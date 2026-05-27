@@ -454,7 +454,9 @@ export default function MoodInputScreen() {
                   </motion.button>
                   <motion.button
                     whileTap={{ scale: 0.96 }}
-                    onClick={() => fileInputRef.current?.click()}                    disabled={isAnalyzing}
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isAnalyzing}
+
                     className="relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden disabled:opacity-50 py-3 px-4"
                     style={{
                       borderRadius: "4px",
