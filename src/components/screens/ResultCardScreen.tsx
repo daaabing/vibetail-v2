@@ -290,92 +290,20 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     if (!cocktail) return;
     setSaving(true);
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const SCALE = 2;
-      const filename = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
-
-      // 把翻转状态临时固定到正面，截图后恢复
-      const wasFlipped = flipped;
-      setFlipped(false);
-      await new Promise((r) => setTimeout(r, 350));
-
-      // 截正面
-      let frontCanvas: HTMLCanvasElement | null = null;
-      if (frontRef.current) {
-        frontCanvas = await html2canvas(frontRef.current, {
-          useCORS: true,
-          backgroundColor: "#fdf8f3",
-          scale: SCALE,
-          logging: false,
-        });
-      }
-
-      // 翻到背面截图
-      setFlipped(true);
-      await new Promise((r) => setTimeout(r, 450));
-
-      let backCanvas: HTMLCanvasElement | null = null;
-      if (backRef.current) {
-        backCanvas = await html2canvas(backRef.current, {
-          useCORS: true,
-          backgroundColor: "#fdf8f3",
-          scale: SCALE,
-          logging: false,
-        });
-      }
-
-      // 恢复翻转状态
-      setFlipped(wasFlipped);
-
-      // 拼接上下长图
-      if (frontCanvas && backCanvas) {
-        const gap = 24 * SCALE; // 两张之间留一些间距
-        const w = Math.max(frontCanvas.width, backCanvas.width);
-        const h = frontCanvas.height + backCanvas.height + gap;
-        const merged = document.createElement("canvas");
-        merged.width = w;
-        merged.height = h;
-        const ctx = merged.getContext("2d")!;
-
-        // 奶白背景
-        ctx.fillStyle = "#fdf8f3";
-        ctx.fillRect(0, 0, w, h);
-
-        ctx.drawImage(frontCanvas, (w - frontCanvas.width) / 2, 0);
-        ctx.drawImage(backCanvas, (w - backCanvas.width) / 2, frontCanvas.height + gap);
-
-        // 底部加品牌水印
-        ctx.fillStyle = "rgba(74,62,61,0.35)";
-        ctx.font = `${13 * SCALE}px "Plus Jakarta Sans", system-ui, sans-serif`;
-        ctx.textAlign = "center";
-        ctx.fillText("Vibetail — 人不一定清醒，酒一定要对味", w / 2, h - 10 * SCALE);
-
+      if (imageData) {
         const link = document.createElement("a");
-        link.download = filename;
-        link.href = merged.toDataURL("image/png");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else if (frontCanvas) {
-        // 只有正面
-        const link = document.createElement("a");
-        link.download = filename;
-        link.href = frontCanvas.toDataURL("image/png");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else if (imageData) {
-        // fallback: 直接下载 AI 图片
-        const link = document.createElement("a");
-        link.download = filename;
+        link.download = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
         link.href = `data:image/png;base64,${imageData}`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+      } else {
+        // No image — copy recipe to clipboard
+        const text = `${cocktail.cocktailName}\n\n${cocktail.tastesLike}\n\nIngredients:\n${cocktail.ingredients.join("\n")}\n\n${cocktail.recipe}`;
+        await navigator.clipboard.writeText(text);
       }
     } catch (e) {
       console.error("save error", e);
-      if (imageData) window.open(`data:image/png;base64,${imageData}`, "_blank");
     } finally {
       setSaving(false);
     }

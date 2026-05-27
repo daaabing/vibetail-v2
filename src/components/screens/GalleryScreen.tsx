@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import type { Cocktail } from "@/lib/db/queries/cocktails";
+import { type Cocktail, listCocktails } from "@/lib/cocktails-store";
 import { formatDistanceToNow } from "date-fns";
 import { useLang } from "@/lib/i18n";
 
