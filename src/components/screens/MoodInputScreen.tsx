@@ -168,7 +168,7 @@ export default function MoodInputScreen() {
               <div className="flex flex-wrap gap-2">
                 {VIBE_CHIPS.map((chip) => {
                   const displayLabel = lang === "zh" ? chip.label : (chip.labelEn ?? chip.label);
-                  const valueLabel = chip.labelEn ?? chip.label; // 始终存英文值给 AI
+                  const valueLabel = lang === "zh" ? chip.label : (chip.labelEn ?? chip.label);
                   const isSelected = mood === valueLabel;
                   return (
                     <motion.button
