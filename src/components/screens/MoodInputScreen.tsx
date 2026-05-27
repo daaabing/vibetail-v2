@@ -1,6 +1,6 @@
 
 import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { memory } from "@eazo/sdk";
 import { toast } from "sonner";
@@ -16,7 +16,7 @@ const inkButtonStyle = {
 };
 
 export default function MoodInputScreen() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { t, lang } = useLang();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [mood, setMood] = useState("");

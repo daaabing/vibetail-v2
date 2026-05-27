@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import type { Cocktail } from "@/lib/db/queries/cocktails";
 import { formatDistanceToNow } from "date-fns";
@@ -9,7 +9,7 @@ import { useLang } from "@/lib/i18n";
 const PAGE_SIZE = 10;
 
 export default function GalleryScreen() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { t } = useLang();
   const [cocktails, setCocktails] = useState<Cocktail[]>([]);
   const [loading, setLoading] = useState(true);

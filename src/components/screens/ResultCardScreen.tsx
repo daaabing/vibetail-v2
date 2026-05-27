@@ -1,6 +1,6 @@
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import type { Cocktail } from "@/lib/db/queries/cocktails";
 import { share, memory } from "@eazo/sdk";
@@ -251,7 +251,7 @@ function CardBack({ cocktail, tapHint, labels, divRef }: {
 
 /* ── Main screen ── */
 export default function ResultCardScreen({ id }: ResultCardScreenProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const searchParams = useSearchParams();
   const fromGallery = searchParams.get("from") === "gallery";
   const { t } = useLang();
