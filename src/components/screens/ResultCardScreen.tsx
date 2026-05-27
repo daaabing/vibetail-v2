@@ -250,7 +250,7 @@ function CardBack({ cocktail, tapHint, labels }: {
 /* ── Main screen ── */
 export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const navigate = useNavigate();
-  const search = useSearch({ from: "/result/$id" }) as { from?: string };
+  const search = useSearch({ from: "/result/$id" }) as { from?: string; d?: string };
   const fromGallery = search.from === "gallery";
   const { t } = useLang();
   const [cocktail, setCocktail] = useState<Cocktail | null>(null);
@@ -260,8 +260,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
-
-
+  const captureRef = useRef<HTMLDivElement>(null);
 
   const tapHint = t("result.tap");
   const distillingText = t("result.distilling");
@@ -278,27 +277,32 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       setCocktail(data);
       setImageData(data.imageData ?? null);
       setImageLoading(false);
+    } else if (search.d) {
+      const decoded = decodeCocktailFromHash(search.d);
+      if (decoded) {
+        setCocktail(decoded);
+        setImageData(decoded.imageData ?? null);
+        setImageLoading(false);
+      }
     }
     setLoading(false);
-  }, [id]);
-
+  }, [id, search.d]);
 
   const handleSave = async () => {
-    if (!cocktail) return;
+    if (!cocktail || !captureRef.current) return;
     setSaving(true);
     try {
-      if (imageData) {
-        const link = document.createElement("a");
-        link.download = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
-        link.href = `data:image/png;base64,${imageData}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else {
-        // No image — copy recipe to clipboard
-        const text = `${cocktail.cocktailName}\n\n${cocktail.tastesLike}\n\nIngredients:\n${cocktail.ingredients.join("\n")}\n\n${cocktail.recipe}`;
-        await navigator.clipboard.writeText(text);
-      }
+      const dataUrl = await htmlToImage.toPng(captureRef.current, {
+        pixelRatio: 2,
+        cacheBust: true,
+        backgroundColor: "#fdf8f3",
+      });
+      const link = document.createElement("a");
+      link.download = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (e) {
       console.error("save error", e);
     } finally {
@@ -308,13 +312,13 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   const handleShare = async () => {
     if (!cocktail) return;
-    const url = `${window.location.origin}/result/${cocktail.id}`;
+    const encoded = encodeCocktailToHash(cocktail);
+    const url = `${window.location.origin}/result/${cocktail.id}?d=${encoded}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // fallback for browsers that block clipboard
       try {
         const el = document.createElement("textarea");
         el.value = url;
@@ -327,7 +331,6 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } catch {
-        // last resort: open in new tab so user can copy manually
         window.open(url, "_blank");
       }
     }
