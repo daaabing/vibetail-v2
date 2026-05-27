@@ -122,18 +122,17 @@ function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText 
 }
 
 /* ── Back face: recipe + roast + details — light style ── */
-function CardBack({ cocktail, tapHint, labels, divRef }: {
+function CardBack({ cocktail, tapHint, labels }: {
   cocktail: Cocktail;
   tapHint: string;
   labels: { originalVibe: string; tastingNotes: string; ingredients: string; howToMake: string; };
-  divRef?: React.RefObject<HTMLDivElement | null>;
 }) {
   const recipeLines = cocktail.recipe.split("\n").filter(Boolean);
 
   return (
     <div
-      ref={divRef}
       className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col"
+
       style={{
         backfaceVisibility: "hidden",
         WebkitBackfaceVisibility: "hidden",
