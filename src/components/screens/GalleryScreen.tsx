@@ -16,11 +16,8 @@ export default function GalleryScreen() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    fetch("/api/cocktails")
-      .then((r) => r.json())
-      .then((data) => setCocktails(data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    setCocktails(listCocktails());
+    setLoading(false);
   }, []);
 
   const totalPages = Math.max(1, Math.ceil(cocktails.length / PAGE_SIZE));
