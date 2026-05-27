@@ -151,7 +151,7 @@ export default function MoodInputScreen() {
                     <motion.button
                       key={chip.labelEn ?? chip.label}
                       whileTap={{ scale: 0.88 }}
-                      onClick={() => setMood(isSelected ? "" : valueLabel)}
+                      onClick={() => setMood(isSelected ? "" : displayLabel)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
                       style={{
                         border: isSelected ? `1.5px solid ${chip.color}` : "1px solid var(--app-border)",
