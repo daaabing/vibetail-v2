@@ -108,7 +108,7 @@ export default function MoodInputScreen() {
         page: "mood-input",
         metadata: { type: "generate_cocktail", cocktail_id: data.id, action_kind: "domain_event" },
       }).catch(() => {});
-      router.push(`/result/${data.id}`);
+      navigate({ to: "/result/$id", params: { id: String(data.id) } });
     } catch {
       toast.error("Couldn't read your vibe. Try again!");
       setIsGenerating(false);
@@ -124,7 +124,7 @@ export default function MoodInputScreen() {
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
         <motion.button
           whileTap={{ scale: 0.88 }}
-          onClick={step === 1 ? () => router.push("/") : goBack}
+          onClick={step === 1 ? () => navigate({ to: "/" }) : goBack}
           className="flex items-center gap-1.5 text-xs"
           style={{ color: "var(--app-text-secondary)" }}
         >

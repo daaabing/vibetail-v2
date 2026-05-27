@@ -468,7 +468,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     return (
       <div className="min-h-svh flex flex-col items-center justify-center p-5">
         <p style={{ color: "var(--app-text-muted)" }}>Cocktail not found.</p>
-        <button onClick={() => router.push("/mood-input")} className="mt-4 text-sm underline"
+        <button onClick={() => navigate({ to: "/mood-input" })} className="mt-4 text-sm underline"
           style={{ color: "var(--app-primary)" }}>
           Check another vibe
         </button>
@@ -484,7 +484,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
         <motion.button
           whileTap={{ scale: 0.9 }}
-          onClick={() => fromGallery ? router.push("/gallery") : router.push("/")}
+          onClick={() => fromGallery ? navigate({ to: "/gallery" }) : navigate({ to: "/" })}
           className="flex items-center gap-1.5 text-xs"
           style={{ color: "var(--app-text-secondary)" }}
         >
@@ -579,7 +579,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
         <motion.button
           whileTap={{ scale: 0.96 }}
-          onClick={() => router.push("/mood-input")}
+          onClick={() => navigate({ to: "/mood-input" })}
           className="w-full text-xs font-semibold uppercase tracking-widest py-2 text-center block hover:underline"
           style={{ color: "var(--app-primary)" }}
         >

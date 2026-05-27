@@ -33,7 +33,7 @@ export default function GalleryScreen() {
       <div className="flex items-center justify-between pt-5 pb-4">
         <motion.button
           whileTap={{ scale: 0.88 }}
-          onClick={() => router.push("/")}
+          onClick={() => navigate({ to: "/" })}
           className="flex items-center gap-1.5 text-xs"
           style={{ color: "var(--app-text-secondary)" }}
         >
@@ -49,7 +49,7 @@ export default function GalleryScreen() {
 
         <motion.button
           whileTap={{ scale: 0.9 }}
-          onClick={() => router.push("/mood-input")}
+          onClick={() => navigate({ to: "/mood-input" })}
           className="text-xs font-semibold tracking-wider px-3 py-1.5 relative overflow-hidden"
           style={{
             borderRadius: "4px",
@@ -81,7 +81,7 @@ export default function GalleryScreen() {
             <p className="text-sm" style={{ color: "var(--app-text-muted)" }}>还没有任何 vibe，去混第一杯吧。</p>
             <motion.button
               whileTap={{ scale: 0.94 }}
-              onClick={() => router.push("/mood-input")}
+              onClick={() => navigate({ to: "/mood-input" })}
               className="text-xs font-semibold underline"
               style={{ color: "var(--app-primary)" }}
             >
@@ -95,7 +95,7 @@ export default function GalleryScreen() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: idx * 0.03 }}
-              onClick={() => router.push(`/result/${cocktail.id}?from=gallery`)}
+              onClick={() => navigate({ to: "/result/$id", params: { id: String(cocktail.id) }, search: { from: "gallery" } })}
               className="glass-card rounded-xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
             >
               {/* 缩略图 */}
