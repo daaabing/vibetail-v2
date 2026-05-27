@@ -366,6 +366,26 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     <div className="min-h-svh flex flex-col w-full md:max-w-md md:mx-auto relative"
       style={{ background: "linear-gradient(170deg, #fdf8f3 0%, #faf4ed 60%, #f8f0e8 100%)" }}>
 
+      {/* Offscreen capture target — fixed 3:4 card front for image export */}
+      <div
+        aria-hidden
+        style={{
+          position: "fixed",
+          top: 0,
+          left: -9999,
+          width: 600,
+          height: 800,
+          pointerEvents: "none",
+          opacity: 1,
+          zIndex: -1,
+        }}
+      >
+        <div ref={captureRef} style={{ position: "relative", width: 600, height: 800 }}>
+          <CardFront cocktail={cocktail} imageData={imageData} imageLoading={false} tapHint={tapHint} distillingText={distillingText} />
+        </div>
+      </div>
+
+
       {/* Top bar */}
       <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
         <motion.button
