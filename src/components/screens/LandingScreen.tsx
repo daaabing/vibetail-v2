@@ -1,5 +1,5 @@
 
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useLang } from "@/lib/i18n";
 
