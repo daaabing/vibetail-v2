@@ -48,7 +48,7 @@ function InkButton({
 }
 
 export default function LandingScreen() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { lang, setLang, t } = useLang();
 
   return (
