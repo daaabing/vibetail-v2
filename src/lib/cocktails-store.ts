@@ -1,4 +1,20 @@
+import LZString from "lz-string";
 import { SEED_COCKTAILS } from "./moodtail-data";
+
+export function encodeCocktailToHash(c: Cocktail): string {
+  const minimal = { ...c, imageData: null };
+  return LZString.compressToEncodedURIComponent(JSON.stringify(minimal));
+}
+
+export function decodeCocktailFromHash(hash: string): Cocktail | null {
+  try {
+    const json = LZString.decompressFromEncodedURIComponent(hash);
+    if (!json) return null;
+    return JSON.parse(json) as Cocktail;
+  } catch {
+    return null;
+  }
+}
 
 export interface Cocktail {
   id: number;
