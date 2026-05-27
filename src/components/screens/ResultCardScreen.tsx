@@ -366,7 +366,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     <div className="min-h-svh flex flex-col w-full md:max-w-md md:mx-auto relative"
       style={{ background: "linear-gradient(170deg, #fdf8f3 0%, #faf4ed 60%, #f8f0e8 100%)" }}>
 
-      {/* Offscreen capture target — front + back stacked vertically for long-image export */}
+      {/* Offscreen capture target — flat long image, no card frame */}
       <div
         aria-hidden
         style={{
@@ -379,14 +379,92 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           zIndex: -1,
         }}
       >
-        <div ref={captureRef} style={{ width: 600, background: "#fdf8f3", display: "flex", flexDirection: "column", gap: 20, padding: 24 }}>
-          <div style={{ position: "relative", width: 552, height: 736 }}>
-            <CardFront cocktail={cocktail} imageData={imageData} imageLoading={false} tapHint={tapHint} distillingText={distillingText} />
+        <div
+          ref={captureRef}
+          style={{
+            width: 600,
+            background: "linear-gradient(170deg, #fdf8f3 0%, #faf0e6 60%, #f8ead8 100%)",
+            padding: "40px 44px 44px",
+            fontFamily: "var(--font-body)",
+            color: "var(--app-text)",
+          }}
+        >
+          {/* Hero image */}
+          <div style={{ width: "100%", height: 420, borderRadius: 18, overflow: "hidden", background: "rgba(250,246,240,0.6)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
+            {imageData ? (
+              <img src={`data:image/png;base64,${imageData}`} alt={cocktail.cocktailName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+            ) : (
+              <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="var(--app-primary)" strokeWidth="0.8" opacity="0.3">
+                <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
           </div>
-          <div style={{ position: "relative", width: 552, height: 900 }}>
-            <div style={{ position: "absolute", inset: 0, transform: "rotateY(180deg)", transformStyle: "preserve-3d" }}>
-              <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} />
-            </div>
+
+          {/* Name */}
+          <h2 style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)", fontSize: 36, fontWeight: 600, lineHeight: 1.15, textAlign: "center", margin: 0 }}>
+            {cocktail.cocktailName}
+          </h2>
+
+          {/* Roast */}
+          <p style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-primary)", fontSize: 15, lineHeight: 1.45, textAlign: "center", marginTop: 12 }}>
+            "{cocktail.roast}"
+          </p>
+
+          {/* Flavor keywords */}
+          <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 6, marginTop: 14 }}>
+            {(Array.isArray((cocktail as any).flavorKeywords) && (cocktail as any).flavorKeywords.length > 0
+              ? (cocktail as any).flavorKeywords as string[]
+              : cocktail.flavorProfile.split(",").map((s: string) => s.trim())
+            ).map((f: string) => (
+              <span key={f} style={{ padding: "3px 9px", borderRadius: 4, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(210,201,189,0.6)", color: "var(--app-text-secondary)" }}>
+                {f.trim()}
+              </span>
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: 1, background: "rgba(210,201,189,0.6)", margin: "28px 0 24px" }} />
+
+          {/* Original vibe */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)", marginBottom: 6 }}>{cardLabels.originalVibe}</div>
+            <p style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-text-secondary)", fontSize: 14, lineHeight: 1.55, margin: 0 }}>
+              "{cocktail.originalMood}"
+            </p>
+          </div>
+
+          {/* Tasting notes */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)", marginBottom: 6 }}>{cardLabels.tastingNotes}</div>
+            <p style={{ color: "var(--app-text-secondary)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>
+              {cocktail.tastesLike}
+            </p>
+          </div>
+
+          {/* Ingredients */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)", marginBottom: 8 }}>{cardLabels.ingredients}</div>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {(cocktail.ingredients as string[]).map((ing, i) => (
+                <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: "var(--app-text-secondary)", marginBottom: 6, lineHeight: 1.5 }}>
+                  <span style={{ marginTop: 7, width: 6, height: 6, borderRadius: "50%", background: "var(--app-primary)", flexShrink: 0 }} />
+                  <span>{ing}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Recipe */}
+          <div>
+            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-primary)", marginBottom: 12 }}>{cardLabels.howToMake}</div>
+            <ol style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {cocktail.recipe.split("\n").filter(Boolean).map((line, i) => (
+                <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+                  <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", background: "var(--app-primary)", color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1 }}>{i + 1}</span>
+                  <span style={{ fontSize: 13, lineHeight: 1.55, color: "var(--app-text-secondary)" }}>{line}</span>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </div>
