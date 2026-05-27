@@ -113,14 +113,14 @@ export default function LandingScreen() {
 
       {/* CTA buttons */}
       <div className="space-y-3">
-        <InkButton primary onClick={() => router.push("/mood-input")}>
+        <InkButton primary onClick={() => navigate({ to: "/mood-input" })}>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           {t("landing.cta.mix")}
         </InkButton>
 
-        <InkButton onClick={() => router.push("/gallery")}>
+        <InkButton onClick={() => navigate({ to: "/gallery" })}>
           <svg className="w-4 h-4" fill="none" stroke="var(--app-secondary)" strokeWidth="1.8" viewBox="0 0 24 24">
             <path d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
               strokeLinecap="round" strokeLinejoin="round" />
