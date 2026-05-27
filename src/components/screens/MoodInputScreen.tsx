@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { memory } from "@eazo/sdk";
+import { createCocktail } from "@/lib/cocktails-store";
 import { toast } from "sonner";
 import { FLAVOR_CHIPS, MOOD_PLACEHOLDERS_EN, MOOD_PLACEHOLDERS_ZH, CUSTOM_FLAVOR_PLACEHOLDERS_EN, CUSTOM_FLAVOR_PLACEHOLDERS_ZH, VIBE_CHIPS } from "@/lib/moodtail-data";
 import { useLang } from "@/lib/i18n";
@@ -95,19 +95,8 @@ export default function MoodInputScreen() {
   const handleMix = async () => {
     setIsGenerating(true);
     try {
-      const response = await fetch("/api/cocktails/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mood, selectedFlavors, customPreference, photoIngredients }),
-      });
-      if (!response.ok) throw new Error("Failed");
-      const data = await response.json();
-      memory.reportAction({
-        content: `User ran a vibe check: "${data.cocktailName}" from vibe: "${mood}"`,
-        event_type: "create",
-        page: "mood-input",
-        metadata: { type: "generate_cocktail", cocktail_id: data.id, action_kind: "domain_event" },
-      }).catch(() => {});
+      await new Promise((r) => setTimeout(r, 800));
+      const data = createCocktail({ mood, selectedFlavors, customPreference, photoIngredients });
       navigate({ to: "/result/$id", params: { id: String(data.id) } });
     } catch {
       toast.error("Couldn't read your vibe. Try again!");
