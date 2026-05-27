@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { type Cocktail, getCocktail } from "@/lib/cocktails-store";
@@ -17,18 +17,17 @@ function CardSkeleton() {
 }
 
 /* ── Front face: cocktail name + AI illustration ── */
-function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText, divRef }: {
+function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText }: {
   cocktail: Cocktail;
   imageData: string | null;
   imageLoading: boolean;
   tapHint: string;
   distillingText: string;
-  divRef?: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
     <div
-      ref={divRef}
       className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col"
+
       style={{
         backfaceVisibility: "hidden",
         WebkitBackfaceVisibility: "hidden",
@@ -123,18 +122,17 @@ function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText,
 }
 
 /* ── Back face: recipe + roast + details — light style ── */
-function CardBack({ cocktail, tapHint, labels, divRef }: {
+function CardBack({ cocktail, tapHint, labels }: {
   cocktail: Cocktail;
   tapHint: string;
   labels: { originalVibe: string; tastingNotes: string; ingredients: string; howToMake: string; };
-  divRef?: React.RefObject<HTMLDivElement | null>;
 }) {
   const recipeLines = cocktail.recipe.split("\n").filter(Boolean);
 
   return (
     <div
-      ref={divRef}
       className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col"
+
       style={{
         backfaceVisibility: "hidden",
         WebkitBackfaceVisibility: "hidden",
@@ -261,10 +259,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const frontRef = useRef<HTMLDivElement>(null);
-  const backRef = useRef<HTMLDivElement>(null);
+
+
 
   const tapHint = t("result.tap");
   const distillingText = t("result.distilling");
@@ -390,7 +386,6 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       {/* ── Flip card ── */}
       <div className="flex-1 flex items-center justify-center px-5 py-2">
         <div
-          ref={cardRef}
           className="w-full cursor-pointer select-none"
           style={{ perspective: 1200, maxWidth: 380 }}
           onClick={() => setFlipped((f) => !f)}
@@ -405,8 +400,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             animate={{ rotateY: flipped ? 180 : 0 }}
             transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
           >
-            <CardFront cocktail={cocktail} imageData={imageData} imageLoading={imageLoading} tapHint={tapHint} distillingText={distillingText} divRef={frontRef} />
-            <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} divRef={backRef} />
+            <CardFront cocktail={cocktail} imageData={imageData} imageLoading={imageLoading} tapHint={tapHint} distillingText={distillingText} />
+            <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} />
+
           </motion.div>
         </div>
       </div>

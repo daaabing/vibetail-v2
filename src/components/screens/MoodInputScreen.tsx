@@ -54,37 +54,14 @@ export default function MoodInputScreen() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handlePhotoUpload = async (file: File) => {
+  const handlePhotoUpload = (file: File) => {
     setPhotoInvalid(false);
     setPhotoIngredients(null);
     setPhotoPreview(URL.createObjectURL(file));
-    setIsAnalyzing(true);
-    try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(",")[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      const res = await fetch("/api/cocktails/analyze-ingredients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: base64, mimeType: file.type }),
-      });
-      const data = await res.json();
-      if (data.valid && data.ingredients?.length > 0) {
-        setPhotoIngredients(data.ingredients);
-      } else {
-        setPhotoInvalid(true);
-        setPhotoPreview(null);
-      }
-    } catch {
-      setPhotoInvalid(true);
-      setPhotoPreview(null);
-    } finally {
-      setIsAnalyzing(false);
-    }
+    // No backend ingredient analysis in this build — accept the photo as-is.
+    setIsAnalyzing(false);
   };
+
 
   const toggleFlavor = (label: string) => {
     setSelectedFlavors((prev) =>
@@ -168,13 +145,13 @@ export default function MoodInputScreen() {
               <div className="flex flex-wrap gap-2">
                 {VIBE_CHIPS.map((chip) => {
                   const displayLabel = lang === "zh" ? chip.label : (chip.labelEn ?? chip.label);
-                  const valueLabel = lang === "zh" ? chip.label : (chip.labelEn ?? chip.label);
-                  const isSelected = mood === valueLabel;
+                  const isSelected = mood === displayLabel;
+
                   return (
                     <motion.button
                       key={chip.labelEn ?? chip.label}
                       whileTap={{ scale: 0.88 }}
-                      onClick={() => setMood(isSelected ? "" : valueLabel)}
+                      onClick={() => setMood(isSelected ? "" : displayLabel)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
                       style={{
                         border: isSelected ? `1.5px solid ${chip.color}` : "1px solid var(--app-border)",
@@ -477,7 +454,9 @@ export default function MoodInputScreen() {
                   </motion.button>
                   <motion.button
                     whileTap={{ scale: 0.96 }}
-                    onClick={() => fileInputRef.current?.click()}                    disabled={isAnalyzing}
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isAnalyzing}
+
                     className="relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden disabled:opacity-50 py-3 px-4"
                     style={{
                       borderRadius: "4px",
