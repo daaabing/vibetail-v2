@@ -261,10 +261,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const frontRef = useRef<HTMLDivElement>(null);
-  const backRef = useRef<HTMLDivElement>(null);
+
+
 
   const tapHint = t("result.tap");
   const distillingText = t("result.distilling");
