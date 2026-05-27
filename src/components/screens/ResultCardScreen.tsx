@@ -388,7 +388,6 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       {/* ── Flip card ── */}
       <div className="flex-1 flex items-center justify-center px-5 py-2">
         <div
-          ref={cardRef}
           className="w-full cursor-pointer select-none"
           style={{ perspective: 1200, maxWidth: 380 }}
           onClick={() => setFlipped((f) => !f)}
@@ -403,8 +402,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             animate={{ rotateY: flipped ? 180 : 0 }}
             transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
           >
-            <CardFront cocktail={cocktail} imageData={imageData} imageLoading={imageLoading} tapHint={tapHint} distillingText={distillingText} divRef={frontRef} />
-            <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} divRef={backRef} />
+            <CardFront cocktail={cocktail} imageData={imageData} imageLoading={imageLoading} tapHint={tapHint} distillingText={distillingText} />
+            <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} />
+
           </motion.div>
         </div>
       </div>
