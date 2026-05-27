@@ -1,0 +1,592 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
+import type { Cocktail } from "@/lib/db/queries/cocktails";
+import { share, memory } from "@eazo/sdk";
+import { useLang } from "@/lib/i18n";
+
+interface ResultCardScreenProps {
+  id: number;
+}
+
+/* ── Skeleton card ── */
+function CardSkeleton() {
+  return (
+    <div className="w-full rounded-3xl overflow-hidden shimmer" style={{ aspectRatio: "3/4", maxHeight: 480 }} />
+  );
+}
+
+/* ── Front face: cocktail name + AI illustration ── */
+function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText, divRef }: {
+  cocktail: Cocktail;
+  imageData: string | null;
+  imageLoading: boolean;
+  tapHint: string;
+  distillingText: string;
+  divRef?: React.RefObject<HTMLDivElement | null>;
+}) {
+  return (
+    <div
+      ref={divRef}
+      className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col"
+      style={{
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
+        background: "linear-gradient(160deg, #fdf8f3 0%, #faf0e6 100%)",
+        border: "1px solid rgba(210,201,189,0.6)",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08)",
+      }}
+    >
+      {/* AI illustration — fixed height, object-contain so full image is visible */}
+      <div className="mx-4 mt-4 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center"
+        style={{ height: 260, background: "rgba(250,246,240,0.6)" }}>
+        {imageLoading ? (
+          <div className="flex flex-col items-center justify-center gap-3 w-full h-full">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--app-primary)" strokeWidth="1.5">
+                <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </motion.div>
+            <p className="text-[10px] tracking-wider" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
+              {distillingText}
+            </p>
+          </div>
+        ) : imageData ? (
+          <img
+            src={`data:image/png;base64,${imageData}`}
+            alt={cocktail.cocktailName}
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <div className="flex items-center justify-center w-full h-full">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="var(--app-primary)" strokeWidth="0.8" opacity="0.3">
+              <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      {/* Cocktail name + vibe diagnosis */}
+      <div className="px-5 pt-4 pb-3 flex-shrink-0">
+        <h2
+          className="font-semibold leading-tight text-center"
+          style={{
+            fontFamily: "var(--font-heading)",
+            color: "var(--app-text)",
+            fontSize: "clamp(1.4rem, 6vw, 2rem)",
+          }}
+        >
+          {cocktail.cocktailName}
+        </h2>
+
+        {/* Vibe diagnosis — roast line */}
+        <p className="text-center text-xs mt-2 leading-snug italic"
+          style={{ fontFamily: "var(--font-heading)", color: "var(--app-primary)" }}>
+          "{cocktail.roast}"
+        </p>
+
+        {/* Flavor keywords from tasting notes */}
+        <div className="flex justify-center gap-1.5 mt-3 flex-wrap">
+          {(Array.isArray((cocktail as any).flavorKeywords) && (cocktail as any).flavorKeywords.length > 0
+            ? (cocktail as any).flavorKeywords as string[]
+            : cocktail.flavorProfile.split(",").map((s: string) => s.trim())
+          ).map((f: string) => (
+            <span key={f} className="px-2 py-0.5 rounded text-[9px] uppercase"
+              style={{
+                background: "rgba(255,255,255,0.7)",
+                backdropFilter: "blur(6px)",
+                border: "1px solid rgba(210,201,189,0.6)",
+                fontFamily: "var(--font-body)",
+                color: "var(--app-text-secondary)",
+              }}>
+              {f.trim()}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Tap hint */}
+      <div className="pb-5 flex justify-center flex-shrink-0">
+        <span className="text-[9px] tracking-widest flex items-center gap-1.5"
+          style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          {tapHint}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ── Back face: recipe + roast + details — light style ── */
+function CardBack({ cocktail, tapHint, labels, divRef }: {
+  cocktail: Cocktail;
+  tapHint: string;
+  labels: { originalVibe: string; tastingNotes: string; ingredients: string; howToMake: string; };
+  divRef?: React.RefObject<HTMLDivElement | null>;
+}) {
+  const recipeLines = cocktail.recipe.split("\n").filter(Boolean);
+
+  return (
+    <div
+      ref={divRef}
+      className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col"
+      style={{
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
+        transform: "rotateY(180deg)",
+        background: "linear-gradient(160deg, #fdf8f3 0%, #faf0e6 100%)",
+        border: "1px solid rgba(210,201,189,0.6)",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08)",
+      }}
+    >
+      {/* Subtle warm blobs */}
+      <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(224,83,60,0.10) 0%, transparent 70%)", filter: "blur(30px)" }} />
+      <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(212,155,67,0.08) 0%, transparent 70%)", filter: "blur(30px)" }} />
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto px-6 pt-6 pb-4 relative z-10" style={{ scrollbarWidth: "none" }}>
+
+        {/* Header — just the name */}
+        <div className="mb-4 pb-3" style={{ borderBottom: "1px solid rgba(210,201,189,0.5)" }}>
+          <h3 className="font-semibold leading-tight"
+            style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)", fontSize: "1.3rem" }}>
+            {cocktail.cocktailName}
+          </h3>
+        </div>
+
+        {/* Original vibe */}
+        <div className="mb-4 p-3 rounded-xl"
+          style={{ background: "rgba(255,255,255,0.6)", border: "1px solid rgba(210,201,189,0.4)" }}>
+          <span className="text-[8px] tracking-widest uppercase block mb-1"
+            style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+            {labels.originalVibe}
+          </span>
+          <p className="text-xs leading-relaxed"
+            style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-text-secondary)" }}>
+            "{cocktail.originalMood}"
+          </p>
+        </div>
+
+        {/* Tasting notes */}
+        <div className="mb-4">
+          <span className="text-[8px] tracking-widest uppercase block mb-1.5"
+            style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+            {labels.tastingNotes}
+          </span>
+          <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
+            {cocktail.tastesLike}
+          </p>
+        </div>
+
+        {/* Ingredients */}
+        <div className="mb-4">
+          <span className="text-[8px] tracking-widest uppercase block mb-2"
+            style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+            {labels.ingredients}
+          </span>
+          <ul className="space-y-1.5">
+            {(cocktail.ingredients as string[]).map((ing, i) => (
+              <li key={i} className="flex items-start gap-2 text-[11px]"
+                style={{ color: "var(--app-text-secondary)" }}>
+                <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: "var(--app-primary)" }} />
+                {ing}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Recipe — numbered steps */}
+        <div className="mb-4 p-3 rounded-xl"
+          style={{ background: "rgba(224,83,60,0.06)", border: "1px solid rgba(224,83,60,0.18)" }}>
+          <span className="text-[8px] tracking-widest uppercase block mb-3"
+            style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
+            {labels.howToMake}
+          </span>
+          <ol className="space-y-2.5">
+            {recipeLines.map((line, i) => (
+              <li key={i} className="flex items-start gap-2.5">
+                {/* Step number badge */}
+                <span
+                  className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold"
+                  style={{
+                    backgroundColor: "var(--app-primary)",
+                    color: "white",
+                    marginTop: 1,
+                  }}
+                >
+                  {i + 1}
+                </span>
+                <span className="text-[11px] leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
+                  {line}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+      </div>
+
+      {/* Tap hint */}
+      <div className="pb-5 flex justify-center flex-shrink-0 relative z-10">
+        <span className="text-[9px] tracking-widest flex items-center gap-1.5"
+          style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          {tapHint}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main screen ── */
+export default function ResultCardScreen({ id }: ResultCardScreenProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromGallery = searchParams.get("from") === "gallery";
+  const { t } = useLang();
+  const [cocktail, setCocktail] = useState<Cocktail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [flipped, setFlipped] = useState(false);
+  const [imageData, setImageData] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const frontRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLDivElement>(null);
+
+  const tapHint = t("result.tap");
+  const distillingText = t("result.distilling");
+  const cardLabels = {
+    originalVibe: t("result.original"),
+    tastingNotes: t("result.tasting"),
+    ingredients: t("result.ingredients"),
+    howToMake: t("result.howToMake"),
+  };
+
+  useEffect(() => {
+    fetch(`/api/cocktails/${id}`)
+      .then((r) => r.json())
+      .then((data: Cocktail) => {
+        setCocktail(data);
+        setLoading(false);
+        memory.reportAction({
+          content: `User got their vibe checked: "${data.cocktailName}" from vibe: "${data.originalMood}"`,
+          event_type: "navigate",
+          page: "result-card",
+          metadata: { type: "view_cocktail", cocktail_id: data.id },
+        }).catch(() => {});
+
+        // 已有图片 → 直接显示
+        if (data.imageData) {
+          setImageData(data.imageData);
+          setImageLoading(false);
+          return;
+        }
+
+        // 没有图片 → 轮询 image-status，每 3s 查一次，最多 30s；超时用 fallback
+        let attempts = 0;
+        pollRef.current = setInterval(async () => {
+          attempts++;
+          try {
+            const res = await fetch(`/api/cocktails/${data.id}/image-status`);
+            const json = await res.json();
+            if (json.ready && json.imageData) {
+              setImageData(json.imageData);
+              setImageLoading(false);
+              if (pollRef.current) clearInterval(pollRef.current);
+            } else if (attempts >= 10) {
+              // 30s 超时 → 用兜底图
+              if (pollRef.current) clearInterval(pollRef.current);
+              const fb = await fetch(`/api/cocktails/fallback-image?name=${encodeURIComponent(data.cocktailName)}`);
+              const fbJson = await fb.json();
+              if (fbJson.imageData) setImageData(fbJson.imageData);
+              setImageLoading(false);
+            }
+          } catch {
+            if (attempts >= 10) {
+              if (pollRef.current) clearInterval(pollRef.current);
+              setImageLoading(false);
+            }
+          }
+        }, 3000);
+      })
+      .catch(() => setLoading(false));
+
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, [id]);
+
+  const handleSave = async () => {
+    if (!cocktail) return;
+    setSaving(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const SCALE = 2;
+      const filename = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
+
+      // 把翻转状态临时固定到正面，截图后恢复
+      const wasFlipped = flipped;
+      setFlipped(false);
+      await new Promise((r) => setTimeout(r, 350));
+
+      // 截正面
+      let frontCanvas: HTMLCanvasElement | null = null;
+      if (frontRef.current) {
+        frontCanvas = await html2canvas(frontRef.current, {
+          useCORS: true,
+          backgroundColor: "#fdf8f3",
+          scale: SCALE,
+          logging: false,
+        });
+      }
+
+      // 翻到背面截图
+      setFlipped(true);
+      await new Promise((r) => setTimeout(r, 450));
+
+      let backCanvas: HTMLCanvasElement | null = null;
+      if (backRef.current) {
+        backCanvas = await html2canvas(backRef.current, {
+          useCORS: true,
+          backgroundColor: "#fdf8f3",
+          scale: SCALE,
+          logging: false,
+        });
+      }
+
+      // 恢复翻转状态
+      setFlipped(wasFlipped);
+
+      // 拼接上下长图
+      if (frontCanvas && backCanvas) {
+        const gap = 24 * SCALE; // 两张之间留一些间距
+        const w = Math.max(frontCanvas.width, backCanvas.width);
+        const h = frontCanvas.height + backCanvas.height + gap;
+        const merged = document.createElement("canvas");
+        merged.width = w;
+        merged.height = h;
+        const ctx = merged.getContext("2d")!;
+
+        // 奶白背景
+        ctx.fillStyle = "#fdf8f3";
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.drawImage(frontCanvas, (w - frontCanvas.width) / 2, 0);
+        ctx.drawImage(backCanvas, (w - backCanvas.width) / 2, frontCanvas.height + gap);
+
+        // 底部加品牌水印
+        ctx.fillStyle = "rgba(74,62,61,0.35)";
+        ctx.font = `${13 * SCALE}px "Plus Jakarta Sans", system-ui, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText("Vibetail — 人不一定清醒，酒一定要对味", w / 2, h - 10 * SCALE);
+
+        const link = document.createElement("a");
+        link.download = filename;
+        link.href = merged.toDataURL("image/png");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else if (frontCanvas) {
+        // 只有正面
+        const link = document.createElement("a");
+        link.download = filename;
+        link.href = frontCanvas.toDataURL("image/png");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else if (imageData) {
+        // fallback: 直接下载 AI 图片
+        const link = document.createElement("a");
+        link.download = filename;
+        link.href = `data:image/png;base64,${imageData}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (e) {
+      console.error("save error", e);
+      if (imageData) window.open(`data:image/png;base64,${imageData}`, "_blank");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!cocktail) return;
+    const url = `${window.location.origin}/result/${cocktail.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback for browsers that block clipboard
+      try {
+        const el = document.createElement("textarea");
+        el.value = url;
+        el.style.position = "fixed";
+        el.style.opacity = "0";
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        // last resort: open in new tab so user can copy manually
+        window.open(url, "_blank");
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-svh flex flex-col p-5 pb-24 md:pb-5 w-full md:max-w-md md:mx-auto relative">
+        <div className="glass-card-warm rounded-xl px-4 py-3 mb-4 flex items-center justify-between">
+          <div className="h-4 w-24 rounded shimmer" />
+          <div className="h-4 w-16 rounded shimmer" />
+        </div>
+        <div className="flex-1 flex items-center justify-center py-4">
+          <CardSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  if (!cocktail) {
+    return (
+      <div className="min-h-svh flex flex-col items-center justify-center p-5">
+        <p style={{ color: "var(--app-text-muted)" }}>Cocktail not found.</p>
+        <button onClick={() => router.push("/mood-input")} className="mt-4 text-sm underline"
+          style={{ color: "var(--app-primary)" }}>
+          Check another vibe
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-svh flex flex-col w-full md:max-w-md md:mx-auto relative"
+      style={{ background: "linear-gradient(170deg, #fdf8f3 0%, #faf4ed 60%, #f8f0e8 100%)" }}>
+
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={() => fromGallery ? router.push("/gallery") : router.push("/")}
+          className="flex items-center gap-1.5 text-xs"
+          style={{ color: "var(--app-text-secondary)" }}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path d="M15.75 19.5L8.25 12l7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="text-[10px] tracking-wider" style={{ fontFamily: "var(--font-body)" }}>
+            {fromGallery ? t("gallery.title") : t("result.home")}
+          </span>
+        </motion.button>
+        <div className="text-[10px] tracking-widest font-semibold uppercase"
+          style={{ color: "var(--app-states-success)" }}>
+          {t("result.checked")}
+        </div>
+      </div>
+
+      {/* ── Flip card ── */}
+      <div className="flex-1 flex items-center justify-center px-5 py-2">
+        <div
+          ref={cardRef}
+          className="w-full cursor-pointer select-none"
+          style={{ perspective: 1200, maxWidth: 380 }}
+          onClick={() => setFlipped((f) => !f)}
+        >
+          <motion.div
+            className="relative w-full"
+            style={{
+              aspectRatio: "3/4",
+              maxHeight: 520,
+              transformStyle: "preserve-3d",
+            }}
+            animate={{ rotateY: flipped ? 180 : 0 }}
+            transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
+          >
+            <CardFront cocktail={cocktail} imageData={imageData} imageLoading={imageLoading} tapHint={tapHint} distillingText={distillingText} divRef={frontRef} />
+            <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} divRef={backRef} />
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ── CTA buttons ── */}
+      <div className="px-5 pb-28 md:pb-8 pt-3 flex-shrink-0 space-y-2">
+        <div className="grid grid-cols-2 gap-2">
+          {/* Save → download */}
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={handleSave}
+            disabled={saving}
+            className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
+            style={{
+              borderRadius: "4px",
+              background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+              color: "white",
+              boxShadow: "2px 3px 10px rgba(194,65,12,0.22), inset 0 1px 0 rgba(255,255,255,0.15)",
+            }}
+          >
+            <span className="absolute inset-0 pointer-events-none" style={{
+              background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
+              animation: "liquid-flow 3s ease-in-out infinite",
+            }} />
+            <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="relative z-10">{saving ? t("result.saving") : t("result.save")}</span>
+          </motion.button>
+
+          {/* Share — copy link */}
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={handleShare}
+            className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
+            style={{
+              borderRadius: "4px",
+              background: copied ? "rgba(141,163,130,0.15)" : "transparent",
+              color: copied ? "var(--app-states-success)" : "var(--app-text-secondary)",
+              border: copied ? "1.5px solid var(--app-states-success)" : "1.5px solid rgba(74,62,61,0.3)",
+              boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
+            }}
+          >
+            {copied ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path d="M4.5 12.75l6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="var(--app-primary)" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+            <span>{copied ? t("result.copied") : t("result.share")}</span>
+          </motion.button>
+        </div>
+
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={() => router.push("/mood-input")}
+          className="w-full text-xs font-semibold uppercase tracking-widest py-2 text-center block hover:underline"
+          style={{ color: "var(--app-primary)" }}
+        >
+          {t("result.another")}
+        </motion.button>
+      </div>
+    </div>
+  );
+}
