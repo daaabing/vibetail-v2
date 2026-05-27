@@ -54,37 +54,14 @@ export default function MoodInputScreen() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handlePhotoUpload = async (file: File) => {
+  const handlePhotoUpload = (file: File) => {
     setPhotoInvalid(false);
     setPhotoIngredients(null);
     setPhotoPreview(URL.createObjectURL(file));
-    setIsAnalyzing(true);
-    try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(",")[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      const res = await fetch("/api/cocktails/analyze-ingredients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: base64, mimeType: file.type }),
-      });
-      const data = await res.json();
-      if (data.valid && data.ingredients?.length > 0) {
-        setPhotoIngredients(data.ingredients);
-      } else {
-        setPhotoInvalid(true);
-        setPhotoPreview(null);
-      }
-    } catch {
-      setPhotoInvalid(true);
-      setPhotoPreview(null);
-    } finally {
-      setIsAnalyzing(false);
-    }
+    // No backend ingredient analysis in this build — accept the photo as-is.
+    setIsAnalyzing(false);
   };
+
 
   const toggleFlavor = (label: string) => {
     setSelectedFlavors((prev) =>
