@@ -366,7 +366,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     <div className="min-h-svh flex flex-col w-full md:max-w-md md:mx-auto relative"
       style={{ background: "linear-gradient(170deg, #fdf8f3 0%, #faf4ed 60%, #f8f0e8 100%)" }}>
 
-      {/* Offscreen capture target — fixed 3:4 card front for image export */}
+      {/* Offscreen capture target — front + back stacked vertically for long-image export */}
       <div
         aria-hidden
         style={{
@@ -374,14 +374,20 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           top: 0,
           left: -9999,
           width: 600,
-          height: 800,
           pointerEvents: "none",
           opacity: 1,
           zIndex: -1,
         }}
       >
-        <div ref={captureRef} style={{ position: "relative", width: 600, height: 800 }}>
-          <CardFront cocktail={cocktail} imageData={imageData} imageLoading={false} tapHint={tapHint} distillingText={distillingText} />
+        <div ref={captureRef} style={{ width: 600, background: "#fdf8f3", display: "flex", flexDirection: "column", gap: 20, padding: 24 }}>
+          <div style={{ position: "relative", width: 552, height: 736 }}>
+            <CardFront cocktail={cocktail} imageData={imageData} imageLoading={false} tapHint={tapHint} distillingText={distillingText} />
+          </div>
+          <div style={{ position: "relative", width: 552, height: 900 }}>
+            <div style={{ position: "absolute", inset: 0, transform: "rotateY(180deg)", transformStyle: "preserve-3d" }}>
+              <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} />
+            </div>
+          </div>
         </div>
       </div>
 
