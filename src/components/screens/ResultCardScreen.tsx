@@ -17,18 +17,17 @@ function CardSkeleton() {
 }
 
 /* ── Front face: cocktail name + AI illustration ── */
-function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText, divRef }: {
+function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText }: {
   cocktail: Cocktail;
   imageData: string | null;
   imageLoading: boolean;
   tapHint: string;
   distillingText: string;
-  divRef?: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
     <div
-      ref={divRef}
       className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col"
+
       style={{
         backfaceVisibility: "hidden",
         WebkitBackfaceVisibility: "hidden",
