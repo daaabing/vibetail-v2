@@ -2,8 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import type { Cocktail } from "@/lib/db/queries/cocktails";
-import { share, memory } from "@eazo/sdk";
+import { type Cocktail, getCocktail } from "@/lib/cocktails-store";
 import { useLang } from "@/lib/i18n";
 
 interface ResultCardScreenProps {
@@ -212,7 +211,7 @@ function CardBack({ cocktail, tapHint, labels, divRef }: {
             {labels.howToMake}
           </span>
           <ol className="space-y-2.5">
-            {recipeLines.map((line, i) => (
+            {recipeLines.map((line: string, i: number) => (
               <li key={i} className="flex items-start gap-2.5">
                 {/* Step number badge */}
                 <span
@@ -252,8 +251,8 @@ function CardBack({ cocktail, tapHint, labels, divRef }: {
 /* ── Main screen ── */
 export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const navigate = useNavigate();
-  const searchParams = useSearchParams();
-  const fromGallery = searchParams.get("from") === "gallery";
+  const search = useSearch({ from: "/result/$id" }) as { from?: string };
+  const fromGallery = search.from === "gallery";
   const { t } = useLang();
   const [cocktail, setCocktail] = useState<Cocktail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -277,56 +276,15 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   };
 
   useEffect(() => {
-    fetch(`/api/cocktails/${id}`)
-      .then((r) => r.json())
-      .then((data: Cocktail) => {
-        setCocktail(data);
-        setLoading(false);
-        memory.reportAction({
-          content: `User got their vibe checked: "${data.cocktailName}" from vibe: "${data.originalMood}"`,
-          event_type: "navigate",
-          page: "result-card",
-          metadata: { type: "view_cocktail", cocktail_id: data.id },
-        }).catch(() => {});
-
-        // 已有图片 → 直接显示
-        if (data.imageData) {
-          setImageData(data.imageData);
-          setImageLoading(false);
-          return;
-        }
-
-        // 没有图片 → 轮询 image-status，每 3s 查一次，最多 30s；超时用 fallback
-        let attempts = 0;
-        pollRef.current = setInterval(async () => {
-          attempts++;
-          try {
-            const res = await fetch(`/api/cocktails/${data.id}/image-status`);
-            const json = await res.json();
-            if (json.ready && json.imageData) {
-              setImageData(json.imageData);
-              setImageLoading(false);
-              if (pollRef.current) clearInterval(pollRef.current);
-            } else if (attempts >= 10) {
-              // 30s 超时 → 用兜底图
-              if (pollRef.current) clearInterval(pollRef.current);
-              const fb = await fetch(`/api/cocktails/fallback-image?name=${encodeURIComponent(data.cocktailName)}`);
-              const fbJson = await fb.json();
-              if (fbJson.imageData) setImageData(fbJson.imageData);
-              setImageLoading(false);
-            }
-          } catch {
-            if (attempts >= 10) {
-              if (pollRef.current) clearInterval(pollRef.current);
-              setImageLoading(false);
-            }
-          }
-        }, 3000);
-      })
-      .catch(() => setLoading(false));
-
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    const data = getCocktail(Number(id));
+    if (data) {
+      setCocktail(data);
+      setImageData(data.imageData ?? null);
+      setImageLoading(false);
+    }
+    setLoading(false);
   }, [id]);
+
 
   const handleSave = async () => {
     if (!cocktail) return;
