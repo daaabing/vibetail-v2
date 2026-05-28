@@ -60,9 +60,8 @@ export default function GalleryScreen() {
       </div>
 
       <h1 className="sr-only">Vibe Bar — Your Cocktail Gallery</h1>
-      <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
       {/* ── 卡片列表 ── */}
-      <div className="space-y-3">
+      <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
         {loading ? (
           [1, 2, 3, 4].map((i) => (
             <div key={i} className="glass-card rounded-xl p-4 space-y-2">
