@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as MoodInputRouteImport } from './routes/mood-input'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ResultIdRouteImport } from './routes/result.$id'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MoodInputRoute = MoodInputRouteImport.update({
   id: '/mood-input',
   path: '/mood-input',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/gallery': typeof GalleryRoute
   '/mood-input': typeof MoodInputRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/result/$id': typeof ResultIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/gallery': typeof GalleryRoute
   '/mood-input': typeof MoodInputRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/result/$id': typeof ResultIdRoute
 }
 export interface FileRoutesById {
@@ -52,25 +60,40 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/gallery': typeof GalleryRoute
   '/mood-input': typeof MoodInputRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/result/$id': typeof ResultIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/gallery' | '/mood-input' | '/result/$id'
+  fullPaths: '/' | '/gallery' | '/mood-input' | '/sitemap.xml' | '/result/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/gallery' | '/mood-input' | '/result/$id'
-  id: '__root__' | '/' | '/gallery' | '/mood-input' | '/result/$id'
+  to: '/' | '/gallery' | '/mood-input' | '/sitemap.xml' | '/result/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/gallery'
+    | '/mood-input'
+    | '/sitemap.xml'
+    | '/result/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GalleryRoute: typeof GalleryRoute
   MoodInputRoute: typeof MoodInputRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ResultIdRoute: typeof ResultIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mood-input': {
       id: '/mood-input'
       path: '/mood-input'
@@ -106,18 +129,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GalleryRoute: GalleryRoute,
   MoodInputRoute: MoodInputRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ResultIdRoute: ResultIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

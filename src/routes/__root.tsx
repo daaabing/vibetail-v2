@@ -16,19 +16,33 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" },
-      { title: "Vibetail — Turn your vibe into a cocktail" },
-      { name: "description", content: "Turn your current vibe into a cocktail. 人不一定清醒，酒一定要对味。" },
       { name: "theme-color", content: "#FAF6F0" },
-      { property: "og:title", content: "Vibetail — Turn your vibe into a cocktail" },
-      { property: "og:description", content: "Turn your current vibe into a cocktail. 人不一定清醒，酒一定要对味。" },
-      { name: "twitter:title", content: "Vibetail — Turn your vibe into a cocktail" },
-      { name: "twitter:description", content: "Turn your current vibe into a cocktail. 人不一定清醒，酒一定要对味。" },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/17PkbIkJJbhD4Z7df3muH0hvMGK2/social-images/social-1780006827115-115.webp" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/17PkbIkJJbhD4Z7df3muH0hvMGK2/social-images/social-1780006827115-115.webp" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:site_name", content: "Vibetail" },
       { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "Vibetail",
+              url: "https://vibetail.com",
+            },
+            {
+              "@type": "WebSite",
+              name: "Vibetail",
+              url: "https://vibetail.com",
+              description: "AI cocktail generator that turns your current vibe into a personalized drink.",
+            },
+          ],
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,

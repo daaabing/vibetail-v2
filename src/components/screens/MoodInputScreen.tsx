@@ -128,9 +128,9 @@ export default function MoodInputScreen() {
             className="px-5 pb-28 space-y-5"
           >
             <div>
-              <h2 className="text-2xl font-semibold" style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
+              <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
                 {t("mood.title")}
-              </h2>
+              </h1>
               <p className="text-sm mt-1" style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-text-secondary)" }}>
                 {t("mood.subtitle")}
               </p>
@@ -242,9 +242,9 @@ export default function MoodInputScreen() {
             className="px-5 pb-28 space-y-5"
           >
             <div>
-              <h2 className="text-2xl font-semibold" style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
+              <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
                 {t("flavor.title")}
-              </h2>
+              </h1>
               <p className="text-sm mt-1" style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-text-secondary)" }}>
                 {t("flavor.subtitle")}
               </p>
@@ -354,9 +354,9 @@ export default function MoodInputScreen() {
           >
             {/* Title */}
             <div>
-              <h2 className="text-2xl font-semibold" style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
+              <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
                 {t("ingredients.title")}
-              </h2>
+              </h1>
               <p className="text-sm mt-1" style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-text-secondary)" }}>
                 {t("ingredients.subtitle")}
               </p>
@@ -373,7 +373,7 @@ export default function MoodInputScreen() {
             {/* Photo preview + detected ingredients */}
             {photoPreview && !isAnalyzing && photoIngredients && (
               <div className="space-y-3">
-                <img src={photoPreview} alt="ingredients" className="w-full rounded-xl object-cover" style={{ maxHeight: 200 }} />
+                <img src={photoPreview} alt="Cocktail ingredients preview from uploaded photo" className="w-full rounded-xl object-cover" style={{ maxHeight: 200 }} />
                 <div className="p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.7)", border: "1px solid var(--app-border)" }}>
                   <p className="text-[10px] uppercase tracking-wider mb-2" style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
                     {t("ingredients.detected")}

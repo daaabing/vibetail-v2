@@ -98,7 +98,7 @@ export default function LandingScreen() {
         <div className="space-y-2">
           <h1 className="text-5xl font-semibold tracking-tight"
             style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
-            Vibetail
+            Vibetail <span className="sr-only">— AI Cocktail Generator</span>
           </h1>
           <p className="text-base font-semibold"
             style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>

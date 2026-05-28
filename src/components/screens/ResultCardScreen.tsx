@@ -71,7 +71,7 @@ function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText 
 
       {/* Cocktail name + vibe diagnosis */}
       <div className="px-5 pt-4 pb-3 flex-shrink-0">
-        <h2
+        <h1
           className="font-semibold leading-tight text-center"
           style={{
             fontFamily: "var(--font-heading)",
@@ -80,7 +80,7 @@ function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText 
           }}
         >
           {cocktail.cocktailName}
-        </h2>
+        </h1>
 
         {/* Vibe diagnosis — roast line */}
         <p className="text-center text-xs mt-2 leading-snug italic"
@@ -287,6 +287,33 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     }
     setLoading(false);
   }, [id, search.d]);
+
+  // Dynamic title + Recipe JSON-LD once cocktail loads (client-side data)
+  useEffect(() => {
+    if (!cocktail || typeof document === "undefined") return;
+    document.title = `${cocktail.cocktailName} — Vibetail`;
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.dataset.vibetailRecipe = "true";
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Recipe",
+      name: cocktail.cocktailName,
+      description: cocktail.tastesLike,
+      recipeCategory: cocktail.category || "Cocktail",
+      recipeCuisine: "Cocktail",
+      recipeIngredient: cocktail.ingredients,
+      recipeInstructions: cocktail.recipe
+        .split("\n")
+        .filter(Boolean)
+        .map((step) => ({ "@type": "HowToStep", text: step })),
+      datePublished: cocktail.createdAt,
+    });
+    document.head.appendChild(script);
+    return () => {
+      script.remove();
+    };
+  }, [cocktail]);
 
   const handleSave = async () => {
     if (!cocktail || !captureRef.current) return;
