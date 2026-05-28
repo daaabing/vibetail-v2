@@ -6,6 +6,24 @@ export const Route = createFileRoute("/result/$id")({
     from: typeof s.from === "string" ? s.from : undefined,
     d: typeof s.d === "string" ? s.d : undefined,
   }),
+  head: ({ params }) => {
+    const TITLE = "Your Cocktail — Vibetail";
+    const DESC = "A bespoke cocktail recipe distilled from your vibe by Vibetail's AI bartender.";
+    const URL = `https://vibetail.com/result/${params.id}`;
+    return {
+      meta: [
+        { title: TITLE },
+        { name: "description", content: DESC },
+        { property: "og:title", content: TITLE },
+        { property: "og:description", content: DESC },
+        { property: "og:url", content: URL },
+        { property: "og:type", content: "article" },
+        { name: "twitter:title", content: TITLE },
+        { name: "twitter:description", content: DESC },
+      ],
+      links: [{ rel: "canonical", href: URL }],
+    };
+  },
   component: ResultRoute,
 });
 
