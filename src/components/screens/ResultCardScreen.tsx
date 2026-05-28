@@ -71,7 +71,7 @@ function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText 
 
       {/* Cocktail name + vibe diagnosis */}
       <div className="px-5 pt-4 pb-3 flex-shrink-0">
-        <h2
+        <h1
           className="font-semibold leading-tight text-center"
           style={{
             fontFamily: "var(--font-heading)",
@@ -80,7 +80,7 @@ function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText 
           }}
         >
           {cocktail.cocktailName}
-        </h2>
+        </h1>
 
         {/* Vibe diagnosis — roast line */}
         <p className="text-center text-xs mt-2 leading-snug italic"
