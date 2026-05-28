@@ -24,7 +24,7 @@ export default function GalleryScreen() {
   const paged = cocktails.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="w-full md:max-w-md md:mx-auto px-5 pb-28 relative">
+    <div className="w-full md:max-w-4xl lg:max-w-5xl md:mx-auto px-5 pb-28 md:pb-8 relative">
 
       {/* ── 顶部返回首页 ── */}
       <div className="flex items-center justify-between pt-5 pb-4">
@@ -60,9 +60,8 @@ export default function GalleryScreen() {
       </div>
 
       <h1 className="sr-only">Vibe Bar — Your Cocktail Gallery</h1>
-
       {/* ── 卡片列表 ── */}
-      <div className="space-y-3">
+      <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
         {loading ? (
           [1, 2, 3, 4].map((i) => (
             <div key={i} className="glass-card rounded-xl p-4 space-y-2">

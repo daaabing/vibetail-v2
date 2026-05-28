@@ -83,7 +83,7 @@ export default function MoodInputScreen() {
 
   return (
     <div
-      className="w-full md:max-w-md md:mx-auto min-h-svh"
+      className="w-full md:max-w-2xl lg:max-w-3xl md:mx-auto min-h-svh"
       style={{ background: "linear-gradient(170deg, #fdf8f3 0%, #faf4ed 60%, #f8f0e8 100%)" }}
     >
       {/* ── Top bar ── */}

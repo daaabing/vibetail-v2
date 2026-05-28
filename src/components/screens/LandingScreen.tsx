@@ -52,7 +52,7 @@ export default function LandingScreen() {
   const { lang, setLang, t } = useLang();
 
   return (
-    <div className="min-h-svh flex flex-col p-5 pb-24 md:pb-5 w-full md:max-w-md md:mx-auto relative">
+    <div className="min-h-svh flex flex-col p-5 pb-24 md:pb-5 w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative">
 
       {/* Language toggle — top right */}
       <div className="flex justify-end mb-2">
