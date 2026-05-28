@@ -59,6 +59,8 @@ export default function GalleryScreen() {
         </motion.button>
       </div>
 
+      <h1 className="sr-only">Vibe Bar — Your Cocktail Gallery</h1>
+
       {/* ── 卡片列表 ── */}
       <div className="space-y-3">
         {loading ? (
