@@ -288,6 +288,33 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     setLoading(false);
   }, [id, search.d]);
 
+  // Dynamic title + Recipe JSON-LD once cocktail loads (client-side data)
+  useEffect(() => {
+    if (!cocktail || typeof document === "undefined") return;
+    document.title = `${cocktail.cocktailName} — Vibetail`;
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.dataset.vibetailRecipe = "true";
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Recipe",
+      name: cocktail.cocktailName,
+      description: cocktail.tastesLike,
+      recipeCategory: cocktail.category || "Cocktail",
+      recipeCuisine: "Cocktail",
+      recipeIngredient: cocktail.ingredients,
+      recipeInstructions: cocktail.recipe
+        .split("\n")
+        .filter(Boolean)
+        .map((step) => ({ "@type": "HowToStep", text: step })),
+      datePublished: cocktail.createdAt,
+    });
+    document.head.appendChild(script);
+    return () => {
+      script.remove();
+    };
+  }, [cocktail]);
+
   const handleSave = async () => {
     if (!cocktail || !captureRef.current) return;
     setSaving(true);
