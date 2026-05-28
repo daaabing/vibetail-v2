@@ -365,7 +365,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   if (loading) {
     return (
-      <div className="min-h-svh flex flex-col p-5 pb-24 md:pb-5 w-full md:max-w-md md:mx-auto relative">
+      <div className="min-h-svh flex flex-col p-5 pb-24 md:pb-5 w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative">
         <div className="glass-card-warm rounded-xl px-4 py-3 mb-4 flex items-center justify-between">
           <div className="h-4 w-24 rounded shimmer" />
           <div className="h-4 w-16 rounded shimmer" />
@@ -390,7 +390,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   }
 
   return (
-    <div className="min-h-svh flex flex-col w-full md:max-w-md md:mx-auto relative"
+    <div className="min-h-svh flex flex-col w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative"
       style={{ background: "linear-gradient(170deg, #fdf8f3 0%, #faf4ed 60%, #f8f0e8 100%)" }}>
 
       {/* Offscreen capture target — flat long image, no card frame */}
@@ -519,10 +519,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       </div>
 
       {/* ── Flip card ── */}
-      <div className="flex-1 flex items-center justify-center px-5 py-2">
+      <div className="flex-1 flex items-center justify-center px-5 py-2 md:py-6">
         <div
           className="w-full cursor-pointer select-none"
-          style={{ perspective: 1200, maxWidth: 380 }}
+          style={{ perspective: 1200, maxWidth: 440 }}
           onClick={() => setFlipped((f) => !f)}
         >
           <motion.div
