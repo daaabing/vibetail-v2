@@ -276,17 +276,50 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     if (data) {
       setCocktail(data);
       setImageData(data.imageData ?? null);
-      setImageLoading(false);
+      setImageLoading(!data.imageData);
     } else if (search.d) {
       const decoded = decodeCocktailFromHash(search.d);
       if (decoded) {
         setCocktail(decoded);
         setImageData(decoded.imageData ?? null);
-        setImageLoading(false);
+        setImageLoading(!decoded.imageData);
       }
     }
     setLoading(false);
   }, [id, search.d]);
+
+  // Generate watercolor illustration if missing
+  useEffect(() => {
+    if (!cocktail || imageData) return;
+    let cancelled = false;
+    setImageLoading(true);
+    (async () => {
+      try {
+        const res = await fetch("/api/generate-cocktail-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: cocktail.cocktailName,
+            ingredients: cocktail.ingredients,
+            flavorProfile: cocktail.flavorProfile,
+            tastesLike: cocktail.tastesLike,
+          }),
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        const json = (await res.json()) as { imageData?: string };
+        if (cancelled || !json.imageData) return;
+        setImageData(json.imageData);
+        updateCocktailImage(cocktail.id, json.imageData);
+      } catch (e) {
+        console.error("cocktail image generation failed", e);
+      } finally {
+        if (!cancelled) setImageLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [cocktail, imageData]);
 
   // Dynamic title + Recipe JSON-LD once cocktail loads (client-side data)
   useEffect(() => {
