@@ -62,6 +62,14 @@ export function getCocktail(id: number): Cocktail | null {
   return read().find((c) => c.id === id) ?? null;
 }
 
+export function updateCocktailImage(id: number, imageData: string): void {
+  const list = read();
+  const idx = list.findIndex((c) => c.id === id);
+  if (idx === -1) return;
+  list[idx] = { ...list[idx], imageData };
+  write(list);
+}
+
 function hash(s: string): number {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
