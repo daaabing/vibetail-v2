@@ -14,6 +14,7 @@ import { Route as MoodInputRouteImport } from './routes/mood-input'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ResultIdRouteImport } from './routes/result.$id'
+import { Route as ApiGenerateCocktailImageRouteImport } from './routes/api/generate-cocktail-image'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -40,12 +41,19 @@ const ResultIdRoute = ResultIdRouteImport.update({
   path: '/result/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerateCocktailImageRoute =
+  ApiGenerateCocktailImageRouteImport.update({
+    id: '/api/generate-cocktail-image',
+    path: '/api/generate-cocktail-image',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/gallery': typeof GalleryRoute
   '/mood-input': typeof MoodInputRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
   '/result/$id': typeof ResultIdRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +61,7 @@ export interface FileRoutesByTo {
   '/gallery': typeof GalleryRoute
   '/mood-input': typeof MoodInputRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
   '/result/$id': typeof ResultIdRoute
 }
 export interface FileRoutesById {
@@ -61,19 +70,33 @@ export interface FileRoutesById {
   '/gallery': typeof GalleryRoute
   '/mood-input': typeof MoodInputRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
   '/result/$id': typeof ResultIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/gallery' | '/mood-input' | '/sitemap.xml' | '/result/$id'
+  fullPaths:
+    | '/'
+    | '/gallery'
+    | '/mood-input'
+    | '/sitemap.xml'
+    | '/api/generate-cocktail-image'
+    | '/result/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/gallery' | '/mood-input' | '/sitemap.xml' | '/result/$id'
+  to:
+    | '/'
+    | '/gallery'
+    | '/mood-input'
+    | '/sitemap.xml'
+    | '/api/generate-cocktail-image'
+    | '/result/$id'
   id:
     | '__root__'
     | '/'
     | '/gallery'
     | '/mood-input'
     | '/sitemap.xml'
+    | '/api/generate-cocktail-image'
     | '/result/$id'
   fileRoutesById: FileRoutesById
 }
@@ -82,6 +105,7 @@ export interface RootRouteChildren {
   GalleryRoute: typeof GalleryRoute
   MoodInputRoute: typeof MoodInputRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiGenerateCocktailImageRoute: typeof ApiGenerateCocktailImageRoute
   ResultIdRoute: typeof ResultIdRoute
 }
 
@@ -122,6 +146,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResultIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/generate-cocktail-image': {
+      id: '/api/generate-cocktail-image'
+      path: '/api/generate-cocktail-image'
+      fullPath: '/api/generate-cocktail-image'
+      preLoaderRoute: typeof ApiGenerateCocktailImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -130,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   GalleryRoute: GalleryRoute,
   MoodInputRoute: MoodInputRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiGenerateCocktailImageRoute: ApiGenerateCocktailImageRoute,
   ResultIdRoute: ResultIdRoute,
 }
 export const routeTree = rootRouteImport
