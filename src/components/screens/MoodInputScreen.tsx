@@ -72,14 +72,20 @@ export default function MoodInputScreen() {
   const handleMix = async () => {
     setIsGenerating(true);
     try {
-      await new Promise((r) => setTimeout(r, 800));
-      const data = createCocktail({ mood, selectedFlavors, customPreference, photoIngredients });
+      const res = await fetch("/api/generate-cocktail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mood, selectedFlavors, customPreference, photoIngredients }),
+      });
+      const generated = res.ok ? await res.json() : null;
+      const data = createCocktail({ mood, selectedFlavors, customPreference, photoIngredients, generated });
       navigate({ to: "/result/$id", params: { id: String(data.id) } });
     } catch {
       toast.error("Couldn't read your vibe. Try again!");
       setIsGenerating(false);
     }
   };
+
 
   return (
     <div
