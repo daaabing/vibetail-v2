@@ -76,28 +76,44 @@ function hash(s: string): number {
   return Math.abs(h);
 }
 
+export interface GeneratedCocktailFields {
+  cocktailName: string;
+  tastesLike: string;
+  flavorProfile: string;
+  ingredients: string[];
+  recipe: string;
+  roast: string;
+  category: string;
+}
+
 export function createCocktail(input: {
   mood: string;
   selectedFlavors: string[];
   customPreference: string;
   photoIngredients?: string[] | null;
+  generated?: GeneratedCocktailFields | null;
 }): Cocktail {
   const list = read();
   const seed = SEED_COCKTAILS[hash(input.mood + input.selectedFlavors.join(",")) % SEED_COCKTAILS.length];
   const id = Date.now();
+  const g = input.generated;
   const next: Cocktail = {
     ...seed,
     id,
+    cocktailName: g?.cocktailName || seed.cocktailName,
     originalMood: input.mood || seed.originalMood,
     selectedFlavors: input.selectedFlavors.length ? input.selectedFlavors : seed.selectedFlavors,
     customPreference: input.customPreference || seed.customPreference,
-    flavorProfile: (input.selectedFlavors.length ? input.selectedFlavors.join(", ") : seed.flavorProfile),
-    ingredients: input.photoIngredients && input.photoIngredients.length
-      ? [...input.photoIngredients.map((i) => `A splash of ${i}`), ...seed.ingredients.slice(0, 2)]
-      : seed.ingredients,
+    flavorProfile: g?.flavorProfile || (input.selectedFlavors.length ? input.selectedFlavors.join(", ") : seed.flavorProfile),
+    tastesLike: g?.tastesLike || seed.tastesLike,
+    ingredients: g?.ingredients?.length ? g.ingredients : seed.ingredients,
+    recipe: g?.recipe || seed.recipe,
+    roast: g?.roast || seed.roast,
+    category: g?.category || seed.category,
     createdAt: new Date().toISOString(),
   };
   list.push(next);
   write(list);
   return next;
 }
+
