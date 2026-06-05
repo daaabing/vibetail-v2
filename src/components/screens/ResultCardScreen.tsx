@@ -476,7 +476,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               ? (cocktail as any).flavorKeywords as string[]
               : cocktail.flavorProfile.split(",").map((s: string) => s.trim())
             ).map((f: string) => (
-              <span key={f} style={{ padding: "3px 9px", borderRadius: 4, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(210,201,189,0.6)", color: "var(--app-text-secondary)" }}>
+              <span key={f} style={{ padding: "3px 9px", borderRadius: 4, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(210,201,189,0.6)", color: "var(--app-text-secondary)", whiteSpace: "nowrap", flexShrink: 0 }}>
                 {f.trim()}
               </span>
             ))}
