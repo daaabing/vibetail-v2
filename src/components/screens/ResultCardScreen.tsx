@@ -519,9 +519,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-primary)", marginBottom: 12 }}>{cardLabels.howToMake}</div>
             <ol style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {cocktail.recipe.split("\n").filter(Boolean).map((line, i) => (
-                <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
-                  <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", background: "var(--app-primary)", color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1 }}>{i + 1}</span>
-                  <span style={{ fontSize: 13, lineHeight: 1.55, color: "var(--app-text-secondary)" }}>{line}</span>
+                <li key={i} style={{ position: "relative", paddingLeft: 34, minHeight: 24, marginBottom: 12, fontSize: 13, lineHeight: 1.55, color: "var(--app-text-secondary)", wordBreak: "break-word" }}>
+                  <span style={{ position: "absolute", left: 0, top: 0, width: 22, height: 22, borderRadius: "50%", background: "var(--app-primary)", color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                  {line}
                 </li>
               ))}
             </ol>
