@@ -75,7 +75,7 @@ export default function MoodInputScreen() {
       const res = await fetch("/api/generate-cocktail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mood, selectedFlavors, customPreference, photoIngredients }),
+        body: JSON.stringify({ mood, selectedFlavors, customPreference, photoIngredients, lang }),
       });
       const generated = res.ok ? await res.json() : null;
       const data = createCocktail({ mood, selectedFlavors, customPreference, photoIngredients, generated });
