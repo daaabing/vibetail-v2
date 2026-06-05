@@ -476,7 +476,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               ? (cocktail as any).flavorKeywords as string[]
               : cocktail.flavorProfile.split(",").map((s: string) => s.trim())
             ).map((f: string) => (
-              <span key={f} style={{ padding: "3px 9px", borderRadius: 4, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(210,201,189,0.6)", color: "var(--app-text-secondary)" }}>
+              <span key={f} style={{ padding: "3px 9px", borderRadius: 4, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(210,201,189,0.6)", color: "var(--app-text-secondary)", whiteSpace: "nowrap", flexShrink: 0 }}>
                 {f.trim()}
               </span>
             ))}
@@ -506,9 +506,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)", marginBottom: 8 }}>{cardLabels.ingredients}</div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {(cocktail.ingredients as string[]).map((ing, i) => (
-                <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: "var(--app-text-secondary)", marginBottom: 6, lineHeight: 1.5 }}>
-                  <span style={{ marginTop: 7, width: 6, height: 6, borderRadius: "50%", background: "var(--app-primary)", flexShrink: 0 }} />
-                  <span>{ing}</span>
+                <li key={i} style={{ position: "relative", paddingLeft: 16, fontSize: 13, color: "var(--app-text-secondary)", marginBottom: 8, lineHeight: 1.55, wordBreak: "break-word" }}>
+                  <span style={{ position: "absolute", left: 0, top: 8, width: 6, height: 6, borderRadius: "50%", background: "var(--app-primary)" }} />
+                  {ing}
                 </li>
               ))}
             </ul>
@@ -519,9 +519,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-primary)", marginBottom: 12 }}>{cardLabels.howToMake}</div>
             <ol style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {cocktail.recipe.split("\n").filter(Boolean).map((line, i) => (
-                <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
-                  <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", background: "var(--app-primary)", color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1 }}>{i + 1}</span>
-                  <span style={{ fontSize: 13, lineHeight: 1.55, color: "var(--app-text-secondary)" }}>{line}</span>
+                <li key={i} style={{ position: "relative", paddingLeft: 34, minHeight: 24, marginBottom: 12, fontSize: 13, lineHeight: 1.55, color: "var(--app-text-secondary)", wordBreak: "break-word" }}>
+                  <span style={{ position: "absolute", left: 0, top: 0, width: 22, height: 22, borderRadius: "50%", background: "var(--app-primary)", color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                  {line}
                 </li>
               ))}
             </ol>
