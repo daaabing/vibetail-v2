@@ -506,9 +506,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)", marginBottom: 8 }}>{cardLabels.ingredients}</div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {(cocktail.ingredients as string[]).map((ing, i) => (
-                <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: "var(--app-text-secondary)", marginBottom: 6, lineHeight: 1.5 }}>
-                  <span style={{ marginTop: 7, width: 6, height: 6, borderRadius: "50%", background: "var(--app-primary)", flexShrink: 0 }} />
-                  <span>{ing}</span>
+                <li key={i} style={{ position: "relative", paddingLeft: 16, fontSize: 13, color: "var(--app-text-secondary)", marginBottom: 8, lineHeight: 1.55, wordBreak: "break-word" }}>
+                  <span style={{ position: "absolute", left: 0, top: 8, width: 6, height: 6, borderRadius: "50%", background: "var(--app-primary)" }} />
+                  {ing}
                 </li>
               ))}
             </ul>
