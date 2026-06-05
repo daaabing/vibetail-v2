@@ -69,7 +69,13 @@ function buildUserPrompt(input: GenInput): string {
   const photo = input.photoIngredients?.length
     ? `Ingredients the user has on hand (try to incorporate at least one if it fits): ${input.photoIngredients.join(", ")}`
     : "No ingredients photo provided.";
+  const isZh = input.lang === "zh";
+  const langRule = isZh
+    ? `OUTPUT LANGUAGE: Simplified Chinese (简体中文). ALL string fields (cocktailName, tastesLike, flavorProfile, ingredients, recipe, roast) MUST be written in Simplified Chinese. Ingredient measurements use 盎司/毫升/滴/吧勺. The 'category' enum stays in English. Keep witty Chinese tone — don't translate stiffly.`
+    : `OUTPUT LANGUAGE: English.`;
   return [
+    langRule,
+    ``,
     `User mood / vibe: ${mood}`,
     `Flavor tags they picked: ${flavors}`,
     `Custom preference: ${pref}`,
