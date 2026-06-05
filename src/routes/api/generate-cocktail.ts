@@ -5,6 +5,7 @@ interface GenInput {
   selectedFlavors?: string[];
   customPreference?: string;
   photoIngredients?: string[] | null;
+  lang?: "zh" | "en";
 }
 
 interface GeneratedCocktail {
