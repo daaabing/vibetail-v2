@@ -18,9 +18,10 @@ function CardSkeleton() {
 }
 
 /* ── Front face: cocktail name + AI illustration ── */
-function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText }: {
+function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, distillingText }: {
   cocktail: Cocktail;
   imageData: string | null;
+  imageUrl: string | null;
   imageLoading: boolean;
   tapHint: string;
   distillingText: string;
@@ -40,7 +41,13 @@ function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText 
       {/* AI illustration — fixed height, object-contain so full image is visible */}
       <div className="mx-4 mt-4 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center"
         style={{ height: 260, background: "rgba(250,246,240,0.6)" }}>
-        {imageLoading ? (
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={cocktail.cocktailName}
+            className="w-full h-full object-contain"
+          />
+        ) : imageLoading ? (
           <div className="flex flex-col items-center justify-center gap-3 w-full h-full">
             <motion.div
               animate={{ rotate: 360 }}
@@ -68,6 +75,7 @@ function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText 
           </div>
         )}
       </div>
+
 
       {/* Cocktail name + vibe diagnosis */}
       <div className="px-5 pt-4 pb-3 flex-shrink-0">
@@ -288,9 +296,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     setLoading(false);
   }, [id, search.d]);
 
-  // Generate watercolor illustration if missing
+  // Generate watercolor illustration if missing (skip when a brand image URL is supplied)
   useEffect(() => {
-    if (!cocktail || imageData) return;
+    if (!cocktail || imageData || cocktail.imageUrl) return;
     let cancelled = false;
     setImageLoading(true);
     (async () => {
@@ -451,7 +459,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         >
           {/* Hero image */}
           <div style={{ width: "100%", height: 420, borderRadius: 18, overflow: "hidden", background: "rgba(250,246,240,0.6)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
-            {imageData ? (
+            {cocktail.imageUrl ? (
+              <img src={cocktail.imageUrl} alt={cocktail.cocktailName} crossOrigin="anonymous" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+            ) : imageData ? (
               <img src={`data:image/png;base64,${imageData}`} alt={cocktail.cocktailName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             ) : (
               <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="var(--app-primary)" strokeWidth="0.8" opacity="0.3">
@@ -568,7 +578,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             animate={{ rotateY: flipped ? 180 : 0 }}
             transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
           >
-            <CardFront cocktail={cocktail} imageData={imageData} imageLoading={imageLoading} tapHint={tapHint} distillingText={distillingText} />
+            <CardFront cocktail={cocktail} imageData={imageData} imageUrl={cocktail.imageUrl ?? null} imageLoading={imageLoading} tapHint={tapHint} distillingText={distillingText} />
             <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} />
 
           </motion.div>
