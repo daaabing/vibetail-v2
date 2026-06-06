@@ -296,9 +296,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     setLoading(false);
   }, [id, search.d]);
 
-  // Generate watercolor illustration if missing
+  // Generate watercolor illustration if missing (skip when a brand image URL is supplied)
   useEffect(() => {
-    if (!cocktail || imageData) return;
+    if (!cocktail || imageData || cocktail.imageUrl) return;
     let cancelled = false;
     setImageLoading(true);
     (async () => {
