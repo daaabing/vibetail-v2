@@ -258,8 +258,10 @@ function CardBack({ cocktail, tapHint, labels }: {
 /* ── Main screen ── */
 export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const navigate = useNavigate();
-  const search = useSearch({ from: "/result/$id" }) as { from?: string; d?: string };
+  const search = useSearch({ from: "/result/$id" }) as { from?: string; d?: string; restaurant?: string };
   const fromGallery = search.from === "gallery";
+  const restaurantId = search.restaurant;
+  const isRestaurant = !!restaurantId;
   const { t } = useLang();
   const [cocktail, setCocktail] = useState<Cocktail | null>(null);
   const [loading, setLoading] = useState(true);
