@@ -27,7 +27,7 @@ export default function MoodInputScreen() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const BASE_SPIRITS: { key: string; en: string; zh: string; color: string; flavorEn: string; flavorZh: string }[] = [
-    { key: "surprise", en: "Surprise me", zh: "随心调", color: "#9ca3af", flavorEn: "Let the bartender pick", flavorZh: "由调酒师替你决定" },
+    { key: "surprise", en: "Let the bartender pick", zh: "让调酒师决定", color: "#9ca3af", flavorEn: "Any spirit, chef's choice", flavorZh: "任意基酒，由调酒师决定" },
     { key: "gin", en: "Gin", zh: "金酒", color: "#7fb069", flavorEn: "Crisp, herbal, juniper-forward", flavorZh: "清冽草本，杜松子香气" },
     { key: "vodka", en: "Vodka", zh: "伏特加", color: "#a3b8c4", flavorEn: "Neutral, clean, lets mixers shine", flavorZh: "中性纯净，凸显其他风味" },
     { key: "rum", en: "Rum", zh: "朗姆", color: "#c08457", flavorEn: "Sweet, tropical, molasses warmth", flavorZh: "甜润热带，蔗糖暖意" },
