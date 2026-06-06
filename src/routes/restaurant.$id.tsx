@@ -1,9 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import MoodInputScreen from "@/components/screens/MoodInputScreen";
 
 export const Route = createFileRoute("/restaurant/$id")({
-  head: ({ params }) => {
-    const TITLE = `Vibetail — Restaurant ${params.id}`;
+  beforeLoad: ({ params }) => {
+    if (params.id !== "0") {
+      throw notFound();
+    }
+  },
+  head: () => {
+    const TITLE = "Vibetail — Restaurant";
     const DESC = "Share your vibe and let Vibetail mix a cocktail for you at this restaurant.";
     return {
       meta: [
@@ -15,6 +20,22 @@ export const Route = createFileRoute("/restaurant/$id")({
     };
   },
   component: RestaurantRoute,
+  notFoundComponent: () => (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold mb-4">404</h1>
+        <p className="text-muted-foreground">Restaurant not found</p>
+      </div>
+    </div>
+  ),
+  errorComponent: () => (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold mb-4">Error</h1>
+        <p className="text-muted-foreground">Something went wrong</p>
+      </div>
+    </div>
+  ),
 });
 
 function RestaurantRoute() {
