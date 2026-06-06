@@ -35,6 +35,7 @@ export default function MoodInputScreen() {
     { key: "mezcal", en: "Mezcal", zh: "梅斯卡尔", color: "#8b6f4e", flavorEn: "Smoky, mineral, wild agave", flavorZh: "浓郁烟熏，矿物野性" },
     { key: "brandy", en: "Brandy", zh: "白兰地", color: "#b8602e", flavorEn: "Fruity, velvety, oak-aged", flavorZh: "果香丝滑，橡木陈年" },
     { key: "sake", en: "Sake", zh: "清酒", color: "#e8dcc4", flavorEn: "Delicate, rice-sweet, umami", flavorZh: "清雅米香，鲜甜柔和" },
+    { key: "tashi", en: "Tashi", zh: "Tashi 青稞酒", color: "#c9a84c", flavorEn: "Highland barley, mellow and sweet, plateau grain", flavorZh: "青稞清香，柔和甘甜，高原谷物" },
     { key: "nonalcoholic", en: "No alcohol", zh: "无酒精", color: "#d4a5c4", flavorEn: "Fresh, fruity mocktail", flavorZh: "清爽果香无酒精" },
   ];
   // Step 3 — photo ingredients
