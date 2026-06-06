@@ -335,42 +335,100 @@ export default function MoodInputScreen() {
               </div>
             </div>
 
-            {/* Base spirit */}
+            {/* Base spirit dropdown */}
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
                 style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
                 {lang === "zh" ? "基酒（可选）" : "Base spirit (optional)"}
               </label>
-              <div className="flex flex-wrap gap-2">
-                {BASE_SPIRITS.map((s) => {
-                  const isSelected = baseSpirit === s.key;
-                  return (
+              {(() => {
+                const selected = BASE_SPIRITS.find((s) => s.key === baseSpirit);
+                return (
+                  <div className="relative">
                     <motion.button
-                      key={s.key}
-                      whileTap={{ scale: 0.88 }}
-                      onClick={() => setBaseSpirit(isSelected ? "" : s.key)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                      type="button"
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSpiritOpen((v) => !v)}
+                      className="w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm transition-all"
                       style={{
-                        border: isSelected ? `1.5px solid ${s.color}` : "1px solid var(--app-border)",
-                        backgroundColor: isSelected ? `${s.color}22` : "rgba(255,255,255,0.6)",
-                        backdropFilter: "blur(6px)",
-                        color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
-                        fontWeight: isSelected ? 600 : 400,
-                        boxShadow: isSelected ? `0 0 0 3px ${s.color}22` : "none",
+                        backgroundColor: "rgba(255,255,255,0.7)",
+                        backdropFilter: "blur(8px)",
+                        border: selected ? `1.5px solid ${selected.color}` : "1px solid var(--app-border)",
+                        color: "var(--app-text)",
+                        boxShadow: selected ? `0 0 0 3px ${selected.color}22` : "none",
                       }}
                     >
-                      <span className="flex-shrink-0 rounded-full" style={{
-                        width: 7, height: 7,
-                        backgroundColor: s.color,
-                        opacity: isSelected ? 1 : 0.7,
-                        boxShadow: isSelected ? `0 0 4px ${s.color}88` : "none",
-                      }} />
-                      {lang === "zh" ? s.zh : s.en}
+                      <span className="flex items-center gap-2 min-w-0">
+                        <span className="flex-shrink-0 rounded-full" style={{
+                          width: 9, height: 9,
+                          backgroundColor: selected?.color ?? "var(--app-border)",
+                          boxShadow: selected ? `0 0 4px ${selected.color}88` : "none",
+                        }} />
+                        <span className="flex flex-col items-start min-w-0">
+                          <span className="font-medium truncate" style={{ color: selected ? "var(--app-text)" : "var(--app-text-muted)" }}>
+                            {selected ? (lang === "zh" ? selected.zh : selected.en) : (lang === "zh" ? "选择基酒" : "Pick a base spirit")}
+                          </span>
+                          {selected && (
+                            <span className="text-[10px] truncate" style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+                              {lang === "zh" ? selected.flavorZh : selected.flavorEn}
+                            </span>
+                          )}
+                        </span>
+                      </span>
+                      <svg className="w-4 h-4 flex-shrink-0 transition-transform" style={{ transform: spiritOpen ? "rotate(180deg)" : "rotate(0)", color: "var(--app-text-muted)" }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M19.5 8.25l-7.5 7.5-7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
                     </motion.button>
-                  );
-                })}
-              </div>
+
+                    <AnimatePresence>
+                      {spiritOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute z-20 mt-1.5 w-full rounded-xl overflow-hidden max-h-80 overflow-y-auto"
+                          style={{
+                            backgroundColor: "rgba(255,253,250,0.98)",
+                            backdropFilter: "blur(12px)",
+                            border: "1px solid var(--app-border)",
+                            boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                          }}
+                        >
+                          {BASE_SPIRITS.map((s) => {
+                            const isSelected = baseSpirit === s.key;
+                            return (
+                              <button
+                                key={s.key}
+                                type="button"
+                                onClick={() => { setBaseSpirit(isSelected ? "" : s.key); setSpiritOpen(false); }}
+                                className="w-full flex items-start gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-black/5"
+                                style={{ backgroundColor: isSelected ? `${s.color}18` : "transparent" }}
+                              >
+                                <span className="flex-shrink-0 rounded-full mt-1.5" style={{
+                                  width: 9, height: 9,
+                                  backgroundColor: s.color,
+                                  boxShadow: isSelected ? `0 0 4px ${s.color}88` : "none",
+                                }} />
+                                <span className="flex flex-col min-w-0">
+                                  <span className="text-sm font-medium" style={{ color: "var(--app-text)" }}>
+                                    {lang === "zh" ? s.zh : s.en}
+                                  </span>
+                                  <span className="text-[11px] leading-tight" style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+                                    {lang === "zh" ? s.flavorZh : s.flavorEn}
+                                  </span>
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })()}
             </div>
+
 
             {/* Custom preference */}
             <div>
