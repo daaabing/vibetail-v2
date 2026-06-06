@@ -22,20 +22,21 @@ export default function MoodInputScreen() {
   const [mood, setMood] = useState("");
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
   const [baseSpirit, setBaseSpirit] = useState<string>("");
+  const [spiritOpen, setSpiritOpen] = useState(false);
   const [customPreference, setCustomPreference] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const BASE_SPIRITS: { key: string; en: string; zh: string; color: string }[] = [
-    { key: "surprise", en: "Surprise me", zh: "随心调", color: "#9ca3af" },
-    { key: "gin", en: "Gin", zh: "金酒", color: "#7fb069" },
-    { key: "vodka", en: "Vodka", zh: "伏特加", color: "#a3b8c4" },
-    { key: "rum", en: "Rum", zh: "朗姆", color: "#c08457" },
-    { key: "tequila", en: "Tequila", zh: "龙舌兰", color: "#e0b96b" },
-    { key: "whiskey", en: "Whiskey", zh: "威士忌", color: "#a0522d" },
-    { key: "mezcal", en: "Mezcal", zh: "梅斯卡尔", color: "#8b6f4e" },
-    { key: "brandy", en: "Brandy", zh: "白兰地", color: "#b8602e" },
-    { key: "sake", en: "Sake", zh: "清酒", color: "#e8dcc4" },
-    { key: "nonalcoholic", en: "No alcohol", zh: "无酒精", color: "#d4a5c4" },
+  const BASE_SPIRITS: { key: string; en: string; zh: string; color: string; flavorEn: string; flavorZh: string }[] = [
+    { key: "surprise", en: "Surprise me", zh: "随心调", color: "#9ca3af", flavorEn: "Let the bartender pick", flavorZh: "由调酒师替你决定" },
+    { key: "gin", en: "Gin", zh: "金酒", color: "#7fb069", flavorEn: "Crisp, herbal, juniper-forward", flavorZh: "清冽草本，杜松子香气" },
+    { key: "vodka", en: "Vodka", zh: "伏特加", color: "#a3b8c4", flavorEn: "Neutral, clean, lets mixers shine", flavorZh: "中性纯净，凸显其他风味" },
+    { key: "rum", en: "Rum", zh: "朗姆", color: "#c08457", flavorEn: "Sweet, tropical, molasses warmth", flavorZh: "甜润热带，蔗糖暖意" },
+    { key: "tequila", en: "Tequila", zh: "龙舌兰", color: "#e0b96b", flavorEn: "Earthy agave, peppery, bright", flavorZh: "龙舌兰土香，胡椒明亮" },
+    { key: "whiskey", en: "Whiskey", zh: "威士忌", color: "#a0522d", flavorEn: "Oaky, smoky, caramel depth", flavorZh: "橡木烟熏，焦糖醇厚" },
+    { key: "mezcal", en: "Mezcal", zh: "梅斯卡尔", color: "#8b6f4e", flavorEn: "Smoky, mineral, wild agave", flavorZh: "浓郁烟熏，矿物野性" },
+    { key: "brandy", en: "Brandy", zh: "白兰地", color: "#b8602e", flavorEn: "Fruity, velvety, oak-aged", flavorZh: "果香丝滑，橡木陈年" },
+    { key: "sake", en: "Sake", zh: "清酒", color: "#e8dcc4", flavorEn: "Delicate, rice-sweet, umami", flavorZh: "清雅米香，鲜甜柔和" },
+    { key: "nonalcoholic", en: "No alcohol", zh: "无酒精", color: "#d4a5c4", flavorEn: "Fresh, fruity mocktail", flavorZh: "清爽果香无酒精" },
   ];
   // Step 3 — photo ingredients
   const [photoIngredients, setPhotoIngredients] = useState<string[] | null>(null);
