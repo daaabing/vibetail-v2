@@ -21,8 +21,22 @@ export default function MoodInputScreen() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [mood, setMood] = useState("");
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
+  const [baseSpirit, setBaseSpirit] = useState<string>("");
   const [customPreference, setCustomPreference] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const BASE_SPIRITS: { key: string; en: string; zh: string; color: string }[] = [
+    { key: "surprise", en: "Surprise me", zh: "随心调", color: "#9ca3af" },
+    { key: "gin", en: "Gin", zh: "金酒", color: "#7fb069" },
+    { key: "vodka", en: "Vodka", zh: "伏特加", color: "#a3b8c4" },
+    { key: "rum", en: "Rum", zh: "朗姆", color: "#c08457" },
+    { key: "tequila", en: "Tequila", zh: "龙舌兰", color: "#e0b96b" },
+    { key: "whiskey", en: "Whiskey", zh: "威士忌", color: "#a0522d" },
+    { key: "mezcal", en: "Mezcal", zh: "梅斯卡尔", color: "#8b6f4e" },
+    { key: "brandy", en: "Brandy", zh: "白兰地", color: "#b8602e" },
+    { key: "sake", en: "Sake", zh: "清酒", color: "#e8dcc4" },
+    { key: "nonalcoholic", en: "No alcohol", zh: "无酒精", color: "#d4a5c4" },
+  ];
   // Step 3 — photo ingredients
   const [photoIngredients, setPhotoIngredients] = useState<string[] | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
