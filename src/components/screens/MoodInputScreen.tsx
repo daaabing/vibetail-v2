@@ -77,11 +77,22 @@ export default function MoodInputScreen() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mood, selectedFlavors, customPreference, photoIngredients, lang }),
       });
-      const generated = res.ok ? await res.json() : null;
+      if (!res.ok) {
+        if (res.status === 402) {
+          toast.error(lang === "zh" ? "AI 额度不足，请稍后再试或为工作区充值。" : "AI credits exhausted. Please top up your workspace.");
+        } else if (res.status === 429) {
+          toast.error(lang === "zh" ? "请求太频繁，请稍等片刻再试。" : "Too many requests. Please slow down and retry.");
+        } else {
+          toast.error(lang === "zh" ? "AI 调制失败，请重试。" : "AI couldn't mix this. Please retry.");
+        }
+        setIsGenerating(false);
+        return;
+      }
+      const generated = await res.json();
       const data = createCocktail({ mood, selectedFlavors, customPreference, photoIngredients, generated });
       navigate({ to: "/result/$id", params: { id: String(data.id) } });
     } catch {
-      toast.error("Couldn't read your vibe. Try again!");
+      toast.error(lang === "zh" ? "无法读取你的 vibe，请重试！" : "Couldn't read your vibe. Try again!");
       setIsGenerating(false);
     }
   };
