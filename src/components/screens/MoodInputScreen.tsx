@@ -334,6 +334,43 @@ export default function MoodInputScreen() {
               </div>
             </div>
 
+            {/* Base spirit */}
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
+                style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+                {lang === "zh" ? "基酒（可选）" : "Base spirit (optional)"}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {BASE_SPIRITS.map((s) => {
+                  const isSelected = baseSpirit === s.key;
+                  return (
+                    <motion.button
+                      key={s.key}
+                      whileTap={{ scale: 0.88 }}
+                      onClick={() => setBaseSpirit(isSelected ? "" : s.key)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                      style={{
+                        border: isSelected ? `1.5px solid ${s.color}` : "1px solid var(--app-border)",
+                        backgroundColor: isSelected ? `${s.color}22` : "rgba(255,255,255,0.6)",
+                        backdropFilter: "blur(6px)",
+                        color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
+                        fontWeight: isSelected ? 600 : 400,
+                        boxShadow: isSelected ? `0 0 0 3px ${s.color}22` : "none",
+                      }}
+                    >
+                      <span className="flex-shrink-0 rounded-full" style={{
+                        width: 7, height: 7,
+                        backgroundColor: s.color,
+                        opacity: isSelected ? 1 : 0.7,
+                        boxShadow: isSelected ? `0 0 4px ${s.color}88` : "none",
+                      }} />
+                      {lang === "zh" ? s.zh : s.en}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Custom preference */}
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
