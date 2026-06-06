@@ -47,9 +47,10 @@ function InkButton({
   );
 }
 
-export default function LandingScreen() {
+export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => void; hideGallery?: boolean } = {}) {
   const navigate = useNavigate();
   const { lang, setLang, t } = useLang();
+  const handleMix = onMix ?? (() => navigate({ to: "/mood-input" }));
 
   return (
     <div className="min-h-svh flex flex-col p-5 pb-24 md:pb-5 w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative">
