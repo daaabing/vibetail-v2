@@ -6,6 +6,12 @@ interface GenInput {
   customPreference?: string;
   photoIngredients?: string[] | null;
   lang?: "zh" | "en";
+  tashiReference?: {
+    name: string;
+    vibe: string;
+    ingredients: string[];
+    recipe: string;
+  } | null;
 }
 
 interface GeneratedCocktail {
