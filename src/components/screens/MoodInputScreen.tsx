@@ -132,6 +132,7 @@ export default function MoodInputScreen() {
         photoIngredients,
         generated,
         imageUrl: tashiPick?.imageUrl ?? null,
+        lang,
       });
       navigate({ to: "/result/$id", params: { id: String(data.id) } });
     } catch {
