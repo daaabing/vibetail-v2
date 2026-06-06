@@ -69,6 +69,10 @@ export default function GalleryScreen() {
       </div>
 
       <h1 className="sr-only">Vibe Bar — Your Cocktail Gallery</h1>
+
+      {/* ── 中英文 tab ── */}
+      <LangTabs />
+
       {/* ── 卡片列表 ── */}
       <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
         {loading ? (
@@ -80,19 +84,19 @@ export default function GalleryScreen() {
               <div className="h-3 w-2/3 rounded shimmer" />
             </div>
           ))
-        ) : cocktails.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-3">
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-3 md:col-span-2 lg:col-span-3">
             <svg className="w-12 h-12 opacity-20" fill="none" stroke="var(--app-text-muted)" strokeWidth="1.5" viewBox="0 0 24 24">
               <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <p className="text-sm" style={{ color: "var(--app-text-muted)" }}>还没有任何 vibe，去混第一杯吧。</p>
+            <p className="text-sm" style={{ color: "var(--app-text-muted)" }}>{t("gallery.empty")}</p>
             <motion.button
               whileTap={{ scale: 0.94 }}
               onClick={() => navigate({ to: "/mood-input" })}
               className="text-xs font-semibold underline"
               style={{ color: "var(--app-primary)" }}
             >
-              Check My Vibe
+              {t("gallery.emptyBtn")}
             </motion.button>
           </div>
         ) : (
