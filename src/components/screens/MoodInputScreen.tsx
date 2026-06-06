@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createCocktail } from "@/lib/cocktails-store";
 import { toast } from "sonner";
 import { FLAVOR_CHIPS, MOOD_PLACEHOLDERS_EN, MOOD_PLACEHOLDERS_ZH, CUSTOM_FLAVOR_PLACEHOLDERS_EN, CUSTOM_FLAVOR_PLACEHOLDERS_ZH, VIBE_CHIPS } from "@/lib/moodtail-data";
+import { pickTashiRecipe } from "@/lib/tashi-recipes";
 import { useLang } from "@/lib/i18n";
 
 const inkButtonStyle = {
@@ -92,10 +93,25 @@ export default function MoodInputScreen() {
         ? (lang === "zh" ? `基酒：${spiritObj.zh}。` : `Base spirit: ${spiritObj.en}. `)
         : "";
       const mergedPreference = (spiritNote + (customPreference || "")).trim();
+
+      // When the user picks Tashi, pick one of the brand's signature recipes
+      // as a creative reference and attach its brand illustration to the card.
+      const tashiPick = baseSpirit === "tashi"
+        ? pickTashiRecipe({ selectedFlavors, mood })
+        : null;
+      const tashiReference = tashiPick
+        ? {
+            name: tashiPick.name,
+            vibe: tashiPick.vibe,
+            ingredients: tashiPick.ingredients,
+            recipe: tashiPick.recipe,
+          }
+        : null;
+
       const res = await fetch("/api/generate-cocktail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mood, selectedFlavors, customPreference: mergedPreference, photoIngredients, lang }),
+        body: JSON.stringify({ mood, selectedFlavors, customPreference: mergedPreference, photoIngredients, lang, tashiReference }),
       });
       if (!res.ok) {
         if (res.status === 402) {
@@ -109,7 +125,14 @@ export default function MoodInputScreen() {
         return;
       }
       const generated = await res.json();
-      const data = createCocktail({ mood, selectedFlavors, customPreference, photoIngredients, generated });
+      const data = createCocktail({
+        mood,
+        selectedFlavors,
+        customPreference,
+        photoIngredients,
+        generated,
+        imageUrl: tashiPick?.imageUrl ?? null,
+      });
       navigate({ to: "/result/$id", params: { id: String(data.id) } });
     } catch {
       toast.error(lang === "zh" ? "无法读取你的 vibe，请重试！" : "Couldn't read your vibe. Try again!");
