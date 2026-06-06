@@ -79,6 +79,19 @@ function buildUserPrompt(input: GenInput): string {
   const langRule = isZh
     ? `OUTPUT LANGUAGE: Simplified Chinese (简体中文). ALL string fields (cocktailName, tastesLike, flavorProfile, ingredients, recipe, roast) MUST be written in Simplified Chinese. Ingredient measurements use 盎司/毫升/滴/吧勺. The 'category' enum stays in English. Keep witty Chinese tone — don't translate stiffly.`
     : `OUTPUT LANGUAGE: English.`;
+  const tashi = input.tashiReference;
+  const tashiBlock = tashi
+    ? [
+        ``,
+        `BASE SPIRIT LOCK: Tashi Baijiu (Tibetan highland barley liquor, 43% ABV — mellow, sweet, plateau grain). It MUST appear in the ingredients and recipe.`,
+        `TASHI REFERENCE RECIPE — use this as inspiration. You MAY adapt measurements, swap one or two ingredients, or modernize the technique to better match the user's vibe, but keep it recognizably in the same family.`,
+        `Reference name (DO NOT copy — invent a fresh witty name tied to the user's vibe): ${tashi.name}`,
+        `Reference vibe (for tone reference only — write your OWN tastesLike, roast and flavor profile from scratch): ${tashi.vibe}`,
+        `Reference ingredients:\n${tashi.ingredients.map((i) => `  - ${i}`).join("\n")}`,
+        `Reference steps:\n${tashi.recipe.split("\n").filter(Boolean).map((s, i) => `  ${i + 1}. ${s}`).join("\n")}`,
+        ``,
+      ].join("\n")
+    : "";
   return [
     langRule,
     ``,
@@ -86,7 +99,7 @@ function buildUserPrompt(input: GenInput): string {
     `Flavor tags they picked: ${flavors}`,
     `Custom preference: ${pref}`,
     photo,
-    ``,
+    tashiBlock,
     `Design ONE creative-but-makeable cocktail that captures this vibe.`,
     `Hard rules:`,
     `- Ingredients must be real bar ingredients with real measurements (oz, ml, dashes, barspoons).`,
