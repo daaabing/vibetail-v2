@@ -100,6 +100,7 @@ export function createCocktail(input: {
   photoIngredients?: string[] | null;
   generated?: GeneratedCocktailFields | null;
   imageUrl?: string | null;
+  lang?: "zh" | "en";
 }): Cocktail {
   const list = read();
   const seed = SEED_COCKTAILS[hash(input.mood + input.selectedFlavors.join(",")) % SEED_COCKTAILS.length];
@@ -119,6 +120,7 @@ export function createCocktail(input: {
     roast: g?.roast || seed.roast,
     category: g?.category || seed.category,
     imageUrl: input.imageUrl ?? null,
+    lang: input.lang ?? "en",
     createdAt: new Date().toISOString(),
   };
   list.push(next);
