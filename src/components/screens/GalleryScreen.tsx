@@ -66,7 +66,7 @@ export default function GalleryScreen() {
     <div className="w-full md:max-w-4xl lg:max-w-5xl md:mx-auto px-5 pb-28 md:pb-8 relative">
 
       {/* ── 顶部返回首页 ── */}
-      <div className="flex items-center justify-between pt-3 pb-4">
+      <div className="relative flex items-center justify-between pt-3 pb-4">
 
         <motion.button
           whileTap={{ scale: 0.88 }}
@@ -80,7 +80,10 @@ export default function GalleryScreen() {
           <span className="text-[10px] tracking-wider" style={{ fontFamily: "var(--font-body)" }}>{t("gallery.home")}</span>
         </motion.button>
 
-        <span className="text-[10px] tracking-wider" style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+        <span
+          className="absolute left-1/2 -translate-x-1/2 text-[10px] tracking-wider pointer-events-none"
+          style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}
+        >
           {t("nav.vibeBar")}
         </span>
 
@@ -101,6 +104,7 @@ export default function GalleryScreen() {
           </motion.button>
         </div>
       </div>
+
 
       <h1 className="sr-only">Vibe Bar — Your Cocktail Gallery</h1>
 
