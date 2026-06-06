@@ -131,10 +131,11 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
 }
 
 /* ── Back face: recipe + roast + details — light style ── */
-function CardBack({ cocktail, tapHint, labels }: {
+function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
   cocktail: Cocktail;
   tapHint: string;
   labels: { originalVibe: string; tastingNotes: string; ingredients: string; howToMake: string; };
+  hideRecipe?: boolean;
 }) {
   const recipeLines = cocktail.recipe.split("\n").filter(Boolean);
 
@@ -211,33 +212,34 @@ function CardBack({ cocktail, tapHint, labels }: {
         </div>
 
         {/* Recipe — numbered steps */}
-        <div className="mb-4 p-3 rounded-xl"
-          style={{ background: "rgba(224,83,60,0.06)", border: "1px solid rgba(224,83,60,0.18)" }}>
-          <span className="text-[8px] tracking-widest uppercase block mb-3"
-            style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
-            {labels.howToMake}
-          </span>
-          <ol className="space-y-2.5">
-            {recipeLines.map((line: string, i: number) => (
-              <li key={i} className="flex items-start gap-2.5">
-                {/* Step number badge */}
-                <span
-                  className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold"
-                  style={{
-                    backgroundColor: "var(--app-primary)",
-                    color: "white",
-                    marginTop: 1,
-                  }}
-                >
-                  {i + 1}
-                </span>
-                <span className="text-[11px] leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
-                  {line}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </div>
+        {!hideRecipe && (
+          <div className="mb-4 p-3 rounded-xl"
+            style={{ background: "rgba(224,83,60,0.06)", border: "1px solid rgba(224,83,60,0.18)" }}>
+            <span className="text-[8px] tracking-widest uppercase block mb-3"
+              style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
+              {labels.howToMake}
+            </span>
+            <ol className="space-y-2.5">
+              {recipeLines.map((line: string, i: number) => (
+                <li key={i} className="flex items-start gap-2.5">
+                  <span
+                    className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold"
+                    style={{
+                      backgroundColor: "var(--app-primary)",
+                      color: "white",
+                      marginTop: 1,
+                    }}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="text-[11px] leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
+                    {line}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
 
       </div>
 
@@ -258,8 +260,10 @@ function CardBack({ cocktail, tapHint, labels }: {
 /* ── Main screen ── */
 export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const navigate = useNavigate();
-  const search = useSearch({ from: "/result/$id" }) as { from?: string; d?: string };
+  const search = useSearch({ from: "/result/$id" }) as { from?: string; d?: string; restaurant?: string };
   const fromGallery = search.from === "gallery";
+  const restaurantId = search.restaurant;
+  const isRestaurant = !!restaurantId;
   const { t } = useLang();
   const [cocktail, setCocktail] = useState<Cocktail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -525,17 +529,19 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           </div>
 
           {/* Recipe */}
-          <div>
-            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-primary)", marginBottom: 12 }}>{cardLabels.howToMake}</div>
-            <ol style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              {cocktail.recipe.split("\n").filter(Boolean).map((line, i) => (
-                <li key={i} style={{ position: "relative", paddingLeft: 34, minHeight: 24, marginBottom: 12, fontSize: 13, lineHeight: 1.55, color: "var(--app-text-secondary)", wordBreak: "break-word" }}>
-                  <span style={{ position: "absolute", left: 0, top: 0, width: 22, height: 22, borderRadius: "50%", background: "var(--app-primary)", color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
-                  {line}
-                </li>
-              ))}
-            </ol>
-          </div>
+          {!isRestaurant && (
+            <div>
+              <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-primary)", marginBottom: 12 }}>{cardLabels.howToMake}</div>
+              <ol style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                {cocktail.recipe.split("\n").filter(Boolean).map((line, i) => (
+                  <li key={i} style={{ position: "relative", paddingLeft: 34, minHeight: 24, marginBottom: 12, fontSize: 13, lineHeight: 1.55, color: "var(--app-text-secondary)", wordBreak: "break-word" }}>
+                    <span style={{ position: "absolute", left: 0, top: 0, width: 22, height: 22, borderRadius: "50%", background: "var(--app-primary)", color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                    {line}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
         </div>
       </div>
 
@@ -544,7 +550,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
         <motion.button
           whileTap={{ scale: 0.9 }}
-          onClick={() => fromGallery ? navigate({ to: "/gallery" }) : navigate({ to: "/" })}
+          onClick={() => isRestaurant ? navigate({ to: "/restaurant/$id", params: { id: restaurantId! } }) : fromGallery ? navigate({ to: "/gallery" }) : navigate({ to: "/" })}
           className="flex items-center gap-1.5 text-xs"
           style={{ color: "var(--app-text-secondary)" }}
         >
@@ -579,7 +585,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
           >
             <CardFront cocktail={cocktail} imageData={imageData} imageUrl={cocktail.imageUrl ?? null} imageLoading={imageLoading} tapHint={tapHint} distillingText={distillingText} />
-            <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} />
+            <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} hideRecipe={isRestaurant} />
 
           </motion.div>
         </div>
@@ -639,7 +645,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
         <motion.button
           whileTap={{ scale: 0.96 }}
-          onClick={() => navigate({ to: "/mood-input" })}
+          onClick={() => isRestaurant ? navigate({ to: "/restaurant/$id", params: { id: restaurantId! } }) : navigate({ to: "/mood-input" })}
           className="w-full text-xs font-semibold uppercase tracking-widest py-2 text-center block hover:underline"
           style={{ color: "var(--app-primary)" }}
         >

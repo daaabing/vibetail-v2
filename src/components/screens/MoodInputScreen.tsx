@@ -16,9 +16,10 @@ const inkButtonStyle = {
   boxShadow: "2px 3px 12px rgba(194,65,12,0.25), inset 0 1px 0 rgba(255,255,255,0.15)",
 };
 
-export default function MoodInputScreen() {
+export default function MoodInputScreen({ restaurantId }: { restaurantId?: string } = {}) {
   const navigate = useNavigate();
   const { t, lang } = useLang();
+  const isRestaurant = !!restaurantId;
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [mood, setMood] = useState("");
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
@@ -134,7 +135,7 @@ export default function MoodInputScreen() {
         imageUrl: tashiPick?.imageUrl ?? null,
         lang,
       });
-      navigate({ to: "/result/$id", params: { id: String(data.id) } });
+      navigate({ to: "/result/$id", params: { id: String(data.id) }, search: isRestaurant ? { restaurant: restaurantId } : {} });
     } catch {
       toast.error(lang === "zh" ? "无法读取你的 vibe，请重试！" : "Couldn't read your vibe. Try again!");
       setIsGenerating(false);
@@ -164,7 +165,7 @@ export default function MoodInputScreen() {
         </motion.button>
 
         <div className="flex items-center gap-2">
-          {[1, 2, 3].map((s) => (
+          {(isRestaurant ? [1, 2] : [1, 2, 3]).map((s) => (
             <div key={s} className="transition-all duration-300" style={{
               width: step === s ? 20 : 6, height: 6, borderRadius: 3,
               backgroundColor: step === s ? "var(--app-primary)" : "var(--app-border)",
@@ -480,9 +481,9 @@ export default function MoodInputScreen() {
             {/* CTA — 内容末尾，随页面滚动 */}
             <motion.button
               whileTap={{ scale: 0.96 }}
-              onClick={goToStep3}
-              disabled={false}
-              className="w-full relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden"
+              onClick={isRestaurant ? handleMix : goToStep3}
+              disabled={isRestaurant && isGenerating}
+              className="w-full relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden disabled:opacity-50"
               style={inkButtonStyle}
             >
               <span className="absolute inset-0 pointer-events-none" style={{
@@ -491,7 +492,9 @@ export default function MoodInputScreen() {
               }} />
               <span className="absolute top-0 left-4 right-4 h-px pointer-events-none" style={{ background: "rgba(255,255,255,0.3)" }} />
               <span className="relative z-10 flex items-center gap-2">
-                {lang === "zh" ? "下一步 — 上传食材" : "Next — Add Ingredients"}
+                {isRestaurant
+                  ? (isGenerating ? t("flavor.loading") : (lang === "zh" ? "调制我的酒" : "Mix My Drink"))
+                  : (lang === "zh" ? "下一步 — 上传食材" : "Next — Add Ingredients")}
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
