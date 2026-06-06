@@ -576,7 +576,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             animate={{ rotateY: flipped ? 180 : 0 }}
             transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
           >
-            <CardFront cocktail={cocktail} imageData={imageData} imageLoading={imageLoading} tapHint={tapHint} distillingText={distillingText} />
+            <CardFront cocktail={cocktail} imageData={imageData} imageUrl={cocktail.imageUrl ?? null} imageLoading={imageLoading} tapHint={tapHint} distillingText={distillingText} />
             <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} />
 
           </motion.div>
