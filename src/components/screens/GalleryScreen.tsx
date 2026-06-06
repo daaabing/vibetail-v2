@@ -84,19 +84,22 @@ export default function GalleryScreen() {
           {t("nav.vibeBar")}
         </span>
 
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => navigate({ to: "/mood-input" })}
-          className="text-xs font-semibold tracking-wider px-3 py-1.5 relative overflow-hidden"
-          style={{
-            borderRadius: "4px",
-            background: "linear-gradient(135deg, #C2410C 0%, #E0533C 100%)",
-            color: "white",
-            boxShadow: "1px 2px 8px rgba(194,65,12,0.2)",
-          }}
-        >
-          {t("gallery.addVibe")}
-        </motion.button>
+        <div className="flex items-center gap-2">
+          <LangToggle />
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => navigate({ to: "/mood-input" })}
+            className="text-xs font-semibold tracking-wider px-3 py-1.5 relative overflow-hidden"
+            style={{
+              borderRadius: "4px",
+              background: "linear-gradient(135deg, #C2410C 0%, #E0533C 100%)",
+              color: "white",
+              boxShadow: "1px 2px 8px rgba(194,65,12,0.2)",
+            }}
+          >
+            {t("gallery.addVibe")}
+          </motion.button>
+        </div>
       </div>
 
       <h1 className="sr-only">Vibe Bar — Your Cocktail Gallery</h1>
