@@ -131,10 +131,11 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
 }
 
 /* ── Back face: recipe + roast + details — light style ── */
-function CardBack({ cocktail, tapHint, labels }: {
+function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
   cocktail: Cocktail;
   tapHint: string;
   labels: { originalVibe: string; tastingNotes: string; ingredients: string; howToMake: string; };
+  hideRecipe?: boolean;
 }) {
   const recipeLines = cocktail.recipe.split("\n").filter(Boolean);
 
@@ -211,33 +212,34 @@ function CardBack({ cocktail, tapHint, labels }: {
         </div>
 
         {/* Recipe — numbered steps */}
-        <div className="mb-4 p-3 rounded-xl"
-          style={{ background: "rgba(224,83,60,0.06)", border: "1px solid rgba(224,83,60,0.18)" }}>
-          <span className="text-[8px] tracking-widest uppercase block mb-3"
-            style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
-            {labels.howToMake}
-          </span>
-          <ol className="space-y-2.5">
-            {recipeLines.map((line: string, i: number) => (
-              <li key={i} className="flex items-start gap-2.5">
-                {/* Step number badge */}
-                <span
-                  className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold"
-                  style={{
-                    backgroundColor: "var(--app-primary)",
-                    color: "white",
-                    marginTop: 1,
-                  }}
-                >
-                  {i + 1}
-                </span>
-                <span className="text-[11px] leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
-                  {line}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </div>
+        {!hideRecipe && (
+          <div className="mb-4 p-3 rounded-xl"
+            style={{ background: "rgba(224,83,60,0.06)", border: "1px solid rgba(224,83,60,0.18)" }}>
+            <span className="text-[8px] tracking-widest uppercase block mb-3"
+              style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
+              {labels.howToMake}
+            </span>
+            <ol className="space-y-2.5">
+              {recipeLines.map((line: string, i: number) => (
+                <li key={i} className="flex items-start gap-2.5">
+                  <span
+                    className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold"
+                    style={{
+                      backgroundColor: "var(--app-primary)",
+                      color: "white",
+                      marginTop: 1,
+                    }}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="text-[11px] leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
+                    {line}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
 
       </div>
 
