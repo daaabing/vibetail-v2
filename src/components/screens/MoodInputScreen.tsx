@@ -87,7 +87,7 @@ export default function MoodInputScreen() {
     setIsGenerating(true);
     try {
       const spiritObj = BASE_SPIRITS.find((s) => s.key === baseSpirit);
-      const spiritNote = spiritObj && spiritObj.key !== "surprise"
+      const spiritNote = spiritObj
         ? (lang === "zh" ? `基酒：${spiritObj.zh}。` : `Base spirit: ${spiritObj.en}. `)
         : "";
       const mergedPreference = (spiritNote + (customPreference || "")).trim();
