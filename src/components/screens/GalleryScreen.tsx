@@ -8,9 +8,46 @@ import { useLang } from "@/lib/i18n";
 
 const PAGE_SIZE = 10;
 
+function LangTabs() {
+  const { lang, setLang } = useLang();
+  const tabs: { key: "zh" | "en"; label: string }[] = [
+    { key: "zh", label: "中文" },
+    { key: "en", label: "English" },
+  ];
+  return (
+    <div className="flex justify-center mb-4">
+      <div
+        className="inline-flex rounded-full p-1"
+        style={{
+          background: "rgba(255,255,255,0.65)",
+          border: "1px solid var(--app-border)",
+          backdropFilter: "blur(8px)",
+        }}
+      >
+        {tabs.map((tab) => {
+          const active = lang === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setLang(tab.key)}
+              className="px-4 py-1.5 text-[11px] font-semibold tracking-wider rounded-full transition-all"
+              style={{
+                background: active ? "var(--app-primary)" : "transparent",
+                color: active ? "white" : "var(--app-text-muted)",
+              }}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function GalleryScreen() {
   const navigate = useNavigate();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [cocktails, setCocktails] = useState<Cocktail[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -20,8 +57,17 @@ export default function GalleryScreen() {
     setLoading(false);
   }, []);
 
-  const totalPages = Math.max(1, Math.ceil(cocktails.length / PAGE_SIZE));
-  const paged = cocktails.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // Filter by current language. Legacy entries without an explicit `lang`
+  // field are bucketed by sniffing CJK characters in the cocktail name.
+  const cjk = /[\u4e00-\u9fff]/;
+  const filtered = cocktails.filter((c) => {
+    const cLang = c.lang ?? (cjk.test(c.cocktailName) ? "zh" : "en");
+    return cLang === lang;
+  });
+  useEffect(() => { setPage(1); }, [lang]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="w-full md:max-w-4xl lg:max-w-5xl md:mx-auto px-5 pb-28 md:pb-8 relative">
@@ -60,6 +106,10 @@ export default function GalleryScreen() {
       </div>
 
       <h1 className="sr-only">Vibe Bar — Your Cocktail Gallery</h1>
+
+      {/* ── 中英文 tab ── */}
+      <LangTabs />
+
       {/* ── 卡片列表 ── */}
       <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
         {loading ? (
@@ -71,19 +121,19 @@ export default function GalleryScreen() {
               <div className="h-3 w-2/3 rounded shimmer" />
             </div>
           ))
-        ) : cocktails.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-3">
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-3 md:col-span-2 lg:col-span-3">
             <svg className="w-12 h-12 opacity-20" fill="none" stroke="var(--app-text-muted)" strokeWidth="1.5" viewBox="0 0 24 24">
               <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <p className="text-sm" style={{ color: "var(--app-text-muted)" }}>还没有任何 vibe，去混第一杯吧。</p>
+            <p className="text-sm" style={{ color: "var(--app-text-muted)" }}>{t("gallery.empty")}</p>
             <motion.button
               whileTap={{ scale: 0.94 }}
               onClick={() => navigate({ to: "/mood-input" })}
               className="text-xs font-semibold underline"
               style={{ color: "var(--app-primary)" }}
             >
-              Check My Vibe
+              {t("gallery.emptyBtn")}
             </motion.button>
           </div>
         ) : (

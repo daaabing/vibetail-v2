@@ -32,6 +32,9 @@ export interface Cocktail {
   /** Pre-supplied illustration URL (e.g. Tashi brand image). When set, the
    * result card uses this directly and skips AI image generation. */
   imageUrl?: string | null;
+  /** Language the cocktail was generated in. Used to filter the Vibe Bar
+   * so zh and en gallery views stay separate. */
+  lang?: "zh" | "en";
   createdAt: string;
 }
 
@@ -47,6 +50,7 @@ function read(): Cocktail[] {
   const seeded: Cocktail[] = SEED_COCKTAILS.map((c, i) => ({
     ...c,
     id: 1000 + i,
+    lang: "en" as const,
     createdAt: new Date(Date.now() - i * 1000 * 60 * 60 * 6).toISOString(),
   }));
   localStorage.setItem(KEY, JSON.stringify(seeded));
@@ -96,6 +100,7 @@ export function createCocktail(input: {
   photoIngredients?: string[] | null;
   generated?: GeneratedCocktailFields | null;
   imageUrl?: string | null;
+  lang?: "zh" | "en";
 }): Cocktail {
   const list = read();
   const seed = SEED_COCKTAILS[hash(input.mood + input.selectedFlavors.join(",")) % SEED_COCKTAILS.length];
@@ -115,6 +120,7 @@ export function createCocktail(input: {
     roast: g?.roast || seed.roast,
     category: g?.category || seed.category,
     imageUrl: input.imageUrl ?? null,
+    lang: input.lang ?? "en",
     createdAt: new Date().toISOString(),
   };
   list.push(next);
