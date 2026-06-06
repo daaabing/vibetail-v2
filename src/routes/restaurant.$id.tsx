@@ -44,7 +44,7 @@ function RestaurantRoute() {
   const { id } = Route.useParams();
   const [started, setStarted] = useState(false);
   if (!started) {
-    return <LandingScreen hideGallery onMix={() => setStarted(true)} />;
+    return <LandingScreen onMix={() => setStarted(true)} />;
   }
   return <MoodInputScreen restaurantId={id} />;
 }
