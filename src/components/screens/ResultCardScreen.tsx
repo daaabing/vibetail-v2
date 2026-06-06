@@ -529,17 +529,19 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           </div>
 
           {/* Recipe */}
-          <div>
-            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-primary)", marginBottom: 12 }}>{cardLabels.howToMake}</div>
-            <ol style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              {cocktail.recipe.split("\n").filter(Boolean).map((line, i) => (
-                <li key={i} style={{ position: "relative", paddingLeft: 34, minHeight: 24, marginBottom: 12, fontSize: 13, lineHeight: 1.55, color: "var(--app-text-secondary)", wordBreak: "break-word" }}>
-                  <span style={{ position: "absolute", left: 0, top: 0, width: 22, height: 22, borderRadius: "50%", background: "var(--app-primary)", color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
-                  {line}
-                </li>
-              ))}
-            </ol>
-          </div>
+          {!isRestaurant && (
+            <div>
+              <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-primary)", marginBottom: 12 }}>{cardLabels.howToMake}</div>
+              <ol style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                {cocktail.recipe.split("\n").filter(Boolean).map((line, i) => (
+                  <li key={i} style={{ position: "relative", paddingLeft: 34, minHeight: 24, marginBottom: 12, fontSize: 13, lineHeight: 1.55, color: "var(--app-text-secondary)", wordBreak: "break-word" }}>
+                    <span style={{ position: "absolute", left: 0, top: 0, width: 22, height: 22, borderRadius: "50%", background: "var(--app-primary)", color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                    {line}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
         </div>
       </div>
 
@@ -548,7 +550,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
         <motion.button
           whileTap={{ scale: 0.9 }}
-          onClick={() => fromGallery ? navigate({ to: "/gallery" }) : navigate({ to: "/" })}
+          onClick={() => isRestaurant ? navigate({ to: "/restaurant/$id", params: { id: restaurantId! } }) : fromGallery ? navigate({ to: "/gallery" }) : navigate({ to: "/" })}
           className="flex items-center gap-1.5 text-xs"
           style={{ color: "var(--app-text-secondary)" }}
         >
@@ -583,7 +585,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
           >
             <CardFront cocktail={cocktail} imageData={imageData} imageUrl={cocktail.imageUrl ?? null} imageLoading={imageLoading} tapHint={tapHint} distillingText={distillingText} />
-            <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} />
+            <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} hideRecipe={isRestaurant} />
 
           </motion.div>
         </div>
@@ -643,7 +645,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
         <motion.button
           whileTap={{ scale: 0.96 }}
-          onClick={() => navigate({ to: "/mood-input" })}
+          onClick={() => isRestaurant ? navigate({ to: "/restaurant/$id", params: { id: restaurantId! } }) : navigate({ to: "/mood-input" })}
           className="w-full text-xs font-semibold uppercase tracking-widest py-2 text-center block hover:underline"
           style={{ color: "var(--app-primary)" }}
         >
