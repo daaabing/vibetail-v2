@@ -18,9 +18,10 @@ function CardSkeleton() {
 }
 
 /* ── Front face: cocktail name + AI illustration ── */
-function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText }: {
+function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, distillingText }: {
   cocktail: Cocktail;
   imageData: string | null;
+  imageUrl: string | null;
   imageLoading: boolean;
   tapHint: string;
   distillingText: string;
@@ -40,7 +41,13 @@ function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText 
       {/* AI illustration — fixed height, object-contain so full image is visible */}
       <div className="mx-4 mt-4 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center"
         style={{ height: 260, background: "rgba(250,246,240,0.6)" }}>
-        {imageLoading ? (
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={cocktail.cocktailName}
+            className="w-full h-full object-contain"
+          />
+        ) : imageLoading ? (
           <div className="flex flex-col items-center justify-center gap-3 w-full h-full">
             <motion.div
               animate={{ rotate: 360 }}
@@ -68,6 +75,7 @@ function CardFront({ cocktail, imageData, imageLoading, tapHint, distillingText 
           </div>
         )}
       </div>
+
 
       {/* Cocktail name + vibe diagnosis */}
       <div className="px-5 pt-4 pb-3 flex-shrink-0">
