@@ -67,8 +67,11 @@ export default function GalleryScreen() {
   return (
     <div className="w-full md:max-w-4xl lg:max-w-5xl md:mx-auto px-5 pb-28 md:pb-8 relative">
 
+      {/* ── 语言切换 — 跟首页位置一致 ── */}
+      <LangToggle />
+
       {/* ── 顶部返回首页 ── */}
-      <div className="flex items-center justify-between pt-5 pb-4">
+      <div className="flex items-center justify-between pt-3 pb-4">
         <motion.button
           whileTap={{ scale: 0.88 }}
           onClick={() => navigate({ to: "/" })}
@@ -101,9 +104,6 @@ export default function GalleryScreen() {
       </div>
 
       <h1 className="sr-only">Vibe Bar — Your Cocktail Gallery</h1>
-
-      {/* ── 中英文 tab ── */}
-      <LangTabs />
 
       {/* ── 卡片列表 ── */}
       <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
