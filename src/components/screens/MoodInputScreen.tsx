@@ -366,7 +366,7 @@ export default function MoodInputScreen() {
                         }} />
                         <span className="flex flex-col items-start min-w-0">
                           <span className="font-medium truncate" style={{ color: selected ? "var(--app-text)" : "var(--app-text-muted)" }}>
-                            {selected ? (lang === "zh" ? selected.zh : selected.en) : (lang === "zh" ? "选择基酒" : "Pick a base spirit")}
+                            {selected ? (lang === "zh" ? selected.zh : selected.en) : (lang === "zh" ? "选择基酒（可选）" : "Pick a base spirit (optional)")}
                           </span>
                           {selected && (
                             <span className="text-[10px] truncate" style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
