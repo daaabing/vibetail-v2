@@ -8,6 +8,43 @@ import { useLang } from "@/lib/i18n";
 
 const PAGE_SIZE = 10;
 
+function LangTabs() {
+  const { lang, setLang } = useLang();
+  const tabs: { key: "zh" | "en"; label: string }[] = [
+    { key: "zh", label: "中文" },
+    { key: "en", label: "English" },
+  ];
+  return (
+    <div className="flex justify-center mb-4">
+      <div
+        className="inline-flex rounded-full p-1"
+        style={{
+          background: "rgba(255,255,255,0.65)",
+          border: "1px solid var(--app-border)",
+          backdropFilter: "blur(8px)",
+        }}
+      >
+        {tabs.map((tab) => {
+          const active = lang === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setLang(tab.key)}
+              className="px-4 py-1.5 text-[11px] font-semibold tracking-wider rounded-full transition-all"
+              style={{
+                background: active ? "var(--app-primary)" : "transparent",
+                color: active ? "white" : "var(--app-text-muted)",
+              }}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function GalleryScreen() {
   const navigate = useNavigate();
   const { t, lang } = useLang();
