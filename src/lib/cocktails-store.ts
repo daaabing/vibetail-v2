@@ -50,6 +50,7 @@ function read(): Cocktail[] {
   const seeded: Cocktail[] = SEED_COCKTAILS.map((c, i) => ({
     ...c,
     id: 1000 + i,
+    lang: "en" as const,
     createdAt: new Date(Date.now() - i * 1000 * 60 * 60 * 6).toISOString(),
   }));
   localStorage.setItem(KEY, JSON.stringify(seeded));
