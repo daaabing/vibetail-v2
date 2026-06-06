@@ -16,9 +16,10 @@ const inkButtonStyle = {
   boxShadow: "2px 3px 12px rgba(194,65,12,0.25), inset 0 1px 0 rgba(255,255,255,0.15)",
 };
 
-export default function MoodInputScreen() {
+export default function MoodInputScreen({ restaurantId }: { restaurantId?: string } = {}) {
   const navigate = useNavigate();
   const { t, lang } = useLang();
+  const isRestaurant = !!restaurantId;
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [mood, setMood] = useState("");
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
