@@ -8,38 +8,33 @@ import { useLang } from "@/lib/i18n";
 
 const PAGE_SIZE = 10;
 
-function LangTabs() {
+function LangToggle() {
   const { lang, setLang } = useLang();
-  const tabs: { key: "zh" | "en"; label: string }[] = [
-    { key: "zh", label: "中文" },
-    { key: "en", label: "English" },
-  ];
   return (
-    <div className="flex justify-center mb-4">
+    <div className="flex justify-end mb-2">
       <div
-        className="inline-flex rounded-full p-1"
+        className="flex rounded-full overflow-hidden"
         style={{
-          background: "rgba(255,255,255,0.65)",
-          border: "1px solid var(--app-border)",
+          border: "1px solid rgba(74,62,61,0.2)",
+          background: "rgba(255,255,255,0.6)",
           backdropFilter: "blur(8px)",
         }}
       >
-        {tabs.map((tab) => {
-          const active = lang === tab.key;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setLang(tab.key)}
-              className="px-4 py-1.5 text-[11px] font-semibold tracking-wider rounded-full transition-all"
-              style={{
-                background: active ? "var(--app-primary)" : "transparent",
-                color: active ? "white" : "var(--app-text-muted)",
-              }}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
+        {(["zh", "en"] as const).map((l) => (
+          <motion.button
+            key={l}
+            whileTap={{ scale: 0.92 }}
+            onClick={() => setLang(l)}
+            className="px-3 py-1 text-[11px] font-semibold tracking-wider transition-all"
+            style={{
+              background: lang === l ? "var(--app-primary)" : "transparent",
+              color: lang === l ? "white" : "var(--app-text-muted)",
+              borderRadius: "9999px",
+            }}
+          >
+            {l === "zh" ? "中文" : "EN"}
+          </motion.button>
+        ))}
       </div>
     </div>
   );
@@ -72,8 +67,11 @@ export default function GalleryScreen() {
   return (
     <div className="w-full md:max-w-4xl lg:max-w-5xl md:mx-auto px-5 pb-28 md:pb-8 relative">
 
+      {/* ── 语言切换 — 跟首页位置一致 ── */}
+      <LangToggle />
+
       {/* ── 顶部返回首页 ── */}
-      <div className="flex items-center justify-between pt-5 pb-4">
+      <div className="flex items-center justify-between pt-3 pb-4">
         <motion.button
           whileTap={{ scale: 0.88 }}
           onClick={() => navigate({ to: "/" })}
@@ -106,9 +104,6 @@ export default function GalleryScreen() {
       </div>
 
       <h1 className="sr-only">Vibe Bar — Your Cocktail Gallery</h1>
-
-      {/* ── 中英文 tab ── */}
-      <LangTabs />
 
       {/* ── 卡片列表 ── */}
       <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
