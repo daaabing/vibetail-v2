@@ -11,31 +11,29 @@ const PAGE_SIZE = 10;
 function LangToggle() {
   const { lang, setLang } = useLang();
   return (
-    <div className="flex justify-end mb-2">
-      <div
-        className="flex rounded-full overflow-hidden"
-        style={{
-          border: "1px solid rgba(74,62,61,0.2)",
-          background: "rgba(255,255,255,0.6)",
-          backdropFilter: "blur(8px)",
-        }}
-      >
-        {(["zh", "en"] as const).map((l) => (
-          <motion.button
-            key={l}
-            whileTap={{ scale: 0.92 }}
-            onClick={() => setLang(l)}
-            className="px-3 py-1 text-[11px] font-semibold tracking-wider transition-all"
-            style={{
-              background: lang === l ? "var(--app-primary)" : "transparent",
-              color: lang === l ? "white" : "var(--app-text-muted)",
-              borderRadius: "9999px",
-            }}
-          >
-            {l === "zh" ? "中文" : "EN"}
-          </motion.button>
-        ))}
-      </div>
+    <div
+      className="flex rounded-full overflow-hidden"
+      style={{
+        border: "1px solid rgba(74,62,61,0.2)",
+        background: "rgba(255,255,255,0.6)",
+        backdropFilter: "blur(8px)",
+      }}
+    >
+      {(["zh", "en"] as const).map((l) => (
+        <motion.button
+          key={l}
+          whileTap={{ scale: 0.92 }}
+          onClick={() => setLang(l)}
+          className="px-2.5 py-1 text-[11px] font-semibold tracking-wider transition-all"
+          style={{
+            background: lang === l ? "var(--app-primary)" : "transparent",
+            color: lang === l ? "white" : "var(--app-text-muted)",
+            borderRadius: "9999px",
+          }}
+        >
+          {l === "zh" ? "中文" : "EN"}
+        </motion.button>
+      ))}
     </div>
   );
 }
@@ -67,11 +65,9 @@ export default function GalleryScreen() {
   return (
     <div className="w-full md:max-w-4xl lg:max-w-5xl md:mx-auto px-5 pb-28 md:pb-8 relative">
 
-      {/* ── 语言切换 — 跟首页位置一致 ── */}
-      <LangToggle />
-
       {/* ── 顶部返回首页 ── */}
       <div className="flex items-center justify-between pt-3 pb-4">
+
         <motion.button
           whileTap={{ scale: 0.88 }}
           onClick={() => navigate({ to: "/" })}
@@ -88,19 +84,22 @@ export default function GalleryScreen() {
           {t("nav.vibeBar")}
         </span>
 
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => navigate({ to: "/mood-input" })}
-          className="text-xs font-semibold tracking-wider px-3 py-1.5 relative overflow-hidden"
-          style={{
-            borderRadius: "4px",
-            background: "linear-gradient(135deg, #C2410C 0%, #E0533C 100%)",
-            color: "white",
-            boxShadow: "1px 2px 8px rgba(194,65,12,0.2)",
-          }}
-        >
-          {t("gallery.addVibe")}
-        </motion.button>
+        <div className="flex items-center gap-2">
+          <LangToggle />
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => navigate({ to: "/mood-input" })}
+            className="text-xs font-semibold tracking-wider px-3 py-1.5 relative overflow-hidden"
+            style={{
+              borderRadius: "4px",
+              background: "linear-gradient(135deg, #C2410C 0%, #E0533C 100%)",
+              color: "white",
+              boxShadow: "1px 2px 8px rgba(194,65,12,0.2)",
+            }}
+          >
+            {t("gallery.addVibe")}
+          </motion.button>
+        </div>
       </div>
 
       <h1 className="sr-only">Vibe Bar — Your Cocktail Gallery</h1>
