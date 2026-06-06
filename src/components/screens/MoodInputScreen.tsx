@@ -150,19 +150,23 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
     >
       {/* ── Top bar ── */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
-        <motion.button
-          whileTap={{ scale: 0.88 }}
-          onClick={step === 1 ? () => navigate({ to: "/" }) : goBack}
-          className="flex items-center gap-1.5 text-xs"
-          style={{ color: "var(--app-text-secondary)" }}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M15.75 19.5L8.25 12l7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="text-[10px] tracking-wider" style={{ fontFamily: "var(--font-body)" }}>
-            {step === 1 ? t("mood.exit") : t("mood.back")}
-          </span>
-        </motion.button>
+        {isRestaurant && step === 1 ? (
+          <span className="w-4" />
+        ) : (
+          <motion.button
+            whileTap={{ scale: 0.88 }}
+            onClick={step === 1 ? () => navigate({ to: "/" }) : goBack}
+            className="flex items-center gap-1.5 text-xs"
+            style={{ color: "var(--app-text-secondary)" }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M15.75 19.5L8.25 12l7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="text-[10px] tracking-wider" style={{ fontFamily: "var(--font-body)" }}>
+              {step === 1 ? t("mood.exit") : t("mood.back")}
+            </span>
+          </motion.button>
+        )}
 
         <div className="flex items-center gap-2">
           {(isRestaurant ? [1, 2] : [1, 2, 3]).map((s) => (
