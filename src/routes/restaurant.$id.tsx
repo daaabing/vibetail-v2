@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import MoodInputScreen from "@/components/screens/MoodInputScreen";
+import LandingScreen from "@/components/screens/LandingScreen";
 
 export const Route = createFileRoute("/restaurant/$id")({
   beforeLoad: ({ params }) => {
@@ -40,5 +42,9 @@ export const Route = createFileRoute("/restaurant/$id")({
 
 function RestaurantRoute() {
   const { id } = Route.useParams();
+  const [started, setStarted] = useState(false);
+  if (!started) {
+    return <LandingScreen hideGallery onMix={() => setStarted(true)} />;
+  }
   return <MoodInputScreen restaurantId={id} />;
 }
