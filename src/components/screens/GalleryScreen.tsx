@@ -146,14 +146,15 @@ export default function GalleryScreen() {
             >
               {/* 缩略图 */}
               {cocktail.imageData && (
-                <div className="w-full overflow-hidden" style={{ height: 120 }}>
+                <div className="w-full overflow-hidden bg-white">
                   <img
                     src={`data:image/png;base64,${cocktail.imageData}`}
                     alt={cocktail.cocktailName}
-                    className="w-full h-full object-cover"
+                    className="w-full h-auto object-contain block"
                   />
                 </div>
               )}
+
 
               <div className="p-4">
                 <div className="flex justify-between items-start mb-1.5">
