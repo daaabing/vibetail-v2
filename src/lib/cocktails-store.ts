@@ -29,6 +29,9 @@ export interface Cocktail {
   roast: string;
   category: string;
   imageData?: string | null;
+  /** Pre-supplied illustration URL (e.g. Tashi brand image). When set, the
+   * result card uses this directly and skips AI image generation. */
+  imageUrl?: string | null;
   createdAt: string;
 }
 
@@ -92,6 +95,7 @@ export function createCocktail(input: {
   customPreference: string;
   photoIngredients?: string[] | null;
   generated?: GeneratedCocktailFields | null;
+  imageUrl?: string | null;
 }): Cocktail {
   const list = read();
   const seed = SEED_COCKTAILS[hash(input.mood + input.selectedFlavors.join(",")) % SEED_COCKTAILS.length];
@@ -110,6 +114,7 @@ export function createCocktail(input: {
     recipe: g?.recipe || seed.recipe,
     roast: g?.roast || seed.roast,
     category: g?.category || seed.category,
+    imageUrl: input.imageUrl ?? null,
     createdAt: new Date().toISOString(),
   };
   list.push(next);
