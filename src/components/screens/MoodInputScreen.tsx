@@ -21,8 +21,22 @@ export default function MoodInputScreen() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [mood, setMood] = useState("");
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
+  const [baseSpirit, setBaseSpirit] = useState<string>("");
   const [customPreference, setCustomPreference] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const BASE_SPIRITS: { key: string; en: string; zh: string; color: string }[] = [
+    { key: "surprise", en: "Surprise me", zh: "随心调", color: "#9ca3af" },
+    { key: "gin", en: "Gin", zh: "金酒", color: "#7fb069" },
+    { key: "vodka", en: "Vodka", zh: "伏特加", color: "#a3b8c4" },
+    { key: "rum", en: "Rum", zh: "朗姆", color: "#c08457" },
+    { key: "tequila", en: "Tequila", zh: "龙舌兰", color: "#e0b96b" },
+    { key: "whiskey", en: "Whiskey", zh: "威士忌", color: "#a0522d" },
+    { key: "mezcal", en: "Mezcal", zh: "梅斯卡尔", color: "#8b6f4e" },
+    { key: "brandy", en: "Brandy", zh: "白兰地", color: "#b8602e" },
+    { key: "sake", en: "Sake", zh: "清酒", color: "#e8dcc4" },
+    { key: "nonalcoholic", en: "No alcohol", zh: "无酒精", color: "#d4a5c4" },
+  ];
   // Step 3 — photo ingredients
   const [photoIngredients, setPhotoIngredients] = useState<string[] | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -72,10 +86,15 @@ export default function MoodInputScreen() {
   const handleMix = async () => {
     setIsGenerating(true);
     try {
+      const spiritObj = BASE_SPIRITS.find((s) => s.key === baseSpirit);
+      const spiritNote = spiritObj && spiritObj.key !== "surprise"
+        ? (lang === "zh" ? `基酒：${spiritObj.zh}。` : `Base spirit: ${spiritObj.en}. `)
+        : "";
+      const mergedPreference = (spiritNote + (customPreference || "")).trim();
       const res = await fetch("/api/generate-cocktail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mood, selectedFlavors, customPreference, photoIngredients, lang }),
+        body: JSON.stringify({ mood, selectedFlavors, customPreference: mergedPreference, photoIngredients, lang }),
       });
       if (!res.ok) {
         if (res.status === 402) {
@@ -309,6 +328,43 @@ export default function MoodInputScreen() {
                         boxShadow: isSelected ? `0 0 4px ${chip.color}88` : "none",
                       }} />
                       {lang === "zh" ? chip.labelZh : chip.label}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Base spirit */}
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
+                style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+                {lang === "zh" ? "基酒（可选）" : "Base spirit (optional)"}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {BASE_SPIRITS.map((s) => {
+                  const isSelected = baseSpirit === s.key;
+                  return (
+                    <motion.button
+                      key={s.key}
+                      whileTap={{ scale: 0.88 }}
+                      onClick={() => setBaseSpirit(isSelected ? "" : s.key)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                      style={{
+                        border: isSelected ? `1.5px solid ${s.color}` : "1px solid var(--app-border)",
+                        backgroundColor: isSelected ? `${s.color}22` : "rgba(255,255,255,0.6)",
+                        backdropFilter: "blur(6px)",
+                        color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
+                        fontWeight: isSelected ? 600 : 400,
+                        boxShadow: isSelected ? `0 0 0 3px ${s.color}22` : "none",
+                      }}
+                    >
+                      <span className="flex-shrink-0 rounded-full" style={{
+                        width: 7, height: 7,
+                        backgroundColor: s.color,
+                        opacity: isSelected ? 1 : 0.7,
+                        boxShadow: isSelected ? `0 0 4px ${s.color}88` : "none",
+                      }} />
+                      {lang === "zh" ? s.zh : s.en}
                     </motion.button>
                   );
                 })}
