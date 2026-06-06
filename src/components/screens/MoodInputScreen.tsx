@@ -22,20 +22,21 @@ export default function MoodInputScreen() {
   const [mood, setMood] = useState("");
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
   const [baseSpirit, setBaseSpirit] = useState<string>("");
+  const [spiritOpen, setSpiritOpen] = useState(false);
   const [customPreference, setCustomPreference] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const BASE_SPIRITS: { key: string; en: string; zh: string; color: string }[] = [
-    { key: "surprise", en: "Surprise me", zh: "随心调", color: "#9ca3af" },
-    { key: "gin", en: "Gin", zh: "金酒", color: "#7fb069" },
-    { key: "vodka", en: "Vodka", zh: "伏特加", color: "#a3b8c4" },
-    { key: "rum", en: "Rum", zh: "朗姆", color: "#c08457" },
-    { key: "tequila", en: "Tequila", zh: "龙舌兰", color: "#e0b96b" },
-    { key: "whiskey", en: "Whiskey", zh: "威士忌", color: "#a0522d" },
-    { key: "mezcal", en: "Mezcal", zh: "梅斯卡尔", color: "#8b6f4e" },
-    { key: "brandy", en: "Brandy", zh: "白兰地", color: "#b8602e" },
-    { key: "sake", en: "Sake", zh: "清酒", color: "#e8dcc4" },
-    { key: "nonalcoholic", en: "No alcohol", zh: "无酒精", color: "#d4a5c4" },
+  const BASE_SPIRITS: { key: string; en: string; zh: string; color: string; flavorEn: string; flavorZh: string }[] = [
+    { key: "surprise", en: "Surprise me", zh: "随心调", color: "#9ca3af", flavorEn: "Let the bartender pick", flavorZh: "由调酒师替你决定" },
+    { key: "gin", en: "Gin", zh: "金酒", color: "#7fb069", flavorEn: "Crisp, herbal, juniper-forward", flavorZh: "清冽草本，杜松子香气" },
+    { key: "vodka", en: "Vodka", zh: "伏特加", color: "#a3b8c4", flavorEn: "Neutral, clean, lets mixers shine", flavorZh: "中性纯净，凸显其他风味" },
+    { key: "rum", en: "Rum", zh: "朗姆", color: "#c08457", flavorEn: "Sweet, tropical, molasses warmth", flavorZh: "甜润热带，蔗糖暖意" },
+    { key: "tequila", en: "Tequila", zh: "龙舌兰", color: "#e0b96b", flavorEn: "Earthy agave, peppery, bright", flavorZh: "龙舌兰土香，胡椒明亮" },
+    { key: "whiskey", en: "Whiskey", zh: "威士忌", color: "#a0522d", flavorEn: "Oaky, smoky, caramel depth", flavorZh: "橡木烟熏，焦糖醇厚" },
+    { key: "mezcal", en: "Mezcal", zh: "梅斯卡尔", color: "#8b6f4e", flavorEn: "Smoky, mineral, wild agave", flavorZh: "浓郁烟熏，矿物野性" },
+    { key: "brandy", en: "Brandy", zh: "白兰地", color: "#b8602e", flavorEn: "Fruity, velvety, oak-aged", flavorZh: "果香丝滑，橡木陈年" },
+    { key: "sake", en: "Sake", zh: "清酒", color: "#e8dcc4", flavorEn: "Delicate, rice-sweet, umami", flavorZh: "清雅米香，鲜甜柔和" },
+    { key: "nonalcoholic", en: "No alcohol", zh: "无酒精", color: "#d4a5c4", flavorEn: "Fresh, fruity mocktail", flavorZh: "清爽果香无酒精" },
   ];
   // Step 3 — photo ingredients
   const [photoIngredients, setPhotoIngredients] = useState<string[] | null>(null);
@@ -334,42 +335,100 @@ export default function MoodInputScreen() {
               </div>
             </div>
 
-            {/* Base spirit */}
+            {/* Base spirit dropdown */}
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
                 style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
                 {lang === "zh" ? "基酒（可选）" : "Base spirit (optional)"}
               </label>
-              <div className="flex flex-wrap gap-2">
-                {BASE_SPIRITS.map((s) => {
-                  const isSelected = baseSpirit === s.key;
-                  return (
+              {(() => {
+                const selected = BASE_SPIRITS.find((s) => s.key === baseSpirit);
+                return (
+                  <div className="relative">
                     <motion.button
-                      key={s.key}
-                      whileTap={{ scale: 0.88 }}
-                      onClick={() => setBaseSpirit(isSelected ? "" : s.key)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                      type="button"
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSpiritOpen((v) => !v)}
+                      className="w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm transition-all"
                       style={{
-                        border: isSelected ? `1.5px solid ${s.color}` : "1px solid var(--app-border)",
-                        backgroundColor: isSelected ? `${s.color}22` : "rgba(255,255,255,0.6)",
-                        backdropFilter: "blur(6px)",
-                        color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
-                        fontWeight: isSelected ? 600 : 400,
-                        boxShadow: isSelected ? `0 0 0 3px ${s.color}22` : "none",
+                        backgroundColor: "rgba(255,255,255,0.7)",
+                        backdropFilter: "blur(8px)",
+                        border: selected ? `1.5px solid ${selected.color}` : "1px solid var(--app-border)",
+                        color: "var(--app-text)",
+                        boxShadow: selected ? `0 0 0 3px ${selected.color}22` : "none",
                       }}
                     >
-                      <span className="flex-shrink-0 rounded-full" style={{
-                        width: 7, height: 7,
-                        backgroundColor: s.color,
-                        opacity: isSelected ? 1 : 0.7,
-                        boxShadow: isSelected ? `0 0 4px ${s.color}88` : "none",
-                      }} />
-                      {lang === "zh" ? s.zh : s.en}
+                      <span className="flex items-center gap-2 min-w-0">
+                        <span className="flex-shrink-0 rounded-full" style={{
+                          width: 9, height: 9,
+                          backgroundColor: selected?.color ?? "var(--app-border)",
+                          boxShadow: selected ? `0 0 4px ${selected.color}88` : "none",
+                        }} />
+                        <span className="flex flex-col items-start min-w-0">
+                          <span className="font-medium truncate" style={{ color: selected ? "var(--app-text)" : "var(--app-text-muted)" }}>
+                            {selected ? (lang === "zh" ? selected.zh : selected.en) : (lang === "zh" ? "选择基酒" : "Pick a base spirit")}
+                          </span>
+                          {selected && (
+                            <span className="text-[10px] truncate" style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+                              {lang === "zh" ? selected.flavorZh : selected.flavorEn}
+                            </span>
+                          )}
+                        </span>
+                      </span>
+                      <svg className="w-4 h-4 flex-shrink-0 transition-transform" style={{ transform: spiritOpen ? "rotate(180deg)" : "rotate(0)", color: "var(--app-text-muted)" }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M19.5 8.25l-7.5 7.5-7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
                     </motion.button>
-                  );
-                })}
-              </div>
+
+                    <AnimatePresence>
+                      {spiritOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute z-20 mt-1.5 w-full rounded-xl overflow-hidden max-h-80 overflow-y-auto"
+                          style={{
+                            backgroundColor: "rgba(255,253,250,0.98)",
+                            backdropFilter: "blur(12px)",
+                            border: "1px solid var(--app-border)",
+                            boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                          }}
+                        >
+                          {BASE_SPIRITS.map((s) => {
+                            const isSelected = baseSpirit === s.key;
+                            return (
+                              <button
+                                key={s.key}
+                                type="button"
+                                onClick={() => { setBaseSpirit(isSelected ? "" : s.key); setSpiritOpen(false); }}
+                                className="w-full flex items-start gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-black/5"
+                                style={{ backgroundColor: isSelected ? `${s.color}18` : "transparent" }}
+                              >
+                                <span className="flex-shrink-0 rounded-full mt-1.5" style={{
+                                  width: 9, height: 9,
+                                  backgroundColor: s.color,
+                                  boxShadow: isSelected ? `0 0 4px ${s.color}88` : "none",
+                                }} />
+                                <span className="flex flex-col min-w-0">
+                                  <span className="text-sm font-medium" style={{ color: "var(--app-text)" }}>
+                                    {lang === "zh" ? s.zh : s.en}
+                                  </span>
+                                  <span className="text-[11px] leading-tight" style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+                                    {lang === "zh" ? s.flavorZh : s.flavorEn}
+                                  </span>
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })()}
             </div>
+
 
             {/* Custom preference */}
             <div>
