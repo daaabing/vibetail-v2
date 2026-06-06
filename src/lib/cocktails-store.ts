@@ -32,6 +32,9 @@ export interface Cocktail {
   /** Pre-supplied illustration URL (e.g. Tashi brand image). When set, the
    * result card uses this directly and skips AI image generation. */
   imageUrl?: string | null;
+  /** Language the cocktail was generated in. Used to filter the Vibe Bar
+   * so zh and en gallery views stay separate. */
+  lang?: "zh" | "en";
   createdAt: string;
 }
 
