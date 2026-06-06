@@ -10,7 +10,7 @@ const PAGE_SIZE = 10;
 
 export default function GalleryScreen() {
   const navigate = useNavigate();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [cocktails, setCocktails] = useState<Cocktail[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -20,8 +20,17 @@ export default function GalleryScreen() {
     setLoading(false);
   }, []);
 
-  const totalPages = Math.max(1, Math.ceil(cocktails.length / PAGE_SIZE));
-  const paged = cocktails.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // Filter by current language. Legacy entries without an explicit `lang`
+  // field are bucketed by sniffing CJK characters in the cocktail name.
+  const cjk = /[\u4e00-\u9fff]/;
+  const filtered = cocktails.filter((c) => {
+    const cLang = c.lang ?? (cjk.test(c.cocktailName) ? "zh" : "en");
+    return cLang === lang;
+  });
+  useEffect(() => { setPage(1); }, [lang]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="w-full md:max-w-4xl lg:max-w-5xl md:mx-auto px-5 pb-28 md:pb-8 relative">
