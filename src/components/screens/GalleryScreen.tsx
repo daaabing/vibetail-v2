@@ -65,11 +65,9 @@ export default function GalleryScreen() {
   return (
     <div className="w-full md:max-w-4xl lg:max-w-5xl md:mx-auto px-5 pb-28 md:pb-8 relative">
 
-      {/* ── 语言切换 — 跟首页位置一致 ── */}
-      <LangToggle />
-
       {/* ── 顶部返回首页 ── */}
       <div className="flex items-center justify-between pt-3 pb-4">
+
         <motion.button
           whileTap={{ scale: 0.88 }}
           onClick={() => navigate({ to: "/" })}
