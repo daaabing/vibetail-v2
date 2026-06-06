@@ -86,10 +86,15 @@ export default function MoodInputScreen() {
   const handleMix = async () => {
     setIsGenerating(true);
     try {
+      const spiritObj = BASE_SPIRITS.find((s) => s.key === baseSpirit);
+      const spiritNote = spiritObj && spiritObj.key !== "surprise"
+        ? (lang === "zh" ? `基酒：${spiritObj.zh}。` : `Base spirit: ${spiritObj.en}. `)
+        : "";
+      const mergedPreference = (spiritNote + (customPreference || "")).trim();
       const res = await fetch("/api/generate-cocktail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mood, selectedFlavors, customPreference, photoIngredients, lang }),
+        body: JSON.stringify({ mood, selectedFlavors, customPreference: mergedPreference, photoIngredients, lang }),
       });
       if (!res.ok) {
         if (res.status === 402) {
