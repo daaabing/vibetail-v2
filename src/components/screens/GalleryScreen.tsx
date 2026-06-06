@@ -11,31 +11,29 @@ const PAGE_SIZE = 10;
 function LangToggle() {
   const { lang, setLang } = useLang();
   return (
-    <div className="flex justify-end mb-2">
-      <div
-        className="flex rounded-full overflow-hidden"
-        style={{
-          border: "1px solid rgba(74,62,61,0.2)",
-          background: "rgba(255,255,255,0.6)",
-          backdropFilter: "blur(8px)",
-        }}
-      >
-        {(["zh", "en"] as const).map((l) => (
-          <motion.button
-            key={l}
-            whileTap={{ scale: 0.92 }}
-            onClick={() => setLang(l)}
-            className="px-3 py-1 text-[11px] font-semibold tracking-wider transition-all"
-            style={{
-              background: lang === l ? "var(--app-primary)" : "transparent",
-              color: lang === l ? "white" : "var(--app-text-muted)",
-              borderRadius: "9999px",
-            }}
-          >
-            {l === "zh" ? "中文" : "EN"}
-          </motion.button>
-        ))}
-      </div>
+    <div
+      className="flex rounded-full overflow-hidden"
+      style={{
+        border: "1px solid rgba(74,62,61,0.2)",
+        background: "rgba(255,255,255,0.6)",
+        backdropFilter: "blur(8px)",
+      }}
+    >
+      {(["zh", "en"] as const).map((l) => (
+        <motion.button
+          key={l}
+          whileTap={{ scale: 0.92 }}
+          onClick={() => setLang(l)}
+          className="px-2.5 py-1 text-[11px] font-semibold tracking-wider transition-all"
+          style={{
+            background: lang === l ? "var(--app-primary)" : "transparent",
+            color: lang === l ? "white" : "var(--app-text-muted)",
+            borderRadius: "9999px",
+          }}
+        >
+          {l === "zh" ? "中文" : "EN"}
+        </motion.button>
+      ))}
     </div>
   );
 }
