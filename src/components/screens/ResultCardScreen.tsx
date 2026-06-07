@@ -866,6 +866,94 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           {t("result.another")}
         </motion.button>
       </div>
+
+      {/* Frame picker modal */}
+      {showFramePicker && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.45)" }}
+          onClick={() => setShowFramePicker(false)}
+        >
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl p-5"
+            style={{ background: "#fdf8f3", border: "1px solid rgba(74,62,61,0.15)" }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold tracking-wider uppercase" style={{ color: "var(--app-text-primary)", fontFamily: "var(--font-body)" }}>
+                {t("result.chooseFrame") || "Choose a frame"}
+              </h3>
+              <button onClick={() => setShowFramePicker(false)} className="text-xs" style={{ color: "var(--app-text-muted)" }}>✕</button>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {FRAME_STYLES.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => { setShowFramePicker(false); handlePrint(f.id); }}
+                  className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-black/5 transition"
+                >
+                  <div
+                    className="relative"
+                    style={{ width: 72, height: 108, background: "#fdf8f3" }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        boxSizing: "border-box",
+                        ...parseFrameCss(f.outerCss),
+                      }}
+                    />
+                    {f.showCorners && (
+                      <>
+                        {["tl","tr","br","bl"].map((c, i) => (
+                          <div key={c} style={{
+                            position: "absolute",
+                            width: 14, height: 14,
+                            boxSizing: "border-box",
+                            ...parseFrameCss(f.cornerCss),
+                            top: c.includes("t") ? 3 : undefined,
+                            bottom: c.includes("b") ? 3 : undefined,
+                            left: c.includes("l") ? 3 : undefined,
+                            right: c.includes("r") ? 3 : undefined,
+                            transform: `rotate(${i*90}deg)`,
+                          }} />
+                        ))}
+                      </>
+                    )}
+                    <div style={{
+                      position: "absolute",
+                      inset: f.id === "none" ? 4 : 10,
+                      background: "linear-gradient(160deg,#e0533c33,#b8893a22)",
+                      borderRadius: 2,
+                    }} />
+                  </div>
+                  <span className="text-[10px] tracking-wider uppercase" style={{ color: "var(--app-text-secondary)", fontFamily: "var(--font-body)" }}>
+                    {f.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
+}
+
+/** Convert a small subset of inline CSS string into a React style object for the preview swatches. */
+function parseFrameCss(css: string): React.CSSProperties {
+  const style: Record<string, string> = {};
+  css.split(";").forEach((rule) => {
+    const idx = rule.indexOf(":");
+    if (idx < 0) return;
+    const key = rule.slice(0, idx).trim();
+    const val = rule.slice(idx + 1).trim();
+    if (!key || !val) return;
+    const camel = key.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    style[camel] = val;
+  });
+  return style as React.CSSProperties;
 }
