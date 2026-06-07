@@ -447,7 +447,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     }
   };
 
-  const handlePrint = async () => {
+  const handlePrint = async (frameId: string = "none") => {
     if (!cocktail || !captureRef.current) return;
     try {
       const raw = await htmlToImage.toPng(captureRef.current, {
@@ -456,9 +456,31 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         backgroundColor: "#fdf8f3",
       });
       const dataUrl = await compositeQr(raw, qrDataUrl);
+      const frame = FRAME_STYLES.find((f) => f.id === frameId) ?? FRAME_STYLES[0];
       const w = window.open("", "_blank");
       if (!w) return;
-      w.document.write(`<!doctype html><html><head><title>${cocktail.cocktailName} — Vibetail</title><style>@page{size:2in 3in;margin:0;}html,body{margin:0;padding:0;background:#fdf8f3;}.sheet{width:2in;height:3in;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fdf8f3;}.sheet img{max-width:100%;max-height:100%;width:auto;height:auto;display:block;}@media print{.sheet{page-break-after:always;}}</style></head><body><div class="sheet"><img src="${dataUrl}" onload="setTimeout(function(){window.focus();window.print();},200)" /></div></body></html>`);
+      // 2in x 3in card; frame is inset padding around the image
+      const html = `<!doctype html><html><head><title>${cocktail.cocktailName} — Vibetail</title>
+<style>
+  @page { size: 2in 3in; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fdf8f3; }
+  .sheet { width: 2in; height: 3in; background: #fdf8f3; position: relative; box-sizing: border-box; }
+  .frame { position: absolute; inset: 0; box-sizing: border-box; ${frame.outerCss} }
+  .inner { position: absolute; inset: ${frame.inset}; box-sizing: border-box; ${frame.innerCss} display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .inner img { max-width:100%; max-height:100%; width:auto; height:auto; display:block; }
+  .corner { position:absolute; width:${frame.cornerSize}; height:${frame.cornerSize}; ${frame.cornerCss} }
+  .c-tl { top:${frame.cornerOffset}; left:${frame.cornerOffset}; }
+  .c-tr { top:${frame.cornerOffset}; right:${frame.cornerOffset}; transform: rotate(90deg); }
+  .c-br { bottom:${frame.cornerOffset}; right:${frame.cornerOffset}; transform: rotate(180deg); }
+  .c-bl { bottom:${frame.cornerOffset}; left:${frame.cornerOffset}; transform: rotate(270deg); }
+  @media print { .sheet { page-break-after: always; } }
+</style></head><body>
+<div class="sheet">
+  <div class="frame"></div>
+  ${frame.showCorners ? '<div class="corner c-tl"></div><div class="corner c-tr"></div><div class="corner c-br"></div><div class="corner c-bl"></div>' : ''}
+  <div class="inner"><img src="${dataUrl}" onload="setTimeout(function(){window.focus();window.print();},250)" /></div>
+</div></body></html>`;
+      w.document.write(html);
       w.document.close();
     } catch (e) {
       console.error("print error", e);
