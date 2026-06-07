@@ -399,20 +399,25 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   }, [shareUrl]);
 
   useEffect(() => {
-    const data = getCocktail(Number(id));
-    if (data) {
-      setCocktail(data);
-      setImageData(data.imageData ?? null);
-      setImageLoading(!data.imageData);
-    } else if (search.d) {
-      const decoded = decodeCocktailFromHash(search.d);
-      if (decoded) {
-        setCocktail(decoded);
-        setImageData(decoded.imageData ?? null);
-        setImageLoading(!decoded.imageData);
+    let cancelled = false;
+    (async () => {
+      const data = await getCocktail(Number(id));
+      if (cancelled) return;
+      if (data) {
+        setCocktail(data);
+        setImageData(data.imageData ?? null);
+        setImageLoading(!data.imageData);
+      } else if (search.d) {
+        const decoded = decodeCocktailFromHash(search.d);
+        if (decoded) {
+          setCocktail(decoded);
+          setImageData(decoded.imageData ?? null);
+          setImageLoading(!decoded.imageData);
+        }
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [id, search.d]);
 
   // Generate watercolor illustration if missing (skip when a brand image URL is supplied)
@@ -436,7 +441,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         const json = (await res.json()) as { imageData?: string };
         if (cancelled || !json.imageData) return;
         setImageData(json.imageData);
-        updateCocktailImage(cocktail.id, json.imageData);
+        void updateCocktailImage(cocktail.id, json.imageData);
       } catch (e) {
         console.error("cocktail image generation failed", e);
       } finally {
