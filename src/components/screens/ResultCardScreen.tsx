@@ -802,7 +802,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           >
             <span className="absolute inset-0 pointer-events-none" style={{
               background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-              animation: "liquid-flow 3s ease-in-out infinite",
+              animation: "liquid-flow 3s linear infinite",
             }} />
             <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" strokeLinecap="round" strokeLinejoin="round" />
