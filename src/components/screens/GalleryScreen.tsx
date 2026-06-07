@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useLang } from "@/lib/i18n";
 import { getRestaurantCtx, clearRestaurantCtx } from "@/lib/restaurant-ctx";
 import { useAuth } from "@/lib/use-auth";
+import AuthModal from "@/components/moodtail/AuthModal";
 
 const PAGE_SIZE = 10;
 
@@ -53,7 +54,8 @@ export default function GalleryScreen() {
     if (authLoading) return;
     setRestCtx(getRestaurantCtx());
     if (!user) {
-      navigate({ to: "/auth" });
+      setCocktails([]);
+      setLoading(false);
       return;
     }
     setLoading(true);
@@ -61,17 +63,16 @@ export default function GalleryScreen() {
       setCocktails(list);
       setLoading(false);
     });
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading]);
 
   useEffect(() => { setPage(1); }, [lang]);
 
-  if (authLoading || !user) {
+  if (!authLoading && !user) {
     return (
-      <div className="min-h-svh flex items-center justify-center">
-        <div className="text-xs" style={{ color: "var(--app-text-muted)" }}>
-          {lang === "zh" ? "加载中…" : "Loading…"}
-        </div>
-      </div>
+      <>
+        <div className="min-h-svh" />
+        <AuthModal open onClose={() => navigate({ to: "/" })} />
+      </>
     );
   }
 
