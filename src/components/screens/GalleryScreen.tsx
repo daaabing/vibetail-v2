@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { type Cocktail, listCocktails } from "@/lib/cocktails-store";
 import { formatDistanceToNow } from "date-fns";
 import { useLang } from "@/lib/i18n";
+import { getRestaurantCtx, clearRestaurantCtx } from "@/lib/restaurant-ctx";
 
 const PAGE_SIZE = 10;
 
@@ -44,9 +45,11 @@ export default function GalleryScreen() {
   const [cocktails, setCocktails] = useState<Cocktail[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [restaurantCtx, setRestCtx] = useState<string | null>(null);
 
   useEffect(() => {
     setCocktails(listCocktails());
+    setRestCtx(getRestaurantCtx());
     setLoading(false);
   }, []);
 
@@ -70,7 +73,14 @@ export default function GalleryScreen() {
 
         <motion.button
           whileTap={{ scale: 0.88 }}
-          onClick={() => navigate({ to: "/" })}
+          onClick={() => {
+            if (restaurantCtx) {
+              navigate({ to: "/restaurant/$id", params: { id: restaurantCtx } });
+            } else {
+              clearRestaurantCtx();
+              navigate({ to: "/" });
+            }
+          }}
           className="flex items-center gap-1.5 text-xs"
           style={{ color: "var(--app-text-secondary)" }}
         >
@@ -141,7 +151,7 @@ export default function GalleryScreen() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: idx * 0.03 }}
-              onClick={() => navigate({ to: "/result/$id", params: { id: String(cocktail.id) }, search: { from: "gallery" } })}
+              onClick={() => navigate({ to: "/result/$id", params: { id: String(cocktail.id) }, search: { from: "gallery", ...(restaurantCtx ? { restaurant: restaurantCtx } : {}) } })}
               className="glass-card rounded-xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
             >
               {/* 缩略图 */}
