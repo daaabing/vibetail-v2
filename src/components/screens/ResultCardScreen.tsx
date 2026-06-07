@@ -577,6 +577,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                 </li>
               ))}
             </ul>
+            <p style={{ fontSize: 10, color: "var(--app-text-muted)", fontStyle: "italic", marginTop: 6, marginBottom: 0 }}>{cardLabels.ingredientsBar}</p>
           </div>
 
           {/* Recipe */}
