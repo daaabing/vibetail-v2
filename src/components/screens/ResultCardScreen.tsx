@@ -146,7 +146,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
 function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
   cocktail: Cocktail;
   tapHint: string;
-  labels: { originalVibe: string; tastingNotes: string; ingredients: string; howToMake: string; };
+  labels: { originalVibe: string; tastingNotes: string; ingredients: string; ingredientsBar: string; howToMake: string; };
   hideRecipe?: boolean;
 }) {
   const recipeLines = cocktail.recipe.split("\n").filter(Boolean);
@@ -221,6 +221,9 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
               </li>
             ))}
           </ul>
+          <p className="text-[9px] mt-2 italic" style={{ color: "var(--app-text-muted)" }}>
+            {labels.ingredientsBar}
+          </p>
         </div>
 
         {/* Recipe — numbered steps */}
@@ -293,6 +296,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     tastingNotes: t("result.tasting"),
     ingredients: t("result.ingredients"),
     ingredientsRef: t("result.ingredients.ref"),
+    ingredientsBar: t("result.ingredients.bar"),
     howToMake: t("result.howToMake"),
     scanQr: t("result.scanQr"),
   };
@@ -573,6 +577,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                 </li>
               ))}
             </ul>
+            <p style={{ fontSize: 10, color: "var(--app-text-muted)", fontStyle: "italic", marginTop: 6, marginBottom: 0 }}>{cardLabels.ingredientsBar}</p>
           </div>
 
           {/* Recipe */}
