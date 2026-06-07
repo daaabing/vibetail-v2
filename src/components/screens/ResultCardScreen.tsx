@@ -550,7 +550,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
           {/* Ingredients */}
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)", marginBottom: 8 }}>{cardLabels.ingredients}</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)" }}>{cardLabels.ingredients}</span>
+              <span style={{ fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: "var(--app-primary)", fontStyle: "italic" }}>· {cardLabels.ingredientsRef}</span>
+            </div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {(cocktail.ingredients as string[]).map((ing, i) => (
                 <li key={i} style={{ position: "relative", paddingLeft: 16, fontSize: 13, color: "var(--app-text-secondary)", marginBottom: 8, lineHeight: 1.55, wordBreak: "break-word" }}>
@@ -573,6 +576,17 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                   </li>
                 ))}
               </ol>
+            </div>
+          )}
+
+          {/* QR code — scan to open full card */}
+          {qrDataUrl && (
+            <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid rgba(210,201,189,0.6)", display: "flex", alignItems: "center", gap: 16 }}>
+              <img src={qrDataUrl} alt="QR" style={{ width: 96, height: 96, flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)", marginBottom: 6 }}>Vibetail</div>
+                <p style={{ fontSize: 12, color: "var(--app-text-secondary)", lineHeight: 1.5, margin: 0 }}>{cardLabels.scanQr}</p>
+              </div>
             </div>
           )}
         </div>
