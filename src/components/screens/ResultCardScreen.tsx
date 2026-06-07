@@ -629,11 +629,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             </div>
           )}
 
-          {/* Reserved space for QR — composited onto the exported image at a fixed position */}
-          <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid rgba(210,201,189,0.6)", minHeight: 120 }}>
-            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)", marginBottom: 6 }}>Vibetail</div>
-            <p style={{ fontSize: 12, color: "var(--app-text-secondary)", lineHeight: 1.5, margin: 0, maxWidth: "70%" }}>{cardLabels.scanQr}</p>
-          </div>
+          {/* QR is composited at fixed bottom-right position on the exported image */}
         </div>
       </div>
 
