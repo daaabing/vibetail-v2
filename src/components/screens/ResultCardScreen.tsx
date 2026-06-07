@@ -569,7 +569,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               {(cocktail.ingredients as string[]).map((ing, i) => (
                 <li key={i} style={{ position: "relative", paddingLeft: 16, fontSize: 13, color: "var(--app-text-secondary)", marginBottom: 8, lineHeight: 1.55, wordBreak: "break-word" }}>
                   <span style={{ position: "absolute", left: 0, top: 8, width: 6, height: 6, borderRadius: "50%", background: "var(--app-primary)" }} />
-                  {ing}
+                  {simplifyIngredient(ing)}
                 </li>
               ))}
             </ul>
