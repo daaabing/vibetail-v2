@@ -8,6 +8,7 @@ import { useLang } from "@/lib/i18n";
 import { getRestaurantCtx, clearRestaurantCtx } from "@/lib/restaurant-ctx";
 import { useAuth } from "@/lib/use-auth";
 import AuthModal from "@/components/moodtail/AuthModal";
+import UserMenu from "@/components/moodtail/UserMenu";
 
 const PAGE_SIZE = 10;
 
@@ -121,6 +122,7 @@ export default function GalleryScreen() {
 
         <div className="flex items-center gap-2">
           <LangToggle />
+          <UserMenu />
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => navigate({ to: "/mood-input" })}
