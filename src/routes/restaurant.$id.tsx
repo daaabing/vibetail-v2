@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import MoodInputScreen from "@/components/screens/MoodInputScreen";
 import LandingScreen from "@/components/screens/LandingScreen";
+import { setRestaurantCtx } from "@/lib/restaurant-ctx";
+
 
 export const Route = createFileRoute("/restaurant/$id")({
   beforeLoad: ({ params }) => {
@@ -43,6 +45,7 @@ export const Route = createFileRoute("/restaurant/$id")({
 function RestaurantRoute() {
   const { id } = Route.useParams();
   const [started, setStarted] = useState(false);
+  useEffect(() => { setRestaurantCtx(id); }, [id]);
   if (!started) {
     return <LandingScreen onMix={() => setStarted(true)} />;
   }
