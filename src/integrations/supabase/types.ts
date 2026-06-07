@@ -14,7 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cocktails: {
+        Row: {
+          category: string
+          cocktail_name: string
+          created_at: string
+          custom_preference: string
+          flavor_profile: string
+          id: number
+          image_data: string | null
+          image_url: string | null
+          ingredients: string[]
+          lang: string
+          original_mood: string
+          recipe: string
+          roast: string
+          selected_flavors: string[]
+          tastes_like: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          category?: string
+          cocktail_name: string
+          created_at?: string
+          custom_preference?: string
+          flavor_profile?: string
+          id?: number
+          image_data?: string | null
+          image_url?: string | null
+          ingredients?: string[]
+          lang?: string
+          original_mood?: string
+          recipe?: string
+          roast?: string
+          selected_flavors?: string[]
+          tastes_like?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          cocktail_name?: string
+          created_at?: string
+          custom_preference?: string
+          flavor_profile?: string
+          id?: number
+          image_data?: string | null
+          image_url?: string | null
+          ingredients?: string[]
+          lang?: string
+          original_mood?: string
+          recipe?: string
+          roast?: string
+          selected_flavors?: string[]
+          tastes_like?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
