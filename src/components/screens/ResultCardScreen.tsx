@@ -221,6 +221,9 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
               </li>
             ))}
           </ul>
+          <p className="text-[9px] mt-2 italic" style={{ color: "var(--app-text-muted)" }}>
+            {labels.ingredientsBar}
+          </p>
         </div>
 
         {/* Recipe — numbered steps */}
