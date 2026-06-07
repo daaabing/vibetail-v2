@@ -293,6 +293,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     tastingNotes: t("result.tasting"),
     ingredients: t("result.ingredients"),
     ingredientsRef: t("result.ingredients.ref"),
+    ingredientsBar: t("result.ingredients.bar"),
     howToMake: t("result.howToMake"),
     scanQr: t("result.scanQr"),
   };
