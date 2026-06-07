@@ -1,8 +1,9 @@
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import * as htmlToImage from "html-to-image";
+import QRCode from "qrcode";
 import { type Cocktail, decodeCocktailFromHash, encodeCocktailToHash, getCocktail, updateCocktailImage } from "@/lib/cocktails-store";
 import { useLang } from "@/lib/i18n";
 
