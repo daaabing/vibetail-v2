@@ -309,9 +309,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   }, [cocktail]);
   useEffect(() => {
     if (!shareUrl) return;
-    QRCode.toDataURL(shareUrl, { margin: 2, width: 320, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } })
+    QRCode.toDataURL(shareUrl, { margin: 2, width: 512, errorCorrectionLevel: "L", color: { dark: "#000000", light: "#ffffff" } })
       .then(setQrDataUrl)
-      .catch(() => setQrDataUrl(null));
+      .catch((err) => { console.error("QR generation failed", err); setQrDataUrl(null); });
   }, [shareUrl]);
 
   useEffect(() => {
@@ -406,8 +406,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         if (!qr) return resolve(canvas.toDataURL("image/png"));
         const qrImg = new Image();
         qrImg.onload = () => {
-          const qrSize = Math.round(canvas.width * 0.18);
-          const pad = Math.round(canvas.width * 0.04);
+          const qrSize = Math.round(canvas.width * 0.28);
+          const pad = Math.round(canvas.width * 0.03);
           const x = canvas.width - qrSize - pad;
           const y = canvas.height - qrSize - pad;
           // White backdrop with quiet zone for scan reliability
