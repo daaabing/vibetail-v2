@@ -610,7 +610,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
       {/* ── CTA buttons ── */}
       <div className="px-5 pb-28 md:pb-8 pt-3 flex-shrink-0 space-y-2">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {/* Save → download */}
           <motion.button
             whileTap={{ scale: 0.96 }}
