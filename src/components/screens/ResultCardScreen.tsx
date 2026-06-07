@@ -309,7 +309,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   }, [cocktail]);
   useEffect(() => {
     if (!shareUrl) return;
-    QRCode.toDataURL(shareUrl, { margin: 0, width: 240, color: { dark: "#4a3e3d", light: "#fdf8f300" } })
+    QRCode.toDataURL(shareUrl, { margin: 2, width: 320, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } })
       .then(setQrDataUrl)
       .catch(() => setQrDataUrl(null));
   }, [shareUrl]);
@@ -410,9 +410,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           const pad = Math.round(canvas.width * 0.04);
           const x = canvas.width - qrSize - pad;
           const y = canvas.height - qrSize - pad;
-          // Soft backdrop for scan reliability
-          ctx.fillStyle = "#fdf8f3";
-          ctx.fillRect(x - 6, y - 6, qrSize + 12, qrSize + 12);
+          // White backdrop with quiet zone for scan reliability
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(x - 10, y - 10, qrSize + 20, qrSize + 20);
           ctx.drawImage(qrImg, x, y, qrSize, qrSize);
           resolve(canvas.toDataURL("image/png"));
         };
