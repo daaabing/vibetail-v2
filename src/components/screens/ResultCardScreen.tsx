@@ -7,6 +7,17 @@ import QRCode from "qrcode";
 import { type Cocktail, decodeCocktailFromHash, encodeCocktailToHash, getCocktail, updateCocktailImage } from "@/lib/cocktails-store";
 import { useLang } from "@/lib/i18n";
 
+/** Strip quantity / measurement prefixes from AI-generated ingredient strings. */
+function simplifyIngredient(name: string): string {
+  return name
+    .replace(/^\d+(\.\d+)?\s*(oz|ounce|tsp|tbsp|ml|cl|cup|part|shot|drop|pinch|dash|splash|squeeze|sprig|slice|piece|crushed|g|kg|lb|oz\.|tsp\.|tbsp\.)\s*(of\s+)?/i, "")
+    .replace(/^[Aa]n?\s+(garnish|splash|squeeze|dash|sprig|twist|pinch|drop|slice|piece)\s*(of\s+)?/i, "")
+    .replace(/^Topped with\s+/i, "")
+    .replace(/^Garnish:\s*[Aa]n?\s*/i, "")
+    .replace(/^Garnish:\s*/i, "")
+    .trim();
+}
+
 interface ResultCardScreenProps {
   id: number;
 }
