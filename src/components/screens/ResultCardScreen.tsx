@@ -146,7 +146,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
 function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
   cocktail: Cocktail;
   tapHint: string;
-  labels: { originalVibe: string; tastingNotes: string; ingredients: string; howToMake: string; };
+  labels: { originalVibe: string; tastingNotes: string; ingredients: string; ingredientsBar: string; howToMake: string; };
   hideRecipe?: boolean;
 }) {
   const recipeLines = cocktail.recipe.split("\n").filter(Boolean);
