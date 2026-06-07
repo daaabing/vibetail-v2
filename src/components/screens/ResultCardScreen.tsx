@@ -382,6 +382,23 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     }
   };
 
+  const handlePrint = async () => {
+    if (!cocktail || !captureRef.current) return;
+    try {
+      const dataUrl = await htmlToImage.toPng(captureRef.current, {
+        pixelRatio: 2,
+        cacheBust: true,
+        backgroundColor: "#fdf8f3",
+      });
+      const w = window.open("", "_blank");
+      if (!w) return;
+      w.document.write(`<!doctype html><html><head><title>${cocktail.cocktailName} — Vibetail</title><style>@page{margin:12mm;}html,body{margin:0;padding:0;background:#fdf8f3;}img{display:block;width:100%;height:auto;}</style></head><body><img src="${dataUrl}" onload="setTimeout(function(){window.focus();window.print();},150)" /></body></html>`);
+      w.document.close();
+    } catch (e) {
+      console.error("print error", e);
+    }
+  };
+
   const handleShare = async () => {
     if (!cocktail) return;
     const encoded = encodeCocktailToHash(cocktail);
