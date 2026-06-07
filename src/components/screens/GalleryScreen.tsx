@@ -53,8 +53,7 @@ export default function GalleryScreen() {
     if (authLoading) return;
     setRestCtx(getRestaurantCtx());
     if (!user) {
-      setCocktails([]);
-      setLoading(false);
+      navigate({ to: "/auth" });
       return;
     }
     setLoading(true);
@@ -62,28 +61,16 @@ export default function GalleryScreen() {
       setCocktails(list);
       setLoading(false);
     });
-  }, [user, authLoading]);
+  }, [user, authLoading, navigate]);
 
   useEffect(() => { setPage(1); }, [lang]);
 
-  if (!authLoading && !user) {
+  if (authLoading || !user) {
     return (
-      <div className="min-h-svh flex flex-col items-center justify-center px-5 text-center space-y-4">
-        <p className="text-sm" style={{ color: "var(--app-text-secondary)" }}>
-          {lang === "zh" ? "登录后查看你的 Vibe Bar" : "Sign in to see your Vibe Bar"}
-        </p>
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => navigate({ to: "/auth" })}
-          className="px-6 py-3 rounded-md text-sm font-semibold"
-          style={{
-            background: "linear-gradient(135deg, #C2410C 0%, #E0533C 100%)",
-            color: "white",
-            boxShadow: "2px 3px 12px rgba(194,65,12,0.25)",
-          }}
-        >
-          {lang === "zh" ? "去登录" : "Sign in"}
-        </motion.button>
+      <div className="min-h-svh flex items-center justify-center">
+        <div className="text-xs" style={{ color: "var(--app-text-muted)" }}>
+          {lang === "zh" ? "加载中…" : "Loading…"}
+        </div>
       </div>
     );
   }
