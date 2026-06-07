@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { useRouterState, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useLang } from "@/lib/i18n";
@@ -7,6 +7,7 @@ import AuthModal from "@/components/moodtail/AuthModal";
 
 export default function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
   const { t } = useLang();
   const { user } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
@@ -60,15 +61,7 @@ export default function BottomNav() {
                     setShowAuth(true);
                     return;
                   }
-                  // For normal navigation we still need to navigate.
-                  // But Link doesn't expose programmatic navigation easily here,
-                  // so use a tiny workaround: push state manually or use window.location
-                  // Actually, let's just use window.location for the non-gallery case
-                  if (isGallery && user) {
-                    window.location.href = tab.to;
-                  } else {
-                    window.location.href = tab.to;
-                  }
+                  navigate({ to: tab.to as any });
                 }}
                 className="flex-1 flex flex-col items-center gap-1 py-3"
               >
