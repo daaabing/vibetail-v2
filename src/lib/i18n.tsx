@@ -69,6 +69,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     "result.save": "保存卡片",
     "result.saving": "保存中…",
     "result.share": "分享",
+    "result.print": "打印",
     "result.copied": "链接已复制 ✓",
     "result.another": "再测一次",
     // Gallery
@@ -133,6 +134,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     "result.save": "Save Card",
     "result.saving": "Saving…",
     "result.share": "Share",
+    "result.print": "Print",
     "result.copied": "Link Copied ✓",
     "result.another": "Check Another Vibe",
     // Gallery
