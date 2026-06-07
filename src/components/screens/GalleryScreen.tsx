@@ -64,6 +64,8 @@ export default function GalleryScreen() {
     });
   }, [user, authLoading]);
 
+  useEffect(() => { setPage(1); }, [lang]);
+
   if (!authLoading && !user) {
     return (
       <div className="min-h-svh flex flex-col items-center justify-center px-5 text-center space-y-4">
@@ -93,7 +95,6 @@ export default function GalleryScreen() {
     const cLang = c.lang ?? (cjk.test(c.cocktailName) ? "zh" : "en");
     return cLang === lang;
   });
-  useEffect(() => { setPage(1); }, [lang]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
