@@ -392,7 +392,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       });
       const w = window.open("", "_blank");
       if (!w) return;
-      w.document.write(`<!doctype html><html><head><title>${cocktail.cocktailName} — Vibetail</title><style>@page{margin:12mm;}html,body{margin:0;padding:0;background:#fdf8f3;}img{display:block;width:100%;height:auto;}</style></head><body><img src="${dataUrl}" onload="setTimeout(function(){window.focus();window.print();},150)" /></body></html>`);
+      w.document.write(`<!doctype html><html><head><title>${cocktail.cocktailName} — Vibetail</title><style>@page{size:2in 3in;margin:0;}html,body{margin:0;padding:0;background:#fdf8f3;}.sheet{width:2in;height:3in;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fdf8f3;}.sheet img{max-width:100%;max-height:100%;width:auto;height:auto;display:block;}@media print{.sheet{page-break-after:always;}}</style></head><body><div class="sheet"><img src="${dataUrl}" onload="setTimeout(function(){window.focus();window.print();},200)" /></div></body></html>`);
       w.document.close();
     } catch (e) {
       console.error("print error", e);
