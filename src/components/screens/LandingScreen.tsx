@@ -35,7 +35,7 @@ function InkButton({
       {primary && (
         <span className="absolute inset-0 pointer-events-none" style={{
           background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-          animation: "liquid-flow 3s linear infinite",
+          animation: "liquid-flow 4s linear infinite",
         }} />
       )}
       {primary && (

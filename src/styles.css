@@ -87,6 +87,7 @@
 }
 @keyframes liquid-flow {
   0% { transform: translateX(-100%); }
+  35% { transform: translateX(100%); }
   100% { transform: translateX(100%); }
 }
 @keyframes pulse-distill {
