@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import * as htmlToImage from "html-to-image";
@@ -21,6 +21,88 @@ function simplifyIngredient(name: string): string {
 interface ResultCardScreenProps {
   id: number;
 }
+
+/* ── Print frame styles (relief / border around the printed card) ── */
+type FrameStyle = {
+  id: string;
+  label: string;
+  inset: string;
+  outerCss: string;
+  innerCss: string;
+  showCorners: boolean;
+  cornerSize: string;
+  cornerOffset: string;
+  cornerCss: string;
+};
+
+const FRAME_STYLES: FrameStyle[] = [
+  {
+    id: "none",
+    label: "None",
+    inset: "0",
+    outerCss: "",
+    innerCss: "",
+    showCorners: false,
+    cornerSize: "0",
+    cornerOffset: "0",
+    cornerCss: "",
+  },
+  {
+    id: "classic",
+    label: "Classic",
+    inset: "0.14in",
+    outerCss: "border: 2px solid #4a3e3d; outline: 1px solid #4a3e3d; outline-offset: -0.08in;",
+    innerCss: "",
+    showCorners: false,
+    cornerSize: "0",
+    cornerOffset: "0",
+    cornerCss: "",
+  },
+  {
+    id: "deco",
+    label: "Art Deco",
+    inset: "0.16in",
+    outerCss: "border: 3px solid #b8893a;",
+    innerCss: "border: 1px solid #b8893a;",
+    showCorners: true,
+    cornerSize: "0.22in",
+    cornerOffset: "0.04in",
+    cornerCss: "border-top: 3px solid #b8893a; border-left: 3px solid #b8893a;",
+  },
+  {
+    id: "vintage",
+    label: "Vintage",
+    inset: "0.18in",
+    outerCss: "border: 2px dashed #6b4a2b; box-shadow: inset 0 0 0 4px #fdf8f3, inset 0 0 0 5px #6b4a2b;",
+    innerCss: "",
+    showCorners: false,
+    cornerSize: "0",
+    cornerOffset: "0",
+    cornerCss: "",
+  },
+  {
+    id: "double",
+    label: "Double Line",
+    inset: "0.15in",
+    outerCss: "border: 1px solid #4a3e3d; box-shadow: inset 0 0 0 3px #fdf8f3, inset 0 0 0 4px #4a3e3d;",
+    innerCss: "",
+    showCorners: false,
+    cornerSize: "0",
+    cornerOffset: "0",
+    cornerCss: "",
+  },
+  {
+    id: "bold",
+    label: "Bold",
+    inset: "0.12in",
+    outerCss: "border: 6px solid #e0533c;",
+    innerCss: "",
+    showCorners: false,
+    cornerSize: "0",
+    cornerOffset: "0",
+    cornerCss: "",
+  },
+];
 
 /* ── Skeleton card ── */
 function CardSkeleton() {
@@ -287,6 +369,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showFramePicker, setShowFramePicker] = useState(false);
   const captureRef = useRef<HTMLDivElement>(null);
 
   const tapHint = t("result.tap");
@@ -446,7 +529,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     }
   };
 
-  const handlePrint = async () => {
+  const handlePrint = async (frameId: string = "none") => {
     if (!cocktail || !captureRef.current) return;
     try {
       const raw = await htmlToImage.toPng(captureRef.current, {
@@ -455,9 +538,31 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         backgroundColor: "#fdf8f3",
       });
       const dataUrl = await compositeQr(raw, qrDataUrl);
+      const frame = FRAME_STYLES.find((f) => f.id === frameId) ?? FRAME_STYLES[0];
       const w = window.open("", "_blank");
       if (!w) return;
-      w.document.write(`<!doctype html><html><head><title>${cocktail.cocktailName} — Vibetail</title><style>@page{size:2in 3in;margin:0;}html,body{margin:0;padding:0;background:#fdf8f3;}.sheet{width:2in;height:3in;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fdf8f3;}.sheet img{max-width:100%;max-height:100%;width:auto;height:auto;display:block;}@media print{.sheet{page-break-after:always;}}</style></head><body><div class="sheet"><img src="${dataUrl}" onload="setTimeout(function(){window.focus();window.print();},200)" /></div></body></html>`);
+      // 2in x 3in card; frame is inset padding around the image
+      const html = `<!doctype html><html><head><title>${cocktail.cocktailName} — Vibetail</title>
+<style>
+  @page { size: 2in 3in; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fdf8f3; }
+  .sheet { width: 2in; height: 3in; background: #fdf8f3; position: relative; box-sizing: border-box; }
+  .frame { position: absolute; inset: 0; box-sizing: border-box; ${frame.outerCss} }
+  .inner { position: absolute; inset: ${frame.inset}; box-sizing: border-box; ${frame.innerCss} display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .inner img { max-width:100%; max-height:100%; width:auto; height:auto; display:block; }
+  .corner { position:absolute; width:${frame.cornerSize}; height:${frame.cornerSize}; ${frame.cornerCss} }
+  .c-tl { top:${frame.cornerOffset}; left:${frame.cornerOffset}; }
+  .c-tr { top:${frame.cornerOffset}; right:${frame.cornerOffset}; transform: rotate(90deg); }
+  .c-br { bottom:${frame.cornerOffset}; right:${frame.cornerOffset}; transform: rotate(180deg); }
+  .c-bl { bottom:${frame.cornerOffset}; left:${frame.cornerOffset}; transform: rotate(270deg); }
+  @media print { .sheet { page-break-after: always; } }
+</style></head><body>
+<div class="sheet">
+  <div class="frame"></div>
+  ${frame.showCorners ? '<div class="corner c-tl"></div><div class="corner c-tr"></div><div class="corner c-br"></div><div class="corner c-bl"></div>' : ''}
+  <div class="inner"><img src="${dataUrl}" onload="setTimeout(function(){window.focus();window.print();},250)" /></div>
+</div></body></html>`;
+      w.document.write(html);
       w.document.close();
     } catch (e) {
       console.error("print error", e);
@@ -734,7 +839,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           {isRestaurant && (
             <motion.button
               whileTap={{ scale: 0.96 }}
-              onClick={handlePrint}
+              onClick={() => setShowFramePicker(true)}
               className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
               style={{
                 borderRadius: "4px",
@@ -761,6 +866,94 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           {t("result.another")}
         </motion.button>
       </div>
+
+      {/* Frame picker modal */}
+      {showFramePicker && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.45)" }}
+          onClick={() => setShowFramePicker(false)}
+        >
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl p-5"
+            style={{ background: "#fdf8f3", border: "1px solid rgba(74,62,61,0.15)" }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold tracking-wider uppercase" style={{ color: "var(--app-text-primary)", fontFamily: "var(--font-body)" }}>
+                {t("result.chooseFrame") || "Choose a frame"}
+              </h3>
+              <button onClick={() => setShowFramePicker(false)} className="text-xs" style={{ color: "var(--app-text-muted)" }}>✕</button>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {FRAME_STYLES.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => { setShowFramePicker(false); handlePrint(f.id); }}
+                  className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-black/5 transition"
+                >
+                  <div
+                    className="relative"
+                    style={{ width: 72, height: 108, background: "#fdf8f3" }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        boxSizing: "border-box",
+                        ...parseFrameCss(f.outerCss),
+                      }}
+                    />
+                    {f.showCorners && (
+                      <>
+                        {["tl","tr","br","bl"].map((c, i) => (
+                          <div key={c} style={{
+                            position: "absolute",
+                            width: 14, height: 14,
+                            boxSizing: "border-box",
+                            ...parseFrameCss(f.cornerCss),
+                            top: c.includes("t") ? 3 : undefined,
+                            bottom: c.includes("b") ? 3 : undefined,
+                            left: c.includes("l") ? 3 : undefined,
+                            right: c.includes("r") ? 3 : undefined,
+                            transform: `rotate(${i*90}deg)`,
+                          }} />
+                        ))}
+                      </>
+                    )}
+                    <div style={{
+                      position: "absolute",
+                      inset: f.id === "none" ? 4 : 10,
+                      background: "linear-gradient(160deg,#e0533c33,#b8893a22)",
+                      borderRadius: 2,
+                    }} />
+                  </div>
+                  <span className="text-[10px] tracking-wider uppercase" style={{ color: "var(--app-text-secondary)", fontFamily: "var(--font-body)" }}>
+                    {f.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
+}
+
+/** Convert a small subset of inline CSS string into a React style object for the preview swatches. */
+function parseFrameCss(css: string): CSSProperties {
+  const style: Record<string, string> = {};
+  css.split(";").forEach((rule) => {
+    const idx = rule.indexOf(":");
+    if (idx < 0) return;
+    const key = rule.slice(0, idx).trim();
+    const val = rule.slice(idx + 1).trim();
+    if (!key || !val) return;
+    const camel = key.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    style[camel] = val;
+  });
+  return style as CSSProperties;
 }
