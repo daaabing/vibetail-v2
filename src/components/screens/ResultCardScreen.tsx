@@ -629,16 +629,11 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             </div>
           )}
 
-          {/* QR code — scan to open full card */}
-          {qrDataUrl && (
-            <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid rgba(210,201,189,0.6)", display: "flex", alignItems: "center", gap: 16 }}>
-              <img src={qrDataUrl} alt="QR" style={{ width: 96, height: 96, flexShrink: 0 }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)", marginBottom: 6 }}>Vibetail</div>
-                <p style={{ fontSize: 12, color: "var(--app-text-secondary)", lineHeight: 1.5, margin: 0 }}>{cardLabels.scanQr}</p>
-              </div>
-            </div>
-          )}
+          {/* Reserved space for QR — composited onto the exported image at a fixed position */}
+          <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid rgba(210,201,189,0.6)", minHeight: 120 }}>
+            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)", marginBottom: 6 }}>Vibetail</div>
+            <p style={{ fontSize: 12, color: "var(--app-text-secondary)", lineHeight: 1.5, margin: 0, maxWidth: "70%" }}>{cardLabels.scanQr}</p>
+          </div>
         </div>
       </div>
 
