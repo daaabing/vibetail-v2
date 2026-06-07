@@ -7,6 +7,17 @@ import QRCode from "qrcode";
 import { type Cocktail, decodeCocktailFromHash, encodeCocktailToHash, getCocktail, updateCocktailImage } from "@/lib/cocktails-store";
 import { useLang } from "@/lib/i18n";
 
+/** Strip quantity / measurement prefixes from AI-generated ingredient strings. */
+function simplifyIngredient(name: string): string {
+  return name
+    .replace(/^\d+(\.\d+)?\s*(oz|ounce|tsp|tbsp|ml|cl|cup|part|shot|drop|pinch|dash|splash|squeeze|sprig|slice|piece|crushed|g|kg|lb|oz\.|tsp\.|tbsp\.)\s*(of\s+)?/i, "")
+    .replace(/^[Aa]n?\s+(garnish|splash|squeeze|dash|sprig|twist|pinch|drop|slice|piece)\s*(of\s+)?/i, "")
+    .replace(/^Topped with\s+/i, "")
+    .replace(/^Garnish:\s*[Aa]n?\s*/i, "")
+    .replace(/^Garnish:\s*/i, "")
+    .trim();
+}
+
 interface ResultCardScreenProps {
   id: number;
 }
@@ -206,7 +217,7 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
                 style={{ color: "var(--app-text-secondary)" }}>
                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
                   style={{ backgroundColor: "var(--app-primary)" }} />
-                {ing}
+                {simplifyIngredient(ing)}
               </li>
             ))}
           </ul>
@@ -558,7 +569,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               {(cocktail.ingredients as string[]).map((ing, i) => (
                 <li key={i} style={{ position: "relative", paddingLeft: 16, fontSize: 13, color: "var(--app-text-secondary)", marginBottom: 8, lineHeight: 1.55, wordBreak: "break-word" }}>
                   <span style={{ position: "absolute", left: 0, top: 8, width: 6, height: 6, borderRadius: "50%", background: "var(--app-primary)" }} />
-                  {ing}
+                  {simplifyIngredient(ing)}
                 </li>
               ))}
             </ul>
