@@ -1,7 +1,10 @@
 
 import { useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { useLang } from "@/lib/i18n";
+import { useAuth } from "@/lib/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ---------- Ink-brush style button ---------- */
 function InkButton({
@@ -50,13 +53,46 @@ function InkButton({
 export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => void; hideGallery?: boolean } = {}) {
   const navigate = useNavigate();
   const { lang, setLang, t } = useLang();
+  const { user } = useAuth();
   const handleMix = onMix ?? (() => navigate({ to: "/mood-input" }));
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    toast.success(lang === "zh" ? "已退出" : "Signed out");
+  }
 
   return (
     <div className="min-h-svh flex flex-col p-5 pb-24 md:pb-5 w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative">
 
-      {/* Language toggle — top right */}
-      <div className="flex justify-end mb-2">
+      {/* Top right: auth + language toggle */}
+      <div className="flex justify-end items-center gap-2 mb-2">
+        {user ? (
+          <button
+            onClick={handleSignOut}
+            className="text-[11px] font-semibold tracking-wider px-3 py-1 rounded-full"
+            style={{
+              border: "1px solid rgba(74,62,61,0.2)",
+              background: "rgba(255,255,255,0.6)",
+              backdropFilter: "blur(8px)",
+              color: "var(--app-text-secondary)",
+            }}
+          >
+            {lang === "zh" ? "退出" : "Sign out"}
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate({ to: "/auth" })}
+            className="text-[11px] font-semibold tracking-wider px-3 py-1 rounded-full"
+            style={{
+              border: "1px solid rgba(74,62,61,0.2)",
+              background: "rgba(255,255,255,0.6)",
+              backdropFilter: "blur(8px)",
+              color: "var(--app-text-secondary)",
+            }}
+          >
+            {lang === "zh" ? "登录" : "Sign in"}
+          </button>
+        )}
         <div className="flex rounded-full overflow-hidden"
           style={{ border: "1px solid rgba(74,62,61,0.2)", background: "rgba(255,255,255,0.6)", backdropFilter: "blur(8px)" }}>
           {(["zh", "en"] as const).map((l) => (

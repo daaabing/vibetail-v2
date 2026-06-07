@@ -2,10 +2,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { type Cocktail, listCocktails } from "@/lib/cocktails-store";
+import { type Cocktail, listMyCocktails } from "@/lib/cocktails-store";
 import { formatDistanceToNow } from "date-fns";
 import { useLang } from "@/lib/i18n";
 import { getRestaurantCtx, clearRestaurantCtx } from "@/lib/restaurant-ctx";
+import { useAuth } from "@/lib/use-auth";
 
 const PAGE_SIZE = 10;
 
@@ -42,16 +43,48 @@ function LangToggle() {
 export default function GalleryScreen() {
   const navigate = useNavigate();
   const { t, lang } = useLang();
+  const { user, loading: authLoading } = useAuth();
   const [cocktails, setCocktails] = useState<Cocktail[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [restaurantCtx, setRestCtx] = useState<string | null>(null);
 
   useEffect(() => {
-    setCocktails(listCocktails());
+    if (authLoading) return;
     setRestCtx(getRestaurantCtx());
-    setLoading(false);
-  }, []);
+    if (!user) {
+      setCocktails([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    listMyCocktails().then((list) => {
+      setCocktails(list);
+      setLoading(false);
+    });
+  }, [user, authLoading]);
+
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-svh flex flex-col items-center justify-center px-5 text-center space-y-4">
+        <p className="text-sm" style={{ color: "var(--app-text-secondary)" }}>
+          {lang === "zh" ? "登录后查看你的 Vibe Bar" : "Sign in to see your Vibe Bar"}
+        </p>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate({ to: "/auth" })}
+          className="px-6 py-3 rounded-md text-sm font-semibold"
+          style={{
+            background: "linear-gradient(135deg, #C2410C 0%, #E0533C 100%)",
+            color: "white",
+            boxShadow: "2px 3px 12px rgba(194,65,12,0.25)",
+          }}
+        >
+          {lang === "zh" ? "去登录" : "Sign in"}
+        </motion.button>
+      </div>
+    );
+  }
 
   // Filter by current language. Legacy entries without an explicit `lang`
   // field are bucketed by sniffing CJK characters in the cocktail name.

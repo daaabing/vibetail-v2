@@ -126,16 +126,26 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
         return;
       }
       const generated = await res.json();
-      const data = createCocktail({
-        mood,
-        selectedFlavors,
-        customPreference,
-        photoIngredients,
-        generated,
-        imageUrl: tashiPick?.imageUrl ?? null,
-        lang,
-      });
-      navigate({ to: "/result/$id", params: { id: String(data.id) }, search: isRestaurant ? { restaurant: restaurantId } : {} });
+      try {
+        const data = await createCocktail({
+          mood,
+          selectedFlavors,
+          customPreference,
+          photoIngredients,
+          generated,
+          imageUrl: tashiPick?.imageUrl ?? null,
+          lang,
+        });
+        navigate({ to: "/result/$id", params: { id: String(data.id) }, search: isRestaurant ? { restaurant: restaurantId } : {} });
+      } catch (e) {
+        if (e instanceof Error && e.message === "NOT_SIGNED_IN") {
+          toast.error(lang === "zh" ? "请先登录再保存你的酒" : "Please sign in to save your cocktail");
+          navigate({ to: "/auth" });
+        } else {
+          throw e;
+        }
+        setIsGenerating(false);
+      }
     } catch {
       toast.error(lang === "zh" ? "无法读取你的 vibe，请重试！" : "Couldn't read your vibe. Try again!");
       setIsGenerating(false);
