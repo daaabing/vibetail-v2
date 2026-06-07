@@ -944,7 +944,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 }
 
 /** Convert a small subset of inline CSS string into a React style object for the preview swatches. */
-function parseFrameCss(css: string): React.CSSProperties {
+function parseFrameCss(css: string): CSSProperties {
   const style: Record<string, string> = {};
   css.split(";").forEach((rule) => {
     const idx = rule.indexOf(":");
@@ -955,5 +955,5 @@ function parseFrameCss(css: string): React.CSSProperties {
     const camel = key.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
     style[camel] = val;
   });
-  return style as React.CSSProperties;
+  return style as CSSProperties;
 }
