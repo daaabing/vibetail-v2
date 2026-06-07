@@ -281,8 +281,23 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     originalVibe: t("result.original"),
     tastingNotes: t("result.tasting"),
     ingredients: t("result.ingredients"),
+    ingredientsRef: t("result.ingredients.ref"),
     howToMake: t("result.howToMake"),
+    scanQr: t("result.scanQr"),
   };
+
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const shareUrl = useMemo(() => {
+    if (!cocktail || typeof window === "undefined") return "";
+    const encoded = encodeCocktailToHash(cocktail);
+    return `${window.location.origin}/result/${cocktail.id}?d=${encoded}`;
+  }, [cocktail]);
+  useEffect(() => {
+    if (!shareUrl) return;
+    QRCode.toDataURL(shareUrl, { margin: 0, width: 240, color: { dark: "#4a3e3d", light: "#fdf8f300" } })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(null));
+  }, [shareUrl]);
 
   useEffect(() => {
     const data = getCocktail(Number(id));
