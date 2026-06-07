@@ -287,6 +287,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showFramePicker, setShowFramePicker] = useState(false);
   const captureRef = useRef<HTMLDivElement>(null);
 
   const tapHint = t("result.tap");
