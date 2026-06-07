@@ -1,8 +1,9 @@
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import * as htmlToImage from "html-to-image";
+import QRCode from "qrcode";
 import { type Cocktail, decodeCocktailFromHash, encodeCocktailToHash, getCocktail, updateCocktailImage } from "@/lib/cocktails-store";
 import { useLang } from "@/lib/i18n";
 
@@ -280,8 +281,23 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     originalVibe: t("result.original"),
     tastingNotes: t("result.tasting"),
     ingredients: t("result.ingredients"),
+    ingredientsRef: t("result.ingredients.ref"),
     howToMake: t("result.howToMake"),
+    scanQr: t("result.scanQr"),
   };
+
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const shareUrl = useMemo(() => {
+    if (!cocktail || typeof window === "undefined") return "";
+    const encoded = encodeCocktailToHash(cocktail);
+    return `${window.location.origin}/result/${cocktail.id}?d=${encoded}`;
+  }, [cocktail]);
+  useEffect(() => {
+    if (!shareUrl) return;
+    QRCode.toDataURL(shareUrl, { margin: 0, width: 240, color: { dark: "#4a3e3d", light: "#fdf8f300" } })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(null));
+  }, [shareUrl]);
 
   useEffect(() => {
     const data = getCocktail(Number(id));
@@ -534,7 +550,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
           {/* Ingredients */}
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)", marginBottom: 8 }}>{cardLabels.ingredients}</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)" }}>{cardLabels.ingredients}</span>
+              <span style={{ fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: "var(--app-primary)", fontStyle: "italic" }}>· {cardLabels.ingredientsRef}</span>
+            </div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {(cocktail.ingredients as string[]).map((ing, i) => (
                 <li key={i} style={{ position: "relative", paddingLeft: 16, fontSize: 13, color: "var(--app-text-secondary)", marginBottom: 8, lineHeight: 1.55, wordBreak: "break-word" }}>
@@ -557,6 +576,17 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                   </li>
                 ))}
               </ol>
+            </div>
+          )}
+
+          {/* QR code — scan to open full card */}
+          {qrDataUrl && (
+            <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid rgba(210,201,189,0.6)", display: "flex", alignItems: "center", gap: 16 }}>
+              <img src={qrDataUrl} alt="QR" style={{ width: 96, height: 96, flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)", marginBottom: 6 }}>Vibetail</div>
+                <p style={{ fontSize: 12, color: "var(--app-text-secondary)", lineHeight: 1.5, margin: 0 }}>{cardLabels.scanQr}</p>
+              </div>
             </div>
           )}
         </div>
