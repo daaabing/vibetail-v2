@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useLang } from "@/lib/i18n";
 import { getRestaurantCtx, clearRestaurantCtx } from "@/lib/restaurant-ctx";
 import { useAuth } from "@/lib/use-auth";
+import AuthModal from "@/components/moodtail/AuthModal";
 
 const PAGE_SIZE = 10;
 
