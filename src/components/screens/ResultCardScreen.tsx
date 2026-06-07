@@ -309,7 +309,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   }, [cocktail]);
   useEffect(() => {
     if (!shareUrl) return;
-    QRCode.toDataURL(shareUrl, { margin: 0, width: 240, color: { dark: "#4a3e3d", light: "#fdf8f300" } })
+    QRCode.toDataURL(shareUrl, { margin: 2, width: 320, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } })
       .then(setQrDataUrl)
       .catch(() => setQrDataUrl(null));
   }, [shareUrl]);
