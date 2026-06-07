@@ -658,6 +658,25 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             )}
             <span>{copied ? t("result.copied") : t("result.share")}</span>
           </motion.button>
+
+          {/* Print */}
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={handlePrint}
+            className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
+            style={{
+              borderRadius: "4px",
+              background: "transparent",
+              color: "var(--app-text-secondary)",
+              border: "1.5px solid rgba(74,62,61,0.3)",
+              boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
+            }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="var(--app-primary)" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>{t("result.print")}</span>
+          </motion.button>
         </div>
 
         <motion.button
