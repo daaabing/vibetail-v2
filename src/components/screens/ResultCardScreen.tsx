@@ -391,15 +391,48 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     };
   }, [cocktail]);
 
+  // Composite the QR code on top of the captured PNG at a fixed position.
+  // QR is generated independently and pasted bottom-right with a clean backdrop.
+  const compositeQr = (baseDataUrl: string, qr: string | null): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const base = new Image();
+      base.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = base.naturalWidth;
+        canvas.height = base.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("no ctx"));
+        ctx.drawImage(base, 0, 0);
+        if (!qr) return resolve(canvas.toDataURL("image/png"));
+        const qrImg = new Image();
+        qrImg.onload = () => {
+          const qrSize = Math.round(canvas.width * 0.18);
+          const pad = Math.round(canvas.width * 0.04);
+          const x = canvas.width - qrSize - pad;
+          const y = canvas.height - qrSize - pad;
+          // Soft backdrop for scan reliability
+          ctx.fillStyle = "#fdf8f3";
+          ctx.fillRect(x - 6, y - 6, qrSize + 12, qrSize + 12);
+          ctx.drawImage(qrImg, x, y, qrSize, qrSize);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        qrImg.onerror = () => resolve(canvas.toDataURL("image/png"));
+        qrImg.src = qr;
+      };
+      base.onerror = reject;
+      base.src = baseDataUrl;
+    });
+
   const handleSave = async () => {
     if (!cocktail || !captureRef.current) return;
     setSaving(true);
     try {
-      const dataUrl = await htmlToImage.toPng(captureRef.current, {
+      const raw = await htmlToImage.toPng(captureRef.current, {
         pixelRatio: 2,
         cacheBust: true,
         backgroundColor: "#fdf8f3",
       });
+      const dataUrl = await compositeQr(raw, qrDataUrl);
       const link = document.createElement("a");
       link.download = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
       link.href = dataUrl;
@@ -416,11 +449,12 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const handlePrint = async () => {
     if (!cocktail || !captureRef.current) return;
     try {
-      const dataUrl = await htmlToImage.toPng(captureRef.current, {
+      const raw = await htmlToImage.toPng(captureRef.current, {
         pixelRatio: 2,
         cacheBust: true,
         backgroundColor: "#fdf8f3",
       });
+      const dataUrl = await compositeQr(raw, qrDataUrl);
       const w = window.open("", "_blank");
       if (!w) return;
       w.document.write(`<!doctype html><html><head><title>${cocktail.cocktailName} — Vibetail</title><style>@page{size:2in 3in;margin:0;}html,body{margin:0;padding:0;background:#fdf8f3;}.sheet{width:2in;height:3in;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fdf8f3;}.sheet img{max-width:100%;max-height:100%;width:auto;height:auto;display:block;}@media print{.sheet{page-break-after:always;}}</style></head><body><div class="sheet"><img src="${dataUrl}" onload="setTimeout(function(){window.focus();window.print();},200)" /></div></body></html>`);
