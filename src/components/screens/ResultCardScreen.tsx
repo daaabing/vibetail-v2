@@ -406,8 +406,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         if (!qr) return resolve(canvas.toDataURL("image/png"));
         const qrImg = new Image();
         qrImg.onload = () => {
-          const qrSize = Math.round(canvas.width * 0.18);
-          const pad = Math.round(canvas.width * 0.04);
+          const qrSize = Math.round(canvas.width * 0.28);
+          const pad = Math.round(canvas.width * 0.03);
           const x = canvas.width - qrSize - pad;
           const y = canvas.height - qrSize - pad;
           // White backdrop with quiet zone for scan reliability
