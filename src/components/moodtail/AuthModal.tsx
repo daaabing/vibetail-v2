@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,17 @@ export default function AuthModal({ open, onClose }: { open: boolean; onClose: (
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Auto-close once the user is signed in (covers email/password, Google OAuth redirect back, etc.)
+  useEffect(() => {
+    if (!open) return;
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) {
+        onClose();
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [open, onClose]);
 
   const T = {
     signIn: isZh ? "登录" : "Sign in",
@@ -49,7 +60,7 @@ export default function AuthModal({ open, onClose }: { open: boolean; onClose: (
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        onClose();
+        // onClose handled by onAuthStateChange effect
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Auth error");
