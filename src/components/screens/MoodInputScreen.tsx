@@ -287,7 +287,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
             >
               <span className="absolute inset-0 pointer-events-none" style={{
                 background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-                animation: "liquid-flow 3s ease-in-out infinite",
+                animation: "liquid-flow 3s linear infinite",
               }} />
               <span className="absolute top-0 left-4 right-4 h-px pointer-events-none" style={{ background: "rgba(255,255,255,0.3)" }} />
               <span className="relative z-10 flex items-center gap-2">
@@ -492,7 +492,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
             >
               <span className="absolute inset-0 pointer-events-none" style={{
                 background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-                animation: "liquid-flow 3s ease-in-out infinite",
+                animation: "liquid-flow 3s linear infinite",
               }} />
               <span className="absolute top-0 left-4 right-4 h-px pointer-events-none" style={{ background: "rgba(255,255,255,0.3)" }} />
               <span className="relative z-10 flex items-center gap-2">
@@ -590,7 +590,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
                 >
                   <span className="absolute inset-0 pointer-events-none" style={{
                     background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-                    animation: "liquid-flow 3s ease-in-out infinite",
+                    animation: "liquid-flow 3s linear infinite",
                   }} />
                   <span className="absolute top-0 left-4 right-4 h-px pointer-events-none" style={{ background: "rgba(255,255,255,0.3)" }} />
                   <span className="relative z-10">{isGenerating ? t("flavor.loading") : t("ingredients.detected.continue")}</span>
@@ -607,7 +607,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
                   >
                     <span className="absolute inset-0 pointer-events-none" style={{
                       background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-                      animation: "liquid-flow 3s ease-in-out infinite",
+                      animation: "liquid-flow 3s linear infinite",
                     }} />
                     <span className="absolute top-0 left-4 right-4 h-px pointer-events-none" style={{ background: "rgba(255,255,255,0.3)" }} />
                     <svg className="w-4 h-4 relative z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
