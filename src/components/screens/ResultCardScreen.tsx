@@ -309,9 +309,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   }, [cocktail]);
   useEffect(() => {
     if (!shareUrl) return;
-    QRCode.toDataURL(shareUrl, { margin: 2, width: 320, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } })
+    QRCode.toDataURL(shareUrl, { margin: 2, width: 512, errorCorrectionLevel: "L", color: { dark: "#000000", light: "#ffffff" } })
       .then(setQrDataUrl)
-      .catch(() => setQrDataUrl(null));
+      .catch((err) => { console.error("QR generation failed", err); setQrDataUrl(null); });
   }, [shareUrl]);
 
   useEffect(() => {
