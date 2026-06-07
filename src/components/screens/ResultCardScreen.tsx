@@ -370,6 +370,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showFramePicker, setShowFramePicker] = useState(false);
+  const [selectedFrameId, setSelectedFrameId] = useState<string>("classic");
   const captureRef = useRef<HTMLDivElement>(null);
 
   const tapHint = t("result.tap");
@@ -867,78 +868,179 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         </motion.button>
       </div>
 
-      {/* Frame picker modal */}
-      {showFramePicker && (
-        <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.45)" }}
-          onClick={() => setShowFramePicker(false)}
-        >
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl p-5"
-            style={{ background: "#fdf8f3", border: "1px solid rgba(74,62,61,0.15)" }}
+      {/* Frame picker modal — interactive preview */}
+      {showFramePicker && (() => {
+        const selected = FRAME_STYLES.find((f) => f.id === selectedFrameId) ?? FRAME_STYLES[0];
+        // Preview card is 2:3 aspect — match the printed 2in x 3in proportion.
+        const PREVIEW_W = 220;
+        const PREVIEW_H = 330;
+        // Scale "in"-based insets/borders to preview pixels (1in -> PREVIEW_W/2 px).
+        const scaleIn = (v: string) => v.replace(/([\d.]+)in/g, (_, n) => `${(parseFloat(n) * PREVIEW_W) / 2}px`);
+        const previewOuterCss = scaleIn(selected.outerCss);
+        const previewInnerCss = scaleIn(selected.innerCss);
+        const previewCornerCss = scaleIn(selected.cornerCss);
+        const previewInset = scaleIn(selected.inset);
+        const previewCornerSize = scaleIn(selected.cornerSize);
+        const previewCornerOffset = scaleIn(selected.cornerOffset);
+
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
+            onClick={() => setShowFramePicker(false)}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold tracking-wider uppercase" style={{ color: "var(--app-text-primary)", fontFamily: "var(--font-body)" }}>
-                {t("result.chooseFrame") || "Choose a frame"}
-              </h3>
-              <button onClick={() => setShowFramePicker(false)} className="text-xs" style={{ color: "var(--app-text-muted)" }}>✕</button>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {FRAME_STYLES.map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => { setShowFramePicker(false); handlePrint(f.id); }}
-                  className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-black/5 transition"
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-2xl p-5 flex flex-col gap-5"
+              style={{ background: "#fdf8f3", border: "1px solid rgba(74,62,61,0.15)", maxHeight: "92vh" }}
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold tracking-wider uppercase" style={{ color: "var(--app-text-primary)", fontFamily: "var(--font-body)" }}>
+                  {t("result.chooseFrame") || "Choose a frame"}
+                </h3>
+                <button onClick={() => setShowFramePicker(false)} className="text-xs w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/5" style={{ color: "var(--app-text-muted)" }}>✕</button>
+              </div>
+
+              {/* Live preview of the actual card inside the frame */}
+              <div className="flex justify-center py-2">
+                <div
+                  style={{
+                    width: PREVIEW_W,
+                    height: PREVIEW_H,
+                    position: "relative",
+                    background: "#fdf8f3",
+                    boxShadow: "0 12px 32px rgba(0,0,0,0.18)",
+                    boxSizing: "border-box",
+                  }}
                 >
-                  <div
-                    className="relative"
-                    style={{ width: 72, height: 108, background: "#fdf8f3" }}
-                  >
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        boxSizing: "border-box",
-                        ...parseFrameCss(f.outerCss),
-                      }}
-                    />
-                    {f.showCorners && (
-                      <>
-                        {["tl","tr","br","bl"].map((c, i) => (
-                          <div key={c} style={{
-                            position: "absolute",
-                            width: 14, height: 14,
-                            boxSizing: "border-box",
-                            ...parseFrameCss(f.cornerCss),
-                            top: c.includes("t") ? 3 : undefined,
-                            bottom: c.includes("b") ? 3 : undefined,
-                            left: c.includes("l") ? 3 : undefined,
-                            right: c.includes("r") ? 3 : undefined,
-                            transform: `rotate(${i*90}deg)`,
-                          }} />
-                        ))}
-                      </>
-                    )}
+                  {/* outer frame border */}
+                  <div style={{ position: "absolute", inset: 0, boxSizing: "border-box", pointerEvents: "none", ...parseFrameCss(previewOuterCss) }} />
+                  {/* corner ornaments */}
+                  {selected.showCorners && (
+                    <>
+                      {(["tl", "tr", "br", "bl"] as const).map((c, i) => (
+                        <div key={c} style={{
+                          position: "absolute",
+                          width: previewCornerSize,
+                          height: previewCornerSize,
+                          boxSizing: "border-box",
+                          top: c.includes("t") ? previewCornerOffset : undefined,
+                          bottom: c.includes("b") ? previewCornerOffset : undefined,
+                          left: c.includes("l") ? previewCornerOffset : undefined,
+                          right: c.includes("r") ? previewCornerOffset : undefined,
+                          transform: `rotate(${i * 90}deg)`,
+                          ...parseFrameCss(previewCornerCss),
+                        }} />
+                      ))}
+                    </>
+                  )}
+                  {/* inner content area */}
+                  <div style={{
+                    position: "absolute",
+                    inset: previewInset || 0,
+                    boxSizing: "border-box",
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "linear-gradient(160deg, #fdf8f3 0%, #faf0e6 100%)",
+                    padding: 10,
+                    gap: 6,
+                    ...parseFrameCss(previewInnerCss),
+                  }}>
+                    {/* cocktail thumbnail */}
+                    <div style={{ width: "100%", flex: "1 1 auto", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                      {(cocktail?.imageUrl || imageData) ? (
+                        <img
+                          src={cocktail?.imageUrl ?? `data:image/png;base64,${imageData}`}
+                          alt=""
+                          style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                        />
+                      ) : (
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--app-primary)" strokeWidth="1" opacity="0.4">
+                          <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </div>
                     <div style={{
-                      position: "absolute",
-                      inset: f.id === "none" ? 4 : 10,
-                      background: "linear-gradient(160deg,#e0533c33,#b8893a22)",
-                      borderRadius: 2,
-                    }} />
+                      fontFamily: "var(--font-heading)",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "var(--app-text)",
+                      textAlign: "center",
+                      lineHeight: 1.15,
+                      padding: "0 4px",
+                    }}>
+                      {cocktail?.cocktailName ?? "Vibetail"}
+                    </div>
                   </div>
-                  <span className="text-[10px] tracking-wider uppercase" style={{ color: "var(--app-text-secondary)", fontFamily: "var(--font-body)" }}>
-                    {f.label}
-                  </span>
+                </div>
+              </div>
+
+              {/* Frame swatch row */}
+              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "thin" }}>
+                {FRAME_STYLES.map((f) => {
+                  const isActive = f.id === selectedFrameId;
+                  return (
+                    <button
+                      key={f.id}
+                      onClick={() => setSelectedFrameId(f.id)}
+                      className="flex flex-col items-center gap-1.5 p-1.5 rounded-lg transition flex-shrink-0"
+                      style={{
+                        background: isActive ? "rgba(224,83,60,0.10)" : "transparent",
+                        border: isActive ? "1.5px solid var(--app-primary)" : "1.5px solid transparent",
+                      }}
+                    >
+                      <div style={{ width: 48, height: 72, position: "relative", background: "#fdf8f3", boxSizing: "border-box" }}>
+                        <div style={{ position: "absolute", inset: 0, boxSizing: "border-box", ...parseFrameCss(scaleIn(f.outerCss).replace(/(\d+(\.\d+)?)px/g, (_, n) => `${Math.max(1, parseFloat(n) * 48 / PREVIEW_W)}px`)) }} />
+                        <div style={{
+                          position: "absolute",
+                          inset: f.id === "none" ? 3 : 6,
+                          background: "linear-gradient(160deg,#e0533c33,#b8893a22)",
+                          borderRadius: 1,
+                        }} />
+                      </div>
+                      <span className="text-[9px] tracking-wider uppercase whitespace-nowrap" style={{ color: isActive ? "var(--app-primary)" : "var(--app-text-secondary)", fontFamily: "var(--font-body)" }}>
+                        {f.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowFramePicker(false)}
+                  className="flex-1 py-3 text-xs font-semibold tracking-wider uppercase rounded transition"
+                  style={{
+                    background: "transparent",
+                    color: "var(--app-text-secondary)",
+                    border: "1.5px solid rgba(74,62,61,0.3)",
+                  }}
+                >
+                  {t("result.cancel") || "Cancel"}
                 </button>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      )}
+                <button
+                  onClick={() => { setShowFramePicker(false); handlePrint(selectedFrameId); }}
+                  className="flex-1 py-3 text-xs font-semibold tracking-wider uppercase rounded transition"
+                  style={{
+                    background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+                    color: "white",
+                    border: "none",
+                    boxShadow: "2px 3px 12px rgba(194,65,12,0.25)",
+                  }}
+                >
+                  {t("result.print") || "Print"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
