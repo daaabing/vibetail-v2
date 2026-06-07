@@ -131,6 +131,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     "result.original": "ORIGINAL VIBE",
     "result.tasting": "TASTING NOTES",
     "result.ingredients": "INGREDIENTS",
+    "result.ingredients.ref": "for reference",
+    "result.scanQr": "Scan for full recipe",
     "result.howToMake": "HOW TO MAKE",
     "result.diagnosis": "VIBE DIAGNOSIS",
     "result.save": "Save Card",
