@@ -71,7 +71,7 @@ export default function GalleryScreen() {
     return (
       <>
         <div className="min-h-svh" />
-        <AuthModal open onClose={() => navigate({ to: "/" })} />
+        <AuthModal open onClose={() => { /* do nothing — stay on current page */ }} />
       </>
     );
   }

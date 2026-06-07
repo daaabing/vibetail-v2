@@ -2,9 +2,11 @@
 import { useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useState } from "react";
 import { useLang } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import AuthModal from "@/components/moodtail/AuthModal";
 
 /* ---------- Ink-brush style button ---------- */
 function InkButton({
@@ -54,6 +56,7 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
   const navigate = useNavigate();
   const { lang, setLang, t } = useLang();
   const { user } = useAuth();
+  const [showAuth, setShowAuth] = useState(false);
   const handleMix = onMix ?? (() => navigate({ to: "/mood-input" }));
 
   async function handleSignOut() {
@@ -158,7 +161,13 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
         </InkButton>
 
         {!hideGallery && (
-          <InkButton onClick={() => navigate({ to: "/gallery" })}>
+          <InkButton onClick={() => {
+            if (user) {
+              navigate({ to: "/gallery" });
+            } else {
+              setShowAuth(true);
+            }
+          }}>
             <svg className="w-4 h-4" fill="none" stroke="var(--app-secondary)" strokeWidth="1.8" viewBox="0 0 24 24">
               <path d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
                 strokeLinecap="round" strokeLinejoin="round" />
@@ -167,6 +176,8 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
           </InkButton>
         )}
       </div>
+
+      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
     </div>
   );
 }

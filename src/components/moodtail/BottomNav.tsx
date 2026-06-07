@@ -1,10 +1,16 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { useRouterState, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { useLang } from "@/lib/i18n";
+import { useAuth } from "@/lib/use-auth";
+import AuthModal from "@/components/moodtail/AuthModal";
 
 export default function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
   const { t } = useLang();
+  const { user } = useAuth();
+  const [showAuth, setShowAuth] = useState(false);
 
   const tabs = [
     {
@@ -30,29 +36,43 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav
-      className="fixed bottom-0 left-0 right-0 z-20 md:hidden"
-      style={{
-        background: "rgba(250, 246, 240, 0.85)",
-        backdropFilter: "blur(20px) saturate(180%)",
-        WebkitBackdropFilter: "blur(20px) saturate(180%)",
-        borderTop: "1px solid rgba(210,201,189,0.4)",
-        paddingBottom: "env(safe-area-inset-bottom)",
-        boxShadow: "0 -4px 20px rgba(0,0,0,0.06)",
-      }}
-    >
-      <div className="flex">
-        {tabs.map((tab) => {
-          const isActive = pathname === tab.to || (tab.to !== "/" && pathname.startsWith(tab.to));
-          const color = isActive ? "var(--app-primary)" : "var(--app-text-muted)";
-          return (
-            <Link key={tab.to} to={tab.to} className="flex-1 flex flex-col items-center gap-1 py-3">
-              <motion.div whileTap={{ scale: 0.85 }} style={{ color }}>{tab.icon}</motion.div>
-              <span className="text-[10px] font-medium tracking-wide" style={{ color }}>{tab.label}</span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+    <>
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-20 md:hidden"
+        style={{
+          background: "rgba(250, 246, 240, 0.85)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          borderTop: "1px solid rgba(210,201,189,0.4)",
+          paddingBottom: "env(safe-area-inset-bottom)",
+          boxShadow: "0 -4px 20px rgba(0,0,0,0.06)",
+        }}
+      >
+        <div className="flex">
+          {tabs.map((tab) => {
+            const isActive = pathname === tab.to || (tab.to !== "/" && pathname.startsWith(tab.to));
+            const color = isActive ? "var(--app-primary)" : "var(--app-text-muted)";
+            const isGallery = tab.to === "/gallery";
+            return (
+              <button
+                key={tab.to}
+                onClick={() => {
+                  if (isGallery && !user) {
+                    setShowAuth(true);
+                    return;
+                  }
+                  navigate({ to: tab.to as any });
+                }}
+                className="flex-1 flex flex-col items-center gap-1 py-3"
+              >
+                <motion.div whileTap={{ scale: 0.85 }} style={{ color }}>{tab.icon}</motion.div>
+                <span className="text-[10px] font-medium tracking-wide" style={{ color }}>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+    </>
   );
 }
