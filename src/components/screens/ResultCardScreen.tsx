@@ -22,6 +22,88 @@ interface ResultCardScreenProps {
   id: number;
 }
 
+/* ── Print frame styles (relief / border around the printed card) ── */
+type FrameStyle = {
+  id: string;
+  label: string;
+  inset: string;
+  outerCss: string;
+  innerCss: string;
+  showCorners: boolean;
+  cornerSize: string;
+  cornerOffset: string;
+  cornerCss: string;
+};
+
+const FRAME_STYLES: FrameStyle[] = [
+  {
+    id: "none",
+    label: "None",
+    inset: "0",
+    outerCss: "",
+    innerCss: "",
+    showCorners: false,
+    cornerSize: "0",
+    cornerOffset: "0",
+    cornerCss: "",
+  },
+  {
+    id: "classic",
+    label: "Classic",
+    inset: "0.14in",
+    outerCss: "border: 2px solid #4a3e3d; outline: 1px solid #4a3e3d; outline-offset: -0.08in;",
+    innerCss: "",
+    showCorners: false,
+    cornerSize: "0",
+    cornerOffset: "0",
+    cornerCss: "",
+  },
+  {
+    id: "deco",
+    label: "Art Deco",
+    inset: "0.16in",
+    outerCss: "border: 3px solid #b8893a;",
+    innerCss: "border: 1px solid #b8893a;",
+    showCorners: true,
+    cornerSize: "0.22in",
+    cornerOffset: "0.04in",
+    cornerCss: "border-top: 3px solid #b8893a; border-left: 3px solid #b8893a;",
+  },
+  {
+    id: "vintage",
+    label: "Vintage",
+    inset: "0.18in",
+    outerCss: "border: 2px dashed #6b4a2b; box-shadow: inset 0 0 0 4px #fdf8f3, inset 0 0 0 5px #6b4a2b;",
+    innerCss: "",
+    showCorners: false,
+    cornerSize: "0",
+    cornerOffset: "0",
+    cornerCss: "",
+  },
+  {
+    id: "double",
+    label: "Double Line",
+    inset: "0.15in",
+    outerCss: "border: 1px solid #4a3e3d; box-shadow: inset 0 0 0 3px #fdf8f3, inset 0 0 0 4px #4a3e3d;",
+    innerCss: "",
+    showCorners: false,
+    cornerSize: "0",
+    cornerOffset: "0",
+    cornerCss: "",
+  },
+  {
+    id: "bold",
+    label: "Bold",
+    inset: "0.12in",
+    outerCss: "border: 6px solid #e0533c;",
+    innerCss: "",
+    showCorners: false,
+    cornerSize: "0",
+    cornerOffset: "0",
+    cornerCss: "",
+  },
+];
+
 /* ── Skeleton card ── */
 function CardSkeleton() {
   return (
