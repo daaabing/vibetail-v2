@@ -217,7 +217,7 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
                 style={{ color: "var(--app-text-secondary)" }}>
                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
                   style={{ backgroundColor: "var(--app-primary)" }} />
-                {ing}
+                {simplifyIngredient(ing)}
               </li>
             ))}
           </ul>
