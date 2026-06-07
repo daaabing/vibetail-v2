@@ -64,6 +64,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     "result.original": "原始 Vibe",
     "result.tasting": "品鉴笔记",
     "result.ingredients": "配方成分",
+    "result.ingredients.ref": "仅供参考",
+    "result.scanQr": "扫码查看完整酒卡",
     "result.howToMake": "调制方法",
     "result.diagnosis": "Vibe 诊断",
     "result.save": "保存卡片",
