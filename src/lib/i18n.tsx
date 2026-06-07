@@ -134,6 +134,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     "result.save": "Save Card",
     "result.saving": "Saving…",
     "result.share": "Share",
+    "result.print": "Print",
     "result.copied": "Link Copied ✓",
     "result.another": "Check Another Vibe",
     // Gallery
