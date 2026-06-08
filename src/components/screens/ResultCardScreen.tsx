@@ -399,7 +399,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const shareUrl = useMemo(() => {
     if (!cocktail || typeof window === "undefined") return "";
-    const rid = persistedId ?? (Number.isFinite(cocktail.id) && cocktail.id > 0 ? cocktail.id : null);
+    const rid = persistedId ?? cocktail.publicId ?? null;
     if (rid) return `${window.location.origin}/result/${rid}`;
     return "";
   }, [cocktail, persistedId]);
@@ -413,7 +413,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const data = await getCocktail(Number(id));
+      const data = await getCocktail(id);
       if (cancelled) return;
       if (data) {
         setCocktail(data);
