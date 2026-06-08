@@ -104,21 +104,12 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
             style={{ backgroundColor: "var(--app-primary)" }} />
           <div className="absolute inset-8 rounded-full filter blur-xl opacity-20"
             style={{ backgroundColor: "var(--app-secondary)" }} />
-          <svg className="w-28 h-28 relative z-10" viewBox="0 0 64 64" fill="none"
-            stroke="var(--app-text-secondary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            {/* Bowl: flat top with rounded corners, U-shaped bottom */}
-            <path d="M14 14 H50 V32 A18 18 0 0 1 14 32 Z" />
-            {/* Stem */}
-            <path d="M32 50 V58" />
-            {/* Base */}
-            <path d="M21 58 H43" />
-            {/* Left eye: winking with monocle ring */}
-            <circle cx="28" cy="25" r="2.6" />
-            <path d="M22 22 q 3 -2 5 0" strokeWidth="2.6" />
-            {/* Right eye: closed dash */}
-            <path d="M37 25 h6" strokeWidth="2.6" />
-            {/* Red smile */}
-            <path d="M22 34 q 10 7 20 0" stroke="var(--app-primary)" strokeWidth="4" />
+          <svg className="w-28 h-28 relative z-10" fill="none" stroke="var(--app-text-secondary)" strokeWidth="1.2" viewBox="0 0 24 24">
+            <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M5 5h14" strokeLinecap="round" />
+            <path stroke="var(--app-primary)" d="M8 9.5c2 1 4 0 6.5-.5" strokeLinecap="round" strokeWidth="2" />
+            <circle cx="11" cy="5.4" r="1.6" fill="var(--app-primary)" stroke="none" />
+            <path d="M11 5.4 Q 12 3.4 13.2 2.8" stroke="var(--app-secondary)" strokeWidth="1" strokeLinecap="round" fill="none" />
           </svg>
 
         </motion.div>
