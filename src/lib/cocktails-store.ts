@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface Cocktail {
   id: number;
+  publicId?: string;
   cocktailName: string;
   originalMood: string;
   selectedFlavors: string[];
@@ -34,6 +35,7 @@ export interface GeneratedCocktailFields {
 type Row = {
   id: number;
   user_id: string | null;
+  public_id: string;
   cocktail_name: string;
   original_mood: string;
   selected_flavors: string[];
@@ -53,6 +55,7 @@ type Row = {
 function fromRow(r: Row): Cocktail {
   return {
     id: r.id,
+    publicId: r.public_id,
     cocktailName: r.cocktail_name,
     originalMood: r.original_mood,
     selectedFlavors: r.selected_flavors ?? [],
@@ -104,13 +107,17 @@ export async function listMyCocktails(): Promise<Cocktail[]> {
   return (data as Row[]).map(fromRow);
 }
 
-export async function getCocktail(id: number): Promise<Cocktail | null> {
-  if (!Number.isFinite(id) || id <= 0) return null;
-  const { data, error } = await supabase
-    .from("cocktails")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
+export async function getCocktail(id: string | number): Promise<Cocktail | null> {
+  if (id === undefined || id === null) return null;
+  const key = String(id).trim();
+  if (!key) return null;
+  // Try public_id (short slug) first; fall back to numeric id for legacy links.
+  let q = supabase.from("cocktails").select("*");
+  if (/^\d+$/.test(key)) {
+    const { data } = await q.or(`public_id.eq.${key},id.eq.${key}`).maybeSingle();
+    return data ? fromRow(data as Row) : null;
+  }
+  const { data, error } = await q.eq("public_id", key).maybeSingle();
   if (error || !data) return null;
   return fromRow(data as Row);
 }

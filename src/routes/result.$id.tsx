@@ -30,5 +30,5 @@ export const Route = createFileRoute("/result/$id")({
 
 function ResultRoute() {
   const { id } = Route.useParams();
-  return <ResultCardScreen id={Number(id)} />;
+  return <ResultCardScreen id={id} />;
 }

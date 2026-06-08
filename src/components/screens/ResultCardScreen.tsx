@@ -22,7 +22,7 @@ function simplifyIngredient(name: string): string {
 }
 
 interface ResultCardScreenProps {
-  id: number;
+  id: string;
 }
 
 /* ── Print frame styles (relief / border around the printed card) ── */
@@ -375,12 +375,13 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [copied, setCopied] = useState(false);
   const [showFramePicker, setShowFramePicker] = useState(false);
   const [selectedFrameId, setSelectedFrameId] = useState<string>("classic");
-  const [persistedId, setPersistedId] = useState<number | null>(null);
+  const [persistedId, setPersistedId] = useState<string | null>(null);
+  const [persistedNumericId, setPersistedNumericId] = useState<number | null>(null);
   const [persisting, setPersisting] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [pendingAction, setPendingAction] = useState<null | "save" | "share" | "bar">(null);
   const captureRef = useRef<HTMLDivElement>(null);
-  const isPreview = !Number.isFinite(id) || id <= 0;
+  const isPreview = !id || id === "preview";
   const isPersisted = !isPreview || persistedId !== null;
 
   const tapHint = t("result.tap");
@@ -398,7 +399,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const shareUrl = useMemo(() => {
     if (!cocktail || typeof window === "undefined") return "";
-    const rid = persistedId ?? (Number.isFinite(cocktail.id) && cocktail.id > 0 ? cocktail.id : null);
+    const rid = persistedId ?? cocktail.publicId ?? null;
     if (rid) return `${window.location.origin}/result/${rid}`;
     return "";
   }, [cocktail, persistedId]);
@@ -412,7 +413,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const data = await getCocktail(Number(id));
+      const data = await getCocktail(id);
       if (cancelled) return;
       if (data) {
         setCocktail(data);
@@ -452,9 +453,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         const json = (await res.json()) as { imageData?: string };
         if (cancelled || !json.imageData) return;
         setImageData(json.imageData);
-        const realId = persistedId ?? cocktail.id;
-        if (Number.isFinite(realId) && realId > 0) {
-          void updateCocktailImage(realId, json.imageData);
+        const realNumericId = persistedNumericId ?? cocktail.id;
+        if (Number.isFinite(realNumericId) && realNumericId > 0) {
+          void updateCocktailImage(realNumericId, json.imageData);
         }
       } catch (e) {
         console.error("cocktail image generation failed", e);
@@ -594,13 +595,14 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     if (!cocktail) return;
     if (!user) { setPendingAction("share"); setShowAuth(true); return; }
 
-    let targetId = persistedId;
+    let targetId: string | null = persistedId;
     if (!targetId && isPreview) {
       setPersisting(true);
       try {
         const saved = await saveCocktailFromPreview(cocktail, imageData);
-        targetId = saved.id;
-        setPersistedId(saved.id);
+        targetId = saved.publicId ?? null;
+        setPersistedId(saved.publicId ?? null);
+        setPersistedNumericId(saved.id);
         setCocktail(saved);
       } catch (e) {
         console.error("persist failed", e);
@@ -611,7 +613,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       }
     }
 
-    targetId = targetId ?? (Number.isFinite(cocktail.id) && cocktail.id > 0 ? cocktail.id : null);
+    targetId = targetId ?? cocktail.publicId ?? null;
     if (!targetId) {
       toast.error(lang === "zh" ? "无法生成分享链接" : "Cannot generate share link");
       return;
@@ -645,14 +647,17 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     setPersisting(true);
     try {
       const saved = await saveCocktailFromPreview(cocktail, imageData);
-      setPersistedId(saved.id);
+      setPersistedId(saved.publicId ?? null);
+      setPersistedNumericId(saved.id);
       toast.success(lang === "zh" ? "已保存到你的 Vibe Bar" : "Saved to your Vibe Bar");
-      navigate({
-        to: "/result/$id",
-        params: { id: String(saved.id) },
-        search: { ...(restaurantId ? { restaurant: restaurantId } : {}) },
-        replace: true,
-      });
+      if (saved.publicId) {
+        navigate({
+          to: "/result/$id",
+          params: { id: saved.publicId },
+          search: { ...(restaurantId ? { restaurant: restaurantId } : {}) },
+          replace: true,
+        });
+      }
     } catch (e) {
       if (e instanceof Error && e.message === "NOT_SIGNED_IN") {
         setShowAuth(true);
