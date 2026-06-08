@@ -643,18 +643,22 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   const handleSaveToBar = () => {
     if (!user) {
+      setPendingAction("bar");
       setShowAuth(true);
       return;
     }
     void doPersist();
   };
 
-  // Auto-persist after user completes auth in the modal
+  // After user completes auth in the modal, resume the pending action
   useEffect(() => {
-    if (user && showAuth && !isPersisted && cocktail) {
-      setShowAuth(false);
-      void doPersist();
-    }
+    if (!user || !pendingAction) return;
+    const action = pendingAction;
+    setPendingAction(null);
+    setShowAuth(false);
+    if (action === "save") void handleSave();
+    else if (action === "share") void handleShare();
+    else if (action === "bar") void doPersist();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
