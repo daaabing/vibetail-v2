@@ -398,9 +398,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const shareUrl = useMemo(() => {
     if (!cocktail || typeof window === "undefined") return "";
-    const encoded = encodeCocktailToHash(cocktail);
-    return `${window.location.origin}/result/${cocktail.id}?d=${encoded}`;
-  }, [cocktail]);
+    const rid = persistedId ?? (Number.isFinite(cocktail.id) && cocktail.id > 0 ? cocktail.id : null);
+    if (rid) return `${window.location.origin}/result/${rid}`;
+    return "";
+  }, [cocktail, persistedId]);
   useEffect(() => {
     if (!shareUrl) return;
     QRCode.toDataURL(shareUrl, { margin: 2, width: 512, errorCorrectionLevel: "L", color: { dark: "#000000", light: "#ffffff" } })
