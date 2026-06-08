@@ -595,13 +595,14 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     if (!cocktail) return;
     if (!user) { setPendingAction("share"); setShowAuth(true); return; }
 
-    let targetId = persistedId;
+    let targetId: string | null = persistedId;
     if (!targetId && isPreview) {
       setPersisting(true);
       try {
         const saved = await saveCocktailFromPreview(cocktail, imageData);
-        targetId = saved.id;
-        setPersistedId(saved.id);
+        targetId = saved.publicId ?? null;
+        setPersistedId(saved.publicId ?? null);
+        setPersistedNumericId(saved.id);
         setCocktail(saved);
       } catch (e) {
         console.error("persist failed", e);
@@ -612,7 +613,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       }
     }
 
-    targetId = targetId ?? (Number.isFinite(cocktail.id) && cocktail.id > 0 ? cocktail.id : null);
+    targetId = targetId ?? cocktail.publicId ?? null;
     if (!targetId) {
       toast.error(lang === "zh" ? "无法生成分享链接" : "Cannot generate share link");
       return;
