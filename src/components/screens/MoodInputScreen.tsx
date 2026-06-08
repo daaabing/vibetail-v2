@@ -26,7 +26,9 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
   const [baseSpirit, setBaseSpirit] = useState<string>("");
   const [spiritOpen, setSpiritOpen] = useState(false);
   const [customPreference, setCustomPreference] = useState("");
+  const [drinkLength, setDrinkLength] = useState<"" | "long" | "short">("");
   const [isGenerating, setIsGenerating] = useState(false);
+
 
   const BASE_SPIRITS: { key: string; en: string; zh: string; color: string; flavorEn: string; flavorZh: string }[] = [
     { key: "gin", en: "Gin", zh: "金酒", color: "#7fb069", flavorEn: "Crisp, herbal, juniper-forward", flavorZh: "清冽草本，杜松子香气" },
@@ -93,7 +95,13 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
       const spiritNote = spiritObj
         ? (lang === "zh" ? `基酒：${spiritObj.zh}。` : `Base spirit: ${spiritObj.en}. `)
         : "";
-      const mergedPreference = (spiritNote + (customPreference || "")).trim();
+      const lengthNote = drinkLength === "long"
+        ? (lang === "zh" ? "杯型：长饮（高杯，加冰，含较多 mixer，慢慢享用）。" : "Format: Long drink (tall glass, plenty of ice and mixer, sippable). ")
+        : drinkLength === "short"
+        ? (lang === "zh" ? "杯型：短饮（小杯，烈酒为主，少 mixer，浓郁集中）。" : "Format: Short drink (small glass, spirit-forward, minimal mixer, concentrated). ")
+        : "";
+      const mergedPreference = (spiritNote + lengthNote + (customPreference || "")).trim();
+
 
       // When the user picks Tashi, pick one of the brand's signature recipes
       // as a creative reference and attach its brand illustration to the card.
@@ -473,9 +481,48 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
             </div>
 
 
+            {/* Long vs Short drink */}
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
+                style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+                {lang === "zh" ? "杯型（可选）" : "Drink format (optional)"}
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  { key: "long", en: "Long drink", zh: "长饮", descEn: "Tall, icy, sippable", descZh: "高杯加冰，慢慢享用" },
+                  { key: "short", en: "Short drink", zh: "短饮", descEn: "Small, spirit-forward", descZh: "小杯，烈酒为主" },
+                ] as const).map((opt) => {
+                  const isSelected = drinkLength === opt.key;
+                  return (
+                    <motion.button
+                      key={opt.key}
+                      type="button"
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setDrinkLength(isSelected ? "" : opt.key)}
+                      className="flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl text-left transition-all"
+                      style={{
+                        border: isSelected ? "1.5px solid var(--app-primary)" : "1px solid var(--app-border)",
+                        backgroundColor: isSelected ? "rgba(224,83,60,0.08)" : "rgba(255,255,255,0.7)",
+                        backdropFilter: "blur(8px)",
+                        boxShadow: isSelected ? "0 0 0 3px rgba(224,83,60,0.12)" : "none",
+                      }}
+                    >
+                      <span className="text-sm font-medium" style={{ color: "var(--app-text)" }}>
+                        {lang === "zh" ? opt.zh : opt.en}
+                      </span>
+                      <span className="text-[10px]" style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+                        {lang === "zh" ? opt.descZh : opt.descEn}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Custom preference */}
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
+
                 style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
                 {t("flavor.custom.label")}
               </label>
