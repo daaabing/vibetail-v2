@@ -52,7 +52,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Flavor
     "flavor.title": "你希望它喝起来是什么感觉？",
     "flavor.subtitle": "可以跳过，我们帮你选。",
-    "flavor.chips.label": "口味偏好",
+    "flavor.chips.label": "口味偏好（可选）",
     "flavor.custom.label": "有参考的酒或口味？（可选）",
     "flavor.run": "开始调酒",
     "flavor.loading": "正在读取你的 Vibe...",
@@ -119,7 +119,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Flavor
     "flavor.title": "What should it taste like?",
     "flavor.subtitle": "Optional — skip and we'll choose for you.",
-    "flavor.chips.label": "Flavor modifiers",
+    "flavor.chips.label": "Flavor modifiers (optional)",
     "flavor.custom.label": "Any flavor reference? (optional)",
     "flavor.run": "Run the Vibe Check",
     "flavor.loading": "Reading your vibe...",
