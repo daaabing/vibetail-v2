@@ -26,7 +26,9 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
   const [baseSpirit, setBaseSpirit] = useState<string>("");
   const [spiritOpen, setSpiritOpen] = useState(false);
   const [customPreference, setCustomPreference] = useState("");
+  const [drinkLength, setDrinkLength] = useState<"" | "long" | "short">("");
   const [isGenerating, setIsGenerating] = useState(false);
+
 
   const BASE_SPIRITS: { key: string; en: string; zh: string; color: string; flavorEn: string; flavorZh: string }[] = [
     { key: "gin", en: "Gin", zh: "金酒", color: "#7fb069", flavorEn: "Crisp, herbal, juniper-forward", flavorZh: "清冽草本，杜松子香气" },
