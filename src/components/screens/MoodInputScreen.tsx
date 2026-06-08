@@ -147,7 +147,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
         roast: generated.roast,
         category: generated.category,
         imageData: null,
-        imageUrl: tashiPick?.imageUrl ?? null,
+        imageUrl: null,
         lang,
         createdAt: new Date().toISOString(),
         userId: null,
