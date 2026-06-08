@@ -360,7 +360,7 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
 /* ── Main screen ── */
 export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const navigate = useNavigate();
-  const search = useSearch({ from: "/drink/$id" }) as { from?: string; d?: string; restaurant?: string };
+  const search = useSearch({ from: "/drinks/$id" }) as { from?: string; d?: string; restaurant?: string };
   const fromGallery = search.from === "gallery";
   const restaurantId = search.restaurant;
   const isRestaurant = !!restaurantId;
@@ -400,7 +400,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const shareUrl = useMemo(() => {
     if (!cocktail || typeof window === "undefined") return "";
     const rid = persistedId ?? cocktail.publicId ?? null;
-    if (rid) return `${window.location.origin}/drink/${rid}`;
+    if (rid) return `${window.location.origin}/drinks/${rid}`;
     return "";
   }, [cocktail, persistedId]);
   useEffect(() => {
@@ -619,7 +619,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       return;
     }
 
-    const url = `${window.location.origin}/drink/${targetId}`;
+    const url = `${window.location.origin}/drinks/${targetId}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -652,7 +652,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       toast.success(lang === "zh" ? "已保存到你的 Vibe Bar" : "Saved to your Vibe Bar");
       if (saved.publicId) {
         navigate({
-          to: "/drink/$id",
+          to: "/drinks/$id",
           params: { id: saved.publicId },
           search: { ...(restaurantId ? { restaurant: restaurantId } : {}) },
           replace: true,

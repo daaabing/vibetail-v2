@@ -175,7 +175,7 @@ export default function GalleryScreen() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: idx * 0.03 }}
-              onClick={() => navigate({ to: "/drink/$id", params: { id: cocktail.publicId ?? String(cocktail.id) }, search: { from: "gallery", ...(restaurantCtx ? { restaurant: restaurantCtx } : {}) } })}
+              onClick={() => navigate({ to: "/drinks/$id", params: { id: cocktail.publicId ?? String(cocktail.id) }, search: { from: "gallery", ...(restaurantCtx ? { restaurant: restaurantCtx } : {}) } })}
               className="glass-card rounded-xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
             >
               {/* 缩略图 */}
