@@ -1128,6 +1128,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           </div>
         );
       })()}
+
+      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
     </div>
   );
 }
