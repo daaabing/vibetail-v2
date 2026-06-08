@@ -1,5 +1,5 @@
 import type { Cocktail } from "@/lib/cocktails-store";
-type NewCocktail = Omit<Cocktail, "id" | "createdAt" | "imageData">;
+type NewCocktail = Omit<Cocktail, "id" | "publicId" | "createdAt" | "imageData">;
 
 export const SEED_COCKTAILS: NewCocktail[] = [
   {
