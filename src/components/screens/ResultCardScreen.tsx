@@ -375,7 +375,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [copied, setCopied] = useState(false);
   const [showFramePicker, setShowFramePicker] = useState(false);
   const [selectedFrameId, setSelectedFrameId] = useState<string>("classic");
-  const [persistedId, setPersistedId] = useState<number | null>(null);
+  const [persistedId, setPersistedId] = useState<string | null>(null);
+  const [persistedNumericId, setPersistedNumericId] = useState<number | null>(null);
   const [persisting, setPersisting] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [pendingAction, setPendingAction] = useState<null | "save" | "share" | "bar">(null);
