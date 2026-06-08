@@ -380,7 +380,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [showAuth, setShowAuth] = useState(false);
   const [pendingAction, setPendingAction] = useState<null | "save" | "share" | "bar">(null);
   const captureRef = useRef<HTMLDivElement>(null);
-  const isPreview = !Number.isFinite(id) || id <= 0;
+  const isPreview = !id || id === "preview";
   const isPersisted = !isPreview || persistedId !== null;
 
   const tapHint = t("result.tap");
