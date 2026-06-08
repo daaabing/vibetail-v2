@@ -613,6 +613,48 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     }
   };
 
+  const doPersist = async () => {
+    if (!cocktail || isPersisted || persisting) return;
+    setPersisting(true);
+    try {
+      const saved = await saveCocktailFromPreview(cocktail, imageData);
+      setPersistedId(saved.id);
+      toast.success(lang === "zh" ? "已保存到你的 Vibe Bar" : "Saved to your Vibe Bar");
+      navigate({
+        to: "/result/$id",
+        params: { id: String(saved.id) },
+        search: { ...(restaurantId ? { restaurant: restaurantId } : {}) },
+        replace: true,
+      });
+    } catch (e) {
+      if (e instanceof Error && e.message === "NOT_SIGNED_IN") {
+        setShowAuth(true);
+      } else {
+        console.error(e);
+        toast.error(lang === "zh" ? "保存失败，请重试" : "Save failed, please retry");
+      }
+    } finally {
+      setPersisting(false);
+    }
+  };
+
+  const handleSaveToBar = () => {
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
+    void doPersist();
+  };
+
+  // Auto-persist after user completes auth in the modal
+  useEffect(() => {
+    if (user && showAuth && !isPersisted && cocktail) {
+      setShowAuth(false);
+      void doPersist();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   if (loading) {
     return (
       <div className="min-h-svh flex flex-col p-5 pb-24 md:pb-5 w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative">
