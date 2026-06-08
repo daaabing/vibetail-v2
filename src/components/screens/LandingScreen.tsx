@@ -61,8 +61,13 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
   return (
     <div className="min-h-svh flex flex-col p-5 pb-24 md:pb-5 w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative">
 
-      {/* Top right: auth + language toggle */}
-      <div className="flex justify-end items-center gap-2 mb-2">
+      {/* Top right: auth + language toggle — fades in after hero */}
+      <motion.div
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 1.1, ease: "easeOut" }}
+        className="flex justify-end items-center gap-2 mb-2"
+      >
         <UserMenu />
         <div className="flex rounded-full overflow-hidden"
           style={{ border: "1px solid rgba(74,62,61,0.2)", background: "rgba(255,255,255,0.6)", backdropFilter: "blur(8px)" }}>
@@ -82,12 +87,17 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
             </motion.button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Hero Content Section */}
       <div className="my-auto py-8 flex flex-col items-center text-center space-y-6">
-        {/* Cocktail glass logo */}
-        <div className="relative w-36 h-36 flex items-center justify-center">
+        {/* Cocktail glass logo — appears first */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+          className="relative w-36 h-36 flex items-center justify-center"
+        >
           <div className="absolute inset-2 rounded-full filter blur-2xl opacity-15 pulse-distill"
             style={{ backgroundColor: "var(--app-primary)" }} />
           <div className="absolute inset-8 rounded-full filter blur-xl opacity-20"
@@ -101,27 +111,47 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
             <circle cx="11" cy="5.4" r="1.6" fill="var(--app-primary)" stroke="none" />
             <path d="M11 5.4 Q 12 3.4 13.2 2.8" stroke="var(--app-secondary)" strokeWidth="1" strokeLinecap="round" fill="none" />
           </svg>
-        </div>
+        </motion.div>
 
         {/* Title Group */}
         <div className="space-y-2">
-          <h1 className="text-5xl font-semibold tracking-tight"
-            style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
+          <motion.h1
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.35, ease: "easeOut" }}
+            className="text-5xl font-semibold tracking-tight"
+            style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
+          >
             Vibetail <span className="sr-only">— AI Cocktail Generator</span>
-          </h1>
-          <p className="text-base font-semibold"
-            style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.55, ease: "easeOut" }}
+            className="text-base font-semibold"
+            style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
+          >
             {t("landing.tagline")}
-          </p>
-          <p className="text-xl"
-            style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-primary)" }}>
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.75, ease: "easeOut" }}
+            className="text-xl"
+            style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-primary)" }}
+          >
             {t("landing.subtitle")}
-          </p>
+          </motion.p>
         </div>
       </div>
 
-      {/* CTA buttons */}
-      <div className="space-y-3">
+      {/* CTA buttons — fade in last */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.95, ease: "easeOut" }}
+        className="space-y-3"
+      >
         <InkButton primary onClick={handleMix}>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" strokeLinecap="round" strokeLinejoin="round" />
@@ -144,7 +174,7 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
             {t("landing.cta.bar")}
           </InkButton>
         )}
-      </div>
+      </motion.div>
 
       <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
     </div>
