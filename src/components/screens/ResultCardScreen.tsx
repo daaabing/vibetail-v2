@@ -378,6 +378,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [persistedId, setPersistedId] = useState<number | null>(null);
   const [persisting, setPersisting] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [pendingAction, setPendingAction] = useState<null | "save" | "share" | "bar">(null);
   const captureRef = useRef<HTMLDivElement>(null);
   const isPreview = !Number.isFinite(id) || id <= 0;
   const isPersisted = !isPreview || persistedId !== null;
