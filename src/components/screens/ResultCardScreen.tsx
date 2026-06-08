@@ -591,6 +591,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   const handleShare = async () => {
     if (!cocktail) return;
+    if (!user) { setPendingAction("share"); setShowAuth(true); return; }
     const encoded = encodeCocktailToHash(cocktail);
     const url = `${window.location.origin}/result/${cocktail.id}?d=${encoded}`;
     try {
