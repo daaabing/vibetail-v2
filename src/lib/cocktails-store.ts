@@ -35,6 +35,7 @@ export interface GeneratedCocktailFields {
 type Row = {
   id: number;
   user_id: string | null;
+  public_id: string;
   cocktail_name: string;
   original_mood: string;
   selected_flavors: string[];
@@ -54,6 +55,7 @@ type Row = {
 function fromRow(r: Row): Cocktail {
   return {
     id: r.id,
+    publicId: r.public_id,
     cocktailName: r.cocktail_name,
     originalMood: r.original_mood,
     selectedFlavors: r.selected_flavors ?? [],
