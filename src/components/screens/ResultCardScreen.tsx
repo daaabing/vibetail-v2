@@ -22,7 +22,7 @@ function simplifyIngredient(name: string): string {
 }
 
 interface ResultCardScreenProps {
-  id: number;
+  id: string;
 }
 
 /* ── Print frame styles (relief / border around the printed card) ── */
