@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import ResultCardScreen from "@/components/screens/ResultCardScreen";
 
-export const Route = createFileRoute("/result/$id")({
+export const Route = createFileRoute("/drink/$id")({
   validateSearch: (s: Record<string, unknown>): { from?: string; d?: string; restaurant?: string } => ({
     from: typeof s.from === "string" ? s.from : undefined,
     d: typeof s.d === "string" ? s.d : undefined,
