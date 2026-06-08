@@ -14,8 +14,8 @@ import { Route as MoodInputRouteImport } from './routes/mood-input'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ResultIdRouteImport } from './routes/result.$id'
 import { Route as RestaurantIdRouteImport } from './routes/restaurant.$id'
+import { Route as DrinkIdRouteImport } from './routes/drink.$id'
 import { Route as ApiGenerateCocktailImageRouteImport } from './routes/api/generate-cocktail-image'
 import { Route as ApiGenerateCocktailRouteImport } from './routes/api/generate-cocktail'
 
@@ -44,14 +44,14 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResultIdRoute = ResultIdRouteImport.update({
-  id: '/result/$id',
-  path: '/result/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const RestaurantIdRoute = RestaurantIdRouteImport.update({
   id: '/restaurant/$id',
   path: '/restaurant/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DrinkIdRoute = DrinkIdRouteImport.update({
+  id: '/drink/$id',
+  path: '/drink/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiGenerateCocktailImageRoute =
@@ -74,8 +74,8 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/generate-cocktail': typeof ApiGenerateCocktailRoute
   '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
+  '/drink/$id': typeof DrinkIdRoute
   '/restaurant/$id': typeof RestaurantIdRoute
-  '/result/$id': typeof ResultIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -85,8 +85,8 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/generate-cocktail': typeof ApiGenerateCocktailRoute
   '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
+  '/drink/$id': typeof DrinkIdRoute
   '/restaurant/$id': typeof RestaurantIdRoute
-  '/result/$id': typeof ResultIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -97,8 +97,8 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/generate-cocktail': typeof ApiGenerateCocktailRoute
   '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
+  '/drink/$id': typeof DrinkIdRoute
   '/restaurant/$id': typeof RestaurantIdRoute
-  '/result/$id': typeof ResultIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -110,8 +110,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/api/generate-cocktail'
     | '/api/generate-cocktail-image'
+    | '/drink/$id'
     | '/restaurant/$id'
-    | '/result/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -121,8 +121,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/api/generate-cocktail'
     | '/api/generate-cocktail-image'
+    | '/drink/$id'
     | '/restaurant/$id'
-    | '/result/$id'
   id:
     | '__root__'
     | '/'
@@ -132,8 +132,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/api/generate-cocktail'
     | '/api/generate-cocktail-image'
+    | '/drink/$id'
     | '/restaurant/$id'
-    | '/result/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -144,8 +144,8 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiGenerateCocktailRoute: typeof ApiGenerateCocktailRoute
   ApiGenerateCocktailImageRoute: typeof ApiGenerateCocktailImageRoute
+  DrinkIdRoute: typeof DrinkIdRoute
   RestaurantIdRoute: typeof RestaurantIdRoute
-  ResultIdRoute: typeof ResultIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -185,18 +185,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/result/$id': {
-      id: '/result/$id'
-      path: '/result/$id'
-      fullPath: '/result/$id'
-      preLoaderRoute: typeof ResultIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/restaurant/$id': {
       id: '/restaurant/$id'
       path: '/restaurant/$id'
       fullPath: '/restaurant/$id'
       preLoaderRoute: typeof RestaurantIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/drink/$id': {
+      id: '/drink/$id'
+      path: '/drink/$id'
+      fullPath: '/drink/$id'
+      preLoaderRoute: typeof DrinkIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/generate-cocktail-image': {
@@ -224,9 +224,19 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiGenerateCocktailRoute: ApiGenerateCocktailRoute,
   ApiGenerateCocktailImageRoute: ApiGenerateCocktailImageRoute,
+  DrinkIdRoute: DrinkIdRoute,
   RestaurantIdRoute: RestaurantIdRoute,
-  ResultIdRoute: ResultIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

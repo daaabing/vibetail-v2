@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import ResultCardScreen from "@/components/screens/ResultCardScreen";
 
-export const Route = createFileRoute("/result/$id")({
+export const Route = createFileRoute("/drink/$id")({
   validateSearch: (s: Record<string, unknown>): { from?: string; d?: string; restaurant?: string } => ({
     from: typeof s.from === "string" ? s.from : undefined,
     d: typeof s.d === "string" ? s.d : undefined,
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/result/$id")({
   head: ({ params }) => {
     const TITLE = "Your Cocktail — Vibetail";
     const DESC = "A bespoke cocktail recipe distilled from your vibe by Vibetail's AI bartender.";
-    const URL = `https://vibetail.com/result/${params.id}`;
+    const URL = `https://vibetail.com/drink/${params.id}`;
     return {
       meta: [
         { title: TITLE },
