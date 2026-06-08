@@ -450,7 +450,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         const json = (await res.json()) as { imageData?: string };
         if (cancelled || !json.imageData) return;
         setImageData(json.imageData);
-        void updateCocktailImage(cocktail.id, json.imageData);
+        const realId = persistedId ?? cocktail.id;
+        if (Number.isFinite(realId) && realId > 0) {
+          void updateCocktailImage(realId, json.imageData);
+        }
       } catch (e) {
         console.error("cocktail image generation failed", e);
       } finally {
