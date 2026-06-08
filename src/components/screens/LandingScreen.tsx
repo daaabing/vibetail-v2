@@ -104,12 +104,13 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
             style={{ backgroundColor: "var(--app-primary)" }} />
           <div className="absolute inset-8 rounded-full filter blur-xl opacity-20"
             style={{ backgroundColor: "var(--app-secondary)" }} />
-          <svg className="w-28 h-28 relative z-10" fill="none" stroke="var(--app-text-secondary)" strokeWidth="1.2" viewBox="0 0 24 24">
-            <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M5 5h14" strokeLinecap="round" />
+          <svg className="w-28 h-28 relative z-10 opacity-90" fill="none"
+            stroke="var(--app-text-secondary)" strokeWidth="1.2" viewBox="0 0 24 24">
+            <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z"
+              strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M7 6s1.5 1 5 1 5-1 5-1" strokeDasharray="2 2" />
             <path stroke="var(--app-primary)" d="M8 9.5c2 1 4 0 6.5-.5" strokeLinecap="round" strokeWidth="2" />
-            <circle cx="11" cy="5.4" r="1.6" fill="var(--app-primary)" stroke="none" />
-            <path d="M11 5.4 Q 12 3.4 13.2 2.8" stroke="var(--app-secondary)" strokeWidth="1" strokeLinecap="round" fill="none" />
+            <circle cx="11" cy="6" fill="var(--app-accent)" r="1.5" />
           </svg>
 
         </motion.div>
