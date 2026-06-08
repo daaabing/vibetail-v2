@@ -105,12 +105,43 @@ export async function listMyCocktails(): Promise<Cocktail[]> {
 }
 
 export async function getCocktail(id: number): Promise<Cocktail | null> {
+  if (!Number.isFinite(id) || id <= 0) return null;
   const { data, error } = await supabase
     .from("cocktails")
     .select("*")
     .eq("id", id)
     .maybeSingle();
   if (error || !data) return null;
+  return fromRow(data as Row);
+}
+
+/** Persist an already-generated cocktail preview to the signed-in user's bar. */
+export async function saveCocktailFromPreview(c: Cocktail, imageData?: string | null): Promise<Cocktail> {
+  const { data: sess } = await supabase.auth.getSession();
+  const uid = sess.session?.user.id;
+  if (!uid) throw new Error("NOT_SIGNED_IN");
+  const payload = {
+    user_id: uid,
+    cocktail_name: c.cocktailName,
+    original_mood: c.originalMood,
+    selected_flavors: c.selectedFlavors,
+    custom_preference: c.customPreference,
+    flavor_profile: c.flavorProfile,
+    tastes_like: c.tastesLike,
+    ingredients: c.ingredients,
+    recipe: c.recipe,
+    roast: c.roast,
+    category: c.category,
+    image_url: c.imageUrl ?? null,
+    image_data: imageData ?? c.imageData ?? null,
+    lang: c.lang ?? "en",
+  };
+  const { data, error } = await supabase
+    .from("cocktails")
+    .insert(payload)
+    .select("*")
+    .single();
+  if (error || !data) throw error ?? new Error("insert failed");
   return fromRow(data as Row);
 }
 

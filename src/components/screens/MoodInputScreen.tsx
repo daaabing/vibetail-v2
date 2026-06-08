@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { createCocktail } from "@/lib/cocktails-store";
+import { encodeCocktailToHash, type Cocktail } from "@/lib/cocktails-store";
 import { toast } from "sonner";
 import { FLAVOR_CHIPS, MOOD_PLACEHOLDERS_EN, MOOD_PLACEHOLDERS_ZH, CUSTOM_FLAVOR_PLACEHOLDERS_EN, CUSTOM_FLAVOR_PLACEHOLDERS_ZH, VIBE_CHIPS } from "@/lib/moodtail-data";
 import { pickTashiRecipe } from "@/lib/tashi-recipes";
@@ -126,26 +126,30 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
         return;
       }
       const generated = await res.json();
-      try {
-        const data = await createCocktail({
-          mood,
-          selectedFlavors,
-          customPreference,
-          photoIngredients,
-          generated,
-          imageUrl: tashiPick?.imageUrl ?? null,
-          lang,
-        });
-        navigate({ to: "/result/$id", params: { id: String(data.id) }, search: isRestaurant ? { restaurant: restaurantId } : {} });
-      } catch (e) {
-        if (e instanceof Error && e.message === "NOT_SIGNED_IN") {
-          toast.error(lang === "zh" ? "请先登录再保存你的酒" : "Please sign in to save your cocktail");
-          navigate({ to: "/auth" });
-        } else {
-          throw e;
-        }
-        setIsGenerating(false);
-      }
+      const cocktail: Cocktail = {
+        id: 0,
+        cocktailName: generated.cocktailName,
+        originalMood: mood,
+        selectedFlavors,
+        customPreference,
+        flavorProfile: generated.flavorProfile,
+        tastesLike: generated.tastesLike,
+        ingredients: generated.ingredients,
+        recipe: generated.recipe,
+        roast: generated.roast,
+        category: generated.category,
+        imageData: null,
+        imageUrl: tashiPick?.imageUrl ?? null,
+        lang,
+        createdAt: new Date().toISOString(),
+        userId: null,
+      };
+      const encoded = encodeCocktailToHash(cocktail);
+      navigate({
+        to: "/result/$id",
+        params: { id: "preview" },
+        search: { d: encoded, ...(isRestaurant ? { restaurant: restaurantId } : {}) },
+      });
     } catch {
       toast.error(lang === "zh" ? "无法读取你的 vibe，请重试！" : "Couldn't read your vibe. Try again!");
       setIsGenerating(false);

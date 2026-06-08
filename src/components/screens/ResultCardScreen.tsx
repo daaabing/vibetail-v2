@@ -4,8 +4,11 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import * as htmlToImage from "html-to-image";
 import QRCode from "qrcode";
-import { type Cocktail, decodeCocktailFromHash, encodeCocktailToHash, getCocktail, updateCocktailImage } from "@/lib/cocktails-store";
+import { type Cocktail, decodeCocktailFromHash, encodeCocktailToHash, getCocktail, saveCocktailFromPreview, updateCocktailImage } from "@/lib/cocktails-store";
 import { useLang } from "@/lib/i18n";
+import { useAuth } from "@/lib/use-auth";
+import AuthModal from "@/components/moodtail/AuthModal";
+import { toast } from "sonner";
 
 /** Strip quantity / measurement prefixes from AI-generated ingredient strings. */
 function simplifyIngredient(name: string): string {
@@ -361,7 +364,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const fromGallery = search.from === "gallery";
   const restaurantId = search.restaurant;
   const isRestaurant = !!restaurantId;
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const { user } = useAuth();
   const [cocktail, setCocktail] = useState<Cocktail | null>(null);
   const [loading, setLoading] = useState(true);
   const [flipped, setFlipped] = useState(false);
@@ -371,7 +375,12 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [copied, setCopied] = useState(false);
   const [showFramePicker, setShowFramePicker] = useState(false);
   const [selectedFrameId, setSelectedFrameId] = useState<string>("classic");
+  const [persistedId, setPersistedId] = useState<number | null>(null);
+  const [persisting, setPersisting] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
   const captureRef = useRef<HTMLDivElement>(null);
+  const isPreview = !Number.isFinite(id) || id <= 0;
+  const isPersisted = !isPreview || persistedId !== null;
 
   const tapHint = t("result.tap");
   const distillingText = t("result.distilling");
@@ -441,7 +450,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         const json = (await res.json()) as { imageData?: string };
         if (cancelled || !json.imageData) return;
         setImageData(json.imageData);
-        void updateCocktailImage(cocktail.id, json.imageData);
+        const realId = persistedId ?? cocktail.id;
+        if (Number.isFinite(realId) && realId > 0) {
+          void updateCocktailImage(realId, json.imageData);
+        }
       } catch (e) {
         console.error("cocktail image generation failed", e);
       } finally {
@@ -600,6 +612,48 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       }
     }
   };
+
+  const doPersist = async () => {
+    if (!cocktail || isPersisted || persisting) return;
+    setPersisting(true);
+    try {
+      const saved = await saveCocktailFromPreview(cocktail, imageData);
+      setPersistedId(saved.id);
+      toast.success(lang === "zh" ? "已保存到你的 Vibe Bar" : "Saved to your Vibe Bar");
+      navigate({
+        to: "/result/$id",
+        params: { id: String(saved.id) },
+        search: { ...(restaurantId ? { restaurant: restaurantId } : {}) },
+        replace: true,
+      });
+    } catch (e) {
+      if (e instanceof Error && e.message === "NOT_SIGNED_IN") {
+        setShowAuth(true);
+      } else {
+        console.error(e);
+        toast.error(lang === "zh" ? "保存失败，请重试" : "Save failed, please retry");
+      }
+    } finally {
+      setPersisting(false);
+    }
+  };
+
+  const handleSaveToBar = () => {
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
+    void doPersist();
+  };
+
+  // Auto-persist after user completes auth in the modal
+  useEffect(() => {
+    if (user && showAuth && !isPersisted && cocktail) {
+      setShowAuth(false);
+      void doPersist();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   if (loading) {
     return (
@@ -792,7 +846,35 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
       {/* ── CTA buttons ── */}
       <div className="px-5 pb-28 md:pb-8 pt-3 flex-shrink-0 space-y-2">
+        {!isPersisted && (
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={handleSaveToBar}
+            disabled={persisting}
+            className="w-full py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
+            style={{
+              borderRadius: "4px",
+              background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+              color: "white",
+              boxShadow: "2px 3px 10px rgba(194,65,12,0.22), inset 0 1px 0 rgba(255,255,255,0.15)",
+            }}
+          >
+            <span className="absolute inset-0 pointer-events-none" style={{
+              background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
+              animation: "liquid-flow 4s linear infinite",
+            }} />
+            <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="relative z-10">
+              {persisting
+                ? (lang === "zh" ? "保存中…" : "Saving…")
+                : (lang === "zh" ? "保存到 Vibe Bar" : "Save to Vibe Bar")}
+            </span>
+          </motion.button>
+        )}
         <div className={`grid gap-2 ${isRestaurant ? "grid-cols-3" : "grid-cols-2"}`}>
+
           {/* Save → download */}
           <motion.button
             whileTap={{ scale: 0.96 }}
@@ -1046,6 +1128,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           </div>
         );
       })()}
+
+      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
     </div>
   );
 }
