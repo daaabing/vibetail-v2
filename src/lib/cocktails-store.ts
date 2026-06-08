@@ -107,13 +107,17 @@ export async function listMyCocktails(): Promise<Cocktail[]> {
   return (data as Row[]).map(fromRow);
 }
 
-export async function getCocktail(id: number): Promise<Cocktail | null> {
-  if (!Number.isFinite(id) || id <= 0) return null;
-  const { data, error } = await supabase
-    .from("cocktails")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
+export async function getCocktail(id: string | number): Promise<Cocktail | null> {
+  if (id === undefined || id === null) return null;
+  const key = String(id).trim();
+  if (!key) return null;
+  // Try public_id (short slug) first; fall back to numeric id for legacy links.
+  let q = supabase.from("cocktails").select("*");
+  if (/^\d+$/.test(key)) {
+    const { data } = await q.or(`public_id.eq.${key},id.eq.${key}`).maybeSingle();
+    return data ? fromRow(data as Row) : null;
+  }
+  const { data, error } = await q.eq("public_id", key).maybeSingle();
   if (error || !data) return null;
   return fromRow(data as Row);
 }
