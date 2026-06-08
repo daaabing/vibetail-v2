@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import appCss from "../styles.css?url";
 import { LangProvider } from "@/lib/i18n";
-import SplashScreen from "@/components/moodtail/SplashScreen";
+
 import BottomNav from "@/components/moodtail/BottomNav";
 import { Toaster } from "@/components/ui/sonner";
 
