@@ -647,14 +647,17 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     setPersisting(true);
     try {
       const saved = await saveCocktailFromPreview(cocktail, imageData);
-      setPersistedId(saved.id);
+      setPersistedId(saved.publicId ?? null);
+      setPersistedNumericId(saved.id);
       toast.success(lang === "zh" ? "已保存到你的 Vibe Bar" : "Saved to your Vibe Bar");
-      navigate({
-        to: "/result/$id",
-        params: { id: String(saved.id) },
-        search: { ...(restaurantId ? { restaurant: restaurantId } : {}) },
-        replace: true,
-      });
+      if (saved.publicId) {
+        navigate({
+          to: "/result/$id",
+          params: { id: saved.publicId },
+          search: { ...(restaurantId ? { restaurant: restaurantId } : {}) },
+          replace: true,
+        });
+      }
     } catch (e) {
       if (e instanceof Error && e.message === "NOT_SIGNED_IN") {
         setShowAuth(true);
