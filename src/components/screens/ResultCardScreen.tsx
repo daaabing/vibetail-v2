@@ -526,6 +526,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   const handleSave = async () => {
     if (!cocktail || !captureRef.current) return;
+    if (!user) { setPendingAction("save"); setShowAuth(true); return; }
     setSaving(true);
     try {
       const raw = await htmlToImage.toPng(captureRef.current, {
