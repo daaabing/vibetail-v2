@@ -846,7 +846,35 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
       {/* ── CTA buttons ── */}
       <div className="px-5 pb-28 md:pb-8 pt-3 flex-shrink-0 space-y-2">
+        {!isPersisted && (
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={handleSaveToBar}
+            disabled={persisting}
+            className="w-full py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
+            style={{
+              borderRadius: "4px",
+              background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+              color: "white",
+              boxShadow: "2px 3px 10px rgba(194,65,12,0.22), inset 0 1px 0 rgba(255,255,255,0.15)",
+            }}
+          >
+            <span className="absolute inset-0 pointer-events-none" style={{
+              background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
+              animation: "liquid-flow 4s linear infinite",
+            }} />
+            <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="relative z-10">
+              {persisting
+                ? (lang === "zh" ? "保存中…" : "Saving…")
+                : (lang === "zh" ? "保存到 Vibe Bar" : "Save to Vibe Bar")}
+            </span>
+          </motion.button>
+        )}
         <div className={`grid gap-2 ${isRestaurant ? "grid-cols-3" : "grid-cols-2"}`}>
+
           {/* Save → download */}
           <motion.button
             whileTap={{ scale: 0.96 }}
