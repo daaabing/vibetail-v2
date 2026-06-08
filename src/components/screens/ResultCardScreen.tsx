@@ -4,7 +4,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import * as htmlToImage from "html-to-image";
 import QRCode from "qrcode";
-import { type Cocktail, decodeCocktailFromHash, encodeCocktailToHash, getCocktail, saveCocktailFromPreview, updateCocktailImage } from "@/lib/cocktails-store";
+import { type Cocktail, decodeCocktailFromHash, getCocktail, saveCocktailFromPreview, updateCocktailImage } from "@/lib/cocktails-store";
 import { useLang } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
 import AuthModal from "@/components/moodtail/AuthModal";
@@ -398,9 +398,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const shareUrl = useMemo(() => {
     if (!cocktail || typeof window === "undefined") return "";
-    const encoded = encodeCocktailToHash(cocktail);
-    return `${window.location.origin}/result/${cocktail.id}?d=${encoded}`;
-  }, [cocktail]);
+    const rid = persistedId ?? (Number.isFinite(cocktail.id) && cocktail.id > 0 ? cocktail.id : null);
+    if (rid) return `${window.location.origin}/result/${rid}`;
+    return "";
+  }, [cocktail, persistedId]);
   useEffect(() => {
     if (!shareUrl) return;
     QRCode.toDataURL(shareUrl, { margin: 2, width: 512, errorCorrectionLevel: "L", color: { dark: "#000000", light: "#ffffff" } })
@@ -592,8 +593,31 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const handleShare = async () => {
     if (!cocktail) return;
     if (!user) { setPendingAction("share"); setShowAuth(true); return; }
-    const encoded = encodeCocktailToHash(cocktail);
-    const url = `${window.location.origin}/result/${cocktail.id}?d=${encoded}`;
+
+    let targetId = persistedId;
+    if (!targetId && isPreview) {
+      setPersisting(true);
+      try {
+        const saved = await saveCocktailFromPreview(cocktail, imageData);
+        targetId = saved.id;
+        setPersistedId(saved.id);
+        setCocktail(saved);
+      } catch (e) {
+        console.error("persist failed", e);
+        toast.error(lang === "zh" ? "保存失败，请重试" : "Save failed, please retry");
+        return;
+      } finally {
+        setPersisting(false);
+      }
+    }
+
+    targetId = targetId ?? (Number.isFinite(cocktail.id) && cocktail.id > 0 ? cocktail.id : null);
+    if (!targetId) {
+      toast.error(lang === "zh" ? "无法生成分享链接" : "Cannot generate share link");
+      return;
+    }
+
+    const url = `${window.location.origin}/result/${targetId}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
