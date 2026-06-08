@@ -6,7 +6,7 @@ import { useLang } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
 import AuthModal from "@/components/moodtail/AuthModal";
 import UserMenu from "@/components/moodtail/UserMenu";
-import vibetailLogo from "@/assets/vibetail-logo.png.asset.json";
+
 
 
 /* ---------- Ink-brush style button ---------- */
@@ -104,11 +104,23 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
             style={{ backgroundColor: "var(--app-primary)" }} />
           <div className="absolute inset-8 rounded-full filter blur-xl opacity-20"
             style={{ backgroundColor: "var(--app-secondary)" }} />
-          <img
-            src={vibetailLogo.url}
-            alt="Vibetail logo"
-            className="w-32 h-32 relative z-10 object-contain"
-          />
+          <svg className="w-28 h-28 relative z-10" viewBox="0 0 64 64" fill="none"
+            stroke="var(--app-text-secondary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            {/* Bowl: flat top with rounded corners, U-shaped bottom */}
+            <path d="M14 14 H50 V32 A18 18 0 0 1 14 32 Z" />
+            {/* Stem */}
+            <path d="M32 50 V58" />
+            {/* Base */}
+            <path d="M21 58 H43" />
+            {/* Left eye: winking with monocle ring */}
+            <circle cx="28" cy="25" r="2.6" />
+            <path d="M22 22 q 3 -2 5 0" strokeWidth="2.6" />
+            {/* Right eye: closed dash */}
+            <path d="M37 25 h6" strokeWidth="2.6" />
+            {/* Red smile */}
+            <path d="M22 34 q 10 7 20 0" stroke="var(--app-primary)" strokeWidth="4" />
+          </svg>
+
         </motion.div>
 
 
