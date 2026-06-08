@@ -10,7 +10,7 @@ export const Route = createFileRoute("/drink/$id")({
   head: ({ params }) => {
     const TITLE = "Your Cocktail — Vibetail";
     const DESC = "A bespoke cocktail recipe distilled from your vibe by Vibetail's AI bartender.";
-    const URL = `https://vibetail.com/result/${params.id}`;
+    const URL = `https://vibetail.com/drink/${params.id}`;
     return {
       meta: [
         { title: TITLE },

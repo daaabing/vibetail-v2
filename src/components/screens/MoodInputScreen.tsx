@@ -146,7 +146,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
       };
       const encoded = encodeCocktailToHash(cocktail);
       navigate({
-        to: "/result/$id",
+        to: "/drink/$id",
         params: { id: "preview" },
         search: { d: encoded, ...(isRestaurant ? { restaurant: restaurantId } : {}) },
       });
