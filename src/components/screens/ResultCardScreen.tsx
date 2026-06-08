@@ -364,7 +364,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const fromGallery = search.from === "gallery";
   const restaurantId = search.restaurant;
   const isRestaurant = !!restaurantId;
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const { user } = useAuth();
   const [cocktail, setCocktail] = useState<Cocktail | null>(null);
   const [loading, setLoading] = useState(true);
   const [flipped, setFlipped] = useState(false);
@@ -374,7 +375,12 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [copied, setCopied] = useState(false);
   const [showFramePicker, setShowFramePicker] = useState(false);
   const [selectedFrameId, setSelectedFrameId] = useState<string>("classic");
+  const [persistedId, setPersistedId] = useState<number | null>(null);
+  const [persisting, setPersisting] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
   const captureRef = useRef<HTMLDivElement>(null);
+  const isPreview = !Number.isFinite(id) || id <= 0;
+  const isPersisted = !isPreview || persistedId !== null;
 
   const tapHint = t("result.tap");
   const distillingText = t("result.distilling");
