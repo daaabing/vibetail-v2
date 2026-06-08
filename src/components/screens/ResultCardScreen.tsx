@@ -4,8 +4,11 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import * as htmlToImage from "html-to-image";
 import QRCode from "qrcode";
-import { type Cocktail, decodeCocktailFromHash, encodeCocktailToHash, getCocktail, updateCocktailImage } from "@/lib/cocktails-store";
+import { type Cocktail, decodeCocktailFromHash, encodeCocktailToHash, getCocktail, saveCocktailFromPreview, updateCocktailImage } from "@/lib/cocktails-store";
 import { useLang } from "@/lib/i18n";
+import { useAuth } from "@/lib/use-auth";
+import AuthModal from "@/components/moodtail/AuthModal";
+import { toast } from "sonner";
 
 /** Strip quantity / measurement prefixes from AI-generated ingredient strings. */
 function simplifyIngredient(name: string): string {
