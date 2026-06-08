@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import appCss from "../styles.css?url";
 import { LangProvider } from "@/lib/i18n";
-import SplashScreen from "@/components/moodtail/SplashScreen";
+
 import BottomNav from "@/components/moodtail/BottomNav";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -88,7 +88,7 @@ function RootComponent() {
             animation: "liquid-blob-3 12s ease-in-out infinite",
           }} />
         </div>
-        <SplashScreen />
+        
         <main className="flex-1 flex flex-col relative" style={{ zIndex: 1 }}>
           <Outlet />
         </main>
