@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface Cocktail {
   id: number;
-  publicId: string;
+  publicId?: string;
   cocktailName: string;
   originalMood: string;
   selectedFlavors: string[];
