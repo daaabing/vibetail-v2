@@ -95,7 +95,13 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
       const spiritNote = spiritObj
         ? (lang === "zh" ? `基酒：${spiritObj.zh}。` : `Base spirit: ${spiritObj.en}. `)
         : "";
-      const mergedPreference = (spiritNote + (customPreference || "")).trim();
+      const lengthNote = drinkLength === "long"
+        ? (lang === "zh" ? "杯型：长饮（高杯，加冰，含较多 mixer，慢慢享用）。" : "Format: Long drink (tall glass, plenty of ice and mixer, sippable). ")
+        : drinkLength === "short"
+        ? (lang === "zh" ? "杯型：短饮（小杯，烈酒为主，少 mixer，浓郁集中）。" : "Format: Short drink (small glass, spirit-forward, minimal mixer, concentrated). ")
+        : "";
+      const mergedPreference = (spiritNote + lengthNote + (customPreference || "")).trim();
+
 
       // When the user picks Tashi, pick one of the brand's signature recipes
       // as a creative reference and attach its brand illustration to the card.
