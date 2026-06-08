@@ -72,10 +72,11 @@ export default function GalleryScreen() {
     return (
       <>
         <div className="min-h-svh" />
-        <AuthModal open onClose={() => { /* do nothing — stay on current page */ }} />
+        <AuthModal open onClose={() => navigate({ to: "/" })} />
       </>
     );
   }
+
 
   // Filter by current language. Legacy entries without an explicit `lang`
   // field are bucketed by sniffing CJK characters in the cocktail name.
