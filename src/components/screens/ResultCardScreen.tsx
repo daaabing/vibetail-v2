@@ -378,6 +378,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [persistedId, setPersistedId] = useState<number | null>(null);
   const [persisting, setPersisting] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [pendingAction, setPendingAction] = useState<null | "save" | "share" | "bar">(null);
   const captureRef = useRef<HTMLDivElement>(null);
   const isPreview = !Number.isFinite(id) || id <= 0;
   const isPersisted = !isPreview || persistedId !== null;
@@ -526,6 +527,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   const handleSave = async () => {
     if (!cocktail || !captureRef.current) return;
+    if (!user) { setPendingAction("save"); setShowAuth(true); return; }
     setSaving(true);
     try {
       const raw = await htmlToImage.toPng(captureRef.current, {
@@ -589,6 +591,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   const handleShare = async () => {
     if (!cocktail) return;
+    if (!user) { setPendingAction("share"); setShowAuth(true); return; }
     const encoded = encodeCocktailToHash(cocktail);
     const url = `${window.location.origin}/result/${cocktail.id}?d=${encoded}`;
     try {
@@ -640,18 +643,22 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   const handleSaveToBar = () => {
     if (!user) {
+      setPendingAction("bar");
       setShowAuth(true);
       return;
     }
     void doPersist();
   };
 
-  // Auto-persist after user completes auth in the modal
+  // After user completes auth in the modal, resume the pending action
   useEffect(() => {
-    if (user && showAuth && !isPersisted && cocktail) {
-      setShowAuth(false);
-      void doPersist();
-    }
+    if (!user || !pendingAction) return;
+    const action = pendingAction;
+    setPendingAction(null);
+    setShowAuth(false);
+    if (action === "save") void handleSave();
+    else if (action === "share") void handleShare();
+    else if (action === "bar") void doPersist();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
