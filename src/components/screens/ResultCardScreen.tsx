@@ -447,6 +447,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             ingredients: cocktail.ingredients,
             flavorProfile: cocktail.flavorProfile,
             tastesLike: cocktail.tastesLike,
+            recipe: cocktail.recipe,
           }),
         });
         if (!res.ok) throw new Error(String(res.status));
