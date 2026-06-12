@@ -65,7 +65,7 @@
     background: linear-gradient(145deg, #fdf8f3 0%, #faf6f0 40%, #fef9f5 70%, #f8f3ec 100%);
     background-attachment: fixed;
     color: var(--app-text);
-    font-family: "Nunito", system-ui, sans-serif;
+    font-family: "Playfair Display", Georgia, serif;
     min-height: 100svh;
   }
 }
