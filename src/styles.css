@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: "Fredoka", system-ui, sans-serif;
-  --font-body: "Nunito", system-ui, sans-serif;
+  --font-heading: "Playfair Display", Georgia, serif;
+  --font-body: "Playfair Display", Georgia, serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
