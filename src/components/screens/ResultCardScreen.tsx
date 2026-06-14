@@ -539,12 +539,47 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         backgroundColor: "#fdf8f3",
       });
       const dataUrl = await compositeQr(raw, qrDataUrl);
+      const filename = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
+
+      // Convert to blob
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], filename, { type: "image/png" });
+
+      const nav = navigator as Navigator & {
+        canShare?: (data: { files: File[] }) => boolean;
+        share?: (data: { files: File[]; title?: string }) => Promise<void>;
+      };
+      const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+
+      // On mobile, prefer Web Share API so user can save to Photos/Files
+      if (isMobile && nav.canShare && nav.share && nav.canShare({ files: [file] })) {
+        try {
+          await nav.share({ files: [file], title: cocktail.cocktailName });
+          return;
+        } catch (err) {
+          // user canceled or share failed — fall through to fallback
+          if ((err as Error)?.name === "AbortError") return;
+        }
+      }
+
+      // Try classic download link (works on desktop and most Android)
+      const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.download = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
-      link.href = dataUrl;
+      link.download = filename;
+      link.href = blobUrl;
+      link.rel = "noopener";
+      link.target = "_blank";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      // iOS Safari fallback: open image in new tab so user can long-press save
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      if (isIOS) {
+        window.open(blobUrl, "_blank");
+      }
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
     } catch (e) {
       console.error("save error", e);
     } finally {
