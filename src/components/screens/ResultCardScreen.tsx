@@ -549,16 +549,16 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         canShare?: (data: { files: File[] }) => boolean;
         share?: (data: { files: File[]; title?: string }) => Promise<void>;
       };
-      const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
-
-      // On mobile, prefer Web Share API so user can save to Photos/Files
-      if (isMobile && nav.canShare && nav.share && nav.canShare({ files: [file] })) {
+      // Prefer Web Share API whenever the browser supports sharing files
+      // (Chrome Android, Safari iOS, Edge mobile) — this lets the user save
+      // directly to Photos/Files rather than the Downloads folder.
+      if (nav.canShare && nav.share && nav.canShare({ files: [file] })) {
         try {
           await nav.share({ files: [file], title: cocktail.cocktailName });
           return;
         } catch (err) {
-          // user canceled or share failed — fall through to fallback
           if ((err as Error)?.name === "AbortError") return;
+          // fall through to download fallback
         }
       }
 
