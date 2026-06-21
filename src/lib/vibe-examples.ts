@@ -232,6 +232,21 @@ export function isEmotionalVibe(mood: string): boolean {
   return EMOTION_KEYWORDS.some((k) => m.includes(k.toLowerCase()));
 }
 
+const LITERARY_KEYWORDS = [
+  "诗", "诗意", "文艺", "唯美", "浪漫", "温柔", "宁静", "安静",
+  "月", "月光", "星", "星空", "银河", "夜空", "晚风", "黄昏", "清晨",
+  "雾", "烟雨", "细雨", "落日", "晚霞", "海", "山", "森林", "花",
+  "怀旧", "复古", "旧时光", "回忆", "信", "纸", "梦", "梦境",
+  "治愈", "清新", "干净", "通透",
+];
+
+export function isLiteraryVibe(mood: string, pref = ""): boolean {
+  const text = `${mood || ""} ${pref || ""}`.toLowerCase();
+  if (!text.trim()) return false;
+  return LITERARY_KEYWORDS.some((k) => text.includes(k.toLowerCase()));
+}
+
+
 export interface VibeMatchContext {
   selectedFlavors?: string[];
   customPreference?: string;
