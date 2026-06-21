@@ -16,6 +16,7 @@ interface GenInput {
     name: string;
     tastesLike: string;
     flavorProfile: string;
+    nameStyle?: "absurd" | "literary";
   } | null;
 }
 
