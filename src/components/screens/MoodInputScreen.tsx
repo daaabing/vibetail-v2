@@ -119,9 +119,16 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
         : null;
 
       // Chinese mode → always attach a handwritten-menu style reference so
-      // the AI mimics the witty, abstract bistro-menu tone. Emotional vibes
-      // bias toward emotional examples (handled inside pickVibeExample).
-      const vibePick = lang === "zh" ? pickVibeExample(mood) : null;
+      // the AI mimics the witty, abstract bistro-menu tone. Matching now
+      // weighs mood + scene + flavor chips + base spirit + drink length.
+      const vibePick = lang === "zh"
+        ? pickVibeExample(mood, {
+            selectedFlavors,
+            customPreference: mergedPreference,
+            baseSpirit,
+            drinkLength,
+          })
+        : null;
       const vibeReference = vibePick
         ? { name: vibePick.name, tastesLike: vibePick.tastesLike, flavorProfile: vibePick.flavorProfile }
         : null;
