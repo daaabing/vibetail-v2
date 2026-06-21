@@ -11,136 +11,237 @@ export interface VibeExample {
   tastesLike: string;
   /** Short flavor description from the menu footer. */
   flavorProfile: string;
-  /** Rough mood / topic tags used for matching. Empty = generic, always eligible. */
+  /** Mood / emotion tags (inner state). */
   moodTags: string[];
+  /** Scene / situation tags (work, weekend, weather, social...). */
+  sceneTags?: string[];
+  /** Flavor profile tags — should overlap with FLAVOR_CHIPS labels. */
+  flavorTags?: string[];
+  /** Base-spirit affinity (gin / vodka / rum / whiskey / mezcal / 无酒精 ...). */
+  spiritTags?: string[];
+  /** "long" (highball/spritz) or "short" (coupe/rocks). Empty = either. */
+  lengthTags?: ("long" | "short")[];
+  /** True if this example reads as emotional / relationship-themed. */
+  emotional?: boolean;
 }
 
-// Emotion / relationship-themed examples
 const EMOTIONAL_EXAMPLES: VibeExample[] = [
   {
     name: "你要这样想我也没办法",
     tastesLike: "你要这么说我也不在乎，你如果非要这么想，那你觉得好就好。",
     flavorProfile: "苹果的，有一点点姜味，所以你问我？你辛什么姜子！",
     moodTags: ["无语", "敷衍", "摆烂", "冷战", "懒得解释", "随便", "无所谓", "委屈", "被误会"],
+    sceneTags: ["吵架", "冷战", "情侣", "家庭"],
+    flavorTags: ["spicy", "辛辣", "fruity", "果味", "fresh", "清爽"],
+    spiritTags: ["whiskey", "威士忌", "rum", "朗姆"],
+    lengthTags: ["short"],
+    emotional: true,
   },
   {
     name: "绝望的直女",
     tastesLike: "心理上接收不了男生，生理上又接受不了女生。有一种看透了男生又爱不上女生的无力感。",
     flavorProfile: "葡萄小黑提，白朗姆！柠檬！",
     moodTags: ["单身", "绝望", "母胎solo", "不想恋爱", "看透", "厌男", "无力", "孤独", "情感空窗"],
+    sceneTags: ["单身", "相亲", "情人节", "深夜"],
+    flavorTags: ["sour", "酸", "fruity", "果味"],
+    spiritTags: ["rum", "朗姆", "vodka", "伏特加"],
+    lengthTags: ["short"],
+    emotional: true,
   },
   {
     name: "还以为是被爱了",
     tastesLike: "差点以为自己被爱了，还偷偷开心了好久。",
     flavorProfile: "香石榴柑橘，蓝柑——意思是不要越过栏杆。",
     moodTags: ["暗恋", "误会", "心动", "失落", "被拒", "暧昧", "自作多情", "心碎", "幻灭", "空欢喜"],
+    sceneTags: ["暗恋", "约会", "聊天"],
+    flavorTags: ["sour", "酸", "fruity", "果味", "sweet", "甜"],
+    spiritTags: ["gin", "金酒", "vodka", "伏特加"],
+    lengthTags: ["short"],
+    emotional: true,
   },
   {
     name: "所以我们现在是什么关系",
     tastesLike: "是什么关系？我问你，你的不回应像这杯酒的后劲一样上头。",
     flavorProfile: "蓝色的香石榴味道，还有点烈！像雨后的晴天。",
     moodTags: ["暧昧", "situationship", "已读不回", "不回消息", "搞暧昧", "纠结", "上头", "拉扯", "不明不白", "等回复"],
+    sceneTags: ["暧昧", "聊天", "深夜", "约会"],
+    flavorTags: ["strong", "烈", "sour", "酸"],
+    spiritTags: ["gin", "金酒", "tequila", "龙舌兰"],
+    lengthTags: ["short"],
+    emotional: true,
   },
   {
     name: "莫非是瞧上小生了？",
     tastesLike: "小美人，喜欢小生这么叫你吗～桀桀桀！",
     flavorProfile: "西柚清爽，柑橘果皮微苦，接骨木花香，黑莓金酒赋予莓果清甜，整体轻盈不失稳重。",
     moodTags: ["心动", "暧昧", "被撩", "调情", "心痒", "暗送秋波", "怦然心动"],
+    sceneTags: ["调情", "约会", "酒吧搭讪"],
+    flavorTags: ["bitter", "苦", "floral", "花香", "fruity", "果味"],
+    spiritTags: ["gin", "金酒"],
+    lengthTags: ["long"],
+    emotional: true,
   },
   {
     name: "听老婆的话会发达",
     tastesLike: "在外朋友都觉得妻子很凶，只有体盾的我才懂。多么喜欢被妻子掌控在手心的感觉。请把这句话默念一百遍。",
     flavorProfile: "苹果和菠萝与蛋黄酒的融合，稍微厚重的口感又带有清爽的果香，像是在喝甜酸奶味的液体小蛋糕。",
     moodTags: ["怕老婆", "妻管严", "宠妻", "听话", "婚姻", "认怂", "甜蜜"],
+    sceneTags: ["婚姻", "家庭", "夫妻"],
+    flavorTags: ["sweet", "甜", "creamy", "奶香", "fruity", "果味"],
+    spiritTags: ["rum", "朗姆", "brandy", "白兰地"],
+    lengthTags: ["short"],
+    emotional: true,
   },
 ];
 
-// Generic / non-emotional examples — vibes, weather, food cravings,
-// self-mockery, social commentary, etc.
 const GENERIC_EXAMPLES: VibeExample[] = [
   {
     name: "粉色娇嫩",
     tastesLike: "你管我如今几岁！",
     flavorProfile: "酸酸甜甜，淡淡的莓果味儿和奶香，比较清爽，有蛋清介意勿点！",
     moodTags: ["少女心", "粉红", "可爱", "嫩", "装嫩", "甜", "天真"],
+    sceneTags: ["生日", "拍照", "下午茶"],
+    flavorTags: ["sweet", "甜", "sour", "酸", "fruity", "果味", "creamy", "奶香", "floral", "花香"],
+    spiritTags: ["gin", "金酒", "vodka", "伏特加", "nonalcoholic", "无酒精"],
+    lengthTags: ["short"],
   },
   {
     name: "三分凉薄二分讥笑",
     tastesLike: "呵，小东西（皱眉），叫声主人，命都给你（气泡音）。",
     flavorProfile: "清爽的黄瓜与薄荷佐以气泡感，夏天就是要这样的味道。",
     moodTags: ["清凉", "夏天", "薄荷", "凉爽", "高冷", "傲娇", "讥讽", "毒舌"],
+    sceneTags: ["夏天", "热", "海边", "泳池", "白天"],
+    flavorTags: ["fresh", "清爽", "herbal", "草本", "bitter", "苦"],
+    spiritTags: ["gin", "金酒", "vodka", "伏特加"],
+    lengthTags: ["long"],
   },
   {
     name: "你听听我的心慌不慌",
     tastesLike: "好慌，酒里到底有什么！",
     flavorProfile: "入口松柏加上薄荷味，回味一点椰子的清香。",
     moodTags: ["紧张", "心慌", "焦虑", "好奇", "未知", "刺激", "面试", "见家长", "汇报"],
+    sceneTags: ["面试", "考试", "汇报", "见家长", "约会前"],
+    flavorTags: ["herbal", "草本", "fresh", "清爽"],
+    spiritTags: ["gin", "金酒", "rum", "朗姆"],
+    lengthTags: ["short"],
   },
   {
     name: "今天也没有班上",
     tastesLike: "醒来发现是周六，可以继续摆烂，谁也别叫我。",
     flavorProfile: "微甜的椰子奶味，淡淡咖啡尾韵，慵懒到底。",
     moodTags: ["周末", "放假", "摆烂", "躺平", "懒", "慵懒", "周六", "周日", "休息"],
+    sceneTags: ["周末", "在家", "床上", "假期"],
+    flavorTags: ["sweet", "甜", "creamy", "奶香", "coffee", "咖啡"],
+    spiritTags: ["rum", "朗姆", "whiskey", "威士忌"],
+    lengthTags: ["short"],
   },
   {
     name: "上班如上坟",
     tastesLike: "周一早上的咖啡也救不了我，老板再说一句我就拌了这杯下去。",
     flavorProfile: "浓缩咖啡 + 威士忌 + 一丝绝望的焦糖。",
-    moodTags: ["上班", "打工", "周一", "加班", "老板", "崩溃", "疲惫", "打工人", "牛马"],
+    moodTags: ["上班", "打工", "周一", "加班", "老板", "崩溃", "疲惫", "打工人", "牛马", "想离职", "辞职"],
+    sceneTags: ["工作", "办公室", "周一", "加班", "通勤"],
+    flavorTags: ["bitter", "苦", "strong", "烈", "coffee", "咖啡", "smoky", "烟熏"],
+    spiritTags: ["whiskey", "威士忌", "mezcal", "梅斯卡尔"],
+    lengthTags: ["short"],
   },
   {
     name: "想吃辣的想喝凉的",
     tastesLike: "嘴上说要清淡，手已经点了一份火锅。",
     flavorProfile: "辣椒梅子糖浆，冰镇苏打，柠檬皮油提香。",
     moodTags: ["馋", "想吃", "火锅", "辣", "夜宵", "嘴馋", "深夜", "饿"],
+    sceneTags: ["夜宵", "火锅", "撸串", "吃饭", "深夜"],
+    flavorTags: ["spicy", "辛辣", "sour", "酸", "fresh", "清爽"],
+    spiritTags: ["tequila", "龙舌兰", "mezcal", "梅斯卡尔", "vodka", "伏特加"],
+    lengthTags: ["long"],
   },
   {
     name: "下雨天和巧克力更配",
     tastesLike: "雨声当 BGM，玻璃窗起雾，世界把我静音了一下。",
     flavorProfile: "可可、烤橡木、一点点烟熏，回甘像被子。",
     moodTags: ["下雨", "雨天", "阴天", "潮湿", "安静", "独处", "宅", "巧克力"],
+    sceneTags: ["下雨", "阴天", "在家", "独处", "夜晚"],
+    flavorTags: ["sweet", "甜", "smoky", "烟熏", "bitter", "苦", "chocolate", "巧克力"],
+    spiritTags: ["whiskey", "威士忌", "brandy", "白兰地"],
+    lengthTags: ["short"],
   },
 ];
 
 export const VIBE_EXAMPLES: VibeExample[] = [...EMOTIONAL_EXAMPLES, ...GENERIC_EXAMPLES];
 
 const EMOTION_KEYWORDS = [
-  // relationship
   "爱", "喜欢", "心动", "暗恋", "暧昧", "前任", "分手", "失恋", "心碎",
   "恋爱", "对象", "男友", "女友", "约会", "表白", "拒绝", "异地",
   "已读", "不回", "消息", "回复", "拉扯", "纠结",
-  // emotions
   "难过", "伤心", "孤独", "寂寞", "委屈", "想哭", "破防", "崩溃",
   "无语", "无奈", "摆烂", "躺平", "焦虑", "emo", "丧", "绝望",
   "开心", "高兴", "兴奋", "上头", "心情", "感情", "情绪",
   "单身", "一个人", "想你", "想他", "想她",
 ];
 
-/** True when the (Chinese) mood text reads like an emotion / relationship vibe. */
 export function isEmotionalVibe(mood: string): boolean {
   if (!mood) return false;
   const m = mood.toLowerCase();
   return EMOTION_KEYWORDS.some((k) => m.includes(k.toLowerCase()));
 }
 
+export interface VibeMatchContext {
+  selectedFlavors?: string[];
+  customPreference?: string;
+  baseSpirit?: string;
+  drinkLength?: "" | "long" | "short";
+}
+
 /**
- * Pick the example whose moodTags best overlap with the user's mood.
- * Falls back to a random example so Chinese output always gets a style anchor.
+ * Weighted matcher.
+ * Scoring (per example):
+ *   +3 per mood-tag substring hit in mood
+ *   +2 per scene-tag substring hit in mood / customPreference
+ *   +2 per flavor-tag overlap with selectedFlavors (case-insensitive)
+ *   +1 per flavor-tag substring hit in mood / customPreference
+ *   +3 if baseSpirit matches a spiritTag
+ *   +1 if drinkLength matches lengthTags
+ *   +1.5 emotional bonus if mood reads emotional and example.emotional
+ *   -1.5 if mood reads emotional and example is generic (slight, not exclusive)
+ *   +random*0.6 jitter
  */
-export function pickVibeExample(mood: string): VibeExample {
+export function pickVibeExample(mood: string, ctx: VibeMatchContext = {}): VibeExample {
   const m = (mood || "").toLowerCase();
+  const pref = (ctx.customPreference || "").toLowerCase();
+  const text = `${m} ${pref}`;
+  const flavors = (ctx.selectedFlavors || []).map((s) => s.toLowerCase());
+  const spirit = (ctx.baseSpirit || "").toLowerCase();
+  const length = ctx.drinkLength || "";
   const emotional = isEmotionalVibe(mood);
-  // If the vibe sounds emotional, bias toward emotional examples; otherwise
-  // consider all examples. Within the pool, score by tag overlap + jitter.
-  const pool = emotional ? EMOTIONAL_EXAMPLES : VIBE_EXAMPLES;
-  let best = pool[Math.floor(Math.random() * pool.length)];
-  let bestScore = -1;
-  for (const ex of pool) {
+
+  let best = VIBE_EXAMPLES[0];
+  let bestScore = -Infinity;
+
+  for (const ex of VIBE_EXAMPLES) {
     let score = 0;
+
     for (const tag of ex.moodTags) {
-      if (m.includes(tag.toLowerCase())) score += 2;
+      if (m.includes(tag.toLowerCase())) score += 3;
     }
-    score += Math.random() * 0.8;
+    for (const tag of ex.sceneTags || []) {
+      if (text.includes(tag.toLowerCase())) score += 2;
+    }
+    for (const tag of ex.flavorTags || []) {
+      const t = tag.toLowerCase();
+      if (flavors.some((f) => f === t || f.includes(t) || t.includes(f))) score += 2;
+      else if (text.includes(t)) score += 1;
+    }
+    if (spirit && (ex.spiritTags || []).some((s) => s.toLowerCase() === spirit)) {
+      score += 3;
+    }
+    if (length && (ex.lengthTags || []).includes(length)) {
+      score += 1;
+    }
+    if (emotional && ex.emotional) score += 1.5;
+    if (emotional && !ex.emotional) score -= 1.5;
+
+    score += Math.random() * 0.6;
+
     if (score > bestScore) {
       bestScore = score;
       best = ex;
