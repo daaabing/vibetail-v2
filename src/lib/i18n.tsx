@@ -59,7 +59,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Result
     "result.home": "首页",
     "result.checked": "VIBE 已解析 ✓",
-    "result.distilling": "正在蒸馏插图中…",
+    "result.distilling": "正在调制心情中…",
     "result.tap": "点击翻面",
     "result.original": "原始 Vibe",
     "result.tasting": "品鉴笔记",
@@ -126,7 +126,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Result
     "result.home": "HOME",
     "result.checked": "VIBE CHECKED ✓",
-    "result.distilling": "DISTILLING ILLUSTRATION…",
+    "result.distilling": "CRAFTING THE MOOD…",
     "result.tap": "TAP TO FLIP",
     "result.original": "ORIGINAL VIBE",
     "result.tasting": "TASTING NOTES",
