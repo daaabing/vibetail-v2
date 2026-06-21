@@ -23,6 +23,12 @@ export interface VibeExample {
   lengthTags?: ("long" | "short")[];
   /** True if this example reads as emotional / relationship-themed. */
   emotional?: boolean;
+  /**
+   * Naming voice this example demonstrates:
+   *   - "absurd": 口语 / 内心OS / 吐槽 / 谐音梗 (e.g. "我真的栓Q了")
+   *   - "literary": 名词+名词 / 清新文艺 / 诗意意象 (e.g. "星河晚祷")
+   */
+  nameStyle?: "absurd" | "literary";
 }
 
 const EMOTIONAL_EXAMPLES: VibeExample[] = [
