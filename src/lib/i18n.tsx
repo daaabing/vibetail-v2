@@ -126,7 +126,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Result
     "result.home": "HOME",
     "result.checked": "VIBE CHECKED ✓",
-    "result.distilling": "DISTILLING ILLUSTRATION…",
+    "result.distilling": "CRAFTING THE MOOD…",
     "result.tap": "TAP TO FLIP",
     "result.original": "ORIGINAL VIBE",
     "result.tasting": "TASTING NOTES",
