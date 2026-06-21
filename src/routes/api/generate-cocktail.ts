@@ -12,6 +12,11 @@ interface GenInput {
     ingredients: string[];
     recipe: string;
   } | null;
+  vibeReference?: {
+    name: string;
+    tastesLike: string;
+    flavorProfile: string;
+  } | null;
 }
 
 interface GeneratedCocktail {
