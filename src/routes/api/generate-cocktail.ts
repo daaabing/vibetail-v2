@@ -12,6 +12,11 @@ interface GenInput {
     ingredients: string[];
     recipe: string;
   } | null;
+  vibeReference?: {
+    name: string;
+    tastesLike: string;
+    flavorProfile: string;
+  } | null;
 }
 
 interface GeneratedCocktail {
@@ -92,6 +97,19 @@ function buildUserPrompt(input: GenInput): string {
         ``,
       ].join("\n")
     : "";
+  const vibe = input.vibeReference;
+  const vibeBlock = vibe
+    ? [
+        ``,
+        `STYLE REFERENCE (Chinese handwritten bistro menu — 抽象、荒诞、口语化、自嘲的中文小酒馆菜单调性).`,
+        `Use the cadence + wit of this example to inspire YOUR OWN cocktailName, tastesLike and roast. DO NOT copy any of these strings — invent fresh ones tied to the user's actual vibe.`,
+        `Example name (for tone only, never reuse): ${vibe.name}`,
+        `Example tastes-like (for tone only): ${vibe.tastesLike}`,
+        `Example flavor line (for tone only): ${vibe.flavorProfile}`,
+        `Hints: the name is often a full spoken sentence / inner-monologue (8–14 字), not a noun phrase. The tastes-like reads like a diary line. Puns and homophones (谐音梗) are welcome.`,
+        ``,
+      ].join("\n")
+    : "";
   return [
     langRule,
     ``,
@@ -100,6 +118,7 @@ function buildUserPrompt(input: GenInput): string {
     `Custom preference: ${pref}`,
     photo,
     tashiBlock,
+    vibeBlock,
     `Design ONE creative-but-makeable cocktail that captures this vibe.`,
     `Hard rules:`,
     `- Ingredients must be real bar ingredients with real measurements (oz, ml, dashes, barspoons).`,
