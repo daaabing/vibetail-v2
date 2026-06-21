@@ -23,6 +23,12 @@ export interface VibeExample {
   lengthTags?: ("long" | "short")[];
   /** True if this example reads as emotional / relationship-themed. */
   emotional?: boolean;
+  /**
+   * Naming voice this example demonstrates:
+   *   - "absurd": 口语 / 内心OS / 吐槽 / 谐音梗 (e.g. "我真的栓Q了")
+   *   - "literary": 名词+名词 / 清新文艺 / 诗意意象 (e.g. "星河晚祷")
+   */
+  nameStyle?: "absurd" | "literary";
 }
 
 const EMOTIONAL_EXAMPLES: VibeExample[] = [
@@ -167,7 +173,48 @@ const GENERIC_EXAMPLES: VibeExample[] = [
   },
 ];
 
-export const VIBE_EXAMPLES: VibeExample[] = [...EMOTIONAL_EXAMPLES, ...GENERIC_EXAMPLES];
+const LITERARY_EXAMPLES: VibeExample[] = [
+  {
+    name: "星河晚祷",
+    tastesLike: "把今晚的心事折成纸船，放进银河里漂走。",
+    flavorProfile: "杜松子、接骨木花、柚子皮、一点海盐，尾韵像凉风。",
+    moodTags: ["浪漫", "诗意", "文艺", "夜晚", "星空", "温柔", "安静", "想念", "怀旧", "祈祷", "治愈"],
+    sceneTags: ["夜晚", "星空", "阳台", "独处", "旅行"],
+    flavorTags: ["floral", "花香", "fresh", "清爽", "herbal", "草本"],
+    spiritTags: ["gin", "金酒"],
+    lengthTags: ["long"],
+    nameStyle: "literary",
+  },
+  {
+    name: "薄荷月光",
+    tastesLike: "夏夜把窗推开，月亮顺着薄荷叶滑进杯里。",
+    flavorProfile: "薄荷、青柠、白朗姆、苏打，清亮如月。",
+    moodTags: ["清凉", "夏夜", "月光", "宁静", "温柔", "文艺", "清新", "唯美"],
+    sceneTags: ["夏天", "夜晚", "阳台", "海边"],
+    flavorTags: ["fresh", "清爽", "herbal", "草本", "sour", "酸"],
+    spiritTags: ["rum", "朗姆", "gin", "金酒"],
+    lengthTags: ["long"],
+    nameStyle: "literary",
+  },
+  {
+    name: "雾中信使",
+    tastesLike: "像一封迟到的信，墨水还带着潮意。",
+    flavorProfile: "泥煤威士忌、蜂蜜、佛手柑、一缕烟。",
+    moodTags: ["怀旧", "思念", "诗意", "孤独", "深沉", "复古", "雨", "雾", "黄昏"],
+    sceneTags: ["雨天", "黄昏", "独处", "旅行", "深夜"],
+    flavorTags: ["smoky", "烟熏", "sweet", "甜", "bitter", "苦"],
+    spiritTags: ["whiskey", "威士忌"],
+    lengthTags: ["short"],
+    nameStyle: "literary",
+  },
+];
+
+export const VIBE_EXAMPLES: VibeExample[] = [
+  ...EMOTIONAL_EXAMPLES,
+  ...GENERIC_EXAMPLES,
+  ...LITERARY_EXAMPLES,
+];
+
 
 const EMOTION_KEYWORDS = [
   "爱", "喜欢", "心动", "暗恋", "暧昧", "前任", "分手", "失恋", "心碎",
@@ -184,6 +231,21 @@ export function isEmotionalVibe(mood: string): boolean {
   const m = mood.toLowerCase();
   return EMOTION_KEYWORDS.some((k) => m.includes(k.toLowerCase()));
 }
+
+const LITERARY_KEYWORDS = [
+  "诗", "诗意", "文艺", "唯美", "浪漫", "温柔", "宁静", "安静",
+  "月", "月光", "星", "星空", "银河", "夜空", "晚风", "黄昏", "清晨",
+  "雾", "烟雨", "细雨", "落日", "晚霞", "海", "山", "森林", "花",
+  "怀旧", "复古", "旧时光", "回忆", "信", "纸", "梦", "梦境",
+  "治愈", "清新", "干净", "通透",
+];
+
+export function isLiteraryVibe(mood: string, pref = ""): boolean {
+  const text = `${mood || ""} ${pref || ""}`.toLowerCase();
+  if (!text.trim()) return false;
+  return LITERARY_KEYWORDS.some((k) => text.includes(k.toLowerCase()));
+}
+
 
 export interface VibeMatchContext {
   selectedFlavors?: string[];
@@ -213,6 +275,7 @@ export function pickVibeExample(mood: string, ctx: VibeMatchContext = {}): VibeE
   const spirit = (ctx.baseSpirit || "").toLowerCase();
   const length = ctx.drinkLength || "";
   const emotional = isEmotionalVibe(mood);
+  const literary = isLiteraryVibe(mood, ctx.customPreference);
 
   let best = VIBE_EXAMPLES[0];
   let bestScore = -Infinity;
@@ -238,7 +301,10 @@ export function pickVibeExample(mood: string, ctx: VibeMatchContext = {}): VibeE
       score += 1;
     }
     if (emotional && ex.emotional) score += 1.5;
-    if (emotional && !ex.emotional) score -= 1.5;
+    if (emotional && !ex.emotional && ex.nameStyle !== "literary") score -= 1.5;
+    if (literary && ex.nameStyle === "literary") score += 2.5;
+    if (literary && ex.nameStyle !== "literary") score -= 1;
+
 
     score += Math.random() * 0.6;
 

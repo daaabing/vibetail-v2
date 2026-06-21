@@ -130,7 +130,12 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
           })
         : null;
       const vibeReference = vibePick
-        ? { name: vibePick.name, tastesLike: vibePick.tastesLike, flavorProfile: vibePick.flavorProfile }
+        ? {
+            name: vibePick.name,
+            tastesLike: vibePick.tastesLike,
+            flavorProfile: vibePick.flavorProfile,
+            nameStyle: vibePick.nameStyle ?? "absurd",
+          }
         : null;
 
       const res = await fetch("/api/generate-cocktail", {
