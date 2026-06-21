@@ -275,6 +275,7 @@ export function pickVibeExample(mood: string, ctx: VibeMatchContext = {}): VibeE
   const spirit = (ctx.baseSpirit || "").toLowerCase();
   const length = ctx.drinkLength || "";
   const emotional = isEmotionalVibe(mood);
+  const literary = isLiteraryVibe(mood, ctx.customPreference);
 
   let best = VIBE_EXAMPLES[0];
   let bestScore = -Infinity;
@@ -300,7 +301,10 @@ export function pickVibeExample(mood: string, ctx: VibeMatchContext = {}): VibeE
       score += 1;
     }
     if (emotional && ex.emotional) score += 1.5;
-    if (emotional && !ex.emotional) score -= 1.5;
+    if (emotional && !ex.emotional && ex.nameStyle !== "literary") score -= 1.5;
+    if (literary && ex.nameStyle === "literary") score += 2.5;
+    if (literary && ex.nameStyle !== "literary") score -= 1;
+
 
     score += Math.random() * 0.6;
 
