@@ -173,7 +173,48 @@ const GENERIC_EXAMPLES: VibeExample[] = [
   },
 ];
 
-export const VIBE_EXAMPLES: VibeExample[] = [...EMOTIONAL_EXAMPLES, ...GENERIC_EXAMPLES];
+const LITERARY_EXAMPLES: VibeExample[] = [
+  {
+    name: "星河晚祷",
+    tastesLike: "把今晚的心事折成纸船，放进银河里漂走。",
+    flavorProfile: "杜松子、接骨木花、柚子皮、一点海盐，尾韵像凉风。",
+    moodTags: ["浪漫", "诗意", "文艺", "夜晚", "星空", "温柔", "安静", "想念", "怀旧", "祈祷", "治愈"],
+    sceneTags: ["夜晚", "星空", "阳台", "独处", "旅行"],
+    flavorTags: ["floral", "花香", "fresh", "清爽", "herbal", "草本"],
+    spiritTags: ["gin", "金酒"],
+    lengthTags: ["long"],
+    nameStyle: "literary",
+  },
+  {
+    name: "薄荷月光",
+    tastesLike: "夏夜把窗推开，月亮顺着薄荷叶滑进杯里。",
+    flavorProfile: "薄荷、青柠、白朗姆、苏打，清亮如月。",
+    moodTags: ["清凉", "夏夜", "月光", "宁静", "温柔", "文艺", "清新", "唯美"],
+    sceneTags: ["夏天", "夜晚", "阳台", "海边"],
+    flavorTags: ["fresh", "清爽", "herbal", "草本", "sour", "酸"],
+    spiritTags: ["rum", "朗姆", "gin", "金酒"],
+    lengthTags: ["long"],
+    nameStyle: "literary",
+  },
+  {
+    name: "雾中信使",
+    tastesLike: "像一封迟到的信，墨水还带着潮意。",
+    flavorProfile: "泥煤威士忌、蜂蜜、佛手柑、一缕烟。",
+    moodTags: ["怀旧", "思念", "诗意", "孤独", "深沉", "复古", "雨", "雾", "黄昏"],
+    sceneTags: ["雨天", "黄昏", "独处", "旅行", "深夜"],
+    flavorTags: ["smoky", "烟熏", "sweet", "甜", "bitter", "苦"],
+    spiritTags: ["whiskey", "威士忌"],
+    lengthTags: ["short"],
+    nameStyle: "literary",
+  },
+];
+
+export const VIBE_EXAMPLES: VibeExample[] = [
+  ...EMOTIONAL_EXAMPLES,
+  ...GENERIC_EXAMPLES,
+  ...LITERARY_EXAMPLES,
+];
+
 
 const EMOTION_KEYWORDS = [
   "爱", "喜欢", "心动", "暗恋", "暧昧", "前任", "分手", "失恋", "心碎",
