@@ -37,7 +37,7 @@ export default function VibeBottle({
 
   const shakeAnim = isMixing
     ? {
-        rotate: [-15, 15, -15, 15, 0],
+        rotate: [-15, 15, -15, 15, -15],
         y: [0, -12, 4, -12, 0],
         x: [0, 8, -8, 8, 0],
       }
@@ -46,7 +46,7 @@ export default function VibeBottle({
         y: [0, -3, 0],
       };
 
-  const shakeDur = isMixing ? 1.4 : 4;
+  const shakeDur = isMixing ? 0.9 : 4;
 
   return (
     <div
