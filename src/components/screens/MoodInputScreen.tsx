@@ -60,6 +60,33 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
   const moodPlaceholder = moodPlaceholders[randomMoodIdx.current % moodPlaceholders.length];
   const customPlaceholder = customPlaceholders[randomCustomIdx.current % customPlaceholders.length];
 
+  // Derive the bottle color from current selections (mood chip → spirit → flavor → primary).
+  const currentVibeColor = (() => {
+    const chip = VIBE_CHIPS.find(
+      (c) => c.label === mood || c.labelEn === mood,
+    );
+    if (chip) return chip.color;
+    const spirit = BASE_SPIRITS.find((s) => s.key === baseSpirit);
+    if (spirit) return spirit.color;
+    const flavor = FLAVOR_CHIPS.find((f) => selectedFlavors.includes(f.label));
+    if (flavor?.color) return flavor.color;
+    return "#E0533C";
+  })();
+
+  const mixingLines = lang === "zh"
+    ? [
+        "正在捕捉你的当下味道…",
+        "正在调和你的情绪基酒…",
+        "加入一点不理智的香气…",
+        "摇匀一份只属于你的 vibe…",
+      ]
+    : [
+        "Capturing your current flavor…",
+        "Blending your emotional base spirit…",
+        "Adding a dash of unreason…",
+        "Shaking up a vibe just for you…",
+      ];
+
   const goNext = () => {
     if (!mood.trim()) { toast.error(lang === "zh" ? "先描述一下你的状态吧！" : "Describe your vibe first!"); return; }
     setStep(2);
