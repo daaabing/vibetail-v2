@@ -92,16 +92,25 @@ export const Route = createFileRoute("/api/generate-cocktail-image")({
 
         const prompt = buildPrompt(body);
 
-        const upstream = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash-image",
-            messages: [{ role: "user", content: prompt }],
-            modalities: ["image", "text"],
-          }),
-          signal: request.signal,
-        });
+        let upstream: Response;
+        try {
+          upstream = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-image",
+              messages: [{ role: "user", content: prompt }],
+              modalities: ["image", "text"],
+            }),
+            signal: request.signal,
+          });
+        } catch (err) {
+          if ((err as { name?: string })?.name === "AbortError" || request.signal.aborted) {
+            return new Response("Client aborted", { status: 499 });
+          }
+          console.error("generate-cocktail-image fetch failed", err);
+          return new Response("Upstream fetch failed", { status: 502 });
+        }
 
         if (!upstream.ok) {
           const text = await upstream.text().catch(() => "");
