@@ -86,7 +86,7 @@ export const translations: Record<Lang, Record<string, string>> = {
   },
   en: {
     // Landing
-    "landing.tagline": "You may not be sober. But the drink should be right.",
+    "landing.tagline": "Every messy mood deserves the perfect pour.",
     "landing.subtitle": "Turn your current vibe into a cocktail.",
     "landing.cta.mix": "Check My Vibe",
     "landing.cta.bar": "View the Vibe Bar",
