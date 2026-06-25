@@ -265,7 +265,12 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
             transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
             className="px-5 pb-28 space-y-5"
           >
-            <div>
+            {/* Hero bottle — reflects current vibe */}
+            <div className="flex justify-center pt-2 pb-1">
+              <VibeBottle color={currentVibeColor} size={180} mode="idle" />
+            </div>
+
+            <div className="text-center">
               <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
                 {t("mood.title")}
               </h1>
