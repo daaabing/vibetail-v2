@@ -780,6 +780,8 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
           </motion.div>
         )}
       </AnimatePresence>
+
+      <MixingOverlay open={isGenerating} color={currentVibeColor} lines={mixingLines} />
     </div>
   );
 }
