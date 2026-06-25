@@ -94,6 +94,31 @@
   50% { opacity: 0.28; transform: scale(1.1); }
 }
 .pulse-distill { animation: pulse-distill 3s ease-in-out infinite; }
+@keyframes vibe-bottle-shake {
+  0% { transform: translate3d(0, 0, 0) rotate(-15deg); }
+  25% { transform: translate3d(8px, -12px, 0) rotate(15deg); }
+  50% { transform: translate3d(-8px, 4px, 0) rotate(-15deg); }
+  75% { transform: translate3d(8px, -12px, 0) rotate(15deg); }
+  100% { transform: translate3d(0, 0, 0) rotate(-15deg); }
+}
+@keyframes vibe-bottle-sway {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-4deg); }
+  50% { transform: translate3d(0, -3px, 0) rotate(4deg); }
+}
+.vibe-bottle-shaker {
+  transform-origin: 50% 58%;
+  will-change: transform;
+}
+.vibe-bottle-shaker--mixing {
+  animation: vibe-bottle-shake 0.72s steps(4, end) infinite;
+}
+.vibe-bottle-shaker--idle {
+  animation: vibe-bottle-sway 4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vibe-bottle-shaker--mixing { animation-duration: 1.2s; }
+  .vibe-bottle-shaker--idle { animation: none; }
+}
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }

@@ -35,19 +35,6 @@ export default function VibeBottle({
 }: VibeBottleProps) {
   const isMixing = mode === "mixing";
 
-  const shakeAnim = isMixing
-    ? {
-        rotate: [-15, 15, -15, 15, -15],
-        y: [0, -12, 4, -12, 0],
-        x: [0, 8, -8, 8, 0],
-      }
-    : {
-        rotate: [-4, 4, -4],
-        y: [0, -3, 0],
-      };
-
-  const shakeDur = isMixing ? 0.9 : 4;
-
   return (
     <div
       className="relative inline-flex items-center justify-center"
@@ -75,15 +62,8 @@ export default function VibeBottle({
       )}
 
       {/* Shaker */}
-      <motion.div
-        animate={shakeAnim}
-        transition={{
-          duration: shakeDur,
-          repeat: Infinity,
-          repeatType: "loop",
-          ease: isMixing ? "linear" : "easeInOut",
-        }}
-        className="relative z-10 filter drop-shadow-md"
+      <div
+        className={`relative z-10 filter drop-shadow-md vibe-bottle-shaker ${isMixing ? "vibe-bottle-shaker--mixing" : "vibe-bottle-shaker--idle"}`}
         style={{ width: size * 0.55, height: size * 0.78 }}
       >
         <svg
@@ -168,7 +148,7 @@ export default function VibeBottle({
             </>
           )}
         </svg>
-      </motion.div>
+      </div>
     </div>
   );
 }
