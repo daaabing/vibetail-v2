@@ -80,7 +80,8 @@ export default function VibeBottle({
         transition={{
           duration: shakeDur,
           repeat: Infinity,
-          ease: "easeInOut",
+          repeatType: "loop",
+          ease: isMixing ? "linear" : "easeInOut",
         }}
         className="relative z-10 filter drop-shadow-md"
         style={{ width: size * 0.55, height: size * 0.78 }}
