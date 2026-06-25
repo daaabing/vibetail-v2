@@ -11,7 +11,7 @@ interface LangContextType {
 }
 
 const LangContext = createContext<LangContextType>({
-  lang: "zh",
+  lang: "en",
   setLang: () => {},
   t: (k) => k,
 });
