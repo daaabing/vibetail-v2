@@ -722,6 +722,21 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  const mixingLines =
+    lang === "zh"
+      ? [
+          "正在捕捉你的当下味道…",
+          "正在调和你的情绪基酒…",
+          "加入一点不理智的香气…",
+          "为你的 vibe 倒上最后一滴…",
+        ]
+      : [
+          "Capturing your current flavor…",
+          "Blending your emotional base…",
+          "Adding a dash of irrational aroma…",
+          "Pouring the last drop of your vibe…",
+        ];
+
   if (loading) {
     return (
       <div className="min-h-svh flex flex-col p-5 pb-24 md:pb-5 w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative">
@@ -732,6 +747,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         <div className="flex-1 flex items-center justify-center py-4">
           <CardSkeleton />
         </div>
+        <MixingOverlay open lines={mixingLines} />
       </div>
     );
   }
