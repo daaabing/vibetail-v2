@@ -375,6 +375,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [persisting, setPersisting] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [pendingAction, setPendingAction] = useState<null | "save" | "share" | "bar">(null);
+  const [mixingVisible, setMixingVisible] = useState(true);
+  const mixingStartedAtRef = useRef(Date.now());
+  const wasMixingRef = useRef(false);
   const captureRef = useRef<HTMLDivElement>(null);
   const isPreview = !id || id === "preview";
   const isPersisted = !isPreview || persistedId !== null;
@@ -737,6 +740,23 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           "Pouring the last drop of your vibe…",
         ];
 
+  const wantsMixingOverlay = loading || (!!cocktail && imageLoading && !cocktail.imageUrl);
+
+  useEffect(() => {
+    if (wantsMixingOverlay) {
+      if (!wasMixingRef.current) mixingStartedAtRef.current = Date.now();
+      wasMixingRef.current = true;
+      setMixingVisible(true);
+      return;
+    }
+
+    wasMixingRef.current = false;
+    const elapsed = Date.now() - mixingStartedAtRef.current;
+    const remaining = Math.max(0, 4200 - elapsed);
+    const timeout = window.setTimeout(() => setMixingVisible(false), remaining);
+    return () => window.clearTimeout(timeout);
+  }, [wantsMixingOverlay]);
+
   if (loading) {
     return (
       <div className="min-h-svh flex flex-col p-5 pb-24 md:pb-5 w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative">
@@ -747,7 +767,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         <div className="flex-1 flex items-center justify-center py-4">
           <CardSkeleton />
         </div>
-        <MixingOverlay open lines={mixingLines} />
+        <MixingOverlay open={mixingVisible} lines={mixingLines} />
       </div>
     );
   }
@@ -1215,7 +1235,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
 
       <MixingOverlay
-        open={!!cocktail && imageLoading && !cocktail.imageUrl}
+        open={mixingVisible}
         lines={mixingLines}
       />
     </div>
