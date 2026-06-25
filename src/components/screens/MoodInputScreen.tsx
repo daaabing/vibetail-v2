@@ -8,6 +8,8 @@ import { FLAVOR_CHIPS, MOOD_PLACEHOLDERS_EN, MOOD_PLACEHOLDERS_ZH, CUSTOM_FLAVOR
 import { pickTashiRecipe } from "@/lib/tashi-recipes";
 import { pickVibeExample } from "@/lib/vibe-examples";
 import { useLang } from "@/lib/i18n";
+import VibeBottle from "@/components/moodtail/VibeBottle";
+import MixingOverlay from "@/components/moodtail/MixingOverlay";
 
 const inkButtonStyle = {
   padding: "14px 24px",
