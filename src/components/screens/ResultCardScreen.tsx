@@ -9,6 +9,7 @@ import { useLang } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
 import AuthModal from "@/components/moodtail/AuthModal";
 import VibeBottle from "@/components/moodtail/VibeBottle";
+import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import { toast } from "sonner";
 
 /** Strip quantity / measurement prefixes from AI-generated ingredient strings. */
