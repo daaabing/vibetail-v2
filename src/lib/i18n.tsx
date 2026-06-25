@@ -11,7 +11,7 @@ interface LangContextType {
 }
 
 const LangContext = createContext<LangContextType>({
-  lang: "zh",
+  lang: "en",
   setLang: () => {},
   t: (k) => k,
 });
@@ -154,7 +154,7 @@ export const translations: Record<Lang, Record<string, string>> = {
 };
 
 export function LangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("zh");
+  const [lang, setLangState] = useState<Lang>("en");
 
   useEffect(() => {
     const saved = localStorage.getItem("vibetail-lang") as Lang | null;
