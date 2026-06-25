@@ -145,15 +145,8 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
             className="w-full h-full object-contain"
           />
         ) : imageLoading ? (
-          <div className="flex flex-col items-center justify-center gap-3 w-full h-full">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            >
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--app-primary)" strokeWidth="1.5">
-                <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </motion.div>
+          <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
+            <VibeBottle size={140} mode="mixing" />
             <p className="text-[10px] tracking-wider" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
               {distillingText}
             </p>
