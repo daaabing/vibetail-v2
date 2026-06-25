@@ -9,6 +9,7 @@ import { useLang } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
 import AuthModal from "@/components/moodtail/AuthModal";
 import VibeBottle from "@/components/moodtail/VibeBottle";
+import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import { toast } from "sonner";
 
 /** Strip quantity / measurement prefixes from AI-generated ingredient strings. */
@@ -1196,6 +1197,25 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       })()}
 
       <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+
+      <MixingOverlay
+        open={!!cocktail && imageLoading && !cocktail.imageUrl}
+        lines={
+          lang === "zh"
+            ? [
+                "正在捕捉你的当下味道…",
+                "正在调和你的情绪基酒…",
+                "加入一点不理智的香气…",
+                "为你的 vibe 倒上最后一滴…",
+              ]
+            : [
+                "Capturing your current flavor…",
+                "Blending your emotional base…",
+                "Adding a dash of irrational aroma…",
+                "Pouring the last drop of your vibe…",
+              ]
+        }
+      />
     </div>
   );
 }
