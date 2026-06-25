@@ -22,7 +22,7 @@ export default function MixingOverlay({ open, color = "#E0533C", lines }: Mixing
   }, [open, lines.length]);
 
   return (
-    <AnimatePresence>
+    <AnimatePresence initial={false}>
       {open && (
         <motion.div
           initial={{ opacity: 0 }}
