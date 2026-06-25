@@ -8,6 +8,8 @@ import { FLAVOR_CHIPS, MOOD_PLACEHOLDERS_EN, MOOD_PLACEHOLDERS_ZH, CUSTOM_FLAVOR
 import { pickTashiRecipe } from "@/lib/tashi-recipes";
 import { pickVibeExample } from "@/lib/vibe-examples";
 import { useLang } from "@/lib/i18n";
+import VibeBottle from "@/components/moodtail/VibeBottle";
+import MixingOverlay from "@/components/moodtail/MixingOverlay";
 
 const inkButtonStyle = {
   padding: "14px 24px",
@@ -57,6 +59,33 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
   const randomCustomIdx = useRef(Math.floor(Math.random() * 6));
   const moodPlaceholder = moodPlaceholders[randomMoodIdx.current % moodPlaceholders.length];
   const customPlaceholder = customPlaceholders[randomCustomIdx.current % customPlaceholders.length];
+
+  // Derive the bottle color from current selections (mood chip → spirit → flavor → primary).
+  const currentVibeColor = (() => {
+    const chip = VIBE_CHIPS.find(
+      (c) => c.label === mood || c.labelEn === mood,
+    );
+    if (chip) return chip.color;
+    const spirit = BASE_SPIRITS.find((s) => s.key === baseSpirit);
+    if (spirit) return spirit.color;
+    const flavor = FLAVOR_CHIPS.find((f) => selectedFlavors.includes(f.label));
+    if (flavor?.color) return flavor.color;
+    return "#E0533C";
+  })();
+
+  const mixingLines = lang === "zh"
+    ? [
+        "正在捕捉你的当下味道…",
+        "正在调和你的情绪基酒…",
+        "加入一点不理智的香气…",
+        "摇匀一份只属于你的 vibe…",
+      ]
+    : [
+        "Capturing your current flavor…",
+        "Blending your emotional base spirit…",
+        "Adding a dash of unreason…",
+        "Shaking up a vibe just for you…",
+      ];
 
   const goNext = () => {
     if (!mood.trim()) { toast.error(lang === "zh" ? "先描述一下你的状态吧！" : "Describe your vibe first!"); return; }
@@ -236,7 +265,12 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
             transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
             className="px-5 pb-28 space-y-5"
           >
-            <div>
+            {/* Hero bottle — reflects current vibe */}
+            <div className="flex justify-center pt-2 pb-1">
+              <VibeBottle color={currentVibeColor} size={180} mode="idle" />
+            </div>
+
+            <div className="text-center">
               <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
                 {t("mood.title")}
               </h1>
@@ -746,6 +780,8 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
           </motion.div>
         )}
       </AnimatePresence>
+
+      <MixingOverlay open={isGenerating} color={currentVibeColor} lines={mixingLines} />
     </div>
   );
 }
