@@ -45,12 +45,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
     { key: "tashi", en: "Tashi", zh: "Tashi 青稞酒", color: "#c9a84c", flavorEn: "Highland barley, mellow and sweet, plateau grain", flavorZh: "青稞清香，柔和甘甜，高原谷物" },
     { key: "nonalcoholic", en: "No alcohol", zh: "无酒精", color: "#d4a5c4", flavorEn: "Fresh, fruity mocktail", flavorZh: "清爽果香无酒精" },
   ];
-  // Step 3 — photo ingredients
-  const [photoIngredients, setPhotoIngredients] = useState<string[] | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [photoInvalid, setPhotoInvalid] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const photoIngredients: string[] | null = null;
 
   const moodPlaceholders = lang === "zh" ? MOOD_PLACEHOLDERS_ZH : MOOD_PLACEHOLDERS_EN;
   const customPlaceholders = lang === "zh" ? CUSTOM_FLAVOR_PLACEHOLDERS_ZH : CUSTOM_FLAVOR_PLACEHOLDERS_EN;
@@ -98,13 +93,6 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handlePhotoUpload = (file: File) => {
-    setPhotoInvalid(false);
-    setPhotoIngredients(null);
-    setPhotoPreview(URL.createObjectURL(file));
-    // No backend ingredient analysis in this build — accept the photo as-is.
-    setIsAnalyzing(false);
-  };
 
 
   const toggleFlavor = (label: string) => {
