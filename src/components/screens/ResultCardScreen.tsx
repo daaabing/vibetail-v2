@@ -11,6 +11,7 @@ import AuthModal from "@/components/moodtail/AuthModal";
 import VibeBottle from "@/components/moodtail/VibeBottle";
 import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 /** Strip quantity / measurement prefixes from AI-generated ingredient strings. */
 function simplifyIngredient(name: string): string {
@@ -1119,6 +1120,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         </motion.button>
       </div>
 
+      {/* ── Newsletter / community section ── */}
+      <NewsletterSection lang={lang} />
+
+
       {/* Frame picker modal — interactive preview */}
       {showFramePicker && (() => {
         const selected = FRAME_STYLES.find((f) => f.id === selectedFrameId) ?? FRAME_STYLES[0];
@@ -1317,3 +1322,137 @@ function parseFrameCss(css: string): CSSProperties {
   });
   return style as CSSProperties;
 }
+
+function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
+
+  const copy = lang === "zh"
+    ? {
+        title: "🍸 喜欢你的这杯吗？",
+        body: "我们围绕酒、心情和人做各种小游戏。",
+        ig: "📸 关注 @vibe.tail",
+        emailLabel: "✉️ 留下邮箱",
+        emailHint: "第一时间试玩我们的新游戏。",
+        placeholder: "your@email.com",
+        submit: "订阅",
+        submitting: "订阅中…",
+        done: "已订阅 ✓ 谢谢！",
+        invalid: "请输入有效的邮箱",
+        error: "订阅失败，请稍后再试",
+        already: "这个邮箱已经订阅过啦 ✓",
+      }
+    : {
+        title: "🍸 Like your cocktail?",
+        body: "We build tiny games around drinks, vibes, and people.",
+        ig: "📸 Follow @vibe.tail",
+        emailLabel: "✉️ Leave your email",
+        emailHint: "to try new games before everyone else.",
+        placeholder: "your@email.com",
+        submit: "Subscribe",
+        submitting: "Subscribing…",
+        done: "Subscribed ✓ Thanks!",
+        invalid: "Please enter a valid email",
+        error: "Something went wrong. Try again.",
+        already: "You're already on the list ✓",
+      };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = email.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmed)) {
+      toast.error(copy.invalid);
+      return;
+    }
+    setStatus("loading");
+    const { error } = await supabase
+      .from("newsletter_subscribers")
+      .insert({ email: trimmed, source: "cocktail_card" });
+    if (error) {
+      if (error.code === "23505") {
+        toast.success(copy.already);
+        setStatus("done");
+        return;
+      }
+      console.error("newsletter subscribe failed", error);
+      toast.error(copy.error);
+      setStatus("idle");
+      return;
+    }
+    toast.success(copy.done);
+    setStatus("done");
+  };
+
+  return (
+    <div className="px-5 pb-28 md:pb-8">
+      <div
+        className="rounded-2xl p-6 space-y-4"
+        style={{
+          background: "linear-gradient(135deg, rgba(253,248,243,0.9) 0%, rgba(244,231,214,0.9) 100%)",
+          border: "1px solid rgba(74,62,61,0.12)",
+          boxShadow: "0 4px 18px rgba(74,62,61,0.06)",
+        }}
+      >
+        <div className="space-y-1.5">
+          <h3
+            className="text-lg font-semibold"
+            style={{ fontFamily: "Georgia, serif", color: "var(--app-text-primary, #2b1e1c)" }}
+          >
+            {copy.title}
+          </h3>
+          <p className="text-sm" style={{ color: "var(--app-text-secondary, #4a3e3d)" }}>
+            {copy.body}
+          </p>
+        </div>
+
+        <a
+          href="https://instagram.com/vibe.tail"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block text-sm font-medium hover:underline"
+          style={{ color: "#C2410C" }}
+        >
+          {copy.ig}
+        </a>
+
+        <div className="space-y-2">
+          <div className="text-sm font-medium" style={{ color: "var(--app-text-primary, #2b1e1c)" }}>
+            {copy.emailLabel}
+          </div>
+          <p className="text-xs" style={{ color: "var(--app-text-secondary, #4a3e3d)" }}>
+            {copy.emailHint}
+          </p>
+          <form onSubmit={handleSubmit} className="flex gap-2 pt-1">
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={status !== "idle"}
+              placeholder={copy.placeholder}
+              className="flex-1 min-w-0 px-3 py-2 text-sm rounded-md outline-none disabled:opacity-60"
+              style={{
+                background: "white",
+                border: "1px solid rgba(74,62,61,0.25)",
+                color: "#2b1e1c",
+              }}
+            />
+            <button
+              type="submit"
+              disabled={status !== "idle"}
+              className="px-4 py-2 text-xs font-semibold tracking-wider rounded-md disabled:opacity-60"
+              style={{
+                background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+                color: "white",
+                boxShadow: "0 2px 8px rgba(194,65,12,0.25)",
+              }}
+            >
+              {status === "loading" ? copy.submitting : status === "done" ? "✓" : copy.submit}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
