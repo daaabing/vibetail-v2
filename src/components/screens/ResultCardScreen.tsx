@@ -401,12 +401,14 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     if (rid) return `${window.location.origin}/drinks/${rid}`;
     return "";
   }, [cocktail, persistedId]);
+  // QR on the saved/printed card always sends people to the site so they can
+  // mix their own drink — not to this specific cocktail.
+  const brandQrTarget = "https://vibetail.com/";
   useEffect(() => {
-    if (!shareUrl) return;
-    QRCode.toDataURL(shareUrl, { margin: 2, width: 512, errorCorrectionLevel: "L", color: { dark: "#000000", light: "#ffffff" } })
+    QRCode.toDataURL(brandQrTarget, { margin: 2, width: 512, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } })
       .then(setQrDataUrl)
       .catch((err) => { console.error("QR generation failed", err); setQrDataUrl(null); });
-  }, [shareUrl]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
