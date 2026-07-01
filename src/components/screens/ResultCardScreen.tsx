@@ -401,12 +401,14 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     if (rid) return `${window.location.origin}/drinks/${rid}`;
     return "";
   }, [cocktail, persistedId]);
+  // QR on the saved/printed card always sends people to the site so they can
+  // mix their own drink — not to this specific cocktail.
+  const brandQrTarget = "https://vibetail.com/";
   useEffect(() => {
-    if (!shareUrl) return;
-    QRCode.toDataURL(shareUrl, { margin: 2, width: 512, errorCorrectionLevel: "L", color: { dark: "#000000", light: "#ffffff" } })
+    QRCode.toDataURL(brandQrTarget, { margin: 2, width: 512, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } })
       .then(setQrDataUrl)
       .catch((err) => { console.error("QR generation failed", err); setQrDataUrl(null); });
-  }, [shareUrl]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -500,31 +502,94 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     new Promise((resolve, reject) => {
       const base = new Image();
       base.onload = () => {
+        const W = base.naturalWidth;
+        const H = base.naturalHeight;
+        const bandH = Math.round(W * 0.22);
         const canvas = document.createElement("canvas");
-        canvas.width = base.naturalWidth;
-        canvas.height = base.naturalHeight;
+        canvas.width = W;
+        canvas.height = H + bandH;
         const ctx = canvas.getContext("2d");
         if (!ctx) return reject(new Error("no ctx"));
-        ctx.drawImage(base, 0, 0);
-        if (!qr) return resolve(canvas.toDataURL("image/png"));
+        // paint the card
+        ctx.drawImage(base, 0, 0, W, H);
+        // footer band
+        const grad = ctx.createLinearGradient(0, H, 0, H + bandH);
+        grad.addColorStop(0, "#fdf8f3");
+        grad.addColorStop(1, "#f4e7d6");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, H, W, bandH);
+        // divider
+        ctx.fillStyle = "rgba(74,62,61,0.18)";
+        ctx.fillRect(Math.round(W * 0.08), H, Math.round(W * 0.84), 1);
+
+        const drawText = () => {
+          const pad = Math.round(W * 0.05);
+          const qrSize = Math.round(bandH * 0.78);
+          const qrX = pad;
+          const qrY = H + Math.round((bandH - qrSize) / 2);
+          if (qr) {
+            // white quiet zone
+            ctx.fillStyle = "#ffffff";
+            const qz = Math.round(qrSize * 0.06);
+            ctx.fillRect(qrX - qz, qrY - qz, qrSize + qz * 2, qrSize + qz * 2);
+          }
+          // text block
+          const textX = qrX + qrSize + Math.round(W * 0.04);
+          const textW = W - textX - pad;
+          const slogan = "Every mood deserves the perfect pour.";
+          const scanLine = "Scan to mix your own → vibetail.com";
+          const igLine = "Follow @vibe.tail for more cocktails";
+
+          ctx.fillStyle = "#4a3e3d";
+          ctx.textBaseline = "top";
+          ctx.font = `600 ${Math.round(bandH * 0.16)}px Georgia, "Times New Roman", serif`;
+          const sloganY = H + Math.round(bandH * 0.16);
+          wrapText(ctx, slogan, textX, sloganY, textW, Math.round(bandH * 0.19));
+
+          ctx.fillStyle = "#c2410c";
+          ctx.font = `700 ${Math.round(bandH * 0.11)}px system-ui, -apple-system, sans-serif`;
+          ctx.fillText(scanLine, textX, H + Math.round(bandH * 0.58));
+
+          ctx.fillStyle = "#4a3e3d";
+          ctx.font = `500 ${Math.round(bandH * 0.10)}px system-ui, -apple-system, sans-serif`;
+          ctx.fillText(igLine, textX, H + Math.round(bandH * 0.78));
+        };
+
+        if (!qr) { drawText(); return resolve(canvas.toDataURL("image/png")); }
         const qrImg = new Image();
         qrImg.onload = () => {
-          const qrSize = Math.round(canvas.width * 0.28);
-          const pad = Math.round(canvas.width * 0.03);
-          const x = canvas.width - qrSize - pad;
-          const y = canvas.height - qrSize - pad;
-          // White backdrop with quiet zone for scan reliability
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(x - 10, y - 10, qrSize + 20, qrSize + 20);
-          ctx.drawImage(qrImg, x, y, qrSize, qrSize);
+          const pad = Math.round(W * 0.05);
+          const qrSize = Math.round(bandH * 0.78);
+          const qrX = pad;
+          const qrY = H + Math.round((bandH - qrSize) / 2);
+          drawText();
+          ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
           resolve(canvas.toDataURL("image/png"));
         };
-        qrImg.onerror = () => resolve(canvas.toDataURL("image/png"));
+        qrImg.onerror = () => { drawText(); resolve(canvas.toDataURL("image/png")); };
         qrImg.src = qr;
       };
       base.onerror = reject;
       base.src = baseDataUrl;
     });
+
+  function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number) {
+    const words = text.split(" ");
+    let line = "";
+    let yy = y;
+    for (const w of words) {
+      const test = line ? line + " " + w : w;
+      if (ctx.measureText(test).width > maxW && line) {
+        ctx.fillText(line, x, yy);
+        line = w;
+        yy += lineH;
+      } else {
+        line = test;
+      }
+    }
+    if (line) ctx.fillText(line, x, yy);
+  }
+
 
   const handleSave = async () => {
     if (!cocktail || !captureRef.current) return;
