@@ -1119,6 +1119,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         </motion.button>
       </div>
 
+      {/* ── Newsletter / community section ── */}
+      <NewsletterSection lang={lang} />
+
+
       {/* Frame picker modal — interactive preview */}
       {showFramePicker && (() => {
         const selected = FRAME_STYLES.find((f) => f.id === selectedFrameId) ?? FRAME_STYLES[0];
