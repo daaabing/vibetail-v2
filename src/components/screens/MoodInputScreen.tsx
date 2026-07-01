@@ -23,7 +23,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
   const navigate = useNavigate();
   const { t, lang } = useLang();
   const isRestaurant = !!restaurantId;
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [mood, setMood] = useState("");
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
   const [baseSpirit, setBaseSpirit] = useState<string>("");
@@ -45,12 +45,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
     { key: "tashi", en: "Tashi", zh: "Tashi 青稞酒", color: "#c9a84c", flavorEn: "Highland barley, mellow and sweet, plateau grain", flavorZh: "青稞清香，柔和甘甜，高原谷物" },
     { key: "nonalcoholic", en: "No alcohol", zh: "无酒精", color: "#d4a5c4", flavorEn: "Fresh, fruity mocktail", flavorZh: "清爽果香无酒精" },
   ];
-  // Step 3 — photo ingredients
-  const [photoIngredients, setPhotoIngredients] = useState<string[] | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [photoInvalid, setPhotoInvalid] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const photoIngredients: string[] | null = null;
 
   const moodPlaceholders = lang === "zh" ? MOOD_PLACEHOLDERS_ZH : MOOD_PLACEHOLDERS_EN;
   const customPlaceholders = lang === "zh" ? CUSTOM_FLAVOR_PLACEHOLDERS_ZH : CUSTOM_FLAVOR_PLACEHOLDERS_EN;
@@ -93,23 +88,11 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const goToStep3 = () => {
-    setStep(3);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   const goBack = () => {
-    setStep((s) => (s > 1 ? (s - 1) as 1 | 2 | 3 : 1));
+    setStep((s) => (s > 1 ? ((s - 1) as 1 | 2) : 1));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handlePhotoUpload = (file: File) => {
-    setPhotoInvalid(false);
-    setPhotoIngredients(null);
-    setPhotoPreview(URL.createObjectURL(file));
-    // No backend ingredient analysis in this build — accept the photo as-is.
-    setIsAnalyzing(false);
-  };
 
 
   const toggleFlavor = (label: string) => {
@@ -241,7 +224,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
         )}
 
         <div className="flex items-center gap-2">
-          {(isRestaurant ? [1, 2] : [1, 2, 3]).map((s) => (
+          {[1, 2].map((s) => (
             <div key={s} className="transition-all duration-300" style={{
               width: step === s ? 20 : 6, height: 6, borderRadius: 3,
               backgroundColor: step === s ? "var(--app-primary)" : "var(--app-border)",
@@ -250,7 +233,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
         </div>
 
         <div className="text-[10px] tracking-wider" style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
-          {step === 1 ? t("mood.step1") : step === 2 ? t("mood.step2") : t("ingredients.step")}
+          {step === 1 ? t("mood.step1") : t("mood.step2")}
         </div>
       </div>
 
@@ -601,8 +584,8 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
             {/* CTA — 内容末尾，随页面滚动 */}
             <motion.button
               whileTap={{ scale: 0.96 }}
-              onClick={isRestaurant ? handleMix : goToStep3}
-              disabled={isRestaurant && isGenerating}
+              onClick={handleMix}
+              disabled={isGenerating}
               className="w-full relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden disabled:opacity-50"
               style={inkButtonStyle}
             >
@@ -612,173 +595,14 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
               }} />
               <span className="absolute top-0 left-4 right-4 h-px pointer-events-none" style={{ background: "rgba(255,255,255,0.3)" }} />
               <span className="relative z-10 flex items-center gap-2">
-                {isRestaurant
-                  ? (isGenerating ? t("flavor.loading") : (lang === "zh" ? "调制我的酒" : "Mix My Drink"))
-                  : (lang === "zh" ? "下一步 — 上传食材" : "Next — Add Ingredients")}
+                {isGenerating ? t("flavor.loading") : (lang === "zh" ? "调制我的酒" : "Mix My Drink")}
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </span>
             </motion.button>
           </motion.div>
-        ) : (
-          /* ── Step 3: What's in your fridge? ── */
-          <motion.div
-            key="step3"
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -24 }}
-            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-            className="px-5 pb-28 space-y-5"
-          >
-            {/* Title */}
-            <div>
-              <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
-                {t("ingredients.title")}
-              </h1>
-              <p className="text-sm mt-1" style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-text-secondary)" }}>
-                {t("ingredients.subtitle")}
-              </p>
-            </div>
-
-            {/* Invalid message */}
-            {photoInvalid && (
-              <div className="p-3 rounded-xl text-xs leading-relaxed"
-                style={{ background: "rgba(194,65,12,0.07)", border: "1px solid rgba(194,65,12,0.2)", color: "var(--app-text-secondary)" }}>
-                {t("ingredients.invalid")}
-              </div>
-            )}
-
-            {/* Photo preview + detected ingredients */}
-            {photoPreview && !isAnalyzing && photoIngredients && (
-              <div className="space-y-3">
-                <img src={photoPreview} alt="Cocktail ingredients preview from uploaded photo" className="w-full rounded-xl object-cover" style={{ maxHeight: 200 }} />
-                <div className="p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.7)", border: "1px solid var(--app-border)" }}>
-                  <p className="text-[10px] uppercase tracking-wider mb-2" style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
-                    {t("ingredients.detected")}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {photoIngredients.map((ing) => (
-                      <span key={ing} className="px-2.5 py-1 rounded-full text-xs"
-                        style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", color: "var(--app-text)" }}>
-                        {ing}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Analyzing spinner */}
-            {isAnalyzing && (
-              <div className="flex flex-col items-center justify-center py-8 gap-3">
-                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}>
-                  <svg className="w-7 h-7" fill="none" stroke="var(--app-primary)" strokeWidth="1.5" viewBox="0 0 24 24">
-                    <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </motion.div>
-                <p className="text-xs" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
-                  {t("ingredients.analyzing")}
-                </p>
-              </div>
-            )}
-
-            {/* Hidden inputs — 上传文件 + 拍照分开 */}
-            {/* Single file input — 系统弹出相册/文件选择器，移动端自带"拍照/相册"选项 */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoUpload(f); e.target.value = ""; }}
-            />
-
-            {/* CTA buttons */}
-            <div className="space-y-2.5">
-              {/* If ingredients detected → primary CTA is "Mix with these" */}
-              {photoIngredients && !isAnalyzing ? (
-                <motion.button
-                  whileTap={{ scale: 0.96 }}
-                  onClick={handleMix}
-                  disabled={isGenerating}
-                  className="w-full relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden disabled:opacity-50"
-                  style={inkButtonStyle}
-                >
-                  <span className="absolute inset-0 pointer-events-none" style={{
-                    background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-                    animation: "liquid-flow 4s linear infinite",
-                  }} />
-                  <span className="absolute top-0 left-4 right-4 h-px pointer-events-none" style={{ background: "rgba(255,255,255,0.3)" }} />
-                  <span className="relative z-10">{isGenerating ? t("flavor.loading") : t("ingredients.detected.continue")}</span>
-                </motion.button>
-              ) : (
-                /* 上传 + 拍照 两个并排按钮 */
-                <div className="grid grid-cols-2 gap-2">
-                  <motion.button
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isAnalyzing}
-                    className="relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden disabled:opacity-50 py-3 px-4"
-                    style={inkButtonStyle}
-                  >
-                    <span className="absolute inset-0 pointer-events-none" style={{
-                      background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-                      animation: "liquid-flow 4s linear infinite",
-                    }} />
-                    <span className="absolute top-0 left-4 right-4 h-px pointer-events-none" style={{ background: "rgba(255,255,255,0.3)" }} />
-                    <svg className="w-4 h-4 relative z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span className="relative z-10 text-xs">{lang === "zh" ? "上传图片" : "Upload Photo"}</span>
-                  </motion.button>
-                  <motion.button
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isAnalyzing}
-
-                    className="relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden disabled:opacity-50 py-3 px-4"
-                    style={{
-                      borderRadius: "4px",
-                      background: "transparent",
-                      color: "var(--app-text-secondary)",
-                      border: "1.5px solid rgba(74,62,61,0.3)",
-                      boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
-                    }}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="var(--app-primary)" strokeWidth="2" viewBox="0 0 24 24">
-                      <path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span className="text-xs">{lang === "zh" ? "拍照 / 相册" : "Camera / Gallery"}</span>
-                  </motion.button>
-                </div>
-              )}
-
-              {/* Retry if invalid */}
-              {photoInvalid && (
-                <motion.button
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => { setPhotoInvalid(false); fileInputRef.current?.click(); }}
-                  className="w-full text-xs font-semibold py-3 rounded"
-                  style={{ border: "1.5px solid rgba(74,62,61,0.25)", color: "var(--app-text-secondary)", background: "rgba(255,255,255,0.6)" }}
-                >
-                  {t("ingredients.retry")}
-                </motion.button>
-              )}
-
-              {/* Skip */}
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                onClick={handleMix}
-                disabled={isGenerating}
-                className="w-full text-xs font-semibold py-3 text-center"
-                style={{ color: "var(--app-text-muted)" }}
-              >
-                {isGenerating ? t("flavor.loading") : t("ingredients.skip")} →
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
 
       <MixingOverlay open={isGenerating} color={currentVibeColor} lines={mixingLines} />
