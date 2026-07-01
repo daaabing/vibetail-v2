@@ -11,6 +11,7 @@ import AuthModal from "@/components/moodtail/AuthModal";
 import VibeBottle from "@/components/moodtail/VibeBottle";
 import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 /** Strip quantity / measurement prefixes from AI-generated ingredient strings. */
 function simplifyIngredient(name: string): string {
