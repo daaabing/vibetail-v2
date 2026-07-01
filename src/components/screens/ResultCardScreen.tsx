@@ -691,10 +691,11 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   const handleShare = async () => {
     if (!cocktail) return;
-    if (!user) { setPendingAction("share"); setShowAuth(true); return; }
 
     let targetId: string | null = persistedId;
-    if (!targetId && isPreview) {
+    // Try to persist for a clean short URL when signed in. Guests get a
+    // self-contained hash link so they can still share without an account.
+    if (!targetId && isPreview && user) {
       setPersisting(true);
       try {
         const saved = await saveCocktailFromPreview(cocktail, imageData);
@@ -704,20 +705,16 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         setCocktail(saved);
       } catch (e) {
         console.error("persist failed", e);
-        toast.error(lang === "zh" ? "保存失败，请重试" : "Save failed, please retry");
-        return;
+        // fall through to hash-link fallback below
       } finally {
         setPersisting(false);
       }
     }
 
     targetId = targetId ?? cocktail.publicId ?? null;
-    if (!targetId) {
-      toast.error(lang === "zh" ? "无法生成分享链接" : "Cannot generate share link");
-      return;
-    }
-
-    const url = `${window.location.origin}/drinks/${targetId}`;
+    const url = targetId
+      ? `${window.location.origin}/drinks/${targetId}`
+      : `${window.location.origin}/drinks/preview?d=${encodeCocktailToHash(cocktail)}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
