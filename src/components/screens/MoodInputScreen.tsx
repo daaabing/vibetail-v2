@@ -23,7 +23,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
   const navigate = useNavigate();
   const { t, lang } = useLang();
   const isRestaurant = !!restaurantId;
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [mood, setMood] = useState("");
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
   const [baseSpirit, setBaseSpirit] = useState<string>("");
@@ -93,13 +93,8 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const goToStep3 = () => {
-    setStep(3);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   const goBack = () => {
-    setStep((s) => (s > 1 ? (s - 1) as 1 | 2 | 3 : 1));
+    setStep((s) => (s > 1 ? ((s - 1) as 1 | 2) : 1));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -241,7 +236,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
         )}
 
         <div className="flex items-center gap-2">
-          {(isRestaurant ? [1, 2] : [1, 2, 3]).map((s) => (
+          {[1, 2].map((s) => (
             <div key={s} className="transition-all duration-300" style={{
               width: step === s ? 20 : 6, height: 6, borderRadius: 3,
               backgroundColor: step === s ? "var(--app-primary)" : "var(--app-border)",
@@ -250,7 +245,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
         </div>
 
         <div className="text-[10px] tracking-wider" style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
-          {step === 1 ? t("mood.step1") : step === 2 ? t("mood.step2") : t("ingredients.step")}
+          {step === 1 ? t("mood.step1") : t("mood.step2")}
         </div>
       </div>
 
@@ -601,8 +596,8 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
             {/* CTA — 内容末尾，随页面滚动 */}
             <motion.button
               whileTap={{ scale: 0.96 }}
-              onClick={isRestaurant ? handleMix : goToStep3}
-              disabled={isRestaurant && isGenerating}
+              onClick={handleMix}
+              disabled={isGenerating}
               className="w-full relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden disabled:opacity-50"
               style={inkButtonStyle}
             >
@@ -612,9 +607,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
               }} />
               <span className="absolute top-0 left-4 right-4 h-px pointer-events-none" style={{ background: "rgba(255,255,255,0.3)" }} />
               <span className="relative z-10 flex items-center gap-2">
-                {isRestaurant
-                  ? (isGenerating ? t("flavor.loading") : (lang === "zh" ? "调制我的酒" : "Mix My Drink"))
-                  : (lang === "zh" ? "下一步 — 上传食材" : "Next — Add Ingredients")}
+                {isGenerating ? t("flavor.loading") : (lang === "zh" ? "调制我的酒" : "Mix My Drink")}
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
