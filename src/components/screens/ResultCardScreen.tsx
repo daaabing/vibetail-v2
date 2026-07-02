@@ -1084,7 +1084,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               <motion.button
                 whileTap={{ scale: 0.96 }}
                 onClick={() => setShowFramePicker(true)}
-                className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
+                className="py-2.5 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
                 style={{
                   borderRadius: "4px",
                   background: "transparent",
