@@ -1119,11 +1119,12 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => isRestaurant ? navigate({ to: "/restaurant/$id", params: { id: restaurantId! } }) : navigate({ to: "/mood-input" })}
-          className="w-full text-xs font-semibold uppercase tracking-widest py-2 text-center block hover:underline"
+          className="w-full text-xs font-semibold uppercase tracking-widest py-3 text-center block hover:underline"
           style={{ color: "var(--app-primary)" }}
         >
           {t("result.another")}
         </motion.button>
+
 
         {/* Newsletter / community section */}
         <NewsletterSection lang={lang} />
