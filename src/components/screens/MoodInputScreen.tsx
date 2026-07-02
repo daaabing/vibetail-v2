@@ -10,6 +10,7 @@ import { pickVibeExample } from "@/lib/vibe-examples";
 import { useLang } from "@/lib/i18n";
 import VibeBottle from "@/components/moodtail/VibeBottle";
 import MixingOverlay from "@/components/moodtail/MixingOverlay";
+import { track } from "@/lib/analytics";
 
 const inkButtonStyle = {
   padding: "14px 24px",
@@ -31,6 +32,8 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
   const [customPreference, setCustomPreference] = useState("");
   const [drinkLength, setDrinkLength] = useState<"" | "long" | "short">("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [customInputStarted, setCustomInputStarted] = useState(false);
 
 
   const BASE_SPIRITS: { key: string; en: string; zh: string; color: string; flavorEn: string; flavorZh: string }[] = [
@@ -84,6 +87,14 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
 
   const goNext = () => {
     if (!mood.trim()) { toast.error(lang === "zh" ? "先描述一下你的状态吧！" : "Describe your vibe first!"); return; }
+    if (selectedTag) {
+      // tag path — nothing extra to track beyond the earlier vibe_tag_selected
+    } else {
+      track("vibe_custom_input_submitted", { custom_text_length: mood.trim().length });
+    }
+    if (!selectedTag && !customInputStarted) {
+      track("vibe_selection_skipped");
+    }
     setStep(2);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -96,9 +107,11 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
 
 
   const toggleFlavor = (label: string) => {
-    setSelectedFlavors((prev) =>
-      prev.includes(label) ? prev.filter((f) => f !== label) : [...prev, label]
-    );
+    setSelectedFlavors((prev) => {
+      const next = prev.includes(label) ? prev.filter((f) => f !== label) : [...prev, label];
+      if (!prev.includes(label)) track("flavor_selected", { selected_flavor: label });
+      return next;
+    });
   };
 
   const handleMix = async () => {
