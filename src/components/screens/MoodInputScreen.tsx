@@ -297,7 +297,17 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
                     <motion.button
                       key={chip.labelEn ?? chip.label}
                       whileTap={{ scale: 0.88 }}
-                      onClick={() => setMood(isSelected ? "" : displayLabel)}
+                      onClick={() => {
+                        if (isSelected) {
+                          setMood("");
+                          setSelectedTag(null);
+                        } else {
+                          setMood(displayLabel);
+                          setSelectedTag(displayLabel);
+                          setCustomInputStarted(false);
+                          track("vibe_tag_selected", { selected_tag: displayLabel });
+                        }
+                      }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
                       style={{
                         border: isSelected ? `1.5px solid ${chip.color}` : "1px solid var(--app-border)",
@@ -332,7 +342,15 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
             <div className="relative">
               <textarea
                 value={mood}
-                onChange={(e) => setMood(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setMood(v);
+                  if (v && !customInputStarted && !selectedTag) {
+                    setCustomInputStarted(true);
+                    track("vibe_custom_input_started");
+                  }
+                  if (selectedTag && v !== selectedTag) setSelectedTag(null);
+                }}
                 className="w-full rounded-xl p-4 resize-none leading-relaxed"
                 style={{
                   minHeight: 96, fontSize: 16,
