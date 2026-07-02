@@ -1,11 +1,12 @@
 
 import { useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLang } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
 import AuthModal from "@/components/moodtail/AuthModal";
 import UserMenu from "@/components/moodtail/UserMenu";
+import { track } from "@/lib/analytics";
 
 
 
