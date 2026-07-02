@@ -58,13 +58,22 @@ function detectDeviceType(): "mobile" | "tablet" | "desktop" {
 
 export function initAnalytics() {
   if (initialized || !isBrowser()) return;
+
+  // Skip analytics on dev/preview hosts so staging traffic doesn't pollute
+  // the production funnel. Only vibetail.com (and www) count.
+  const host = window.location.hostname;
+  const isProd = host === "vibetail.com" || host === "www.vibetail.com";
+  if (!isProd) {
+    try { console.log("[analytics] skipped (non-prod host)", host); } catch {}
+    initialized = true;
+    return;
+  }
+
   initialized = true;
 
   const qr = readQrParam();
   const sessionId = ensureSessionId();
 
-  // Debug: verify which qr value is attached on this load.
-  // Look for "[analytics] init" in DevTools console.
   try {
     console.log("[analytics] init", {
       qr,
@@ -78,7 +87,7 @@ export function initAnalytics() {
     api_host: POSTHOG_HOST,
     capture_pageview: true,
     capture_pageleave: true,
-    person_profiles: "identified_only",
+    person_profiles: "always",
     loaded: (ph) => {
       ph.register({
         campaign: CAMPAIGN,
