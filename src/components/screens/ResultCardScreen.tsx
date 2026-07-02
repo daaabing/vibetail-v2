@@ -1107,7 +1107,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               rel="noopener noreferrer"
               onClick={() => track("instagram_clicked")}
               whileTap={{ scale: 0.96 }}
-              className="py-2.5 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
+              className="py-2 px-3 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 transition-all"
               style={{
                 borderRadius: "4px",
                 background: "transparent",
