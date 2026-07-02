@@ -1337,29 +1337,29 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
 
   const copy = lang === "zh"
     ? {
-        title: "喜欢你的这杯吗？",
-        body: "我们围绕酒、心情和人做各种小游戏。",
-        ig: "关注 @vibe.tail",
-        emailLabel: "留下邮箱",
-        emailHint: "第一时间试玩我们的新游戏。",
+        title: "留在 vibe 里",
+        body: "关注新社交体验、快闪活动、调酒灵感与故事。",
+        follow: "关注 Vibetail",
+        emailLabel: "加入宾客名单",
+        emailHint: "受邀参与未来的快闪活动、新社交体验与独家首发。",
         placeholder: "your@email.com",
-        submit: "订阅",
-        submitting: "订阅中…",
-        done: "已订阅 ✓",
+        submit: "加入",
+        submitting: "加入中…",
+        done: "已加入 ✓",
         invalid: "请输入有效的邮箱",
-        error: "订阅失败，请稍后再试",
-        already: "这个邮箱已经订阅过啦 ✓",
+        error: "加入失败，请稍后再试",
+        already: "你已经在名单上啦 ✓",
       }
     : {
-        title: "Like your cocktail?",
-        body: "We build tiny games around drinks, vibes, and people.",
-        ig: "Follow @vibe.tail",
-        emailLabel: "Leave your email",
-        emailHint: "to try new games before everyone else.",
+        title: "Stay in the vibe",
+        body: "Follow for new social experiences, pop-ups, cocktail inspiration, and stories.",
+        follow: "Follow Vibetail",
+        emailLabel: "Join the guest list",
+        emailHint: "Get invited to future pop-ups, new social experiences, and exclusive launches.",
         placeholder: "your@email.com",
-        submit: "Subscribe",
-        submitting: "Subscribing…",
-        done: "Subscribed ✓",
+        submit: "Join",
+        submitting: "Joining…",
+        done: "You're on the list ✓",
         invalid: "Please enter a valid email",
         error: "Something went wrong. Try again.",
         already: "You're already on the list ✓",
@@ -1395,7 +1395,7 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
 
   return (
     <div
-      className="rounded-2xl p-4 space-y-3"
+      className="rounded-2xl p-4 space-y-4"
       style={{
         background: "rgba(255, 255, 255, 0.50)",
         border: "1px solid rgba(210, 201, 189, 0.45)",
@@ -1413,30 +1413,42 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
         </p>
       </div>
 
+      {/* Follow button */}
       <a
         href="https://instagram.com/vibe.tail"
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => track("instagram_clicked")}
-        className="inline-flex items-center gap-1.5 text-xs font-medium hover:underline"
-        style={{ color: "var(--app-primary)" }}
+        className="w-full py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
+        style={{
+          borderRadius: "4px",
+          background: "transparent",
+          color: "var(--app-text-secondary)",
+          border: "1.5px solid rgba(74,62,61,0.3)",
+          boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
+        }}
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <svg className="w-4 h-4" fill="none" stroke="var(--app-primary)" strokeWidth="2" viewBox="0 0 24 24">
           <rect x="2" y="2" width="20" height="20" rx="5" ry="5" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" strokeLinecap="round" strokeLinejoin="round" />
           <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {copy.ig}
+        {copy.follow}
       </a>
 
-      <div className="space-y-1.5">
-        <div className="text-xs font-medium" style={{ color: "var(--app-text)" }}>
-          {copy.emailLabel}
+      <div
+        className="space-y-3"
+        style={{ paddingTop: 8, borderTop: "1px solid rgba(210, 201, 189, 0.35)" }}
+      >
+        <div className="space-y-0.5">
+          <div className="text-xs font-semibold tracking-wide" style={{ color: "var(--app-text)" }}>
+            {copy.emailLabel}
+          </div>
+          <p className="text-xs" style={{ color: "var(--app-text-secondary)" }}>
+            {copy.emailHint}
+          </p>
         </div>
-        <p className="text-xs" style={{ color: "var(--app-text-secondary)" }}>
-          {copy.emailHint}
-        </p>
-        <form onSubmit={handleSubmit} className="flex gap-2 pt-0.5">
+        <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="email"
             required
