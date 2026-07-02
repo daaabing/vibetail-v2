@@ -1012,119 +1012,124 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         </div>
       </div>
 
-      {/* ── CTA buttons ── */}
-      <div className="px-5 pb-28 md:pb-8 pt-3 flex-shrink-0 space-y-2">
-        {!isPersisted && (
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            onClick={handleSaveToBar}
-            disabled={persisting}
-            className="w-full py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
-            style={{
-              borderRadius: "4px",
-              background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
-              color: "white",
-              boxShadow: "2px 3px 10px rgba(194,65,12,0.22), inset 0 1px 0 rgba(255,255,255,0.15)",
-            }}
-          >
-            <span className="absolute inset-0 pointer-events-none" style={{
-              background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-              animation: "liquid-flow 4s linear infinite",
-            }} />
-            <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="relative z-10">
-              {persisting
-                ? (lang === "zh" ? "保存中…" : "Saving…")
-                : (lang === "zh" ? "保存到 Vibe Bar" : "Save to Vibe Bar")}
-            </span>
-          </motion.button>
-        )}
-        <div className={`grid gap-2 ${isRestaurant ? "grid-cols-3" : "grid-cols-2"}`}>
-
-          {/* Save → download */}
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            onClick={handleSave}
-            disabled={saving}
-            className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
-            style={{
-              borderRadius: "4px",
-              background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
-              color: "white",
-              boxShadow: "2px 3px 10px rgba(194,65,12,0.22), inset 0 1px 0 rgba(255,255,255,0.15)",
-            }}
-          >
-            <span className="absolute inset-0 pointer-events-none" style={{
-              background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-              animation: "liquid-flow 4s linear infinite",
-            }} />
-            <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="relative z-10">{saving ? t("result.saving") : t("result.save")}</span>
-          </motion.button>
-
-          {/* Share — copy link */}
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            onClick={handleShare}
-            className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
-            style={{
-              borderRadius: "4px",
-              background: copied ? "rgba(141,163,130,0.15)" : "transparent",
-              color: copied ? "var(--app-states-success)" : "var(--app-text-secondary)",
-              border: copied ? "1.5px solid var(--app-states-success)" : "1.5px solid rgba(74,62,61,0.3)",
-              boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
-            }}
-          >
-            {copied ? (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path d="M4.5 12.75l6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4" fill="none" stroke="var(--app-primary)" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
-            <span>{copied ? t("result.copied") : t("result.share")}</span>
-          </motion.button>
-
-          {/* Print — only in restaurant flow */}
-          {isRestaurant && (
+      {/* ── Bottom action group: CTAs + community ── */}
+      <div className="px-5 pt-3 pb-28 md:pb-8 flex-shrink-0 space-y-3">
+        {/* Primary CTAs */}
+        <div className="space-y-2">
+          {!isPersisted && (
             <motion.button
               whileTap={{ scale: 0.96 }}
-              onClick={() => setShowFramePicker(true)}
+              onClick={handleSaveToBar}
+              disabled={persisting}
+              className="w-full py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
+              style={{
+                borderRadius: "4px",
+                background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+                color: "white",
+                boxShadow: "2px 3px 10px rgba(194,65,12,0.22), inset 0 1px 0 rgba(255,255,255,0.15)",
+              }}
+            >
+              <span className="absolute inset-0 pointer-events-none" style={{
+                background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
+                animation: "liquid-flow 4s linear infinite",
+              }} />
+              <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="relative z-10">
+                {persisting
+                  ? (lang === "zh" ? "保存中…" : "Saving…")
+                  : (lang === "zh" ? "保存到 Vibe Bar" : "Save to Vibe Bar")}
+              </span>
+            </motion.button>
+          )}
+          <div className={`grid gap-2 ${isRestaurant ? "grid-cols-3" : "grid-cols-2"}`}>
+
+            {/* Save → download */}
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              onClick={handleSave}
+              disabled={saving}
+              className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
+              style={{
+                borderRadius: "4px",
+                background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+                color: "white",
+                boxShadow: "2px 3px 10px rgba(194,65,12,0.22), inset 0 1px 0 rgba(255,255,255,0.15)",
+              }}
+            >
+              <span className="absolute inset-0 pointer-events-none" style={{
+                background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
+                animation: "liquid-flow 4s linear infinite",
+              }} />
+              <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="relative z-10">{saving ? t("result.saving") : t("result.save")}</span>
+            </motion.button>
+
+            {/* Share — copy link */}
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              onClick={handleShare}
               className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
               style={{
                 borderRadius: "4px",
-                background: "transparent",
-                color: "var(--app-text-secondary)",
-                border: "1.5px solid rgba(74,62,61,0.3)",
+                background: copied ? "rgba(141,163,130,0.15)" : "transparent",
+                color: copied ? "var(--app-states-success)" : "var(--app-text-secondary)",
+                border: copied ? "1.5px solid var(--app-states-success)" : "1.5px solid rgba(74,62,61,0.3)",
                 boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
               }}
             >
-              <svg className="w-4 h-4" fill="none" stroke="var(--app-primary)" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span>{t("result.print")}</span>
+              {copied ? (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path d="M4.5 12.75l6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="var(--app-primary)" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+              <span>{copied ? t("result.copied") : t("result.share")}</span>
             </motion.button>
-          )}
+
+            {/* Print — only in restaurant flow */}
+            {isRestaurant && (
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                onClick={() => setShowFramePicker(true)}
+                className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
+                style={{
+                  borderRadius: "4px",
+                  background: "transparent",
+                  color: "var(--app-text-secondary)",
+                  border: "1.5px solid rgba(74,62,61,0.3)",
+                  boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
+                }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="var(--app-primary)" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>{t("result.print")}</span>
+              </motion.button>
+            )}
+          </div>
         </div>
 
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => isRestaurant ? navigate({ to: "/restaurant/$id", params: { id: restaurantId! } }) : navigate({ to: "/mood-input" })}
-          className="w-full text-xs font-semibold uppercase tracking-widest py-2 text-center block hover:underline"
+          className="w-full text-xs font-semibold uppercase tracking-widest py-3 text-center block hover:underline"
           style={{ color: "var(--app-primary)" }}
         >
           {t("result.another")}
         </motion.button>
+
+
+        {/* Newsletter / community section */}
+        <NewsletterSection lang={lang} />
       </div>
 
-      {/* ── Newsletter / community section ── */}
-      <NewsletterSection lang={lang} />
 
 
       {/* Frame picker modal — interactive preview */}
@@ -1332,29 +1337,29 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
 
   const copy = lang === "zh"
     ? {
-        title: "🍸 喜欢你的这杯吗？",
+        title: "喜欢你的这杯吗？",
         body: "我们围绕酒、心情和人做各种小游戏。",
-        ig: "📸 关注 @vibe.tail",
-        emailLabel: "✉️ 留下邮箱",
+        ig: "关注 @vibe.tail",
+        emailLabel: "留下邮箱",
         emailHint: "第一时间试玩我们的新游戏。",
         placeholder: "your@email.com",
         submit: "订阅",
         submitting: "订阅中…",
-        done: "已订阅 ✓ 谢谢！",
+        done: "已订阅 ✓",
         invalid: "请输入有效的邮箱",
         error: "订阅失败，请稍后再试",
         already: "这个邮箱已经订阅过啦 ✓",
       }
     : {
-        title: "🍸 Like your cocktail?",
+        title: "Like your cocktail?",
         body: "We build tiny games around drinks, vibes, and people.",
-        ig: "📸 Follow @vibe.tail",
-        emailLabel: "✉️ Leave your email",
+        ig: "Follow @vibe.tail",
+        emailLabel: "Leave your email",
         emailHint: "to try new games before everyone else.",
         placeholder: "your@email.com",
         submit: "Subscribe",
         submitting: "Subscribing…",
-        done: "Subscribed ✓ Thanks!",
+        done: "Subscribed ✓",
         invalid: "Please enter a valid email",
         error: "Something went wrong. Try again.",
         already: "You're already on the list ✓",
@@ -1389,76 +1394,79 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
   };
 
   return (
-    <div className="px-5 pb-28 md:pb-8">
-      <div
-        className="rounded-2xl p-6 space-y-4"
-        style={{
-          background: "linear-gradient(135deg, rgba(253,248,243,0.9) 0%, rgba(244,231,214,0.9) 100%)",
-          border: "1px solid rgba(74,62,61,0.12)",
-          boxShadow: "0 4px 18px rgba(74,62,61,0.06)",
-        }}
-      >
-        <div className="space-y-1.5">
-          <h3
-            className="text-lg font-semibold"
-            style={{ fontFamily: "Georgia, serif", color: "var(--app-text-primary, #2b1e1c)" }}
-          >
-            {copy.title}
-          </h3>
-          <p className="text-sm" style={{ color: "var(--app-text-secondary, #4a3e3d)" }}>
-            {copy.body}
-          </p>
-        </div>
-
-        <a
-          href="https://instagram.com/vibe.tail"
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => track("instagram_clicked")}
-          className="inline-block text-sm font-medium hover:underline"
-          style={{ color: "#C2410C" }}
+    <div
+      className="rounded-2xl p-4 space-y-3"
+      style={{
+        background: "rgba(255, 255, 255, 0.50)",
+        border: "1px solid rgba(210, 201, 189, 0.45)",
+      }}
+    >
+      <div className="space-y-0.5">
+        <h3
+          className="text-base font-semibold leading-snug"
+          style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
         >
-          {copy.ig}
-        </a>
+          {copy.title}
+        </h3>
+        <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
+          {copy.body}
+        </p>
+      </div>
 
-        <div className="space-y-2">
-          <div className="text-sm font-medium" style={{ color: "var(--app-text-primary, #2b1e1c)" }}>
-            {copy.emailLabel}
-          </div>
-          <p className="text-xs" style={{ color: "var(--app-text-secondary, #4a3e3d)" }}>
-            {copy.emailHint}
-          </p>
-          <form onSubmit={handleSubmit} className="flex gap-2 pt-1">
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={status !== "idle"}
-              placeholder={copy.placeholder}
-              className="flex-1 min-w-0 px-3 py-2 text-sm rounded-md outline-none disabled:opacity-60"
-              style={{
-                background: "white",
-                border: "1px solid rgba(74,62,61,0.25)",
-                color: "#2b1e1c",
-              }}
-            />
-            <button
-              type="submit"
-              disabled={status !== "idle"}
-              className="px-4 py-2 text-xs font-semibold tracking-wider rounded-md disabled:opacity-60"
-              style={{
-                background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
-                color: "white",
-                boxShadow: "0 2px 8px rgba(194,65,12,0.25)",
-              }}
-            >
-              {status === "loading" ? copy.submitting : status === "done" ? "✓" : copy.submit}
-            </button>
-          </form>
+      <a
+        href="https://instagram.com/vibe.tail"
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => track("instagram_clicked")}
+        className="inline-flex items-center gap-1.5 text-xs font-medium hover:underline"
+        style={{ color: "var(--app-primary)" }}
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" strokeLinecap="round" strokeLinejoin="round" />
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        {copy.ig}
+      </a>
+
+      <div className="space-y-1.5">
+        <div className="text-xs font-medium" style={{ color: "var(--app-text)" }}>
+          {copy.emailLabel}
         </div>
+        <p className="text-xs" style={{ color: "var(--app-text-secondary)" }}>
+          {copy.emailHint}
+        </p>
+        <form onSubmit={handleSubmit} className="flex gap-2 pt-0.5">
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={status !== "idle"}
+            placeholder={copy.placeholder}
+            className="flex-1 min-w-0 px-3 py-2.5 text-sm rounded-md outline-none disabled:opacity-60"
+            style={{
+              background: "white",
+              border: "1px solid rgba(74,62,61,0.25)",
+              color: "var(--app-text)",
+            }}
+          />
+          <button
+            type="submit"
+            disabled={status !== "idle"}
+            className="px-4 py-2.5 text-xs font-semibold tracking-wider rounded-md disabled:opacity-60 whitespace-nowrap"
+            style={{
+              background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+              color: "white",
+              boxShadow: "0 2px 8px rgba(194,65,12,0.25)",
+            }}
+          >
+            {status === "loading" ? copy.submitting : status === "done" ? "✓" : copy.submit}
+          </button>
+        </form>
       </div>
     </div>
   );
 }
+
 
