@@ -1,0 +1,2 @@
+REVOKE SELECT ON public.newsletter_subscribers FROM anon, authenticated;
+CREATE POLICY "No public read access to subscriber emails" ON public.newsletter_subscribers FOR SELECT TO anon, authenticated USING (false);
