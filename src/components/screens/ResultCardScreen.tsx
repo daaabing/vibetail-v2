@@ -1108,7 +1108,6 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               {lang === "zh" ? "关注 Vibetail" : "Follow Vibetail"}
             </motion.a>
           </div>
-        </div>
 
         {/* Save to Vibe Bar (secondary) */}
         {!isPersisted && (
