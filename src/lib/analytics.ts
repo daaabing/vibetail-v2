@@ -117,14 +117,16 @@ export function track(event: string, props: Record<string, unknown> = {}) {
   if (!isBrowser()) return;
   try {
     if (!initialized) initAnalytics();
-    posthog.capture(event, {
+    const payload = {
       campaign: CAMPAIGN,
       qr: readQrParam(),
       session_id: ensureSessionId(),
       device_type: detectDeviceType(),
       timestamp: new Date().toISOString(),
       ...props,
-    });
+    };
+    try { console.log("[analytics] track", event, payload); } catch {}
+    posthog.capture(event, payload);
   } catch (e) {
     // analytics must never break the app
     console.warn("analytics track failed", e);
