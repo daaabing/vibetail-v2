@@ -116,6 +116,7 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
 
   const handleMix = async () => {
     setIsGenerating(true);
+    if (selectedFlavors.length === 0) track("flavor_skipped");
     try {
       const spiritObj = BASE_SPIRITS.find((s) => s.key === baseSpirit);
       const spiritNote = spiritObj
