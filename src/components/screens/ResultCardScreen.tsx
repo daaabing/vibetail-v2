@@ -172,7 +172,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
 
 
       {/* Cocktail name + vibe diagnosis */}
-      <div className="px-5 pt-4 pb-3 flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+      <div className="px-5 pt-4 pb-3 flex-1" style={{ minHeight: 0 }}>
         <h1
           className="font-semibold leading-tight text-center"
           style={{
@@ -211,7 +211,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
       </div>
 
       {/* Tap hint */}
-      <div className="pb-5 flex justify-center flex-shrink-0">
+      <div className="pb-3 flex justify-center flex-shrink-0">
         <span className="text-[9px] tracking-widest flex items-center gap-1.5"
           style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
