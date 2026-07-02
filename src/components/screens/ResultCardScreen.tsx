@@ -140,7 +140,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
       }}
     >
       {/* AI illustration — fixed height, object-contain so full image is visible */}
-      <div className="mx-4 mt-4 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center h-[130px] md:h-[200px]"
+      <div className="mx-4 mt-4 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center h-[250px] md:h-[340px]"
         style={{ background: "rgba(250,246,240,0.6)" }}>
         {imageUrl ? (
           <img
@@ -1014,23 +1014,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       {/* ── Bottom action group: CTAs + community ── */}
       <div className="px-5 pt-3 pb-6 md:pb-8 flex-shrink-0 space-y-3">
         {/* Above-the-fold CTAs: Save / Share / Follow */}
-        <div className="space-y-2">
-          {/* Follow copy */}
-          <div className="space-y-0 text-center">
-            <h3
-              className="text-sm font-semibold leading-snug"
-              style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
-            >
-              {lang === "zh" ? "留在 vibe 里" : "Stay in the vibe"}
-            </h3>
-            <p className="text-[10px] leading-snug" style={{ color: "var(--app-text-secondary)" }}>
-              {lang === "zh"
-                ? "关注新社交体验、快闪活动、调酒灵感与故事。"
-                : "Follow for new social experiences, pop-ups, cocktail inspiration, and stories."}
-            </p>
-          </div>
-
-          <div className={`grid gap-2 ${isRestaurant ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
+        <div className={`grid gap-2 ${isRestaurant ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
             {/* Save → download */}
             <motion.button
               whileTap={{ scale: 0.96 }}
@@ -1124,7 +1108,6 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               {lang === "zh" ? "关注 Vibetail" : "Follow Vibetail"}
             </motion.a>
           </div>
-        </div>
 
         {/* Save to Vibe Bar (secondary) */}
         {!isPersisted && (
