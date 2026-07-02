@@ -12,6 +12,7 @@ import VibeBottle from "@/components/moodtail/VibeBottle";
 import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { track } from "@/lib/analytics";
 
 /** Strip quantity / measurement prefixes from AI-generated ingredient strings. */
 function simplifyIngredient(name: string): string {
@@ -594,6 +595,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   const handleSave = async () => {
     if (!cocktail || !captureRef.current) return;
+    track("save_clicked", { cocktail_name: cocktail.cocktailName });
     setSaving(true);
     try {
       const raw = await htmlToImage.toPng(captureRef.current, {
@@ -692,6 +694,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   const handleShare = async () => {
     if (!cocktail) return;
+    track("share_clicked", { cocktail_name: cocktail.cocktailName });
 
     let targetId: string | null = persistedId;
     // Try to persist for a clean short URL when signed in. Guests get a
@@ -1381,6 +1384,7 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
     }
     toast.success(copy.done);
     setStatus("done");
+    track("email_submitted");
   };
 
   return (
@@ -1409,6 +1413,7 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
           href="https://instagram.com/vibe.tail"
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => track("instagram_clicked")}
           className="inline-block text-sm font-medium hover:underline"
           style={{ color: "#C2410C" }}
         >
