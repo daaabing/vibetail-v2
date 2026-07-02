@@ -1375,6 +1375,7 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
       if (error.code === "23505") {
         toast.success(copy.already);
         setStatus("done");
+        track("email_submitted", { already_subscribed: true });
         return;
       }
       console.error("newsletter subscribe failed", error);
