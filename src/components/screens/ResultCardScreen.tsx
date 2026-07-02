@@ -140,7 +140,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
       }}
     >
       {/* AI illustration — fixed height, object-contain so full image is visible */}
-      <div className="mx-4 mt-4 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center h-[200px] md:h-[260px]"
+      <div className="mx-4 mt-4 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center h-[130px] md:h-[200px]"
         style={{ background: "rgba(250,246,240,0.6)" }}>
         {imageUrl ? (
           <img
@@ -150,7 +150,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
           />
         ) : imageLoading ? (
           <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
-            <VibeBottle size={140} mode="mixing" />
+            <VibeBottle size={110} mode="mixing" />
             <p className="text-[10px] tracking-wider" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
               {distillingText}
             </p>
@@ -172,7 +172,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
 
 
       {/* Cocktail name + vibe diagnosis */}
-      <div className="px-5 pt-4 pb-3 flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+      <div className="px-5 pt-4 pb-3 flex-1" style={{ minHeight: 0 }}>
         <h1
           className="font-semibold leading-tight text-center"
           style={{
@@ -211,7 +211,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
       </div>
 
       {/* Tap hint */}
-      <div className="pb-5 flex justify-center flex-shrink-0">
+      <div className="pb-3 flex justify-center flex-shrink-0">
         <span className="text-[9px] tracking-widest flex items-center gap-1.5"
           style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -996,7 +996,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           onClick={() => setFlipped((f) => !f)}
         >
           <motion.div
-            className="relative w-full max-h-[340px] md:max-h-[520px]"
+            className="relative w-full max-h-[400px] md:max-h-[520px]"
             style={{
               aspectRatio: "3/4",
               transformStyle: "preserve-3d",
@@ -1016,14 +1016,14 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         {/* Above-the-fold CTAs: Save / Share / Follow */}
         <div className="space-y-2">
           {/* Follow copy */}
-          <div className="space-y-0.5 text-center">
+          <div className="space-y-0 text-center">
             <h3
-              className="text-base font-semibold leading-snug"
+              className="text-sm font-semibold leading-snug"
               style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
             >
               {lang === "zh" ? "留在 vibe 里" : "Stay in the vibe"}
             </h3>
-            <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
+            <p className="text-[10px] leading-snug" style={{ color: "var(--app-text-secondary)" }}>
               {lang === "zh"
                 ? "关注新社交体验、快闪活动、调酒灵感与故事。"
                 : "Follow for new social experiences, pop-ups, cocktail inspiration, and stories."}
@@ -1036,7 +1036,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               whileTap={{ scale: 0.96 }}
               onClick={handleSave}
               disabled={saving}
-              className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
+              className="py-2 px-3 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
               style={{
                 borderRadius: "4px",
                 background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
@@ -1058,7 +1058,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             <motion.button
               whileTap={{ scale: 0.96 }}
               onClick={handleShare}
-              className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
+              className="py-2 px-3 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 transition-all"
               style={{
                 borderRadius: "4px",
                 background: copied ? "rgba(141,163,130,0.15)" : "transparent",
@@ -1084,7 +1084,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               <motion.button
                 whileTap={{ scale: 0.96 }}
                 onClick={() => setShowFramePicker(true)}
-                className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
+                className="py-2 px-3 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 transition-all"
                 style={{
                   borderRadius: "4px",
                   background: "transparent",
@@ -1107,7 +1107,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               rel="noopener noreferrer"
               onClick={() => track("instagram_clicked")}
               whileTap={{ scale: 0.96 }}
-              className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
+              className="py-2 px-3 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 transition-all"
               style={{
                 borderRadius: "4px",
                 background: "transparent",
@@ -1132,7 +1132,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             whileTap={{ scale: 0.96 }}
             onClick={handleSaveToBar}
             disabled={persisting}
-            className="w-full py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
+            className="w-full py-2 px-4 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
             style={{
               borderRadius: "4px",
               background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
