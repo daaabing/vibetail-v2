@@ -114,7 +114,7 @@ const FRAME_STYLES: FrameStyle[] = [
 /* ── Skeleton card ── */
 function CardSkeleton() {
   return (
-    <div className="w-full rounded-3xl overflow-hidden shimmer" style={{ aspectRatio: "3/4", maxHeight: 480 }} />
+    <div className="w-full rounded-3xl overflow-hidden shimmer max-h-[340px] md:max-h-[480px]" style={{ aspectRatio: "3/4" }} />
   );
 }
 
