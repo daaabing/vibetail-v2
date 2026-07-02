@@ -59,6 +59,7 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
   const { lang, setLang, t } = useLang();
   const { user } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
+  useEffect(() => { track("landing_opened"); }, []);
   const handleMix = onMix ?? (() => navigate({ to: "/mood-input" }));
 
   return (
