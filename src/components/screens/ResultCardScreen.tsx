@@ -150,7 +150,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
           />
         ) : imageLoading ? (
           <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
-            <VibeBottle size={140} mode="mixing" />
+            <VibeBottle size={110} mode="mixing" />
             <p className="text-[10px] tracking-wider" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
               {distillingText}
             </p>
