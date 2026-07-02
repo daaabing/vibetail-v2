@@ -996,10 +996,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           onClick={() => setFlipped((f) => !f)}
         >
           <motion.div
-            className="relative w-full"
+            className="relative w-full max-h-[440px] md:max-h-[520px]"
             style={{
               aspectRatio: "3/4",
-              maxHeight: 520,
               transformStyle: "preserve-3d",
             }}
             animate={{ rotateY: flipped ? 180 : 0 }}
