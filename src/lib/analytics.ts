@@ -76,7 +76,7 @@ export function initAnalytics() {
 
   posthog.init(POSTHOG_KEY, {
     api_host: POSTHOG_HOST,
-    capture_pageview: false,
+    capture_pageview: true,
     capture_pageleave: true,
     person_profiles: "identified_only",
     loaded: (ph) => {
@@ -86,9 +86,32 @@ export function initAnalytics() {
         session_id: sessionId,
         device_type: detectDeviceType(),
       });
+      // Always emit an explicit landing event so every entry point
+      // (including QR-linked /drinks/:id pages that don't call track())
+      // shows up in PostHog.
+      try {
+        ph.capture("app_loaded", {
+          campaign: CAMPAIGN,
+          qr: qr ?? null,
+          session_id: sessionId,
+          device_type: detectDeviceType(),
+          path: window.location.pathname,
+          href: window.location.href,
+        });
+        if (qr) {
+          ph.capture("qr_scanned", {
+            campaign: CAMPAIGN,
+            qr,
+            session_id: sessionId,
+            device_type: detectDeviceType(),
+            path: window.location.pathname,
+          });
+        }
+      } catch {}
     },
   });
 }
+
 
 export function track(event: string, props: Record<string, unknown> = {}) {
   if (!isBrowser()) return;
