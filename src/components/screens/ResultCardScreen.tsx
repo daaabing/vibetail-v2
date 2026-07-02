@@ -1376,9 +1376,6 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
 
   const copy = lang === "zh"
     ? {
-        title: "留在 vibe 里",
-        body: "关注新社交体验、快闪活动、调酒灵感与故事。",
-        follow: "关注 Vibetail",
         emailLabel: "加入宾客名单",
         emailHint: "受邀参与未来的快闪活动、新社交体验与独家首发。",
         placeholder: "your@email.com",
@@ -1390,9 +1387,6 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
         already: "你已经在名单上啦 ✓",
       }
     : {
-        title: "Stay in the vibe",
-        body: "Follow for new social experiences, pop-ups, cocktail inspiration, and stories.",
-        follow: "Follow Vibetail",
         emailLabel: "Join the guest list",
         emailHint: "Get invited to future pop-ups, new social experiences, and exclusive launches.",
         placeholder: "your@email.com",
@@ -1434,88 +1428,48 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
 
   return (
     <div
-      className="rounded-2xl p-4 space-y-4"
+      className="rounded-2xl p-4 space-y-3"
       style={{
         background: "rgba(255, 255, 255, 0.50)",
         border: "1px solid rgba(210, 201, 189, 0.45)",
       }}
     >
       <div className="space-y-0.5">
-        <h3
-          className="text-base font-semibold leading-snug"
-          style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
-        >
-          {copy.title}
-        </h3>
-        <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
-          {copy.body}
+        <div className="text-xs font-semibold tracking-wide" style={{ color: "var(--app-text)" }}>
+          {copy.emailLabel}
+        </div>
+        <p className="text-xs" style={{ color: "var(--app-text-secondary)" }}>
+          {copy.emailHint}
         </p>
       </div>
-
-      {/* Follow button */}
-      <a
-        href="https://instagram.com/vibe.tail"
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => track("instagram_clicked")}
-        className="w-full py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
-        style={{
-          borderRadius: "4px",
-          background: "transparent",
-          color: "var(--app-text-secondary)",
-          border: "1.5px solid rgba(74,62,61,0.3)",
-          boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
-        }}
-      >
-        <svg className="w-4 h-4" fill="none" stroke="var(--app-primary)" strokeWidth="2" viewBox="0 0 24 24">
-          <rect x="2" y="2" width="20" height="20" rx="5" ry="5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" strokeLinecap="round" strokeLinejoin="round" />
-          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        {copy.follow}
-      </a>
-
-      <div
-        className="space-y-3"
-        style={{ paddingTop: 8, borderTop: "1px solid rgba(210, 201, 189, 0.35)" }}
-      >
-        <div className="space-y-0.5">
-          <div className="text-xs font-semibold tracking-wide" style={{ color: "var(--app-text)" }}>
-            {copy.emailLabel}
-          </div>
-          <p className="text-xs" style={{ color: "var(--app-text-secondary)" }}>
-            {copy.emailHint}
-          </p>
-        </div>
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={status !== "idle"}
-            placeholder={copy.placeholder}
-            className="flex-1 min-w-0 px-3 py-2.5 text-sm rounded-md outline-none disabled:opacity-60"
-            style={{
-              background: "white",
-              border: "1px solid rgba(74,62,61,0.25)",
-              color: "var(--app-text)",
-            }}
-          />
-          <button
-            type="submit"
-            disabled={status !== "idle"}
-            className="px-4 py-2.5 text-xs font-semibold tracking-wider rounded-md disabled:opacity-60 whitespace-nowrap"
-            style={{
-              background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
-              color: "white",
-              boxShadow: "0 2px 8px rgba(194,65,12,0.25)",
-            }}
-          >
-            {status === "loading" ? copy.submitting : status === "done" ? "✓" : copy.submit}
-          </button>
-        </form>
-      </div>
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={status !== "idle"}
+          placeholder={copy.placeholder}
+          className="flex-1 min-w-0 px-3 py-2.5 text-sm rounded-md outline-none disabled:opacity-60"
+          style={{
+            background: "white",
+            border: "1px solid rgba(74,62,61,0.25)",
+            color: "var(--app-text)",
+          }}
+        />
+        <button
+          type="submit"
+          disabled={status !== "idle"}
+          className="px-4 py-2.5 text-xs font-semibold tracking-wider rounded-md disabled:opacity-60 whitespace-nowrap"
+          style={{
+            background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+            color: "white",
+            boxShadow: "0 2px 8px rgba(194,65,12,0.25)",
+          }}
+        >
+          {status === "loading" ? copy.submitting : status === "done" ? "✓" : copy.submit}
+        </button>
+      </form>
     </div>
   );
 }
