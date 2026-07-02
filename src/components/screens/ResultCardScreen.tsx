@@ -996,7 +996,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           onClick={() => setFlipped((f) => !f)}
         >
           <motion.div
-            className="relative w-full max-h-[340px] md:max-h-[520px]"
+            className="relative w-full max-h-[400px] md:max-h-[520px]"
             style={{
               aspectRatio: "3/4",
               transformStyle: "preserve-3d",
