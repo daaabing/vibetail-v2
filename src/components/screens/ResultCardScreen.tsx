@@ -114,7 +114,7 @@ const FRAME_STYLES: FrameStyle[] = [
 /* ── Skeleton card ── */
 function CardSkeleton() {
   return (
-    <div className="w-full rounded-3xl overflow-hidden shimmer" style={{ aspectRatio: "3/4", maxHeight: 480 }} />
+    <div className="w-full rounded-3xl overflow-hidden shimmer max-h-[340px] md:max-h-[480px]" style={{ aspectRatio: "3/4" }} />
   );
 }
 
@@ -140,8 +140,8 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
       }}
     >
       {/* AI illustration — fixed height, object-contain so full image is visible */}
-      <div className="mx-4 mt-4 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center"
-        style={{ height: 260, background: "rgba(250,246,240,0.6)" }}>
+      <div className="mx-4 mt-4 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center h-[200px] md:h-[260px]"
+        style={{ background: "rgba(250,246,240,0.6)" }}>
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -996,10 +996,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           onClick={() => setFlipped((f) => !f)}
         >
           <motion.div
-            className="relative w-full"
+            className="relative w-full max-h-[340px] md:max-h-[520px]"
             style={{
               aspectRatio: "3/4",
-              maxHeight: 520,
               transformStyle: "preserve-3d",
             }}
             animate={{ rotateY: flipped ? 180 : 0 }}
@@ -1013,38 +1012,25 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       </div>
 
       {/* ── Bottom action group: CTAs + community ── */}
-      <div className="px-5 pt-3 pb-28 md:pb-8 flex-shrink-0 space-y-3">
-        {/* Primary CTAs */}
+      <div className="px-5 pt-3 pb-6 md:pb-8 flex-shrink-0 space-y-3">
+        {/* Above-the-fold CTAs: Save / Share / Follow */}
         <div className="space-y-2">
-          {!isPersisted && (
-            <motion.button
-              whileTap={{ scale: 0.96 }}
-              onClick={handleSaveToBar}
-              disabled={persisting}
-              className="w-full py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
-              style={{
-                borderRadius: "4px",
-                background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
-                color: "white",
-                boxShadow: "2px 3px 10px rgba(194,65,12,0.22), inset 0 1px 0 rgba(255,255,255,0.15)",
-              }}
+          {/* Follow copy */}
+          <div className="space-y-0.5 text-center">
+            <h3
+              className="text-base font-semibold leading-snug"
+              style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
             >
-              <span className="absolute inset-0 pointer-events-none" style={{
-                background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-                animation: "liquid-flow 4s linear infinite",
-              }} />
-              <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span className="relative z-10">
-                {persisting
-                  ? (lang === "zh" ? "保存中…" : "Saving…")
-                  : (lang === "zh" ? "保存到 Vibe Bar" : "Save to Vibe Bar")}
-              </span>
-            </motion.button>
-          )}
-          <div className={`grid gap-2 ${isRestaurant ? "grid-cols-3" : "grid-cols-2"}`}>
+              {lang === "zh" ? "留在 vibe 里" : "Stay in the vibe"}
+            </h3>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
+              {lang === "zh"
+                ? "关注新社交体验、快闪活动、调酒灵感与故事。"
+                : "Follow for new social experiences, pop-ups, cocktail inspiration, and stories."}
+            </p>
+          </div>
 
+          <div className={`grid gap-2 ${isRestaurant ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
             {/* Save → download */}
             <motion.button
               whileTap={{ scale: 0.96 }}
@@ -1113,10 +1099,63 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                 <span>{t("result.print")}</span>
               </motion.button>
             )}
+
+            {/* Follow */}
+            <motion.a
+              href="https://instagram.com/vibe.tail"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => track("instagram_clicked")}
+              whileTap={{ scale: 0.96 }}
+              className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
+              style={{
+                borderRadius: "4px",
+                background: "transparent",
+                color: "var(--app-text-secondary)",
+                border: "1.5px solid rgba(74,62,61,0.3)",
+                boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
+              }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="var(--app-primary)" strokeWidth="2" viewBox="0 0 24 24">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {lang === "zh" ? "关注 Vibetail" : "Follow Vibetail"}
+            </motion.a>
           </div>
         </div>
 
-        {/* Community card: Follow + Guest list */}
+        {/* Save to Vibe Bar (secondary) */}
+        {!isPersisted && (
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={handleSaveToBar}
+            disabled={persisting}
+            className="w-full py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
+            style={{
+              borderRadius: "4px",
+              background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+              color: "white",
+              boxShadow: "2px 3px 10px rgba(194,65,12,0.22), inset 0 1px 0 rgba(255,255,255,0.15)",
+            }}
+          >
+            <span className="absolute inset-0 pointer-events-none" style={{
+              background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
+              animation: "liquid-flow 4s linear infinite",
+            }} />
+            <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="relative z-10">
+              {persisting
+                ? (lang === "zh" ? "保存中…" : "Saving…")
+                : (lang === "zh" ? "保存到 Vibe Bar" : "Save to Vibe Bar")}
+            </span>
+          </motion.button>
+        )}
+
+        {/* Community card: Guest list */}
         <NewsletterSection lang={lang} />
 
         {/* Last secondary action */}
@@ -1337,9 +1376,6 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
 
   const copy = lang === "zh"
     ? {
-        title: "留在 vibe 里",
-        body: "关注新社交体验、快闪活动、调酒灵感与故事。",
-        follow: "关注 Vibetail",
         emailLabel: "加入宾客名单",
         emailHint: "受邀参与未来的快闪活动、新社交体验与独家首发。",
         placeholder: "your@email.com",
@@ -1351,9 +1387,6 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
         already: "你已经在名单上啦 ✓",
       }
     : {
-        title: "Stay in the vibe",
-        body: "Follow for new social experiences, pop-ups, cocktail inspiration, and stories.",
-        follow: "Follow Vibetail",
         emailLabel: "Join the guest list",
         emailHint: "Get invited to future pop-ups, new social experiences, and exclusive launches.",
         placeholder: "your@email.com",
@@ -1395,88 +1428,48 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
 
   return (
     <div
-      className="rounded-2xl p-4 space-y-4"
+      className="rounded-2xl p-4 space-y-3"
       style={{
         background: "rgba(255, 255, 255, 0.50)",
         border: "1px solid rgba(210, 201, 189, 0.45)",
       }}
     >
       <div className="space-y-0.5">
-        <h3
-          className="text-base font-semibold leading-snug"
-          style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
-        >
-          {copy.title}
-        </h3>
-        <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
-          {copy.body}
+        <div className="text-xs font-semibold tracking-wide" style={{ color: "var(--app-text)" }}>
+          {copy.emailLabel}
+        </div>
+        <p className="text-xs" style={{ color: "var(--app-text-secondary)" }}>
+          {copy.emailHint}
         </p>
       </div>
-
-      {/* Follow button */}
-      <a
-        href="https://instagram.com/vibe.tail"
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => track("instagram_clicked")}
-        className="w-full py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 transition-all"
-        style={{
-          borderRadius: "4px",
-          background: "transparent",
-          color: "var(--app-text-secondary)",
-          border: "1.5px solid rgba(74,62,61,0.3)",
-          boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
-        }}
-      >
-        <svg className="w-4 h-4" fill="none" stroke="var(--app-primary)" strokeWidth="2" viewBox="0 0 24 24">
-          <rect x="2" y="2" width="20" height="20" rx="5" ry="5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" strokeLinecap="round" strokeLinejoin="round" />
-          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        {copy.follow}
-      </a>
-
-      <div
-        className="space-y-3"
-        style={{ paddingTop: 8, borderTop: "1px solid rgba(210, 201, 189, 0.35)" }}
-      >
-        <div className="space-y-0.5">
-          <div className="text-xs font-semibold tracking-wide" style={{ color: "var(--app-text)" }}>
-            {copy.emailLabel}
-          </div>
-          <p className="text-xs" style={{ color: "var(--app-text-secondary)" }}>
-            {copy.emailHint}
-          </p>
-        </div>
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={status !== "idle"}
-            placeholder={copy.placeholder}
-            className="flex-1 min-w-0 px-3 py-2.5 text-sm rounded-md outline-none disabled:opacity-60"
-            style={{
-              background: "white",
-              border: "1px solid rgba(74,62,61,0.25)",
-              color: "var(--app-text)",
-            }}
-          />
-          <button
-            type="submit"
-            disabled={status !== "idle"}
-            className="px-4 py-2.5 text-xs font-semibold tracking-wider rounded-md disabled:opacity-60 whitespace-nowrap"
-            style={{
-              background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
-              color: "white",
-              boxShadow: "0 2px 8px rgba(194,65,12,0.25)",
-            }}
-          >
-            {status === "loading" ? copy.submitting : status === "done" ? "✓" : copy.submit}
-          </button>
-        </form>
-      </div>
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={status !== "idle"}
+          placeholder={copy.placeholder}
+          className="flex-1 min-w-0 px-3 py-2.5 text-sm rounded-md outline-none disabled:opacity-60"
+          style={{
+            background: "white",
+            border: "1px solid rgba(74,62,61,0.25)",
+            color: "var(--app-text)",
+          }}
+        />
+        <button
+          type="submit"
+          disabled={status !== "idle"}
+          className="px-4 py-2.5 text-xs font-semibold tracking-wider rounded-md disabled:opacity-60 whitespace-nowrap"
+          style={{
+            background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+            color: "white",
+            boxShadow: "0 2px 8px rgba(194,65,12,0.25)",
+          }}
+        >
+          {status === "loading" ? copy.submitting : status === "done" ? "✓" : copy.submit}
+        </button>
+      </form>
     </div>
   );
 }
