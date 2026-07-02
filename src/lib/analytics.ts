@@ -63,6 +63,17 @@ export function initAnalytics() {
   const qr = readQrParam();
   const sessionId = ensureSessionId();
 
+  // Debug: verify which qr value is attached on this load.
+  // Look for "[analytics] init" in DevTools console.
+  try {
+    console.log("[analytics] init", {
+      qr,
+      session_id: sessionId,
+      href: window.location.href,
+      origin: window.location.origin,
+    });
+  } catch {}
+
   posthog.init(POSTHOG_KEY, {
     api_host: POSTHOG_HOST,
     capture_pageview: false,
