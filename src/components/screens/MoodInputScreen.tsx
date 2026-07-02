@@ -200,6 +200,12 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
         userId: null,
       };
       const encoded = encodeCocktailToHash(cocktail);
+      track("cocktail_generated", {
+        cocktail_name: generated.cocktailName,
+        selected_tag: selectedTag,
+        selected_flavor: selectedFlavors,
+        custom_text_length: mood.trim().length,
+      });
       navigate({
         to: "/drinks/$id",
         params: { id: "preview" },
