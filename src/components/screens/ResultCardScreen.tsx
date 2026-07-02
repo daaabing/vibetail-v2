@@ -1036,7 +1036,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               whileTap={{ scale: 0.96 }}
               onClick={handleSave}
               disabled={saving}
-              className="py-3 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
+              className="py-2.5 px-4 text-xs font-semibold tracking-wider flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
               style={{
                 borderRadius: "4px",
                 background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
