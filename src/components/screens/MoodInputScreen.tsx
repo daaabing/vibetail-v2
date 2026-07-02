@@ -10,6 +10,7 @@ import { pickVibeExample } from "@/lib/vibe-examples";
 import { useLang } from "@/lib/i18n";
 import VibeBottle from "@/components/moodtail/VibeBottle";
 import MixingOverlay from "@/components/moodtail/MixingOverlay";
+import { track } from "@/lib/analytics";
 
 const inkButtonStyle = {
   padding: "14px 24px",
@@ -31,6 +32,8 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
   const [customPreference, setCustomPreference] = useState("");
   const [drinkLength, setDrinkLength] = useState<"" | "long" | "short">("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [customInputStarted, setCustomInputStarted] = useState(false);
 
 
   const BASE_SPIRITS: { key: string; en: string; zh: string; color: string; flavorEn: string; flavorZh: string }[] = [
@@ -84,6 +87,14 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
 
   const goNext = () => {
     if (!mood.trim()) { toast.error(lang === "zh" ? "先描述一下你的状态吧！" : "Describe your vibe first!"); return; }
+    if (selectedTag) {
+      // tag path — nothing extra to track beyond the earlier vibe_tag_selected
+    } else {
+      track("vibe_custom_input_submitted", { custom_text_length: mood.trim().length });
+    }
+    if (!selectedTag && !customInputStarted) {
+      track("vibe_selection_skipped");
+    }
     setStep(2);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -96,13 +107,16 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
 
 
   const toggleFlavor = (label: string) => {
-    setSelectedFlavors((prev) =>
-      prev.includes(label) ? prev.filter((f) => f !== label) : [...prev, label]
-    );
+    setSelectedFlavors((prev) => {
+      const next = prev.includes(label) ? prev.filter((f) => f !== label) : [...prev, label];
+      if (!prev.includes(label)) track("flavor_selected", { selected_flavor: label });
+      return next;
+    });
   };
 
   const handleMix = async () => {
     setIsGenerating(true);
+    if (selectedFlavors.length === 0) track("flavor_skipped");
     try {
       const spiritObj = BASE_SPIRITS.find((s) => s.key === baseSpirit);
       const spiritNote = spiritObj
@@ -186,6 +200,12 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
         userId: null,
       };
       const encoded = encodeCocktailToHash(cocktail);
+      track("cocktail_generated", {
+        cocktail_name: generated.cocktailName,
+        selected_tag: selectedTag,
+        selected_flavor: selectedFlavors,
+        custom_text_length: mood.trim().length,
+      });
       navigate({
         to: "/drinks/$id",
         params: { id: "preview" },
@@ -277,7 +297,17 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
                     <motion.button
                       key={chip.labelEn ?? chip.label}
                       whileTap={{ scale: 0.88 }}
-                      onClick={() => setMood(isSelected ? "" : displayLabel)}
+                      onClick={() => {
+                        if (isSelected) {
+                          setMood("");
+                          setSelectedTag(null);
+                        } else {
+                          setMood(displayLabel);
+                          setSelectedTag(displayLabel);
+                          setCustomInputStarted(false);
+                          track("vibe_tag_selected", { selected_tag: displayLabel });
+                        }
+                      }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
                       style={{
                         border: isSelected ? `1.5px solid ${chip.color}` : "1px solid var(--app-border)",
@@ -312,7 +342,15 @@ export default function MoodInputScreen({ restaurantId }: { restaurantId?: strin
             <div className="relative">
               <textarea
                 value={mood}
-                onChange={(e) => setMood(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setMood(v);
+                  if (v && !customInputStarted && !selectedTag) {
+                    setCustomInputStarted(true);
+                    track("vibe_custom_input_started");
+                  }
+                  if (selectedTag && v !== selectedTag) setSelectedTag(null);
+                }}
                 className="w-full rounded-xl p-4 resize-none leading-relaxed"
                 style={{
                   minHeight: 96, fontSize: 16,
