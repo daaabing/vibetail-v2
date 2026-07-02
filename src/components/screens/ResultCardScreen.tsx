@@ -140,7 +140,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
       }}
     >
       {/* AI illustration — fixed height, object-contain so full image is visible */}
-      <div className="mx-4 mt-4 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center h-[130px] md:h-[200px]"
+      <div className="mx-4 mt-4 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center h-[250px] md:h-[340px]"
         style={{ background: "rgba(250,246,240,0.6)" }}>
         {imageUrl ? (
           <img
