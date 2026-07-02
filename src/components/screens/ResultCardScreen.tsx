@@ -1016,14 +1016,14 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         {/* Above-the-fold CTAs: Save / Share / Follow */}
         <div className="space-y-2">
           {/* Follow copy */}
-          <div className="space-y-0.5 text-center">
+          <div className="space-y-0 text-center">
             <h3
-              className="text-base font-semibold leading-snug"
+              className="text-sm font-semibold leading-snug"
               style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
             >
               {lang === "zh" ? "留在 vibe 里" : "Stay in the vibe"}
             </h3>
-            <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
+            <p className="text-[10px] leading-snug" style={{ color: "var(--app-text-secondary)" }}>
               {lang === "zh"
                 ? "关注新社交体验、快闪活动、调酒灵感与故事。"
                 : "Follow for new social experiences, pop-ups, cocktail inspiration, and stories."}
