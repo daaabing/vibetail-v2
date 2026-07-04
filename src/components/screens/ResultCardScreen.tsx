@@ -277,12 +277,12 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
             </span>
             <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
               {cocktail.menuItemName || cocktail.cocktailName}
-              {cocktail.menuSection ? ` · ${cocktail.menuSection}` : ""}
               {cocktail.menuPrice ? ` · ${cocktail.menuPrice}` : ""}
               {cocktail.restaurantName ? ` @ ${cocktail.restaurantName}` : ""}
             </p>
           </div>
         )}
+
 
         {/* Original vibe */}
         <div className="mb-4 p-3 rounded-xl"
