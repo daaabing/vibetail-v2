@@ -168,10 +168,14 @@ export default function MoodInputScreen({
           }
         : null;
 
-      const res = await fetch("/api/generate-cocktail", {
+      const endpoint = menuSlug === "dcp" ? "/api/match-dcp-cocktail" : "/api/generate-cocktail";
+      const body = menuSlug === "dcp"
+        ? JSON.stringify({ mood, selectedFlavors, customPreference: mergedPreference, lang })
+        : JSON.stringify({ mood, selectedFlavors, customPreference: mergedPreference, photoIngredients, lang, tashiReference, vibeReference });
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mood, selectedFlavors, customPreference: mergedPreference, photoIngredients, lang, tashiReference, vibeReference }),
+        body,
       });
       if (!res.ok) {
         if (res.status === 402) {
@@ -209,11 +213,13 @@ export default function MoodInputScreen({
         selected_tag: selectedTag,
         selected_flavor: selectedFlavors,
         custom_text_length: mood.trim().length,
+        menu_source: menuSlug ?? null,
+        matched_from_menu: !!menuSlug,
       });
       navigate({
         to: "/drinks/$id",
         params: { id: "preview" },
-        search: { d: encoded, ...(isRestaurant ? { restaurant: restaurantId } : {}) },
+        search: { d: encoded, ...(restaurantParam ? { restaurant: restaurantParam } : {}) },
       });
     } catch {
       toast.error(lang === "zh" ? "无法读取你的 vibe，请重试！" : "Couldn't read your vibe. Try again!");
