@@ -25,6 +25,9 @@ export interface Cocktail {
   menuSection?: string | null;
   menuPrice?: string | null;
   whyThisMatch?: string | null;
+  // The actual menu item name to order (may differ from the generated vibe name).
+  menuItemName?: string | null;
+
 }
 
 export interface GeneratedCocktailFields {
