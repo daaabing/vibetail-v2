@@ -61,6 +61,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     "result.checked": "VIBE 已解析 ✓",
     "result.distilling": "正在调制心情中…",
     "result.tap": "点击翻面",
+    "result.tap.menu": "点击查看推荐酒单",
     "result.original": "原始 Vibe",
     "result.tasting": "品鉴笔记",
     "result.ingredients": "配方成分",
@@ -68,6 +69,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     "result.ingredients.bar": "最终解释权与执行权归酒吧所有",
     "result.howToMake": "调制方法",
     "result.diagnosis": "Vibe 诊断",
+
     "result.save": "保存卡片",
     "result.saving": "保存中…",
     "result.share": "分享",
