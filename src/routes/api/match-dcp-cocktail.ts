@@ -131,7 +131,8 @@ export const Route = createFileRoute("/api/match-dcp-cocktail")({
         // Adapt to the same shape the frontend already uses for a generated cocktail.
         const isZh = input.lang === "zh";
         const shaped = {
-          cocktailName: menuItem.name,
+          cocktailName: parsed.vibeName,
+          menuItemName: menuItem.name,
           tastesLike: parsed.tastesLike,
           flavorProfile: parsed.flavorProfile,
           ingredients: menuItem.ingredients.split(/,\s*/).map((s) => s.trim()).filter(Boolean),
@@ -147,6 +148,7 @@ export const Route = createFileRoute("/api/match-dcp-cocktail")({
           menuPrice: menuItem.price ?? null,
           whyThisMatch: parsed.whyThisMatch,
         };
+
 
         return new Response(JSON.stringify(shaped), {
           status: 200,
