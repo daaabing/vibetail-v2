@@ -173,6 +173,11 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
 
       {/* Cocktail name + vibe diagnosis */}
       <div className="px-5 pt-4 pb-3 flex-1" style={{ minHeight: 0 }}>
+        {cocktail.matchedFromMenu && (
+          <p className="text-center text-[10px] tracking-widest uppercase mb-2" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
+            {cocktail.lang === "zh" ? "推荐酒单" : "Recommended drinks"}
+          </p>
+        )}
         <h1
           className="font-semibold leading-tight text-center"
           style={{
@@ -183,11 +188,6 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
         >
           {cocktail.cocktailName}
         </h1>
-        {cocktail.matchedFromMenu && cocktail.restaurantName && (
-          <p className="text-center text-[10px] mt-1 tracking-widest uppercase" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
-            {cocktail.lang === "zh" ? "菜单上的名字 · " : "on the menu at "}{cocktail.restaurantName}
-          </p>
-        )}
 
         {/* Vibe diagnosis — roast line */}
         <p className="text-center text-xs mt-2 leading-snug italic"
@@ -216,6 +216,8 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
           ))}
         </div>
       </div>
+
+
 
       {/* Tap hint */}
       <div className="pb-3 flex justify-center flex-shrink-0">
@@ -294,19 +296,6 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
           )}
         </div>
 
-        {/* Why this match — only when matched from menu */}
-        {cocktail.matchedFromMenu && cocktail.whyThisMatch && (
-          <div className="mb-4 p-3 rounded-xl"
-            style={{ background: "rgba(224,83,60,0.06)", border: "1px solid rgba(224,83,60,0.18)" }}>
-            <span className="text-[8px] tracking-widest uppercase block mb-1.5"
-              style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
-              {cocktail.lang === "zh" ? "为什么是这杯" : "Why this drink"}
-            </span>
-            <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
-              {cocktail.whyThisMatch}
-            </p>
-          </div>
-        )}
 
 
         {/* Original vibe */}
@@ -448,7 +437,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const isPreview = !id || id === "preview";
   const isPersisted = !isPreview || persistedId !== null;
 
-  const tapHint = t("result.tap");
+  const tapHint = cocktail?.matchedFromMenu ? t("result.tap.menu") : t("result.tap");
+
   const distillingText = t("result.distilling");
   const cardLabels = {
     originalVibe: t("result.original"),
