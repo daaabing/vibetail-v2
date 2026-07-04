@@ -173,6 +173,9 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
 
       {/* Cocktail name + vibe diagnosis */}
       <div className="px-5 pt-4 pb-3 flex-1" style={{ minHeight: 0 }}>
+        <p className="text-center text-[10px] tracking-widest uppercase mb-2" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
+          {cocktail.lang === "zh" ? "推荐酒单" : "Recommended drinks"}
+        </p>
         <h1
           className="font-semibold leading-tight text-center"
           style={{
@@ -183,11 +186,6 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
         >
           {cocktail.cocktailName}
         </h1>
-        {cocktail.matchedFromMenu && cocktail.restaurantName && (
-          <p className="text-center text-[10px] mt-1 tracking-widest uppercase" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
-            {cocktail.lang === "zh" ? "菜单上的名字 · " : "on the menu at "}{cocktail.restaurantName}
-          </p>
-        )}
 
         {/* Vibe diagnosis — roast line */}
         <p className="text-center text-xs mt-2 leading-snug italic"
@@ -216,6 +214,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
           ))}
         </div>
       </div>
+
 
       {/* Tap hint */}
       <div className="pb-3 flex justify-center flex-shrink-0">
