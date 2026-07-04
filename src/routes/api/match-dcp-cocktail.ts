@@ -63,12 +63,14 @@ function buildPrompt(input: MatchInput): string {
     `=== DOUBLE CHICKEN PLEASE MENU (choose ONE) ===`,
     menuBlock,
     ``,
-    `Rules:`,
-    `- 'matchedName' MUST be one of the menu names above, spelled EXACTLY.`,
-    `- Prefer the more adventurous "Free Range" or "The Coop" cocktails when the vibe is playful, weird, or emotional. Fall back to "Classics?" only when the user explicitly wants something classic/simple.`,
-    `- Weigh both flavor compatibility AND emotional fit.`,
-    `- 'tastesLike' and 'whyThisMatch' should reference REAL ingredients of the matched drink (not made-up ones), and tie back to the user's mood.`,
-    `- 'roast' is the same witty tone as before — one sharp one-liner about the user's vibe.`,
+  `Rules:`,
+  `- 'matchedName' MUST be one of the menu names above, spelled EXACTLY.`,
+  `- 'vibeName' is a creative, vibe-driven title for the card front — it should NOT be the menu name. Make it witty and inspired by the user's mood.`,
+  `- Prefer the more adventurous "Free Range" or "The Coop" cocktails when the vibe is playful, weird, or emotional. Fall back to "Classics?" only when the user explicitly wants something classic/simple.`,
+  `- Weigh both flavor compatibility AND emotional fit.`,
+  `- 'tastesLike' and 'whyThisMatch' should reference REAL ingredients of the matched drink (not made-up ones), and tie back to the user's mood.`,
+  `- 'roast' is the same witty tone as before — one sharp one-liner about the user's vibe.`,
+
   ].join("\n");
 }
 
