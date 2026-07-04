@@ -10,12 +10,14 @@ interface MatchInput {
 
 interface MatchedCocktail {
   matchedName: string; // must be one of DCP_MENU names
+  vibeName: string; // witty, vibe-driven name for the card front (NOT the menu name)
   tastesLike: string;
   flavorProfile: string;
   whyThisMatch: string; // short reason tied to the user's vibe
   roast: string;
   category: "builder-brain" | "love-drunk" | "heartbreak" | "chaos" | "late-night";
 }
+
 
 const NAMES = DCP_MENU.map((c) => c.name);
 
@@ -24,13 +26,15 @@ const SCHEMA = {
   additionalProperties: false,
   properties: {
     matchedName: { type: "string", enum: NAMES, description: "Pick EXACTLY ONE cocktail name from the Double Chicken Please menu. Must match one of the provided names verbatim." },
+    vibeName: { type: "string", description: "A witty, vibe-driven cocktail name for the card front. This is NOT the menu name — it's a creative title inspired by the user's mood and the matched drink. 2-4 words." },
     tastesLike:  { type: "string", description: "One evocative sentence (~30 words) about how this drink tastes AND feels emotionally, tied to the user's vibe." },
     flavorProfile: { type: "string", description: "3-4 comma-separated taste adjectives." },
     whyThisMatch: { type: "string", description: "One short sentence (~25 words) explaining why THIS cocktail from the menu fits the user's vibe. Warm, personal." },
     roast:        { type: "string", description: "One witty, slightly cutting one-liner roasting the user's vibe, in 12 words or fewer." },
     category:     { type: "string", enum: ["builder-brain","love-drunk","heartbreak","chaos","late-night"] },
   },
-  required: ["matchedName","tastesLike","flavorProfile","whyThisMatch","roast","category"],
+  required: ["matchedName","vibeName","tastesLike","flavorProfile","whyThisMatch","roast","category"],
+
 } as const;
 
 function buildPrompt(input: MatchInput): string {
@@ -59,12 +63,14 @@ function buildPrompt(input: MatchInput): string {
     `=== DOUBLE CHICKEN PLEASE MENU (choose ONE) ===`,
     menuBlock,
     ``,
-    `Rules:`,
-    `- 'matchedName' MUST be one of the menu names above, spelled EXACTLY.`,
-    `- Prefer the more adventurous "Free Range" or "The Coop" cocktails when the vibe is playful, weird, or emotional. Fall back to "Classics?" only when the user explicitly wants something classic/simple.`,
-    `- Weigh both flavor compatibility AND emotional fit.`,
-    `- 'tastesLike' and 'whyThisMatch' should reference REAL ingredients of the matched drink (not made-up ones), and tie back to the user's mood.`,
-    `- 'roast' is the same witty tone as before — one sharp one-liner about the user's vibe.`,
+  `Rules:`,
+  `- 'matchedName' MUST be one of the menu names above, spelled EXACTLY.`,
+  `- 'vibeName' is a creative, vibe-driven title for the card front — it should NOT be the menu name. Make it witty and inspired by the user's mood.`,
+  `- Prefer the more adventurous "Free Range" or "The Coop" cocktails when the vibe is playful, weird, or emotional. Fall back to "Classics?" only when the user explicitly wants something classic/simple.`,
+  `- Weigh both flavor compatibility AND emotional fit.`,
+  `- 'tastesLike' and 'whyThisMatch' should reference REAL ingredients of the matched drink (not made-up ones), and tie back to the user's mood.`,
+  `- 'roast' is the same witty tone as before — one sharp one-liner about the user's vibe.`,
+
   ].join("\n");
 }
 
@@ -125,7 +131,8 @@ export const Route = createFileRoute("/api/match-dcp-cocktail")({
         // Adapt to the same shape the frontend already uses for a generated cocktail.
         const isZh = input.lang === "zh";
         const shaped = {
-          cocktailName: menuItem.name,
+          cocktailName: parsed.vibeName,
+          menuItemName: menuItem.name,
           tastesLike: parsed.tastesLike,
           flavorProfile: parsed.flavorProfile,
           ingredients: menuItem.ingredients.split(/,\s*/).map((s) => s.trim()).filter(Boolean),
@@ -141,6 +148,7 @@ export const Route = createFileRoute("/api/match-dcp-cocktail")({
           menuPrice: menuItem.price ?? null,
           whyThisMatch: parsed.whyThisMatch,
         };
+
 
         return new Response(JSON.stringify(shaped), {
           status: 200,

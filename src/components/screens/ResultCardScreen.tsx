@@ -331,13 +331,14 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
               {cocktail.lang === "zh" ? "点这杯" : "Order this"}
             </span>
             <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
-              {cocktail.cocktailName}
+              {cocktail.menuItemName || cocktail.cocktailName}
               {cocktail.menuSection ? ` · ${cocktail.menuSection}` : ""}
               {cocktail.menuPrice ? ` · ${cocktail.menuPrice}` : ""}
               {cocktail.restaurantName ? ` @ ${cocktail.restaurantName}` : ""}
             </p>
           </div>
         )}
+
 
 
         {/* Ingredients */}
