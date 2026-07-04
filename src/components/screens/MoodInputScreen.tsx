@@ -211,6 +211,8 @@ export default function MoodInputScreen({
         menuSection: generated.menuSection ?? null,
         menuPrice: generated.menuPrice ?? null,
         whyThisMatch: generated.whyThisMatch ?? null,
+        menuItemName: generated.menuItemName ?? null,
+
       };
       const encoded = encodeCocktailToHash(cocktail);
       track("cocktail_generated", {
