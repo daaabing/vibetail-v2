@@ -333,6 +333,24 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
           </p>
         </div>
 
+        {/* Order this — only when matched from menu */}
+        {cocktail.matchedFromMenu && (
+          <div className="mb-4 p-3 rounded-xl"
+            style={{ background: "rgba(194,65,12,0.08)", border: "1px solid rgba(194,65,12,0.25)" }}>
+            <span className="text-[8px] tracking-widest uppercase block mb-1.5"
+              style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
+              {cocktail.lang === "zh" ? "点这杯" : "Order this"}
+            </span>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
+              {cocktail.cocktailName}
+              {cocktail.menuSection ? ` · ${cocktail.menuSection}` : ""}
+              {cocktail.menuPrice ? ` · ${cocktail.menuPrice}` : ""}
+              {cocktail.restaurantName ? ` @ ${cocktail.restaurantName}` : ""}
+            </p>
+          </div>
+        )}
+
+
         {/* Ingredients */}
         <div className="mb-4">
           <span className="text-[8px] tracking-widest uppercase block mb-2"
