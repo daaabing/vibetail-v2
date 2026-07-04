@@ -14,6 +14,7 @@ import { Route as MoodInputRouteImport } from './routes/mood-input'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RestaurantsDoubleChickenPleaseRouteImport } from './routes/restaurants.double-chicken-please'
 import { Route as RestaurantIdRouteImport } from './routes/restaurant.$id'
 import { Route as DrinksIdRouteImport } from './routes/drinks.$id'
 import { Route as ApiMatchDcpCocktailRouteImport } from './routes/api/match-dcp-cocktail'
@@ -45,6 +46,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RestaurantsDoubleChickenPleaseRoute =
+  RestaurantsDoubleChickenPleaseRouteImport.update({
+    id: '/restaurants/double-chicken-please',
+    path: '/restaurants/double-chicken-please',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const RestaurantIdRoute = RestaurantIdRouteImport.update({
   id: '/restaurant/$id',
   path: '/restaurant/$id',
@@ -83,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/api/match-dcp-cocktail': typeof ApiMatchDcpCocktailRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/restaurant/$id': typeof RestaurantIdRoute
+  '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -95,6 +103,7 @@ export interface FileRoutesByTo {
   '/api/match-dcp-cocktail': typeof ApiMatchDcpCocktailRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/restaurant/$id': typeof RestaurantIdRoute
+  '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -108,6 +117,7 @@ export interface FileRoutesById {
   '/api/match-dcp-cocktail': typeof ApiMatchDcpCocktailRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/restaurant/$id': typeof RestaurantIdRoute
+  '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/api/match-dcp-cocktail'
     | '/drinks/$id'
     | '/restaurant/$id'
+    | '/restaurants/double-chicken-please'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -134,6 +145,7 @@ export interface FileRouteTypes {
     | '/api/match-dcp-cocktail'
     | '/drinks/$id'
     | '/restaurant/$id'
+    | '/restaurants/double-chicken-please'
   id:
     | '__root__'
     | '/'
@@ -146,6 +158,7 @@ export interface FileRouteTypes {
     | '/api/match-dcp-cocktail'
     | '/drinks/$id'
     | '/restaurant/$id'
+    | '/restaurants/double-chicken-please'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -159,6 +172,7 @@ export interface RootRouteChildren {
   ApiMatchDcpCocktailRoute: typeof ApiMatchDcpCocktailRoute
   DrinksIdRoute: typeof DrinksIdRoute
   RestaurantIdRoute: typeof RestaurantIdRoute
+  RestaurantsDoubleChickenPleaseRoute: typeof RestaurantsDoubleChickenPleaseRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -196,6 +210,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/restaurants/double-chicken-please': {
+      id: '/restaurants/double-chicken-please'
+      path: '/restaurants/double-chicken-please'
+      fullPath: '/restaurants/double-chicken-please'
+      preLoaderRoute: typeof RestaurantsDoubleChickenPleaseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/restaurant/$id': {
@@ -247,6 +268,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMatchDcpCocktailRoute: ApiMatchDcpCocktailRoute,
   DrinksIdRoute: DrinksIdRoute,
   RestaurantIdRoute: RestaurantIdRoute,
+  RestaurantsDoubleChickenPleaseRoute: RestaurantsDoubleChickenPleaseRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
