@@ -14,8 +14,10 @@ import { Route as MoodInputRouteImport } from './routes/mood-input'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RestaurantsDoubleChickenPleaseRouteImport } from './routes/restaurants.double-chicken-please'
 import { Route as RestaurantIdRouteImport } from './routes/restaurant.$id'
 import { Route as DrinksIdRouteImport } from './routes/drinks.$id'
+import { Route as ApiMatchDcpCocktailRouteImport } from './routes/api/match-dcp-cocktail'
 import { Route as ApiGenerateCocktailImageRouteImport } from './routes/api/generate-cocktail-image'
 import { Route as ApiGenerateCocktailRouteImport } from './routes/api/generate-cocktail'
 
@@ -44,6 +46,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RestaurantsDoubleChickenPleaseRoute =
+  RestaurantsDoubleChickenPleaseRouteImport.update({
+    id: '/restaurants/double-chicken-please',
+    path: '/restaurants/double-chicken-please',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const RestaurantIdRoute = RestaurantIdRouteImport.update({
   id: '/restaurant/$id',
   path: '/restaurant/$id',
@@ -52,6 +60,11 @@ const RestaurantIdRoute = RestaurantIdRouteImport.update({
 const DrinksIdRoute = DrinksIdRouteImport.update({
   id: '/drinks/$id',
   path: '/drinks/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMatchDcpCocktailRoute = ApiMatchDcpCocktailRouteImport.update({
+  id: '/api/match-dcp-cocktail',
+  path: '/api/match-dcp-cocktail',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiGenerateCocktailImageRoute =
@@ -74,8 +87,10 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/generate-cocktail': typeof ApiGenerateCocktailRoute
   '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
+  '/api/match-dcp-cocktail': typeof ApiMatchDcpCocktailRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/restaurant/$id': typeof RestaurantIdRoute
+  '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -85,8 +100,10 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/generate-cocktail': typeof ApiGenerateCocktailRoute
   '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
+  '/api/match-dcp-cocktail': typeof ApiMatchDcpCocktailRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/restaurant/$id': typeof RestaurantIdRoute
+  '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -97,8 +114,10 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/generate-cocktail': typeof ApiGenerateCocktailRoute
   '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
+  '/api/match-dcp-cocktail': typeof ApiMatchDcpCocktailRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/restaurant/$id': typeof RestaurantIdRoute
+  '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -110,8 +129,10 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/api/generate-cocktail'
     | '/api/generate-cocktail-image'
+    | '/api/match-dcp-cocktail'
     | '/drinks/$id'
     | '/restaurant/$id'
+    | '/restaurants/double-chicken-please'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -121,8 +142,10 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/api/generate-cocktail'
     | '/api/generate-cocktail-image'
+    | '/api/match-dcp-cocktail'
     | '/drinks/$id'
     | '/restaurant/$id'
+    | '/restaurants/double-chicken-please'
   id:
     | '__root__'
     | '/'
@@ -132,8 +155,10 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/api/generate-cocktail'
     | '/api/generate-cocktail-image'
+    | '/api/match-dcp-cocktail'
     | '/drinks/$id'
     | '/restaurant/$id'
+    | '/restaurants/double-chicken-please'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -144,8 +169,10 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiGenerateCocktailRoute: typeof ApiGenerateCocktailRoute
   ApiGenerateCocktailImageRoute: typeof ApiGenerateCocktailImageRoute
+  ApiMatchDcpCocktailRoute: typeof ApiMatchDcpCocktailRoute
   DrinksIdRoute: typeof DrinksIdRoute
   RestaurantIdRoute: typeof RestaurantIdRoute
+  RestaurantsDoubleChickenPleaseRoute: typeof RestaurantsDoubleChickenPleaseRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -185,6 +212,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/restaurants/double-chicken-please': {
+      id: '/restaurants/double-chicken-please'
+      path: '/restaurants/double-chicken-please'
+      fullPath: '/restaurants/double-chicken-please'
+      preLoaderRoute: typeof RestaurantsDoubleChickenPleaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/restaurant/$id': {
       id: '/restaurant/$id'
       path: '/restaurant/$id'
@@ -197,6 +231,13 @@ declare module '@tanstack/react-router' {
       path: '/drinks/$id'
       fullPath: '/drinks/$id'
       preLoaderRoute: typeof DrinksIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/match-dcp-cocktail': {
+      id: '/api/match-dcp-cocktail'
+      path: '/api/match-dcp-cocktail'
+      fullPath: '/api/match-dcp-cocktail'
+      preLoaderRoute: typeof ApiMatchDcpCocktailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/generate-cocktail-image': {
@@ -224,19 +265,11 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiGenerateCocktailRoute: ApiGenerateCocktailRoute,
   ApiGenerateCocktailImageRoute: ApiGenerateCocktailImageRoute,
+  ApiMatchDcpCocktailRoute: ApiMatchDcpCocktailRoute,
   DrinksIdRoute: DrinksIdRoute,
   RestaurantIdRoute: RestaurantIdRoute,
+  RestaurantsDoubleChickenPleaseRoute: RestaurantsDoubleChickenPleaseRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
