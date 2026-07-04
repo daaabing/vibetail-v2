@@ -26,13 +26,15 @@ const SCHEMA = {
   additionalProperties: false,
   properties: {
     matchedName: { type: "string", enum: NAMES, description: "Pick EXACTLY ONE cocktail name from the Double Chicken Please menu. Must match one of the provided names verbatim." },
+    vibeName: { type: "string", description: "A witty, vibe-driven cocktail name for the card front. This is NOT the menu name — it's a creative title inspired by the user's mood and the matched drink. 2-4 words." },
     tastesLike:  { type: "string", description: "One evocative sentence (~30 words) about how this drink tastes AND feels emotionally, tied to the user's vibe." },
     flavorProfile: { type: "string", description: "3-4 comma-separated taste adjectives." },
     whyThisMatch: { type: "string", description: "One short sentence (~25 words) explaining why THIS cocktail from the menu fits the user's vibe. Warm, personal." },
     roast:        { type: "string", description: "One witty, slightly cutting one-liner roasting the user's vibe, in 12 words or fewer." },
     category:     { type: "string", enum: ["builder-brain","love-drunk","heartbreak","chaos","late-night"] },
   },
-  required: ["matchedName","tastesLike","flavorProfile","whyThisMatch","roast","category"],
+  required: ["matchedName","vibeName","tastesLike","flavorProfile","whyThisMatch","roast","category"],
+
 } as const;
 
 function buildPrompt(input: MatchInput): string {
