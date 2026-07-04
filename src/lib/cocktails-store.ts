@@ -19,6 +19,12 @@ export interface Cocktail {
   lang?: "zh" | "en";
   createdAt: string;
   userId?: string | null;
+  // Optional: present when the drink is matched from a real bar menu (e.g. DCP)
+  matchedFromMenu?: boolean;
+  restaurantName?: string | null;
+  menuSection?: string | null;
+  menuPrice?: string | null;
+  whyThisMatch?: string | null;
 }
 
 export interface GeneratedCocktailFields {
