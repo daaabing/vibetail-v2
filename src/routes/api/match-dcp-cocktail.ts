@@ -10,12 +10,14 @@ interface MatchInput {
 
 interface MatchedCocktail {
   matchedName: string; // must be one of DCP_MENU names
+  vibeName: string; // witty, vibe-driven name for the card front (NOT the menu name)
   tastesLike: string;
   flavorProfile: string;
   whyThisMatch: string; // short reason tied to the user's vibe
   roast: string;
   category: "builder-brain" | "love-drunk" | "heartbreak" | "chaos" | "late-night";
 }
+
 
 const NAMES = DCP_MENU.map((c) => c.name);
 
