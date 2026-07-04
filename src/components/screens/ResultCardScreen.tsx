@@ -173,6 +173,25 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
 
       {/* Cocktail name + vibe diagnosis */}
       <div className="px-5 pt-4 pb-3 flex-1" style={{ minHeight: 0 }}>
+        {cocktail.matchedFromMenu && (
+          <div
+            className="mx-auto mb-3 flex items-center justify-center gap-2 px-3 py-1.5 rounded-full"
+            style={{
+              background: "linear-gradient(135deg, rgba(194,65,12,0.12) 0%, rgba(224,83,60,0.14) 100%)",
+              border: "1px solid rgba(194,65,12,0.35)",
+              width: "fit-content",
+            }}
+          >
+            <span className="text-[9px] tracking-[0.2em] uppercase font-semibold" style={{ color: "var(--app-primary)", fontFamily: "var(--font-body)" }}>
+              {cocktail.lang === "zh" ? "点这杯" : "Order this"}
+            </span>
+            <span className="text-[9px]" style={{ color: "var(--app-text-muted)" }}>·</span>
+            <span className="text-[9px] tracking-wider" style={{ color: "var(--app-text-secondary)", fontFamily: "var(--font-body)" }}>
+              {cocktail.menuSection}
+              {cocktail.menuPrice ? ` · ${cocktail.menuPrice}` : ""}
+            </span>
+          </div>
+        )}
         <h1
           className="font-semibold leading-tight text-center"
           style={{
@@ -183,12 +202,18 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
         >
           {cocktail.cocktailName}
         </h1>
+        {cocktail.matchedFromMenu && cocktail.restaurantName && (
+          <p className="text-center text-[10px] mt-1 tracking-widest uppercase" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
+            {cocktail.lang === "zh" ? "菜单上的名字 · " : "on the menu at "}{cocktail.restaurantName}
+          </p>
+        )}
 
         {/* Vibe diagnosis — roast line */}
         <p className="text-center text-xs mt-2 leading-snug italic"
           style={{ fontFamily: "var(--font-heading)", color: "var(--app-primary)" }}>
           "{cocktail.roast}"
         </p>
+
 
         {/* Flavor keywords from tasting notes */}
         <div className="flex justify-center gap-1.5 mt-3 flex-wrap">
