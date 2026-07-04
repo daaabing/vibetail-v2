@@ -437,7 +437,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const isPreview = !id || id === "preview";
   const isPersisted = !isPreview || persistedId !== null;
 
-  const tapHint = t("result.tap");
+  const tapHint = cocktail?.matchedFromMenu ? t("result.tap.menu") : t("result.tap");
+
   const distillingText = t("result.distilling");
   const cardLabels = {
     originalVibe: t("result.original"),
