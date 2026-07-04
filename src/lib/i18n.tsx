@@ -130,6 +130,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     "result.checked": "VIBE CHECKED ✓",
     "result.distilling": "CRAFTING THE MOOD…",
     "result.tap": "TAP TO FLIP",
+    "result.tap.menu": "TAP TO SEE THE RECOMMENDED DRINKS",
     "result.original": "ORIGINAL VIBE",
     "result.tasting": "TASTING NOTES",
     "result.ingredients": "INGREDIENTS",
@@ -137,6 +138,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     "result.ingredients.bar": "Final interpretation & execution reserved by the bar",
     "result.howToMake": "HOW TO MAKE",
     "result.diagnosis": "VIBE DIAGNOSIS",
+
     "result.save": "Save Card",
     "result.saving": "Saving…",
     "result.share": "Share",
