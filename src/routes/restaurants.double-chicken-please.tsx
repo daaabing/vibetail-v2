@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import MoodInputScreen from "@/components/screens/MoodInputScreen";
+import VibetailLogo from "@/components/moodtail/VibetailLogo";
 import { setRestaurantCtx } from "@/lib/restaurant-ctx";
+
 
 const TITLE = "Vibetail × Double Chicken Please — Match Your Vibe to a Cocktail";
 const DESC = "Tell us your vibe and we'll match you to a cocktail from the Double Chicken Please menu.";
