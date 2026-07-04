@@ -280,13 +280,52 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-6 pt-6 pb-4 relative z-10" style={{ scrollbarWidth: "none" }}>
 
-        {/* Header — just the name */}
+        {/* Header — name + optional menu badge */}
         <div className="mb-4 pb-3" style={{ borderBottom: "1px solid rgba(210,201,189,0.5)" }}>
+          {cocktail.matchedFromMenu && (
+            <div className="mb-2 flex items-center gap-2 flex-wrap">
+              <span
+                className="px-2 py-0.5 rounded text-[9px] tracking-[0.2em] uppercase font-semibold"
+                style={{
+                  background: "linear-gradient(135deg, rgba(194,65,12,0.12) 0%, rgba(224,83,60,0.14) 100%)",
+                  border: "1px solid rgba(194,65,12,0.35)",
+                  color: "var(--app-primary)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                {cocktail.lang === "zh" ? "菜单直接点这杯" : "Order from menu"}
+              </span>
+              <span className="text-[10px]" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
+                {cocktail.menuSection}
+                {cocktail.menuPrice ? ` · ${cocktail.menuPrice}` : ""}
+              </span>
+            </div>
+          )}
           <h3 className="font-semibold leading-tight"
             style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)", fontSize: "1.3rem" }}>
             {cocktail.cocktailName}
           </h3>
+          {cocktail.matchedFromMenu && cocktail.restaurantName && (
+            <p className="text-[10px] mt-1 tracking-widest uppercase" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
+              @ {cocktail.restaurantName}
+            </p>
+          )}
         </div>
+
+        {/* Why this match — only when matched from menu */}
+        {cocktail.matchedFromMenu && cocktail.whyThisMatch && (
+          <div className="mb-4 p-3 rounded-xl"
+            style={{ background: "rgba(224,83,60,0.06)", border: "1px solid rgba(224,83,60,0.18)" }}>
+            <span className="text-[8px] tracking-widest uppercase block mb-1.5"
+              style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
+              {cocktail.lang === "zh" ? "为什么是这杯" : "Why this drink"}
+            </span>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
+              {cocktail.whyThisMatch}
+            </p>
+          </div>
+        )}
+
 
         {/* Original vibe */}
         <div className="mb-4 p-3 rounded-xl"
