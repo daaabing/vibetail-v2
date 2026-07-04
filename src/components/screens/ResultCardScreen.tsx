@@ -296,19 +296,6 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
           )}
         </div>
 
-        {/* Why this match — only when matched from menu */}
-        {cocktail.matchedFromMenu && cocktail.whyThisMatch && (
-          <div className="mb-4 p-3 rounded-xl"
-            style={{ background: "rgba(224,83,60,0.06)", border: "1px solid rgba(224,83,60,0.18)" }}>
-            <span className="text-[8px] tracking-widest uppercase block mb-1.5"
-              style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
-              {cocktail.lang === "zh" ? "为什么是这杯" : "Why this drink"}
-            </span>
-            <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
-              {cocktail.whyThisMatch}
-            </p>
-          </div>
-        )}
 
 
         {/* Original vibe */}
