@@ -206,6 +206,11 @@ export default function MoodInputScreen({
         lang,
         createdAt: new Date().toISOString(),
         userId: null,
+        matchedFromMenu: !!generated.matchedFromMenu,
+        restaurantName: generated.restaurantName ?? null,
+        menuSection: generated.menuSection ?? null,
+        menuPrice: generated.menuPrice ?? null,
+        whyThisMatch: generated.whyThisMatch ?? null,
       };
       const encoded = encodeCocktailToHash(cocktail);
       track("cocktail_generated", {
