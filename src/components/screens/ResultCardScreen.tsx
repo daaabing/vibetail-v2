@@ -387,6 +387,13 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const fromGallery = search.from === "gallery";
   const restaurantId = search.restaurant;
   const isRestaurant = !!restaurantId;
+  const goToRestaurant = () => {
+    if (restaurantId === "double-chicken-please") {
+      navigate({ to: "/restaurants/double-chicken-please" });
+    } else {
+      navigate({ to: "/restaurant/$id", params: { id: restaurantId! } });
+    }
+  };
   const { t, lang } = useLang();
   const { user } = useAuth();
   const [cocktail, setCocktail] = useState<Cocktail | null>(null);
