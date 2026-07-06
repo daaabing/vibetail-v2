@@ -387,6 +387,13 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const fromGallery = search.from === "gallery";
   const restaurantId = search.restaurant;
   const isRestaurant = !!restaurantId;
+  const goToRestaurant = () => {
+    if (restaurantId === "double-chicken-please") {
+      navigate({ to: "/restaurants/double-chicken-please" });
+    } else {
+      navigate({ to: "/restaurant/$id", params: { id: restaurantId! } });
+    }
+  };
   const { t, lang } = useLang();
   const { user } = useAuth();
   const [cocktail, setCocktail] = useState<Cocktail | null>(null);
@@ -998,7 +1005,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
         <motion.button
           whileTap={{ scale: 0.9 }}
-          onClick={() => isRestaurant ? navigate({ to: "/restaurant/$id", params: { id: restaurantId! } }) : fromGallery ? navigate({ to: "/gallery" }) : navigate({ to: "/" })}
+          onClick={() => isRestaurant ? goToRestaurant() : fromGallery ? navigate({ to: "/gallery" }) : navigate({ to: "/" })}
           className="flex items-center gap-1.5 text-xs"
           style={{ color: "var(--app-text-secondary)" }}
         >
@@ -1171,7 +1178,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         {/* Last secondary action */}
         <motion.button
           whileTap={{ scale: 0.96 }}
-          onClick={() => isRestaurant ? navigate({ to: "/restaurant/$id", params: { id: restaurantId! } }) : navigate({ to: "/mood-input" })}
+          onClick={() => isRestaurant ? goToRestaurant() : navigate({ to: "/mood-input" })}
           className="w-full text-xs font-semibold uppercase tracking-widest py-3 text-center block"
           style={{ color: "var(--app-primary)" }}
         >

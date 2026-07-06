@@ -72,7 +72,7 @@ export default function GalleryScreen() {
     return (
       <>
         <div className="min-h-svh" />
-        <AuthModal open onClose={() => { /* stay on /gallery so the signed-in effect can load cocktails */ }} />
+        <AuthModal open onClose={() => navigate({ to: "/" })} />
       </>
     );
   }
@@ -99,7 +99,11 @@ export default function GalleryScreen() {
           whileTap={{ scale: 0.88 }}
           onClick={() => {
             if (restaurantCtx) {
-              navigate({ to: "/restaurant/$id", params: { id: restaurantCtx } });
+              if (restaurantCtx === "double-chicken-please") {
+                navigate({ to: "/restaurants/double-chicken-please" });
+              } else {
+                navigate({ to: "/restaurant/$id", params: { id: restaurantCtx } });
+              }
             } else {
               clearRestaurantCtx();
               navigate({ to: "/" });
