@@ -1005,7 +1005,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
         <motion.button
           whileTap={{ scale: 0.9 }}
-          onClick={() => isRestaurant ? navigate({ to: "/restaurant/$id", params: { id: restaurantId! } }) : fromGallery ? navigate({ to: "/gallery" }) : navigate({ to: "/" })}
+          onClick={() => isRestaurant ? goToRestaurant() : fromGallery ? navigate({ to: "/gallery" }) : navigate({ to: "/" })}
           className="flex items-center gap-1.5 text-xs"
           style={{ color: "var(--app-text-secondary)" }}
         >
