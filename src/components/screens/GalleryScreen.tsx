@@ -72,7 +72,7 @@ export default function GalleryScreen() {
     return (
       <>
         <div className="min-h-svh" />
-        <AuthModal open onClose={() => { /* stay on /gallery so the signed-in effect can load cocktails */ }} />
+        <AuthModal open onClose={() => navigate({ to: "/" })} />
       </>
     );
   }
