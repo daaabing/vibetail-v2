@@ -8,13 +8,15 @@ export const Route = createFileRoute("/drinks/$id")({
     restaurant: typeof s.restaurant === "string" ? s.restaurant : undefined,
   }),
   head: ({ params }) => {
-    const TITLE = "Your Cocktail — Vibetail";
-    const DESC = "A bespoke cocktail recipe distilled from your vibe by Vibetail's AI bartender.";
+    const shortId = params.id.slice(0, 8);
+    const TITLE = `Cocktail #${shortId} — Vibetail`;
+    const DESC = `A bespoke AI-mixed cocktail (#${shortId}) distilled from your vibe by Vibetail's AI bartender.`;
     const URL = `https://vibetail.com/drinks/${params.id}`;
     return {
       meta: [
         { title: TITLE },
         { name: "description", content: DESC },
+        { name: "robots", content: "noindex" },
         { property: "og:title", content: TITLE },
         { property: "og:description", content: DESC },
         { property: "og:url", content: URL },
@@ -23,6 +25,21 @@ export const Route = createFileRoute("/drinks/$id")({
         { name: "twitter:description", content: DESC },
       ],
       links: [{ rel: "canonical", href: URL }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Recipe",
+            name: `Vibetail Cocktail #${shortId}`,
+            description: DESC,
+            url: URL,
+            recipeCategory: "Cocktail",
+            recipeCuisine: "Cocktail",
+            author: { "@type": "Organization", name: "Vibetail" },
+          }),
+        },
+      ],
     };
   },
   component: ResultRoute,
