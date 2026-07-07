@@ -8,12 +8,20 @@ import { useAuth } from "@/lib/use-auth";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({
-    meta: [
-      { title: "Sign in — Vibetail" },
-      { name: "description", content: "Sign in to Vibetail to save your cocktails to the cloud." },
-    ],
-  }),
+  head: () => {
+    const URL = "https://vibetail.com/auth";
+    return {
+      meta: [
+        { title: "Sign in — Vibetail" },
+        { name: "description", content: "Sign in to Vibetail to save your AI-mixed cocktails to the cloud and revisit your vibe collection." },
+        { name: "robots", content: "noindex" },
+        { property: "og:title", content: "Sign in — Vibetail" },
+        { property: "og:description", content: "Sign in to Vibetail to save your AI-mixed cocktails to the cloud." },
+        { property: "og:url", content: URL },
+      ],
+      links: [{ rel: "canonical", href: URL }],
+    };
+  },
   component: AuthPage,
 });
 

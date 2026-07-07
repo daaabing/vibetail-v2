@@ -11,16 +11,22 @@ export const Route = createFileRoute("/restaurant/$id")({
       throw notFound();
     }
   },
-  head: () => {
-    const TITLE = "Vibetail — Restaurant";
-    const DESC = "Share your vibe and let Vibetail mix a cocktail for you at this restaurant.";
+  head: ({ params }) => {
+    const TITLE = `Restaurant #${params.id} — Vibetail`;
+    const DESC = `Share your vibe and let Vibetail mix a cocktail for you at restaurant #${params.id}.`;
+    const URL = `https://vibetail.com/restaurant/${params.id}`;
     return {
       meta: [
         { title: TITLE },
         { name: "description", content: DESC },
         { property: "og:title", content: TITLE },
         { property: "og:description", content: DESC },
+        { property: "og:url", content: URL },
+        { property: "og:type", content: "website" },
+        { name: "twitter:title", content: TITLE },
+        { name: "twitter:description", content: DESC },
       ],
+      links: [{ rel: "canonical", href: URL }],
     };
   },
   component: RestaurantRoute,
