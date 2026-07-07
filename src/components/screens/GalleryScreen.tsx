@@ -9,6 +9,7 @@ import { getRestaurantCtx, clearRestaurantCtx } from "@/lib/restaurant-ctx";
 import { useAuth } from "@/lib/use-auth";
 import AuthModal from "@/components/moodtail/AuthModal";
 import UserMenu from "@/components/moodtail/UserMenu";
+import { supabase } from "@/integrations/supabase/client";
 
 const PAGE_SIZE = 10;
 
