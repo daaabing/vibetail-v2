@@ -9,6 +9,7 @@ import { getRestaurantCtx, clearRestaurantCtx } from "@/lib/restaurant-ctx";
 import { useAuth } from "@/lib/use-auth";
 import AuthModal from "@/components/moodtail/AuthModal";
 import UserMenu from "@/components/moodtail/UserMenu";
+import { supabase } from "@/integrations/supabase/client";
 
 const PAGE_SIZE = 10;
 
@@ -72,7 +73,16 @@ export default function GalleryScreen() {
     return (
       <>
         <div className="min-h-svh" />
-        <AuthModal open onClose={() => navigate({ to: "/" })} />
+        <AuthModal
+          open
+          onClose={() => {
+            // AuthModal auto-fires onClose on SIGNED_IN — if a session now exists, stay so gallery re-renders.
+            // Otherwise the user dismissed the modal manually; send them home.
+            supabase.auth.getSession().then(({ data }) => {
+              if (!data.session) navigate({ to: "/" });
+            });
+          }}
+        />
       </>
     );
   }
