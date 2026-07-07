@@ -72,7 +72,16 @@ export default function GalleryScreen() {
     return (
       <>
         <div className="min-h-svh" />
-        <AuthModal open onClose={() => navigate({ to: "/" })} />
+        <AuthModal
+          open
+          onClose={() => {
+            // AuthModal auto-fires onClose on SIGNED_IN — if a session now exists, stay so gallery re-renders.
+            // Otherwise the user dismissed the modal manually; send them home.
+            supabase.auth.getSession().then(({ data }) => {
+              if (!data.session) navigate({ to: "/" });
+            });
+          }}
+        />
       </>
     );
   }
