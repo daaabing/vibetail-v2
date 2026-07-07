@@ -217,10 +217,10 @@ export default function GalleryScreen() {
                     {formatDistanceToNow(new Date(cocktail.createdAt), { addSuffix: true })}
                   </span>
                 </div>
-                <h4 className="text-lg font-semibold leading-snug"
+                <h2 className="text-lg font-semibold leading-snug"
                   style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
                   {cocktail.cocktailName}
-                </h4>
+                </h2>
                 <p className="text-[11px] mt-1 leading-relaxed"
                   style={{ color: "var(--app-text-secondary)", fontFamily: "var(--font-heading)", fontStyle: "italic" }}>
                   "{cocktail.originalMood.slice(0, 80)}{cocktail.originalMood.length > 80 ? "…" : ""}"
