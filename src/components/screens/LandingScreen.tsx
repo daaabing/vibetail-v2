@@ -82,7 +82,7 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
               className="px-3 py-1 text-[11px] font-semibold tracking-wider transition-all"
               style={{
                 background: lang === l ? "var(--app-primary)" : "transparent",
-                color: lang === l ? "white" : "var(--app-text-muted)",
+                color: lang === l ? "#0E0F11" : "var(--app-text-muted)",
                 borderRadius: "9999px",
               }}
             >
