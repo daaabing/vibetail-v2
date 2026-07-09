@@ -147,13 +147,14 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
           <img
             src={imageUrl}
             alt={cocktail.cocktailName}
-            className="w-full h-full object-contain"
+            className="w-[112%] h-[112%] object-contain max-w-none"
             style={{
               mixBlendMode: "multiply",
+              filter: "contrast(1.03) saturate(0.96)",
               WebkitMaskImage:
-                "radial-gradient(ellipse at center, black 55%, rgba(0,0,0,0.85) 75%, transparent 100%)",
+                "radial-gradient(ellipse at center, black 38%, rgba(0,0,0,0.92) 52%, rgba(0,0,0,0.55) 66%, rgba(0,0,0,0.18) 78%, transparent 90%)",
               maskImage:
-                "radial-gradient(ellipse at center, black 55%, rgba(0,0,0,0.85) 75%, transparent 100%)",
+                "radial-gradient(ellipse at center, black 38%, rgba(0,0,0,0.92) 52%, rgba(0,0,0,0.55) 66%, rgba(0,0,0,0.18) 78%, transparent 90%)",
             }}
           />
         ) : imageLoading ? (
@@ -167,13 +168,14 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
           <img
             src={`data:image/png;base64,${imageData}`}
             alt={cocktail.cocktailName}
-            className="w-full h-full object-contain"
+            className="w-[112%] h-[112%] object-contain max-w-none"
             style={{
               mixBlendMode: "multiply",
+              filter: "contrast(1.03) saturate(0.96)",
               WebkitMaskImage:
-                "radial-gradient(ellipse at center, black 55%, rgba(0,0,0,0.85) 75%, transparent 100%)",
+                "radial-gradient(ellipse at center, black 38%, rgba(0,0,0,0.92) 52%, rgba(0,0,0,0.55) 66%, rgba(0,0,0,0.18) 78%, transparent 90%)",
               maskImage:
-                "radial-gradient(ellipse at center, black 55%, rgba(0,0,0,0.85) 75%, transparent 100%)",
+                "radial-gradient(ellipse at center, black 38%, rgba(0,0,0,0.92) 52%, rgba(0,0,0,0.55) 66%, rgba(0,0,0,0.18) 78%, transparent 90%)",
             }}
           />
 
