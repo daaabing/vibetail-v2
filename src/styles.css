@@ -80,6 +80,9 @@
     border-color: var(--color-border);
     -webkit-tap-highlight-color: transparent;
   }
+  html {
+    font-family: var(--font-body);
+  }
   body {
     background-color: var(--app-bg-charcoal);
     background-image:
@@ -92,8 +95,12 @@
     font-family: var(--font-body);
     min-height: 100svh;
   }
-  h1, h2, h3, h4 { font-family: var(--font-heading); }
+  button, input, textarea, select, optgroup {
+    font-family: inherit;
+  }
+  h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 }
+
 
 /* ── Glass utilities ── */
 @utility glass-panel {
