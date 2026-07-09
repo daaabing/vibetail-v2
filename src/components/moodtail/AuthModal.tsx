@@ -151,9 +151,9 @@ export default function AuthModal({ open, onClose }: { open: boolean; onClose: (
                 type="submit" disabled={busy}
                 className="w-full py-3 rounded-full text-sm font-semibold tracking-wider disabled:opacity-50 relative overflow-hidden"
                 style={{
-                  background: "linear-gradient(135deg, #A55841 0%, #C96F54 50%, #A55841 100%)",
+                  background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
                   color: "white",
-                  boxShadow: "0 8px 24px -6px rgba(201,111,84,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
+                  boxShadow: "0 8px 24px -6px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
                 }}
               >
                 {busy ? "…" : T.submit}

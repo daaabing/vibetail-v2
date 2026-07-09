@@ -252,7 +252,7 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
     >
       {/* Subtle warm blobs */}
       <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(201,111,84,0.16) 0%, transparent 70%)", filter: "blur(30px)" }} />
+        style={{ background: "radial-gradient(circle, rgba(0,0,0,0.45) 0%, transparent 70%)", filter: "blur(30px)" }} />
       <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full pointer-events-none"
         style={{ background: "radial-gradient(circle, rgba(212,155,67,0.08) 0%, transparent 70%)", filter: "blur(30px)" }} />
 
@@ -270,7 +270,7 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
         {/* Order this — only when matched from menu */}
         {cocktail.matchedFromMenu && (
           <div className="mb-4 p-3 rounded-xl"
-            style={{ background: "rgba(201,111,84,0.14)", border: "1px solid rgba(201,111,84,0.45)" }}>
+            style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(0,0,0,0.45)" }}>
             <span className="text-[8px] tracking-widest uppercase block mb-1.5"
               style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
               {cocktail.lang === "zh" ? "点这杯" : "Order this"}
@@ -337,7 +337,7 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
         {/* Recipe — numbered steps */}
         {!hideRecipe && (
           <div className="mb-4 p-3 rounded-xl"
-            style={{ background: "rgba(201,111,84,0.10)", border: "1px solid rgba(201,111,84,0.28)" }}>
+            style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(0,0,0,0.45)" }}>
             <span className="text-[8px] tracking-widest uppercase block mb-3"
               style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
               {labels.howToMake}
@@ -1057,9 +1057,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               className="py-2 px-3 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
               style={{
                 borderRadius: "4px",
-                background: "linear-gradient(135deg, #A55841 0%, #C96F54 50%, #A55841 100%)",
+                background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
                 color: "white",
-                boxShadow: "2px 3px 10px rgba(201,111,84,0.40), inset 0 1px 0 rgba(255,255,255,0.15)",
+                boxShadow: "2px 3px 10px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
               }}
             >
               <span className="absolute inset-0 pointer-events-none" style={{
@@ -1152,9 +1152,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             className="w-full py-2 px-4 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
             style={{
               borderRadius: "4px",
-              background: "linear-gradient(135deg, #A55841 0%, #C96F54 50%, #A55841 100%)",
+              background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
               color: "white",
-              boxShadow: "2px 3px 10px rgba(201,111,84,0.40), inset 0 1px 0 rgba(255,255,255,0.15)",
+              boxShadow: "2px 3px 10px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
             }}
           >
             <span className="absolute inset-0 pointer-events-none" style={{
@@ -1310,7 +1310,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                       onClick={() => setSelectedFrameId(f.id)}
                       className="flex flex-col items-center gap-1.5 p-1.5 rounded-lg transition flex-shrink-0"
                       style={{
-                        background: isActive ? "rgba(201,111,84,0.16)" : "transparent",
+                        background: isActive ? "rgba(0,0,0,0.45)" : "transparent",
                         border: isActive ? "1.5px solid var(--app-primary)" : "1.5px solid transparent",
                       }}
                     >
@@ -1348,10 +1348,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                   onClick={() => { setShowFramePicker(false); handlePrint(selectedFrameId); }}
                   className="flex-1 py-3 text-xs font-semibold tracking-wider uppercase rounded transition"
                   style={{
-                    background: "linear-gradient(135deg, #A55841 0%, #C96F54 50%, #A55841 100%)",
+                    background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
                     color: "white",
                     border: "none",
-                    boxShadow: "2px 3px 12px rgba(201,111,84,0.45)",
+                    boxShadow: "2px 3px 12px rgba(0,0,0,0.45)",
                   }}
                 >
                   {t("result.print") || "Print"}
@@ -1479,9 +1479,9 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
           disabled={status !== "idle"}
           className="px-4 py-2.5 text-xs font-semibold tracking-wider rounded-md disabled:opacity-60 whitespace-nowrap"
           style={{
-            background: "linear-gradient(135deg, #A55841 0%, #C96F54 50%, #A55841 100%)",
+            background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
             color: "white",
-            boxShadow: "0 2px 8px rgba(201,111,84,0.45)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.45)",
           }}
         >
           {status === "loading" ? copy.submitting : status === "done" ? "✓" : copy.submit}

@@ -28,12 +28,12 @@ function GlassButton({
         padding: "16px 24px",
         borderRadius: "9999px",
         background: primary
-          ? "linear-gradient(135deg, #A55841 0%, #C96F54 50%, #A55841 100%)"
+          ? "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)"
           : "rgba(255,255,255,0.05)",
         color: primary ? "white" : "var(--app-text)",
         border: primary ? "1px solid rgba(255,255,255,0.14)" : "1px solid rgba(255,255,255,0.14)",
         boxShadow: primary
-          ? "0 12px 30px -6px rgba(201,111,84,0.45), inset 0 1px 0 rgba(255,255,255,0.15)"
+          ? "0 12px 30px -6px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)"
           : "0 8px 24px -8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)",
         backdropFilter: "blur(20px) saturate(140%)",
       }}
