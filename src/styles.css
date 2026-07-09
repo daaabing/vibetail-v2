@@ -84,10 +84,10 @@
   body {
     background-color: var(--app-bg-charcoal);
     background-image:
-      radial-gradient(1200px 700px at 20% -10%, rgba(143,169,155,0.10), transparent 60%),
-      radial-gradient(1000px 600px at 100% 20%, rgba(154,145,178,0.10), transparent 60%),
-      radial-gradient(900px 600px at 50% 110%, rgba(143,169,155,0.10), transparent 60%),
-      linear-gradient(160deg, #101715 0%, #12151A 45%, #17120F 100%);
+      radial-gradient(1200px 700px at 20% -10%, rgba(153,185,198,0.10), transparent 60%),
+      radial-gradient(1000px 600px at 100% 20%, rgba(183,169,179,0.10), transparent 60%),
+      radial-gradient(900px 600px at 50% 110%, rgba(169,180,161,0.10), transparent 60%),
+      linear-gradient(160deg, #1A1B1C 0%, #202124 45%, #24211F 100%);
     background-attachment: fixed;
     color: var(--app-text);
     font-family: var(--font-body);
