@@ -15,9 +15,9 @@ import { track } from "@/lib/analytics";
 const inkButtonStyle = {
   padding: "14px 24px",
   borderRadius: "4px",
-  background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+  background: "linear-gradient(135deg, #A55841 0%, #C96F54 50%, #A55841 100%)",
   color: "white" as const,
-  boxShadow: "2px 3px 12px rgba(194,65,12,0.25), inset 0 1px 0 rgba(255,255,255,0.15)",
+  boxShadow: "2px 3px 12px rgba(201,111,84,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
 };
 
 export default function MoodInputScreen({
@@ -238,7 +238,7 @@ export default function MoodInputScreen({
   return (
     <div
       className="w-full md:max-w-2xl lg:max-w-3xl md:mx-auto min-h-svh"
-      style={{ background: "linear-gradient(170deg, #fdf8f3 0%, #faf4ed 60%, #f8f0e8 100%)" }}
+      style={{ background: "transparent" }}
     >
       {/* ── Top bar ── */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
@@ -264,7 +264,7 @@ export default function MoodInputScreen({
           {[1, 2].map((s) => (
             <div key={s} className="transition-all duration-300" style={{
               width: step === s ? 20 : 6, height: 6, borderRadius: 3,
-              backgroundColor: step === s ? "var(--app-primary)" : "var(--app-border)",
+              backgroundColor: step === s ? "var(--app-primary)" : "rgba(255,255,255,0.12)",
             }} />
           ))}
         </div>
@@ -327,8 +327,8 @@ export default function MoodInputScreen({
                       }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
                       style={{
-                        border: isSelected ? `1.5px solid ${chip.color}` : "1px solid var(--app-border)",
-                        backgroundColor: isSelected ? `${chip.color}18` : "rgba(255,255,255,0.65)",
+                        border: isSelected ? `1.5px solid ${chip.color}` : "1px solid rgba(255,255,255,0.12)",
+                        backgroundColor: isSelected ? `${chip.color}18` : "rgba(255,255,255,0.05)",
                         backdropFilter: "blur(6px)",
                         color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
                         fontWeight: isSelected ? 600 : 400,
@@ -350,9 +350,9 @@ export default function MoodInputScreen({
 
             {/* Divider */}
             <div className="flex items-center gap-3">
-              <span className="flex-1 h-px" style={{ background: "var(--app-border)" }} />
+              <span className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.12)" }} />
               <span className="text-[10px] tracking-wider" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>{t("mood.divider")}</span>
-              <span className="flex-1 h-px" style={{ background: "var(--app-border)" }} />
+              <span className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.12)" }} />
             </div>
 
             {/* Textarea */}
@@ -371,16 +371,16 @@ export default function MoodInputScreen({
                 className="w-full rounded-xl p-4 resize-none leading-relaxed"
                 style={{
                   minHeight: 96, fontSize: 16,
-                  backgroundColor: "rgba(255,255,255,0.75)",
+                  backgroundColor: "rgba(255,255,255,0.05)",
                   backdropFilter: "blur(8px)",
-                  border: "1px solid var(--app-border)",
+                  border: "1px solid rgba(255,255,255,0.12)",
                   color: "var(--app-text)",
                   fontFamily: "var(--font-heading)", fontStyle: "italic",
                   outline: "none",
                 }}
                 placeholder={`"${moodPlaceholder}"`}
                 onFocus={(e) => { e.currentTarget.style.borderColor = "var(--app-primary)"; }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = "var(--app-border)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
               />
               <motion.button
                 whileTap={{ scale: 0.9 }}
@@ -433,7 +433,7 @@ export default function MoodInputScreen({
 
             {/* Vibe preview pill */}
             <div className="flex items-start gap-2 p-3 rounded-xl"
-              style={{ background: "rgba(224,83,60,0.07)", border: "1px solid rgba(224,83,60,0.2)" }}>
+              style={{ background: "rgba(201,111,84,0.12)", border: "1px solid rgba(201,111,84,0.45)" }}>
               <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="var(--app-primary)" strokeWidth="1.5" viewBox="0 0 24 24">
                 <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -458,8 +458,8 @@ export default function MoodInputScreen({
                       onClick={() => toggleFlavor(chip.label)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
                       style={{
-                        border: isSelected ? `1.5px solid ${chip.color}` : "1px solid var(--app-border)",
-                        backgroundColor: isSelected ? `${chip.color}18` : "rgba(255,255,255,0.6)",
+                        border: isSelected ? `1.5px solid ${chip.color}` : "1px solid rgba(255,255,255,0.12)",
+                        backgroundColor: isSelected ? `${chip.color}18` : "rgba(255,255,255,0.05)",
                         backdropFilter: "blur(6px)",
                         color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
                         fontWeight: isSelected ? 600 : 400,
@@ -495,9 +495,9 @@ export default function MoodInputScreen({
                       onClick={() => setSpiritOpen((v) => !v)}
                       className="w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm transition-all"
                       style={{
-                        backgroundColor: "rgba(255,255,255,0.7)",
+                        backgroundColor: "rgba(255,255,255,0.05)",
                         backdropFilter: "blur(8px)",
-                        border: selected ? `1.5px solid ${selected.color}` : "1px solid var(--app-border)",
+                        border: selected ? `1.5px solid ${selected.color}` : "1px solid rgba(255,255,255,0.12)",
                         color: "var(--app-text)",
                         boxShadow: selected ? `0 0 0 3px ${selected.color}22` : "none",
                       }}
@@ -505,7 +505,7 @@ export default function MoodInputScreen({
                       <span className="flex items-center gap-2 min-w-0">
                         <span className="flex-shrink-0 rounded-full" style={{
                           width: 9, height: 9,
-                          backgroundColor: selected?.color ?? "var(--app-border)",
+                          backgroundColor: selected?.color ?? "rgba(255,255,255,0.12)",
                           boxShadow: selected ? `0 0 4px ${selected.color}88` : "none",
                         }} />
                         <span className="flex flex-col items-start min-w-0">
@@ -533,9 +533,9 @@ export default function MoodInputScreen({
                           transition={{ duration: 0.15 }}
                           className="absolute z-20 mt-1.5 w-full rounded-xl overflow-hidden max-h-80 overflow-y-auto"
                           style={{
-                            backgroundColor: "rgba(255,253,250,0.98)",
+                            backgroundColor: "rgba(24,28,34,0.95)",
                             backdropFilter: "blur(12px)",
-                            border: "1px solid var(--app-border)",
+                            border: "1px solid rgba(255,255,255,0.12)",
                             boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
                           }}
                         >
@@ -594,10 +594,10 @@ export default function MoodInputScreen({
                       onClick={() => setDrinkLength(isSelected ? "" : opt.key)}
                       className="flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl text-left transition-all"
                       style={{
-                        border: isSelected ? "1.5px solid var(--app-primary)" : "1px solid var(--app-border)",
-                        backgroundColor: isSelected ? "rgba(224,83,60,0.08)" : "rgba(255,255,255,0.7)",
+                        border: isSelected ? "1.5px solid var(--app-primary)" : "1px solid rgba(255,255,255,0.12)",
+                        backgroundColor: isSelected ? "rgba(201,111,84,0.14)" : "rgba(255,255,255,0.05)",
                         backdropFilter: "blur(8px)",
-                        boxShadow: isSelected ? "0 0 0 3px rgba(224,83,60,0.12)" : "none",
+                        boxShadow: isSelected ? "0 0 0 3px rgba(201,111,84,0.18)" : "none",
                       }}
                     >
                       <span className="text-sm font-medium" style={{ color: "var(--app-text)" }}>
@@ -625,14 +625,14 @@ export default function MoodInputScreen({
                 type="text"
                 className="w-full rounded-xl px-4 py-3 text-sm"
                 style={{
-                  backgroundColor: "rgba(255,255,255,0.7)",
+                  backgroundColor: "rgba(255,255,255,0.05)",
                   backdropFilter: "blur(8px)",
-                  border: "1px solid var(--app-border)",
+                  border: "1px solid rgba(255,255,255,0.12)",
                   color: "var(--app-text)", outline: "none",
                 }}
                 placeholder={customPlaceholder}
                 onFocus={(e) => { e.currentTarget.style.borderColor = "var(--app-primary)"; }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = "var(--app-border)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
               />
             </div>
 
