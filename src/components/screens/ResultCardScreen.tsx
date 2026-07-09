@@ -1246,7 +1246,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                   <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               )}
-              <span>{copied ? t("result.copied") : t("result.share")}</span>
+              <span style={{ fontFamily: "var(--font-heading)" }}>{copied ? t("result.copied") : t("result.share")}</span>
             </motion.button>
 
             {/* Print — only in restaurant flow */}
@@ -1266,7 +1266,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                 <svg className="w-4 h-4" fill="none" stroke="var(--app-text-secondary)" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span>{t("result.print")}</span>
+                <span style={{ fontFamily: "var(--font-heading)" }}>{t("result.print")}</span>
               </motion.button>
             )}
 
@@ -1291,7 +1291,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                 <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" strokeLinecap="round" strokeLinejoin="round" />
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              {lang === "zh" ? "关注 Vibetail" : "Follow Vibetail"}
+              <span style={{ fontFamily: "var(--font-heading)" }}>{lang === "zh" ? "关注 Vibetail" : "Follow Vibetail"}</span>
             </motion.a>
           </div>
 
@@ -1312,7 +1312,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span className="relative z-10">
+            <span className="relative z-10" style={{ fontFamily: "var(--font-heading)" }}>
               {persisting
                 ? (lang === "zh" ? "保存中…" : "Saving…")
                 : (lang === "zh" ? "保存到 Vibe Bar" : "Save to Vibe Bar")}
@@ -1328,7 +1328,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           whileTap={{ scale: 0.96 }}
           onClick={() => isRestaurant ? goToRestaurant() : navigate({ to: "/mood-input" })}
           className="w-full text-xs font-semibold uppercase tracking-widest py-3 text-center block"
-          style={{ color: "var(--app-primary)" }}
+          style={{ color: "var(--app-primary)", fontFamily: "var(--font-heading)" }}
         >
           {t("result.another")}
         </motion.button>
