@@ -123,7 +123,7 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.75, ease: "easeOut" }}
-            className="text-2xl italic"
+            className="text-base italic"
             style={{ fontFamily: "var(--font-heading)", color: "var(--app-primary)" }}
           >
             {t("landing.subtitle")}
