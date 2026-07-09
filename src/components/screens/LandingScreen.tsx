@@ -99,7 +99,7 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.9, ease: [0.34, 1.56, 0.64, 1] }}
         >
-          <GlassVessel size={200} color="#C96F54" />
+          <GlassVessel size={200} color="#8FA99B" />
         </motion.div>
 
         <div className="space-y-3">
