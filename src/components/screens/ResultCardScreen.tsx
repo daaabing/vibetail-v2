@@ -1221,7 +1221,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span className="relative z-10">{saving ? t("result.saving") : t("result.save")}</span>
+              <span className="relative z-10" style={{ fontFamily: "var(--font-heading)" }}>{saving ? t("result.saving") : t("result.save")}</span>
             </motion.button>
 
             {/* Share — copy link */}
