@@ -315,13 +315,13 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
         ) : imageLoading ? (
           <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
             <VibeBottle size={110} mode="mixing" />
-            <p className="text-[10px] tracking-wider" style={{ color: "#6B5C48", fontFamily: "var(--font-body)" }}>
+            <p className="text-[10px] tracking-wider" style={{ color: "#8A7A62", fontFamily: "var(--font-body)" }}>
               {distillingText}
             </p>
           </div>
         ) : (
           <div className="flex items-center justify-center w-full h-full">
-            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#6B5C48" strokeWidth="0.8" opacity="0.5">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#8A7A62" strokeWidth="0.8" opacity="0.5">
               <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
@@ -345,7 +345,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
 
         {/* Vibe diagnosis — roast line */}
         <p className="text-center text-xs mt-2 leading-snug italic"
-          style={{ fontFamily: "var(--font-heading)", color: "#8A5A3B" }}>
+          style={{ fontFamily: "var(--font-heading)", color: "#2A2118" }}>
           "{cocktail.roast}"
         </p>
 
@@ -362,7 +362,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
                 background: "rgba(80,55,30,0.08)",
                 border: "1px solid rgba(80,55,30,0.15)",
                 fontFamily: "var(--font-body)",
-                color: "#5A4A38",
+                color: "#8A7A62",
               }}>
               {f.trim()}
             </span>
@@ -427,10 +427,10 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
           <div className="mb-4 p-3 rounded-xl"
             style={{ background: "rgba(80,55,30,0.08)", border: "1px solid rgba(80,55,30,0.18)" }}>
             <span className="text-[8px] tracking-widest uppercase block mb-1.5"
-              style={{ fontFamily: "var(--font-body)", color: "#8A5A3B" }}>
+              style={{ fontFamily: "var(--font-body)", color: "#2A2118" }}>
               {cocktail.lang === "zh" ? "点这杯" : "Order this"}
             </span>
-            <p className="text-xs leading-relaxed" style={{ color: "#3A2E22" }}>
+            <p className="text-xs leading-relaxed" style={{ color: "#2A2118" }}>
               {cocktail.menuItemName || cocktail.cocktailName}
               {cocktail.menuPrice ? ` · ${cocktail.menuPrice}` : ""}
               {cocktail.restaurantName ? ` @ ${cocktail.restaurantName}` : ""}
@@ -449,7 +449,7 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
             {labels.originalVibe}
           </span>
           <p className="text-xs leading-relaxed"
-            style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "#3A2E22" }}>
+            style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "#2A2118" }}>
             "{cocktail.originalMood}"
           </p>
         </div>
@@ -460,7 +460,7 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
             style={{ fontFamily: "var(--font-body)", color: "#8A7A62" }}>
             {labels.tastingNotes}
           </span>
-          <p className="text-xs leading-relaxed" style={{ color: "#3A2E22" }}>
+          <p className="text-xs leading-relaxed" style={{ color: "#2A2118" }}>
             {cocktail.tastesLike}
           </p>
         </div>
@@ -477,9 +477,9 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
           <ul className="space-y-1.5">
             {(cocktail.ingredients as string[]).map((ing, i) => (
               <li key={i} className="flex items-start gap-2 text-[11px]"
-                style={{ color: "#3A2E22" }}>
+                style={{ color: "#2A2118" }}>
                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: "#8A5A3B" }} />
+                  style={{ backgroundColor: "#2A2118" }} />
                 {simplifyIngredient(ing)}
               </li>
             ))}
@@ -494,7 +494,7 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
           <div className="mb-4 p-3 rounded-xl"
             style={{ background: "rgba(80,55,30,0.08)", border: "1px solid rgba(80,55,30,0.18)" }}>
             <span className="text-[8px] tracking-widest uppercase block mb-3"
-              style={{ fontFamily: "var(--font-body)", color: "#8A5A3B" }}>
+              style={{ fontFamily: "var(--font-body)", color: "#2A2118" }}>
               {labels.howToMake}
             </span>
             <ol className="space-y-2.5">
@@ -503,14 +503,14 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
                   <span
                     className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold"
                     style={{
-                      backgroundColor: "#8A5A3B",
+                      backgroundColor: "#2A2118",
                       color: "#F3E8D6",
                       marginTop: 1,
                     }}
                   >
                     {i + 1}
                   </span>
-                  <span className="text-[11px] leading-relaxed" style={{ color: "#3A2E22" }}>
+                  <span className="text-[11px] leading-relaxed" style={{ color: "#2A2118" }}>
                     {line}
                   </span>
                 </li>
