@@ -73,7 +73,7 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
       >
         <UserMenu />
         <div className="flex rounded-full overflow-hidden"
-          style={{ border: "1px solid rgba(74,62,61,0.2)", background: "rgba(255,255,255,0.6)", backdropFilter: "blur(8px)" }}>
+          style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", backdropFilter: "blur(8px)" }}>
           {(["zh", "en"] as const).map((l) => (
             <motion.button
               key={l}
