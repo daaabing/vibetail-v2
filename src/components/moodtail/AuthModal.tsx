@@ -77,7 +77,7 @@ export default function AuthModal({ open, onClose }: { open: boolean; onClose: (
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-5"
-          style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}
+          style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)" }}
           onClick={onClose}
         >
           <motion.div
@@ -86,14 +86,20 @@ export default function AuthModal({ open, onClose }: { open: boolean; onClose: (
             exit={{ opacity: 0, scale: 0.94, y: 8 }}
             transition={{ type: "spring", damping: 22, stiffness: 260 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-sm glass-card rounded-2xl p-6 space-y-5"
-            style={{ background: "var(--app-bg, #FAF6F0)" }}
+            className="relative w-full max-w-sm rounded-3xl p-6 space-y-5"
+            style={{
+              background: "rgba(20,24,28,0.85)",
+              backdropFilter: "blur(28px) saturate(160%)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              boxShadow: "0 40px 100px -20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)",
+              color: "var(--app-text)",
+            }}
           >
             <button
               type="button"
               onClick={onClose}
               aria-label="close"
-              className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/5"
+              className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10"
               style={{ color: "var(--app-text-muted)" }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -101,7 +107,7 @@ export default function AuthModal({ open, onClose }: { open: boolean; onClose: (
               </svg>
             </button>
 
-            <h2 className="text-2xl font-semibold text-center" style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
+            <h2 className="text-3xl font-semibold text-center" style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
               {mode === "signin" ? T.signIn : T.signUp}
             </h2>
 
@@ -109,8 +115,8 @@ export default function AuthModal({ open, onClose }: { open: boolean; onClose: (
               type="button"
               onClick={onGoogle}
               disabled={busy}
-              className="w-full flex items-center justify-center gap-3 py-3 rounded-md font-semibold text-sm disabled:opacity-50"
-              style={{ background: "white", border: "1.5px solid rgba(74,62,61,0.2)", color: "var(--app-text)" }}
+              className="w-full flex items-center justify-center gap-3 py-3 rounded-full font-medium text-sm disabled:opacity-50 transition-colors hover:bg-white/10"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)", color: "var(--app-text)" }}
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -122,37 +128,38 @@ export default function AuthModal({ open, onClose }: { open: boolean; onClose: (
             </button>
 
             <div className="flex items-center gap-3 text-[10px] uppercase tracking-wider" style={{ color: "var(--app-text-muted)" }}>
-              <div className="flex-1 h-px" style={{ background: "rgba(74,62,61,0.15)" }} />
+              <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.10)" }} />
               {T.or}
-              <div className="flex-1 h-px" style={{ background: "rgba(74,62,61,0.15)" }} />
+              <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.10)" }} />
             </div>
 
             <form onSubmit={onSubmit} className="space-y-3">
               <input
                 type="email" required placeholder={T.email}
                 value={email} onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-md text-sm outline-none"
-                style={{ border: "1.5px solid rgba(74,62,61,0.2)", background: "rgba(255,255,255,0.7)" }}
+                className="w-full px-4 py-3 rounded-full text-sm outline-none placeholder:text-[var(--app-text-muted)]"
+                style={{ border: "1px solid rgba(255,255,255,0.14)", background: "rgba(255,255,255,0.04)", color: "var(--app-text)" }}
               />
               <input
                 type="password" required minLength={6} placeholder={T.password}
                 value={password} onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-md text-sm outline-none"
-                style={{ border: "1.5px solid rgba(74,62,61,0.2)", background: "rgba(255,255,255,0.7)" }}
+                className="w-full px-4 py-3 rounded-full text-sm outline-none placeholder:text-[var(--app-text-muted)]"
+                style={{ border: "1px solid rgba(255,255,255,0.14)", background: "rgba(255,255,255,0.04)", color: "var(--app-text)" }}
               />
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 type="submit" disabled={busy}
-                className="w-full py-3 rounded-md text-sm font-semibold tracking-wider disabled:opacity-50"
+                className="w-full py-3 rounded-full text-sm font-semibold tracking-wider disabled:opacity-50 relative overflow-hidden"
                 style={{
-                  background: "linear-gradient(135deg, #C2410C 0%, #E0533C 100%)",
+                  background: "linear-gradient(135deg, #A55841 0%, #C96F54 50%, #A55841 100%)",
                   color: "white",
-                  boxShadow: "2px 3px 12px rgba(194,65,12,0.25)",
+                  boxShadow: "0 8px 24px -6px rgba(201,111,84,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
                 }}
               >
                 {busy ? "…" : T.submit}
               </motion.button>
             </form>
+
 
             <button
               type="button"
