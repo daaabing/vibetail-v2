@@ -40,12 +40,12 @@ export default function BottomNav() {
       <nav
         className="fixed bottom-0 left-0 right-0 z-20 md:hidden"
         style={{
-          background: "rgba(250, 246, 240, 0.85)",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
-          borderTop: "1px solid rgba(210,201,189,0.4)",
+          background: "rgba(14, 15, 17, 0.75)",
+          backdropFilter: "blur(20px) saturate(160%)",
+          WebkitBackdropFilter: "blur(20px) saturate(160%)",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
           paddingBottom: "env(safe-area-inset-bottom)",
-          boxShadow: "0 -4px 20px rgba(0,0,0,0.06)",
+          boxShadow: "0 -4px 30px rgba(0,0,0,0.5)",
         }}
       >
         <div className="flex">

@@ -18,7 +18,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" },
-      { name: "theme-color", content: "#FAF6F0" },
+      { name: "theme-color", content: "#0E0F11" },
       { property: "og:site_name", content: "Vibetail" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -26,7 +26,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" },
       { rel: "stylesheet", href: appCss },
     ],
     scripts: [
@@ -63,7 +63,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         />
         <HeadContent />
       </head>
@@ -78,30 +78,24 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <LangProvider>
-        <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-          <div style={{
-            position: "absolute", top: "-10%", left: "-5%",
-            width: "60vw", height: "60vw", maxWidth: 400, maxHeight: 400,
+        <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0, background: "#0E0F11" }}>
+          <div className="absolute animate-blob-1" style={{
+            top: "-20%", left: "-10%", width: "60%", height: "60%",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(224,83,60,0.12) 0%, transparent 70%)",
-            filter: "blur(40px)",
-            animation: "liquid-blob-1 8s ease-in-out infinite",
+            background: "rgba(61,72,69,0.18)",
+            filter: "blur(140px)",
           }} />
-          <div style={{
-            position: "absolute", top: "30%", right: "-10%",
-            width: "50vw", height: "50vw", maxWidth: 350, maxHeight: 350,
+          <div className="absolute animate-blob-2" style={{
+            bottom: "-10%", right: "-10%", width: "55%", height: "55%",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(212,155,67,0.10) 0%, transparent 70%)",
-            filter: "blur(50px)",
-            animation: "liquid-blob-2 10s ease-in-out infinite",
+            background: "rgba(70,59,65,0.14)",
+            filter: "blur(130px)",
           }} />
-          <div style={{
-            position: "absolute", bottom: "10%", left: "20%",
-            width: "40vw", height: "40vw", maxWidth: 300, maxHeight: 300,
+          <div className="absolute animate-blob-3" style={{
+            top: "35%", right: "20%", width: "45%", height: "45%",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(141,163,130,0.08) 0%, transparent 70%)",
-            filter: "blur(60px)",
-            animation: "liquid-blob-3 12s ease-in-out infinite",
+            background: "rgba(42,48,62,0.14)",
+            filter: "blur(120px)",
           }} />
         </div>
         
