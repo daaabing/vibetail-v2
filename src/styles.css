@@ -6,7 +6,8 @@
 
 @theme inline {
   --font-heading: "Playfair Display", Georgia, serif;
-  --font-body: "Playfair Display", Georgia, serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
@@ -27,32 +28,33 @@
 }
 
 :root {
-  --app-primary: #E0533C;
-  --app-secondary: #D49B43;
-  --app-accent: #FAF6F0;
-  --app-surface: #FFFFFF;
-  --app-border: #D2C9BD;
-  --app-text: #1E1A16;
-  --app-text-secondary: #4A3E3D;
-  --app-text-muted: #635A4E;
-  --app-states-success: #8DA382;
+  /* Mood Lab dark morandi palette */
+  --app-primary: #8FA39E;         /* sage */
+  --app-secondary: #B89C8A;       /* dusty clay */
+  --app-accent: #16181D;
+  --app-surface: #16181D;
+  --app-border: rgba(255,255,255,0.08);
+  --app-text: #E0DED7;
+  --app-text-secondary: rgba(224,222,215,0.75);
+  --app-text-muted: rgba(224,222,215,0.5);
+  --app-states-success: #8FA39E;
 
-  --background: oklch(0.98 0.005 70);
-  --foreground: oklch(0.14 0.015 30);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.14 0.015 30);
-  --primary: oklch(0.55 0.17 28);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.96 0.01 70);
-  --secondary-foreground: oklch(0.30 0.01 30);
-  --muted: oklch(0.96 0.005 70);
-  --muted-foreground: oklch(0.55 0.01 30);
-  --accent: oklch(0.96 0.01 70);
-  --accent-foreground: oklch(0.30 0.01 30);
-  --destructive: oklch(0.50 0.18 28);
-  --border: oklch(0.87 0.01 60);
-  --input: oklch(0.87 0.01 60);
-  --ring: oklch(0.55 0.17 28);
+  --background: oklch(0.16 0.005 250);
+  --foreground: oklch(0.92 0.005 80);
+  --card: oklch(0.19 0.005 250);
+  --card-foreground: oklch(0.92 0.005 80);
+  --primary: oklch(0.72 0.03 170);
+  --primary-foreground: oklch(0.12 0 0);
+  --secondary: oklch(0.24 0.005 250);
+  --secondary-foreground: oklch(0.92 0.005 80);
+  --muted: oklch(0.22 0.005 250);
+  --muted-foreground: oklch(0.65 0.01 80);
+  --accent: oklch(0.24 0.005 250);
+  --accent-foreground: oklch(0.92 0.005 80);
+  --destructive: oklch(0.55 0.16 28);
+  --border: oklch(0.28 0.005 250);
+  --input: oklch(0.24 0.005 250);
+  --ring: oklch(0.72 0.03 170);
   --radius: 0.5rem;
 }
 
@@ -62,28 +64,25 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    background: linear-gradient(145deg, #fdf8f3 0%, #faf6f0 40%, #fef9f5 70%, #f8f3ec 100%);
-    background-attachment: fixed;
+    background: #0E0F11;
     color: var(--app-text);
-    font-family: "Playfair Display", Georgia, serif;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
     min-height: 100svh;
+    -webkit-font-smoothing: antialiased;
   }
 }
 
-@keyframes liquid-blob-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -20px) scale(1.05); }
-  66% { transform: translate(-20px, 15px) scale(0.95); }
+/* Slow morandi ambient drift — from Mood Lab */
+@keyframes ambient-float {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(30px, -50px) scale(1.1); }
+  66%  { transform: translate(-20px, 20px) scale(0.95); }
+  100% { transform: translate(0, 0) scale(1); }
 }
-@keyframes liquid-blob-2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  40% { transform: translate(-25px, 20px) scale(1.08); }
-  70% { transform: translate(15px, -15px) scale(0.92); }
-}
-@keyframes liquid-blob-3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(20px, -25px) scale(1.06); }
-}
+.animate-blob-1 { animation: ambient-float 15s infinite alternate ease-in-out; }
+.animate-blob-2 { animation: ambient-float 20s infinite alternate-reverse ease-in-out; animation-delay: 2s; }
+.animate-blob-3 { animation: ambient-float 18s infinite alternate ease-in-out; animation-delay: 4s; }
+
 @keyframes liquid-flow {
   0% { transform: translateX(-100%); }
   35% { transform: translateX(100%); }
@@ -91,55 +90,58 @@
 }
 @keyframes pulse-distill {
   0%, 100% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.28; transform: scale(1.1); }
+  50% { opacity: 0.32; transform: scale(1.1); }
 }
-.pulse-distill { animation: pulse-distill 3s ease-in-out infinite; }
+.pulse-distill { animation: pulse-distill 4s ease-in-out infinite; }
+
 @keyframes vibe-bottle-shake {
-  0% { transform: translate3d(0, 0, 0) rotate(-15deg); }
-  25% { transform: translate3d(8px, -12px, 0) rotate(15deg); }
-  50% { transform: translate3d(-8px, 4px, 0) rotate(-15deg); }
-  75% { transform: translate3d(8px, -12px, 0) rotate(15deg); }
+  0%   { transform: translate3d(0, 0, 0) rotate(-15deg); }
+  25%  { transform: translate3d(8px, -12px, 0) rotate(15deg); }
+  50%  { transform: translate3d(-8px, 4px, 0) rotate(-15deg); }
+  75%  { transform: translate3d(8px, -12px, 0) rotate(15deg); }
   100% { transform: translate3d(0, 0, 0) rotate(-15deg); }
 }
 @keyframes vibe-bottle-sway {
   0%, 100% { transform: translate3d(0, 0, 0) rotate(-4deg); }
-  50% { transform: translate3d(0, -3px, 0) rotate(4deg); }
+  50%      { transform: translate3d(0, -3px, 0) rotate(4deg); }
 }
-.vibe-bottle-shaker {
-  transform-origin: 50% 58%;
-  will-change: transform;
-}
-.vibe-bottle-shaker--mixing {
-  animation: vibe-bottle-shake 0.72s steps(4, end) infinite;
-}
-.vibe-bottle-shaker--idle {
-  animation: vibe-bottle-sway 4s ease-in-out infinite;
-}
+.vibe-bottle-shaker { transform-origin: 50% 58%; will-change: transform; }
+.vibe-bottle-shaker--mixing { animation: vibe-bottle-shake 0.72s steps(4, end) infinite; }
+.vibe-bottle-shaker--idle   { animation: vibe-bottle-sway 4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
   .vibe-bottle-shaker--mixing { animation-duration: 1.2s; }
   .vibe-bottle-shaker--idle { animation: none; }
 }
+
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 .shimmer {
-  background: linear-gradient(90deg, #f0ece6 25%, #faf6f0 50%, #f0ece6 75%);
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  animation: shimmer 1.8s infinite;
 }
+
+/* Glassmorphism — dark morandi */
 .glass-card {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow:
-    0 8px 32px 0 rgba(31, 38, 135, 0.08),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 25px 60px -20px rgba(0,0,0,0.6);
 }
 .glass-card-warm {
-  background: rgba(250, 246, 240, 0.85);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid rgba(210,201,189,0.5);
+  background: rgba(23, 23, 23, 0.55);
+  backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
+.glass-panel {
+  background: rgba(14, 15, 17, 0.65);
+  backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.01); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
