@@ -33,11 +33,12 @@
   --app-bg-charcoal: #12151A;
   --app-bg-coffee: #17120F;
 
-  --app-primary: #C96F54;          /* muted vermouth */
-  --app-secondary: #B98A87;        /* dusty rose */
-  --app-accent: #E7D9C6;           /* warm cream */
+  --app-primary: #8FA99B;          /* moonlit sage — cool glass accent */
+  --app-secondary: #748A9A;        /* cool moonlight blue */
+  --app-accent: #E7D9C6;           /* warm cream (text) */
   --app-accent-lav: #9A91B2;
   --app-accent-sage: #8FA99B;
+  --app-accent-vermouth: #C96F54;  /* reserved for vessel liquid only */
   --app-accent-blue: #748A9A;
 
   --app-surface: rgba(255,255,255,0.06);
