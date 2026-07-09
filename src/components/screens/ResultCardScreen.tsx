@@ -1090,7 +1090,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                   <path d="M4.5 12.75l6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               ) : (
-                <svg className="w-4 h-4" fill="none" stroke="var(--app-primary)" strokeWidth="2" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="var(--app-text-secondary)" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               )}
@@ -1111,7 +1111,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                   boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
                 }}
               >
-                <svg className="w-4 h-4" fill="none" stroke="var(--app-primary)" strokeWidth="2" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="var(--app-text-secondary)" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <span>{t("result.print")}</span>
@@ -1134,7 +1134,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                 boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
               }}
             >
-              <svg className="w-4 h-4" fill="none" stroke="var(--app-primary)" strokeWidth="2" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="var(--app-text-secondary)" strokeWidth="2" viewBox="0 0 24 24">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" strokeLinecap="round" strokeLinejoin="round" />
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" strokeLinecap="round" strokeLinejoin="round" />
