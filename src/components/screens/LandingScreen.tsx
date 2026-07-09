@@ -26,27 +26,29 @@ function InkButton({
       whileTap={{ scale: 0.96 }}
       whileHover={{ scale: 1.01 }}
       onClick={onClick}
-      className="w-full relative flex items-center justify-center gap-2 text-sm font-medium tracking-wider overflow-hidden"
+      className="w-full relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden"
       style={{
-        padding: "16px 24px",
-        borderRadius: "999px",
+        padding: "14px 24px",
+        borderRadius: "4px",
         background: primary
-          ? "linear-gradient(135deg, rgba(143,163,158,0.95) 0%, rgba(76,88,85,0.95) 100%)"
-          : "rgba(255,255,255,0.04)",
-        color: primary ? "#0E0F11" : "var(--app-text-secondary)",
-        border: primary ? "1px solid rgba(143,163,158,0.4)" : "1px solid rgba(255,255,255,0.1)",
-        backdropFilter: primary ? "none" : "blur(12px)",
+          ? "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)"
+          : "transparent",
+        color: primary ? "white" : "var(--app-text-secondary)",
+        border: primary ? "none" : "1.5px solid rgba(74,62,61,0.3)",
         boxShadow: primary
-          ? "0 10px 40px -10px rgba(143,163,158,0.35), inset 0 1px 0 rgba(255,255,255,0.2)"
-          : "0 4px 20px rgba(0,0,0,0.3)",
-        fontFamily: "var(--font-body)",
+          ? "2px 3px 12px rgba(194,65,12,0.25), inset 0 1px 0 rgba(255,255,255,0.15)"
+          : "1px 2px 8px rgba(0,0,0,0.06)",
       }}
     >
       {primary && (
         <span className="absolute inset-0 pointer-events-none" style={{
-          background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.22) 55%, transparent 75%)",
-          animation: "liquid-flow 5s linear infinite",
+          background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
+          animation: "liquid-flow 4s linear infinite",
         }} />
+      )}
+      {primary && (
+        <span className="absolute top-0 left-4 right-4 h-px pointer-events-none"
+          style={{ background: "rgba(255,255,255,0.3)" }} />
       )}
       <span className="relative z-10 flex items-center gap-2">{children}</span>
     </motion.button>
@@ -73,7 +75,7 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
       >
         <UserMenu />
         <div className="flex rounded-full overflow-hidden"
-          style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", backdropFilter: "blur(8px)" }}>
+          style={{ border: "1px solid rgba(74,62,61,0.2)", background: "rgba(255,255,255,0.6)", backdropFilter: "blur(8px)" }}>
           {(["zh", "en"] as const).map((l) => (
             <motion.button
               key={l}
@@ -82,7 +84,7 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
               className="px-3 py-1 text-[11px] font-semibold tracking-wider transition-all"
               style={{
                 background: lang === l ? "var(--app-primary)" : "transparent",
-                color: lang === l ? "#0E0F11" : "var(--app-text-muted)",
+                color: lang === l ? "white" : "var(--app-text-muted)",
                 borderRadius: "9999px",
               }}
             >

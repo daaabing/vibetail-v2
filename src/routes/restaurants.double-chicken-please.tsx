@@ -33,7 +33,7 @@ function DcpRoute() {
     return (
       <div
         className="w-full md:max-w-2xl lg:max-w-3xl md:mx-auto min-h-svh flex flex-col items-center justify-center px-6 py-10 text-center"
-        style={{ background: "transparent" }}
+        style={{ background: "linear-gradient(170deg, #fdf8f3 0%, #faf4ed 60%, #f8f0e8 100%)" }}
       >
         <VibetailLogo size={80} />
         <div className="mt-4 text-[10px] uppercase tracking-[0.3em]" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
@@ -50,7 +50,7 @@ function DcpRoute() {
           onClick={() => setStarted(true)}
           className="mt-8 px-8 py-3 rounded text-sm font-semibold tracking-wider text-white"
           style={{
-            background: "linear-gradient(135deg, rgba(143,163,158,0.95) 0%, rgba(76,88,85,0.95) 100%)",
+            background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
             boxShadow: "2px 3px 12px rgba(194,65,12,0.25), inset 0 1px 0 rgba(255,255,255,0.15)",
           }}
         >
