@@ -84,7 +84,7 @@ function RootComponent() {
             position: "absolute", top: "-10%", left: "-8%",
             width: "60vw", height: "60vw", maxWidth: 520, maxHeight: 520,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(143,169,155,0.18) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(153,185,198,0.18) 0%, transparent 70%)",
             filter: "blur(60px)",
             animation: "liquid-blob-1 12s ease-in-out infinite",
           }} />
@@ -92,7 +92,7 @@ function RootComponent() {
             position: "absolute", top: "25%", right: "-12%",
             width: "55vw", height: "55vw", maxWidth: 480, maxHeight: 480,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(154,145,178,0.18) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(183,169,179,0.18) 0%, transparent 70%)",
             filter: "blur(70px)",
             animation: "liquid-blob-2 14s ease-in-out infinite",
           }} />
@@ -100,10 +100,11 @@ function RootComponent() {
             position: "absolute", bottom: "-10%", left: "15%",
             width: "50vw", height: "50vw", maxWidth: 440, maxHeight: 440,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(116,138,154,0.18) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(169,180,161,0.18) 0%, transparent 70%)",
             filter: "blur(80px)",
             animation: "liquid-blob-3 16s ease-in-out infinite",
           }} />
+
         </div>
 
         <main className="flex-1 flex flex-col relative" style={{ zIndex: 1 }}>
