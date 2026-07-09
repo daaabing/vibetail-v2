@@ -904,7 +904,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           ref={captureRef}
           style={{
             width: 600,
-            background: "transparent",
+            background: "linear-gradient(170deg, #fdf8f3 0%, #faf0e6 60%, #f8ead8 100%)",
             padding: "40px 44px 44px",
             fontFamily: "var(--font-body)",
             color: "var(--app-text)",
