@@ -400,10 +400,6 @@ export default function MoodInputScreen({
               className="w-full relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden disabled:opacity-40"
               style={inkButtonStyle}
             >
-              <span className="absolute inset-0 pointer-events-none" style={{
-                background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-                animation: "liquid-flow 4s linear infinite",
-              }} />
               <span className="absolute top-0 left-4 right-4 h-px pointer-events-none" style={{ background: "rgba(255,255,255,0.3)" }} />
               <span className="relative z-10 flex items-center gap-2">
                 {t("mood.next")}
@@ -644,10 +640,6 @@ export default function MoodInputScreen({
               className="w-full relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden disabled:opacity-50"
               style={inkButtonStyle}
             >
-              <span className="absolute inset-0 pointer-events-none" style={{
-                background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-                animation: "liquid-flow 4s linear infinite",
-              }} />
               <span className="absolute top-0 left-4 right-4 h-px pointer-events-none" style={{ background: "rgba(255,255,255,0.3)" }} />
               <span className="relative z-10 flex items-center gap-2">
                 {isGenerating ? t("flavor.loading") : (lang === "zh" ? "调制我的酒" : "Mix My Drink")}

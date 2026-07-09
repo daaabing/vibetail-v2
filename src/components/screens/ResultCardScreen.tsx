@@ -1076,10 +1076,6 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                 boxShadow: "2px 3px 10px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
               }}
             >
-              <span className="absolute inset-0 pointer-events-none" style={{
-                background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-                animation: "liquid-flow 4s linear infinite",
-              }} />
               <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -1171,10 +1167,6 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               boxShadow: "2px 3px 10px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
             }}
           >
-            <span className="absolute inset-0 pointer-events-none" style={{
-              background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
-              animation: "liquid-flow 4s linear infinite",
-            }} />
             <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
