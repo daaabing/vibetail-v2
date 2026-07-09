@@ -1328,7 +1328,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           whileTap={{ scale: 0.96 }}
           onClick={() => isRestaurant ? goToRestaurant() : navigate({ to: "/mood-input" })}
           className="w-full text-xs font-semibold uppercase tracking-widest py-3 text-center block"
-          style={{ color: "var(--app-primary)" }}
+          style={{ color: "var(--app-primary)", fontFamily: "var(--font-heading)" }}
         >
           {t("result.another")}
         </motion.button>
