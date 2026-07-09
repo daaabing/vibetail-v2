@@ -144,9 +144,9 @@ export default function GalleryScreen() {
             className="text-xs font-semibold tracking-wider px-3 py-1.5 relative overflow-hidden"
             style={{
               borderRadius: "4px",
-              background: "linear-gradient(135deg, #A55841 0%, #C96F54 100%)",
+              background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
               color: "white",
-              boxShadow: "1px 2px 8px rgba(201,111,84,0.40)",
+              boxShadow: "1px 2px 8px rgba(0,0,0,0.45)",
             }}
           >
             {t("gallery.addVibe")}

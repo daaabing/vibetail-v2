@@ -15,9 +15,9 @@ import { track } from "@/lib/analytics";
 const inkButtonStyle = {
   padding: "14px 24px",
   borderRadius: "4px",
-  background: "linear-gradient(135deg, #A55841 0%, #C96F54 50%, #A55841 100%)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
   color: "white" as const,
-  boxShadow: "2px 3px 12px rgba(201,111,84,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
+  boxShadow: "2px 3px 12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
 };
 
 export default function MoodInputScreen({
@@ -433,7 +433,7 @@ export default function MoodInputScreen({
 
             {/* Vibe preview pill */}
             <div className="flex items-start gap-2 p-3 rounded-xl"
-              style={{ background: "rgba(201,111,84,0.12)", border: "1px solid rgba(201,111,84,0.45)" }}>
+              style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(0,0,0,0.45)" }}>
               <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="var(--app-primary)" strokeWidth="1.5" viewBox="0 0 24 24">
                 <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -595,9 +595,9 @@ export default function MoodInputScreen({
                       className="flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl text-left transition-all"
                       style={{
                         border: isSelected ? "1.5px solid var(--app-primary)" : "1px solid rgba(255,255,255,0.12)",
-                        backgroundColor: isSelected ? "rgba(201,111,84,0.14)" : "rgba(255,255,255,0.05)",
+                        backgroundColor: isSelected ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.05)",
                         backdropFilter: "blur(8px)",
-                        boxShadow: isSelected ? "0 0 0 3px rgba(201,111,84,0.18)" : "none",
+                        boxShadow: isSelected ? "0 0 0 3px rgba(0,0,0,0.45)" : "none",
                       }}
                     >
                       <span className="text-sm font-medium" style={{ color: "var(--app-text)" }}>
