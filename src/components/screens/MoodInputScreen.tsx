@@ -14,10 +14,10 @@ import { track } from "@/lib/analytics";
 
 const inkButtonStyle = {
   padding: "14px 24px",
-  borderRadius: "4px",
-  background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
-  color: "white" as const,
-  boxShadow: "2px 3px 12px rgba(194,65,12,0.25), inset 0 1px 0 rgba(255,255,255,0.15)",
+  borderRadius: "999px",
+  background: "linear-gradient(135deg, rgba(143,163,158,0.95) 0%, rgba(76,88,85,0.95) 100%)",
+  color: "#0E0F11" as const,
+  boxShadow: "0 10px 40px -10px rgba(143,163,158,0.35), inset 0 1px 0 rgba(255,255,255,0.15)",
 };
 
 export default function MoodInputScreen({
@@ -238,7 +238,7 @@ export default function MoodInputScreen({
   return (
     <div
       className="w-full md:max-w-2xl lg:max-w-3xl md:mx-auto min-h-svh"
-      style={{ background: "linear-gradient(170deg, #fdf8f3 0%, #faf4ed 60%, #f8f0e8 100%)" }}
+      style={{ background: "transparent" }}
     >
       {/* ── Top bar ── */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
@@ -328,7 +328,7 @@ export default function MoodInputScreen({
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
                       style={{
                         border: isSelected ? `1.5px solid ${chip.color}` : "1px solid var(--app-border)",
-                        backgroundColor: isSelected ? `${chip.color}18` : "rgba(255,255,255,0.65)",
+                        backgroundColor: isSelected ? `${chip.color}18` : "rgba(255,255,255,0.04)",
                         backdropFilter: "blur(6px)",
                         color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
                         fontWeight: isSelected ? 600 : 400,
@@ -371,7 +371,7 @@ export default function MoodInputScreen({
                 className="w-full rounded-xl p-4 resize-none leading-relaxed"
                 style={{
                   minHeight: 96, fontSize: 16,
-                  backgroundColor: "rgba(255,255,255,0.75)",
+                  backgroundColor: "rgba(255,255,255,0.04)",
                   backdropFilter: "blur(8px)",
                   border: "1px solid var(--app-border)",
                   color: "var(--app-text)",
@@ -433,7 +433,7 @@ export default function MoodInputScreen({
 
             {/* Vibe preview pill */}
             <div className="flex items-start gap-2 p-3 rounded-xl"
-              style={{ background: "rgba(224,83,60,0.07)", border: "1px solid rgba(224,83,60,0.2)" }}>
+              style={{ background: "rgba(143,163,158,0.08)", border: "1px solid rgba(143,163,158,0.3)" }}>
               <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="var(--app-primary)" strokeWidth="1.5" viewBox="0 0 24 24">
                 <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -459,7 +459,7 @@ export default function MoodInputScreen({
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
                       style={{
                         border: isSelected ? `1.5px solid ${chip.color}` : "1px solid var(--app-border)",
-                        backgroundColor: isSelected ? `${chip.color}18` : "rgba(255,255,255,0.6)",
+                        backgroundColor: isSelected ? `${chip.color}18` : "rgba(255,255,255,0.04)",
                         backdropFilter: "blur(6px)",
                         color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
                         fontWeight: isSelected ? 600 : 400,
@@ -495,7 +495,7 @@ export default function MoodInputScreen({
                       onClick={() => setSpiritOpen((v) => !v)}
                       className="w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm transition-all"
                       style={{
-                        backgroundColor: "rgba(255,255,255,0.7)",
+                        backgroundColor: "rgba(255,255,255,0.04)",
                         backdropFilter: "blur(8px)",
                         border: selected ? `1.5px solid ${selected.color}` : "1px solid var(--app-border)",
                         color: "var(--app-text)",
@@ -533,7 +533,7 @@ export default function MoodInputScreen({
                           transition={{ duration: 0.15 }}
                           className="absolute z-20 mt-1.5 w-full rounded-xl overflow-hidden max-h-80 overflow-y-auto"
                           style={{
-                            backgroundColor: "rgba(255,253,250,0.98)",
+                            backgroundColor: "rgba(23,23,23,0.9)",
                             backdropFilter: "blur(12px)",
                             border: "1px solid var(--app-border)",
                             boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
@@ -595,7 +595,7 @@ export default function MoodInputScreen({
                       className="flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl text-left transition-all"
                       style={{
                         border: isSelected ? "1.5px solid var(--app-primary)" : "1px solid var(--app-border)",
-                        backgroundColor: isSelected ? "rgba(224,83,60,0.08)" : "rgba(255,255,255,0.7)",
+                        backgroundColor: isSelected ? "rgba(143,163,158,0.12)" : "rgba(255,255,255,0.04)",
                         backdropFilter: "blur(8px)",
                         boxShadow: isSelected ? "0 0 0 3px rgba(224,83,60,0.12)" : "none",
                       }}
@@ -625,7 +625,7 @@ export default function MoodInputScreen({
                 type="text"
                 className="w-full rounded-xl px-4 py-3 text-sm"
                 style={{
-                  backgroundColor: "rgba(255,255,255,0.7)",
+                  backgroundColor: "rgba(255,255,255,0.04)",
                   backdropFilter: "blur(8px)",
                   border: "1px solid var(--app-border)",
                   color: "var(--app-text)", outline: "none",
