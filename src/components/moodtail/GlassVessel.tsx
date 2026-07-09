@@ -120,7 +120,7 @@ export default function GlassVessel({
       </motion.div>
 
       {/* Drifting particles around vessel */}
-      {!isThumb && mode !== "thumb" && (
+      {!isThumb && (
         <div className="absolute inset-0 pointer-events-none">
           {[0, 1, 2, 3, 4, 5].map((i) => {
             const angle = (i / 6) * Math.PI * 2;
