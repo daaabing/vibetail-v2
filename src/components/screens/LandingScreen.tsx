@@ -38,12 +38,6 @@ function GlassButton({
         backdropFilter: "blur(20px) saturate(140%)",
       }}
     >
-      {primary && (
-        <span className="absolute inset-0 pointer-events-none" style={{
-          background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.22) 55%, transparent 75%)",
-          animation: "liquid-flow 4s linear infinite",
-        }} />
-      )}
       <span className="relative z-10 flex items-center gap-2">{children}</span>
     </motion.button>
   );
