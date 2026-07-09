@@ -120,10 +120,10 @@
   transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
 }
 @utility glass-chip-active {
-  background: rgba(143,169,155,0.16);
-  border: 1px solid rgba(143,169,155,0.55);
+  background: rgba(153,185,198,0.16);
+  border: 1px solid rgba(153,185,198,0.55);
   color: var(--app-text);
-  box-shadow: 0 0 0 3px rgba(143,169,155,0.10), 0 0 18px rgba(143,169,155,0.30);
+  box-shadow: 0 0 0 3px rgba(153,185,198,0.10), 0 0 18px rgba(153,185,198,0.30);
 }
 @utility glass-input {
   background: rgba(255,255,255,0.04);
@@ -133,8 +133,8 @@
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 @utility glass-input-focus {
-  border-color: rgba(143,169,155,0.55);
-  box-shadow: 0 0 0 3px rgba(143,169,155,0.16), 0 0 24px rgba(143,169,155,0.24);
+  border-color: rgba(153,185,198,0.55);
+  box-shadow: 0 0 0 3px rgba(153,185,198,0.16), 0 0 24px rgba(153,185,198,0.24);
 }
 
 /* ── Ambient / motion ── */
