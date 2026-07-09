@@ -95,8 +95,11 @@
     font-family: var(--font-body);
     min-height: 100svh;
   }
-  button, input, textarea, select, optgroup {
+  input, textarea, select, optgroup {
     font-family: inherit;
+  }
+  button, [role="button"], a[class*="button"] {
+    font-family: var(--font-heading);
   }
   h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 }
