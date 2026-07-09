@@ -100,7 +100,7 @@ function RootComponent() {
             position: "absolute", bottom: "-10%", left: "15%",
             width: "50vw", height: "50vw", maxWidth: 440, maxHeight: 440,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(201,111,84,0.18) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(116,138,154,0.18) 0%, transparent 70%)",
             filter: "blur(80px)",
             animation: "liquid-blob-3 16s ease-in-out infinite",
           }} />

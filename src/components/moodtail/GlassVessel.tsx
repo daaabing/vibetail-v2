@@ -11,7 +11,7 @@ interface GlassVesselProps {
 
 function hexToRgba(hex: string, a: number): string {
   const m = hex.replace("#", "");
-  if (m.length !== 6) return `rgba(201,111,84,${a})`;
+  if (m.length !== 6) return `rgba(143,169,155,${a})`;
   const r = parseInt(m.slice(0, 2), 16);
   const g = parseInt(m.slice(2, 4), 16);
   const b = parseInt(m.slice(4, 6), 16);
@@ -25,7 +25,7 @@ function hexToRgba(hex: string, a: number): string {
  */
 export default function GlassVessel({
   size = 220,
-  color = "#C96F54",
+  color = "#8FA99B",
   mode = "idle",
   glow = true,
 }: GlassVesselProps) {
