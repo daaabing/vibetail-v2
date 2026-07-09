@@ -592,16 +592,16 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
           ctx.fillStyle = "#4a3e3d";
           ctx.textBaseline = "top";
-          ctx.font = `600 ${Math.round(bandH * 0.16)}px Georgia, "Times New Roman", serif`;
+          ctx.font = `600 ${Math.round(bandH * 0.16)}px "Cormorant Garamond", Georgia, serif`;
           const sloganY = H + Math.round(bandH * 0.16);
           wrapText(ctx, slogan, textX, sloganY, textW, Math.round(bandH * 0.19));
 
           ctx.fillStyle = "#c2410c";
-          ctx.font = `700 ${Math.round(bandH * 0.11)}px system-ui, -apple-system, sans-serif`;
+          ctx.font = `700 ${Math.round(bandH * 0.11)}px "Inter", system-ui, -apple-system, sans-serif`;
           ctx.fillText(scanLine, textX, H + Math.round(bandH * 0.58));
 
           ctx.fillStyle = "#4a3e3d";
-          ctx.font = `500 ${Math.round(bandH * 0.10)}px system-ui, -apple-system, sans-serif`;
+          ctx.font = `500 ${Math.round(bandH * 0.10)}px "Inter", system-ui, -apple-system, sans-serif`;
           ctx.fillText(igLine, textX, H + Math.round(bandH * 0.78));
         };
 
