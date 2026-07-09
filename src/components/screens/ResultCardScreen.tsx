@@ -148,7 +148,13 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
             src={imageUrl}
             alt={cocktail.cocktailName}
             className="w-full h-full object-contain"
-            style={{ mixBlendMode: "multiply" }}
+            style={{
+              mixBlendMode: "multiply",
+              WebkitMaskImage:
+                "radial-gradient(ellipse at center, black 55%, rgba(0,0,0,0.85) 75%, transparent 100%)",
+              maskImage:
+                "radial-gradient(ellipse at center, black 55%, rgba(0,0,0,0.85) 75%, transparent 100%)",
+            }}
           />
         ) : imageLoading ? (
           <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
@@ -162,8 +168,15 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
             src={`data:image/png;base64,${imageData}`}
             alt={cocktail.cocktailName}
             className="w-full h-full object-contain"
-            style={{ mixBlendMode: "multiply" }}
+            style={{
+              mixBlendMode: "multiply",
+              WebkitMaskImage:
+                "radial-gradient(ellipse at center, black 55%, rgba(0,0,0,0.85) 75%, transparent 100%)",
+              maskImage:
+                "radial-gradient(ellipse at center, black 55%, rgba(0,0,0,0.85) 75%, transparent 100%)",
+            }}
           />
+
         ) : (
           <div className="flex items-center justify-center w-full h-full">
             <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#6B5C48" strokeWidth="0.8" opacity="0.5">
