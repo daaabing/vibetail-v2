@@ -885,7 +885,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   return (
     <div className="min-h-svh flex flex-col w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative"
-      style={{ background: "linear-gradient(170deg, #fdf8f3 0%, #faf4ed 60%, #f8f0e8 100%)" }}>
+      style={{ background: "transparent" }}>
 
       {/* Offscreen capture target — flat long image, no card frame */}
       <div
@@ -1057,7 +1057,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               className="py-2 px-3 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
               style={{
                 borderRadius: "4px",
-                background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+                background: "linear-gradient(135deg, rgba(143,163,158,0.95) 0%, rgba(76,88,85,0.95) 100%)",
                 color: "white",
                 boxShadow: "2px 3px 10px rgba(194,65,12,0.22), inset 0 1px 0 rgba(255,255,255,0.15)",
               }}
@@ -1152,7 +1152,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             className="w-full py-2 px-4 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
             style={{
               borderRadius: "4px",
-              background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+              background: "linear-gradient(135deg, rgba(143,163,158,0.95) 0%, rgba(76,88,85,0.95) 100%)",
               color: "white",
               boxShadow: "2px 3px 10px rgba(194,65,12,0.22), inset 0 1px 0 rgba(255,255,255,0.15)",
             }}
@@ -1348,7 +1348,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                   onClick={() => { setShowFramePicker(false); handlePrint(selectedFrameId); }}
                   className="flex-1 py-3 text-xs font-semibold tracking-wider uppercase rounded transition"
                   style={{
-                    background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+                    background: "linear-gradient(135deg, rgba(143,163,158,0.95) 0%, rgba(76,88,85,0.95) 100%)",
                     color: "white",
                     border: "none",
                     boxShadow: "2px 3px 12px rgba(194,65,12,0.25)",
@@ -1479,7 +1479,7 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
           disabled={status !== "idle"}
           className="px-4 py-2.5 text-xs font-semibold tracking-wider rounded-md disabled:opacity-60 whitespace-nowrap"
           style={{
-            background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+            background: "linear-gradient(135deg, rgba(143,163,158,0.95) 0%, rgba(76,88,85,0.95) 100%)",
             color: "white",
             boxShadow: "0 2px 8px rgba(194,65,12,0.25)",
           }}
