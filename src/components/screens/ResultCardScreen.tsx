@@ -25,6 +25,158 @@ function simplifyIngredient(name: string): string {
     .trim();
 }
 
+const parchmentImageCache = new Map<string, Promise<string>>();
+
+function isNearBackgroundColor(r: number, g: number, b: number, a: number, bg: [number, number, number], loose = false) {
+  if (a < 8) return true;
+  const luma = r * 0.299 + g * 0.587 + b * 0.114;
+  const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+  const distance = Math.hypot(r - bg[0], g - bg[1], b - bg[2]);
+  return luma > (loose ? 155 : 172) && chroma < (loose ? 92 : 74) && distance < (loose ? 96 : 72);
+}
+
+async function removeConnectedLightBackground(source: string): Promise<string> {
+  if (typeof window === "undefined") return source;
+  if (parchmentImageCache.has(source)) return parchmentImageCache.get(source)!;
+
+  const promise = new Promise<string>((resolve) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth || image.width;
+        canvas.height = image.naturalHeight || image.height;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        if (!ctx || !canvas.width || !canvas.height) {
+          resolve(source);
+          return;
+        }
+
+        ctx.drawImage(image, 0, 0);
+        const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const { data, width, height } = frame;
+        const edgeSamples: number[][] = [];
+        const collect = (x: number, y: number) => {
+          const i = (y * width + x) * 4;
+          if (data[i + 3] > 8) edgeSamples.push([data[i], data[i + 1], data[i + 2]]);
+        };
+
+        for (let x = 0; x < width; x += 2) {
+          collect(x, 0);
+          collect(x, height - 1);
+        }
+        for (let y = 0; y < height; y += 2) {
+          collect(0, y);
+          collect(width - 1, y);
+        }
+
+        const median = (channel: number) => {
+          const values = edgeSamples.map((sample) => sample[channel]).sort((a, b) => a - b);
+          return values.length ? values[Math.floor(values.length / 2)] : 242;
+        };
+        const bg: [number, number, number] = [median(0), median(1), median(2)];
+        const total = width * height;
+        const mask = new Uint8Array(total);
+        const queue = new Int32Array(total);
+        let head = 0;
+        let tail = 0;
+
+        const trySeed = (x: number, y: number) => {
+          const pixel = y * width + x;
+          if (mask[pixel]) return;
+          const i = pixel * 4;
+          if (isNearBackgroundColor(data[i], data[i + 1], data[i + 2], data[i + 3], bg)) {
+            mask[pixel] = 1;
+            queue[tail++] = pixel;
+          }
+        };
+
+        for (let x = 0; x < width; x++) {
+          trySeed(x, 0);
+          trySeed(x, height - 1);
+        }
+        for (let y = 0; y < height; y++) {
+          trySeed(0, y);
+          trySeed(width - 1, y);
+        }
+
+        while (head < tail) {
+          const pixel = queue[head++];
+          const x = pixel % width;
+          const y = Math.floor(pixel / width);
+          const neighbors = [pixel - 1, pixel + 1, pixel - width, pixel + width];
+          for (const next of neighbors) {
+            if (next < 0 || next >= total || mask[next]) continue;
+            if ((next === pixel - 1 && x === 0) || (next === pixel + 1 && x === width - 1)) continue;
+            const i = next * 4;
+            if (isNearBackgroundColor(data[i], data[i + 1], data[i + 2], data[i + 3], bg)) {
+              mask[next] = 1;
+              queue[tail++] = next;
+            }
+          }
+        }
+
+        for (let pass = 0; pass < 3; pass++) {
+          const expanded = new Uint8Array(mask);
+          for (let pixel = 0; pixel < total; pixel++) {
+            if (mask[pixel]) continue;
+            const x = pixel % width;
+            const y = Math.floor(pixel / width);
+            const touchesMask =
+              (x > 0 && mask[pixel - 1]) ||
+              (x < width - 1 && mask[pixel + 1]) ||
+              (y > 0 && mask[pixel - width]) ||
+              (y < height - 1 && mask[pixel + width]);
+            if (!touchesMask) continue;
+            const i = pixel * 4;
+            if (isNearBackgroundColor(data[i], data[i + 1], data[i + 2], data[i + 3], bg, true)) {
+              expanded[pixel] = 1;
+            }
+          }
+          mask.set(expanded);
+        }
+
+        for (let pixel = 0; pixel < total; pixel++) {
+          if (mask[pixel]) data[pixel * 4 + 3] = 0;
+        }
+
+        ctx.putImageData(frame, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      } catch {
+        resolve(source);
+      }
+    };
+    image.onerror = () => resolve(source);
+    image.src = source;
+  });
+
+  parchmentImageCache.set(source, promise);
+  return promise;
+}
+
+function useParchmentImage(source: string | null) {
+  const [processedSource, setProcessedSource] = useState<string | null>(source);
+
+  useEffect(() => {
+    let active = true;
+    setProcessedSource(source);
+    if (!source) return () => {
+      active = false;
+    };
+
+    removeConnectedLightBackground(source).then((result) => {
+      if (active) setProcessedSource(result);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [source]);
+
+  return processedSource;
+}
+
 interface ResultCardScreenProps {
   id: string;
 }
@@ -127,6 +279,9 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
   tapHint: string;
   distillingText: string;
 }) {
+  const rawImageSource = imageUrl ?? (imageData ? `data:image/png;base64,${imageData}` : null);
+  const parchmentImageSource = useParchmentImage(rawImageSource);
+
   return (
     <div
       className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col"
@@ -143,17 +298,18 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
     >
       {/* AI illustration — sits directly on the parchment card, no separate frame */}
       <div className="mx-4 mt-4 flex-shrink-0 flex items-center justify-center h-[250px] md:h-[340px] relative">
-        {imageUrl ? (
+        {rawImageSource ? (
           <img
-            src={imageUrl}
+            src={parchmentImageSource ?? rawImageSource}
             alt={cocktail.cocktailName}
-            className="w-full h-full object-contain"
+            className="w-[112%] h-[112%] object-contain max-w-none"
             style={{
-              mixBlendMode: "multiply",
+              mixBlendMode: "normal",
+              filter: "contrast(1.05) saturate(0.96)",
               WebkitMaskImage:
-                "radial-gradient(ellipse at center, black 55%, rgba(0,0,0,0.85) 75%, transparent 100%)",
+                "radial-gradient(ellipse at center, black 38%, rgba(0,0,0,0.92) 52%, rgba(0,0,0,0.55) 66%, rgba(0,0,0,0.18) 78%, transparent 90%)",
               maskImage:
-                "radial-gradient(ellipse at center, black 55%, rgba(0,0,0,0.85) 75%, transparent 100%)",
+                "radial-gradient(ellipse at center, black 38%, rgba(0,0,0,0.92) 52%, rgba(0,0,0,0.55) 66%, rgba(0,0,0,0.18) 78%, transparent 90%)",
             }}
           />
         ) : imageLoading ? (
@@ -163,20 +319,6 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
               {distillingText}
             </p>
           </div>
-        ) : imageData ? (
-          <img
-            src={`data:image/png;base64,${imageData}`}
-            alt={cocktail.cocktailName}
-            className="w-full h-full object-contain"
-            style={{
-              mixBlendMode: "multiply",
-              WebkitMaskImage:
-                "radial-gradient(ellipse at center, black 55%, rgba(0,0,0,0.85) 75%, transparent 100%)",
-              maskImage:
-                "radial-gradient(ellipse at center, black 55%, rgba(0,0,0,0.85) 75%, transparent 100%)",
-            }}
-          />
-
         ) : (
           <div className="flex items-center justify-center w-full h-full">
             <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#6B5C48" strokeWidth="0.8" opacity="0.5">
