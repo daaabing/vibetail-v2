@@ -249,24 +249,20 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
         backfaceVisibility: "hidden",
         WebkitBackfaceVisibility: "hidden",
         transform: "rotateY(180deg)",
-        background: "linear-gradient(160deg, rgba(30,34,40,0.72) 0%, rgba(20,24,28,0.85) 100%)",
-        border: "1px solid rgba(255,255,255,0.10)",
-        boxShadow: "0 24px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)",
+        background:
+          "radial-gradient(ellipse at 50% 35%, #F3E8D6 0%, #E9DBC4 55%, #C9B79A 100%)",
+        border: "1px solid rgba(80,60,40,0.18)",
+        boxShadow:
+          "0 24px 60px rgba(0,0,0,0.55), inset 0 0 80px rgba(80,55,30,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",
       }}
     >
-      {/* Subtle warm blobs */}
-      <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(0,0,0,0.45) 0%, transparent 70%)", filter: "blur(30px)" }} />
-      <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(212,155,67,0.08) 0%, transparent 70%)", filter: "blur(30px)" }} />
-
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-6 pt-6 pb-4 relative z-10" style={{ scrollbarWidth: "none" }}>
 
         {/* Header — name only */}
-        <div className="mb-4 pb-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
+        <div className="mb-4 pb-3" style={{ borderBottom: "1px solid rgba(80,55,30,0.20)" }}>
           <h3 className="font-semibold leading-tight"
-            style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)", fontSize: "1.3rem" }}>
+            style={{ fontFamily: "var(--font-heading)", color: "#2A2118", fontSize: "1.3rem" }}>
             {cocktail.cocktailName}
           </h3>
         </div>
@@ -274,12 +270,12 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
         {/* Order this — only when matched from menu */}
         {cocktail.matchedFromMenu && (
           <div className="mb-4 p-3 rounded-xl"
-            style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(0,0,0,0.45)" }}>
+            style={{ background: "rgba(80,55,30,0.08)", border: "1px solid rgba(80,55,30,0.18)" }}>
             <span className="text-[8px] tracking-widest uppercase block mb-1.5"
-              style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
+              style={{ fontFamily: "var(--font-body)", color: "#8A5A3B" }}>
               {cocktail.lang === "zh" ? "点这杯" : "Order this"}
             </span>
-            <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
+            <p className="text-xs leading-relaxed" style={{ color: "#3A2E22" }}>
               {cocktail.menuItemName || cocktail.cocktailName}
               {cocktail.menuPrice ? ` · ${cocktail.menuPrice}` : ""}
               {cocktail.restaurantName ? ` @ ${cocktail.restaurantName}` : ""}
@@ -292,13 +288,13 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
 
         {/* Original vibe */}
         <div className="mb-4 p-3 rounded-xl"
-          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          style={{ background: "rgba(80,55,30,0.05)", border: "1px solid rgba(80,55,30,0.15)" }}>
           <span className="text-[8px] tracking-widest uppercase block mb-1"
-            style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+            style={{ fontFamily: "var(--font-body)", color: "#8A7A62" }}>
             {labels.originalVibe}
           </span>
           <p className="text-xs leading-relaxed"
-            style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-text-secondary)" }}>
+            style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "#3A2E22" }}>
             "{cocktail.originalMood}"
           </p>
         </div>
@@ -306,10 +302,10 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
         {/* Tasting notes */}
         <div className="mb-4">
           <span className="text-[8px] tracking-widest uppercase block mb-1.5"
-            style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+            style={{ fontFamily: "var(--font-body)", color: "#8A7A62" }}>
             {labels.tastingNotes}
           </span>
-          <p className="text-xs leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
+          <p className="text-xs leading-relaxed" style={{ color: "#3A2E22" }}>
             {cocktail.tastesLike}
           </p>
         </div>
@@ -320,20 +316,20 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
         {/* Ingredients */}
         <div className="mb-4">
           <span className="text-[8px] tracking-widest uppercase block mb-2"
-            style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
+            style={{ fontFamily: "var(--font-body)", color: "#8A7A62" }}>
             {labels.ingredients}
           </span>
           <ul className="space-y-1.5">
             {(cocktail.ingredients as string[]).map((ing, i) => (
               <li key={i} className="flex items-start gap-2 text-[11px]"
-                style={{ color: "var(--app-text-secondary)" }}>
+                style={{ color: "#3A2E22" }}>
                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: "var(--app-primary)" }} />
+                  style={{ backgroundColor: "#8A5A3B" }} />
                 {simplifyIngredient(ing)}
               </li>
             ))}
           </ul>
-          <p className="text-[9px] mt-2 italic" style={{ color: "var(--app-text-muted)" }}>
+          <p className="text-[9px] mt-2 italic" style={{ color: "#8A7A62" }}>
             {labels.ingredientsBar}
           </p>
         </div>
@@ -341,9 +337,9 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
         {/* Recipe — numbered steps */}
         {!hideRecipe && (
           <div className="mb-4 p-3 rounded-xl"
-            style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(0,0,0,0.45)" }}>
+            style={{ background: "rgba(80,55,30,0.08)", border: "1px solid rgba(80,55,30,0.18)" }}>
             <span className="text-[8px] tracking-widest uppercase block mb-3"
-              style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
+              style={{ fontFamily: "var(--font-body)", color: "#8A5A3B" }}>
               {labels.howToMake}
             </span>
             <ol className="space-y-2.5">
@@ -352,14 +348,14 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
                   <span
                     className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold"
                     style={{
-                      backgroundColor: "var(--app-primary)",
-                      color: "white",
+                      backgroundColor: "#8A5A3B",
+                      color: "#F3E8D6",
                       marginTop: 1,
                     }}
                   >
                     {i + 1}
                   </span>
-                  <span className="text-[11px] leading-relaxed" style={{ color: "var(--app-text-secondary)" }}>
+                  <span className="text-[11px] leading-relaxed" style={{ color: "#3A2E22" }}>
                     {line}
                   </span>
                 </li>
@@ -373,7 +369,8 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
       {/* Tap hint */}
       <div className="pb-5 flex justify-center flex-shrink-0 relative z-10">
         <span className="text-[9px] tracking-widest flex items-center gap-1.5"
-          style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
+          style={{ color: "#8A7A62", fontFamily: "var(--font-body)" }}>
+
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
