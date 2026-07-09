@@ -78,30 +78,24 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <LangProvider>
-        <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-          <div style={{
-            position: "absolute", top: "-10%", left: "-5%",
-            width: "60vw", height: "60vw", maxWidth: 400, maxHeight: 400,
+        <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0, background: "#0E0F11" }}>
+          <div className="absolute animate-blob-1" style={{
+            top: "-20%", left: "-10%", width: "60%", height: "60%",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(224,83,60,0.12) 0%, transparent 70%)",
-            filter: "blur(40px)",
-            animation: "liquid-blob-1 8s ease-in-out infinite",
+            background: "rgba(61,72,69,0.18)",
+            filter: "blur(140px)",
           }} />
-          <div style={{
-            position: "absolute", top: "30%", right: "-10%",
-            width: "50vw", height: "50vw", maxWidth: 350, maxHeight: 350,
+          <div className="absolute animate-blob-2" style={{
+            bottom: "-10%", right: "-10%", width: "55%", height: "55%",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(212,155,67,0.10) 0%, transparent 70%)",
-            filter: "blur(50px)",
-            animation: "liquid-blob-2 10s ease-in-out infinite",
+            background: "rgba(70,59,65,0.14)",
+            filter: "blur(130px)",
           }} />
-          <div style={{
-            position: "absolute", bottom: "10%", left: "20%",
-            width: "40vw", height: "40vw", maxWidth: 300, maxHeight: 300,
+          <div className="absolute animate-blob-3" style={{
+            top: "35%", right: "20%", width: "45%", height: "45%",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(141,163,130,0.08) 0%, transparent 70%)",
-            filter: "blur(60px)",
-            animation: "liquid-blob-3 12s ease-in-out infinite",
+            background: "rgba(42,48,62,0.14)",
+            filter: "blur(120px)",
           }} />
         </div>
         
