@@ -85,7 +85,7 @@ export default function BottomNav() {
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
               </svg>
             </motion.div>
-            <span className="text-[10px] font-medium tracking-wide" style={{ color: "var(--app-text-muted)" }}>Instagram</span>
+            <span className="text-[10px] font-medium tracking-wide" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-heading)" }}>Instagram</span>
           </a>
         </div>
       </nav>
