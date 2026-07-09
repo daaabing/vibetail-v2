@@ -1312,7 +1312,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span className="relative z-10">
+            <span className="relative z-10" style={{ fontFamily: "var(--font-heading)" }}>
               {persisting
                 ? (lang === "zh" ? "保存中…" : "Saving…")
                 : (lang === "zh" ? "保存到 Vibe Bar" : "Save to Vibe Bar")}
