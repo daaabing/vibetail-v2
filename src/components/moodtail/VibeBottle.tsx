@@ -13,7 +13,7 @@ interface VibeBottleProps {
 
 /** Backwards-compat wrapper. All existing call sites keep working. */
 export default function VibeBottle({
-  color = "#8FA99B",
+  color = "#99B9C6",
   size = 220,
   mode = "idle",
   glow = true,

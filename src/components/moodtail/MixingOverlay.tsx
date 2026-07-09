@@ -10,7 +10,7 @@ interface MixingOverlayProps {
   lines: string[];
 }
 
-export default function MixingOverlay({ open, color = "#8FA99B", lines }: MixingOverlayProps) {
+export default function MixingOverlay({ open, color = "#99B9C6", lines }: MixingOverlayProps) {
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {
