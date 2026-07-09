@@ -40,12 +40,11 @@ export default function BottomNav() {
       <nav
         className="fixed bottom-0 left-0 right-0 z-20 md:hidden"
         style={{
-          background: "rgba(250, 246, 240, 0.85)",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
-          borderTop: "1px solid rgba(210,201,189,0.4)",
+          background: "rgba(18,21,26,0.72)",
+          backdropFilter: "blur(24px) saturate(160%)",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
           paddingBottom: "env(safe-area-inset-bottom)",
-          boxShadow: "0 -4px 20px rgba(0,0,0,0.06)",
+          boxShadow: "0 -12px 32px rgba(0,0,0,0.5)",
         }}
       >
         <div className="flex">
@@ -57,21 +56,21 @@ export default function BottomNav() {
               <button
                 key={tab.to}
                 onClick={() => {
-                  if (isGallery && !user) {
-                    setShowAuth(true);
-                    return;
-                  }
+                  if (isGallery && !user) { setShowAuth(true); return; }
                   navigate({ to: tab.to as any });
                 }}
-                className="flex-1 flex flex-col items-center gap-1 py-3"
+                className="flex-1 flex flex-col items-center gap-1 py-3 relative"
               >
+                {isActive && (
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full"
+                    style={{ background: "var(--app-primary)", boxShadow: "0 0 10px var(--app-primary)" }} />
+                )}
                 <motion.div whileTap={{ scale: 0.85 }} style={{ color }}>{tab.icon}</motion.div>
                 <span className="text-[10px] font-medium tracking-wide" style={{ color }}>{tab.label}</span>
               </button>
             );
           })}
 
-          {/* Instagram follow */}
           <a
             href="https://instagram.com/vibe.tail"
             target="_blank"
