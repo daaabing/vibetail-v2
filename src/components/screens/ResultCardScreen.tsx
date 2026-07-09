@@ -139,19 +139,31 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
         boxShadow: "0 24px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)",
       }}
     >
-      {/* AI illustration — fixed height, object-contain so full image is visible */}
-      <div className="mx-4 mt-4 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center h-[250px] md:h-[340px]"
-        style={{ background: "rgba(255,255,255,0.04)" }}>
+      {/* AI illustration — parchment-tinted vessel that fades into the dark card */}
+      <div
+        className="mx-4 mt-4 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center h-[250px] md:h-[340px] relative"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 45%, #F3E8D6 0%, #E9DBC4 55%, #C9B79A 100%)",
+          boxShadow:
+            "inset 0 0 60px rgba(30,22,14,0.35), inset 0 1px 0 rgba(255,255,255,0.25), 0 8px 24px rgba(0,0,0,0.35)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse at center, black 60%, rgba(0,0,0,0.85) 82%, transparent 100%)",
+          maskImage:
+            "radial-gradient(ellipse at center, black 60%, rgba(0,0,0,0.85) 82%, transparent 100%)",
+        }}
+      >
         {imageUrl ? (
           <img
             src={imageUrl}
             alt={cocktail.cocktailName}
             className="w-full h-full object-contain"
+            style={{ mixBlendMode: "multiply" }}
           />
         ) : imageLoading ? (
           <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
             <VibeBottle size={110} mode="mixing" />
-            <p className="text-[10px] tracking-wider" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
+            <p className="text-[10px] tracking-wider" style={{ color: "#6B5C48", fontFamily: "var(--font-body)" }}>
               {distillingText}
             </p>
           </div>
@@ -160,15 +172,25 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
             src={`data:image/png;base64,${imageData}`}
             alt={cocktail.cocktailName}
             className="w-full h-full object-contain"
+            style={{ mixBlendMode: "multiply" }}
           />
         ) : (
           <div className="flex items-center justify-center w-full h-full">
-            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="var(--app-primary)" strokeWidth="0.8" opacity="0.3">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#8FA99B" strokeWidth="0.8" opacity="0.4">
               <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
         )}
+        {/* Soft vignette overlay to blend into dark card */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, transparent 55%, rgba(18,21,26,0.35) 100%)",
+          }}
+        />
       </div>
+
 
 
       {/* Cocktail name + vibe diagnosis */}
