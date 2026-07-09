@@ -1600,10 +1600,10 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
       }}
     >
       <div className="space-y-0.5">
-        <div className="text-xs font-semibold tracking-wide" style={{ color: "var(--app-text)" }}>
+        <div className="text-xs font-semibold tracking-wide" style={{ color: "var(--app-text)", fontFamily: "var(--font-heading)" }}>
           {copy.emailLabel}
         </div>
-        <p className="text-xs" style={{ color: "var(--app-text-secondary)" }}>
+        <p className="text-xs" style={{ color: "var(--app-text-secondary)", fontFamily: "var(--font-heading)" }}>
           {copy.emailHint}
         </p>
       </div>
@@ -1620,6 +1620,7 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
             background: "rgba(255,255,255,0.05)",
             border: "1px solid rgba(255,255,255,0.12)",
             color: "var(--app-text)",
+            fontFamily: "var(--font-heading)",
           }}
         />
         <button
@@ -1630,6 +1631,7 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
             background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
             color: "white",
             boxShadow: "0 2px 8px rgba(0,0,0,0.45)",
+            fontFamily: "var(--font-heading)",
           }}
         >
           {status === "loading" ? copy.submitting : status === "done" ? "✓" : copy.submit}
