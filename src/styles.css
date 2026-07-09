@@ -28,31 +28,32 @@
 }
 
 :root {
-  /* Mood Lab palette — dark, quiet, glass */
-  --app-bg-deep: #101715;
-  --app-bg-charcoal: #12151A;
-  --app-bg-coffee: #17120F;
+  /* Mood Lab palette — Morandi */
+  --app-bg-deep: #1A1B1C;
+  --app-bg-charcoal: #202124;
+  --app-bg-coffee: #24211F;
 
-  --app-primary: #8FA99B;          /* moonlit sage — cool glass accent */
-  --app-secondary: #748A9A;        /* cool moonlight blue */
-  --app-accent: #E7D9C6;           /* warm cream (text) */
-  --app-accent-lav: #9A91B2;
-  --app-accent-sage: #8FA99B;
-  --app-accent-vermouth: #C96F54;  /* reserved for vessel liquid only */
-  --app-accent-blue: #748A9A;
+  --app-primary: #99B9C6;          /* Morandi Blue — cool glass accent */
+  --app-secondary: #A9B4A1;        /* Morandi Green */
+  --app-accent: #D8D3C9;           /* Morandi Beige */
+  --app-accent-lav: #B7A9B3;       /* Morandi Lavender */
+  --app-accent-sage: #A9B4A1;      /* Morandi Green */
+  --app-accent-vermouth: #DAC5C3;  /* Morandi Pink (reserved) */
+  --app-accent-blue: #99B9C6;      /* Morandi Blue */
+  --app-accent-gray: #BFBEBD;      /* Morandi Gray */
 
   --app-surface: rgba(255,255,255,0.06);
   --app-surface-strong: rgba(255,255,255,0.10);
   --app-border: rgba(255,255,255,0.12);
   --app-border-strong: rgba(255,255,255,0.18);
 
-  --app-text: #E7D9C6;
-  --app-text-secondary: #B8AFA3;
-  --app-text-muted: #7A7267;
+  --app-text: #D8D3C9;
+  --app-text-secondary: #BFBEBD;
+  --app-text-muted: #7F7D7A;
 
-  --app-states-success: #8FA99B;
+  --app-states-success: #A9B4A1;
 
-  --app-glow-amber: 0 0 24px rgba(143,169,155,0.35);
+  --app-glow-amber: 0 0 24px rgba(153,185,198,0.35);
   --app-shadow-glass: 0 20px 60px -20px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.08);
 
   /* shadcn tokens — dark */
