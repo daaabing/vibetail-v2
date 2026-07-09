@@ -19,8 +19,8 @@ function LangToggle() {
     <div
       className="flex rounded-full overflow-hidden"
       style={{
-        border: "1px solid rgba(74,62,61,0.2)",
-        background: "rgba(255,255,255,0.6)",
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "rgba(255,255,255,0.05)",
         backdropFilter: "blur(8px)",
       }}
     >
@@ -144,9 +144,9 @@ export default function GalleryScreen() {
             className="text-xs font-semibold tracking-wider px-3 py-1.5 relative overflow-hidden"
             style={{
               borderRadius: "4px",
-              background: "linear-gradient(135deg, #C2410C 0%, #E0533C 100%)",
+              background: "linear-gradient(135deg, #A55841 0%, #C96F54 100%)",
               color: "white",
-              boxShadow: "1px 2px 8px rgba(194,65,12,0.2)",
+              boxShadow: "1px 2px 8px rgba(201,111,84,0.40)",
             }}
           >
             {t("gallery.addVibe")}
@@ -226,7 +226,7 @@ export default function GalleryScreen() {
                   "{cocktail.originalMood.slice(0, 80)}{cocktail.originalMood.length > 80 ? "…" : ""}"
                 </p>
                 <div className="mt-2.5 pt-2 flex items-center justify-between"
-                  style={{ borderTop: "1px solid rgba(210,201,189,0.4)" }}>
+                  style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
                   <p className="text-[9px] leading-relaxed" style={{ color: "var(--app-text-muted)" }}>
                     {cocktail.tastesLike.slice(0, 60)}…
                   </p>
@@ -249,9 +249,9 @@ export default function GalleryScreen() {
             disabled={page === 1}
             className="px-4 py-2 text-xs font-semibold rounded disabled:opacity-30"
             style={{
-              border: "1.5px solid rgba(74,62,61,0.25)",
+              border: "1px solid rgba(255,255,255,0.12)",
               color: "var(--app-text-secondary)",
-              background: "rgba(255,255,255,0.6)",
+              background: "rgba(255,255,255,0.05)",
             }}
           >
             ← Prev
@@ -267,9 +267,9 @@ export default function GalleryScreen() {
             disabled={page === totalPages}
             className="px-4 py-2 text-xs font-semibold rounded disabled:opacity-30"
             style={{
-              border: "1.5px solid rgba(74,62,61,0.25)",
+              border: "1px solid rgba(255,255,255,0.12)",
               color: "var(--app-text-secondary)",
-              background: "rgba(255,255,255,0.6)",
+              background: "rgba(255,255,255,0.05)",
             }}
           >
             Next →

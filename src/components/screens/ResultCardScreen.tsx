@@ -134,14 +134,14 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
       style={{
         backfaceVisibility: "hidden",
         WebkitBackfaceVisibility: "hidden",
-        background: "linear-gradient(160deg, #fdf8f3 0%, #faf0e6 100%)",
-        border: "1px solid rgba(210,201,189,0.6)",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08)",
+        background: "linear-gradient(160deg, rgba(30,34,40,0.72) 0%, rgba(20,24,28,0.85) 100%)",
+        border: "1px solid rgba(255,255,255,0.10)",
+        boxShadow: "0 24px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)",
       }}
     >
       {/* AI illustration — fixed height, object-contain so full image is visible */}
       <div className="mx-4 mt-4 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center h-[250px] md:h-[340px]"
-        style={{ background: "rgba(250,246,240,0.6)" }}>
+        style={{ background: "rgba(255,255,255,0.04)" }}>
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -200,9 +200,9 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
           ).map((f: string) => (
             <span key={f} className="px-2 py-0.5 rounded text-[9px] uppercase"
               style={{
-                background: "rgba(255,255,255,0.7)",
+                background: "rgba(255,255,255,0.05)",
                 backdropFilter: "blur(6px)",
-                border: "1px solid rgba(210,201,189,0.6)",
+                border: "1px solid rgba(255,255,255,0.10)",
                 fontFamily: "var(--font-body)",
                 color: "var(--app-text-secondary)",
               }}>
@@ -245,14 +245,14 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
         backfaceVisibility: "hidden",
         WebkitBackfaceVisibility: "hidden",
         transform: "rotateY(180deg)",
-        background: "linear-gradient(160deg, #fdf8f3 0%, #faf0e6 100%)",
-        border: "1px solid rgba(210,201,189,0.6)",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08)",
+        background: "linear-gradient(160deg, rgba(30,34,40,0.72) 0%, rgba(20,24,28,0.85) 100%)",
+        border: "1px solid rgba(255,255,255,0.10)",
+        boxShadow: "0 24px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)",
       }}
     >
       {/* Subtle warm blobs */}
       <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(224,83,60,0.10) 0%, transparent 70%)", filter: "blur(30px)" }} />
+        style={{ background: "radial-gradient(circle, rgba(201,111,84,0.16) 0%, transparent 70%)", filter: "blur(30px)" }} />
       <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full pointer-events-none"
         style={{ background: "radial-gradient(circle, rgba(212,155,67,0.08) 0%, transparent 70%)", filter: "blur(30px)" }} />
 
@@ -260,7 +260,7 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
       <div className="flex-1 overflow-y-auto px-6 pt-6 pb-4 relative z-10" style={{ scrollbarWidth: "none" }}>
 
         {/* Header — name only */}
-        <div className="mb-4 pb-3" style={{ borderBottom: "1px solid rgba(210,201,189,0.5)" }}>
+        <div className="mb-4 pb-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
           <h3 className="font-semibold leading-tight"
             style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)", fontSize: "1.3rem" }}>
             {cocktail.cocktailName}
@@ -270,7 +270,7 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
         {/* Order this — only when matched from menu */}
         {cocktail.matchedFromMenu && (
           <div className="mb-4 p-3 rounded-xl"
-            style={{ background: "rgba(194,65,12,0.08)", border: "1px solid rgba(194,65,12,0.25)" }}>
+            style={{ background: "rgba(201,111,84,0.14)", border: "1px solid rgba(201,111,84,0.45)" }}>
             <span className="text-[8px] tracking-widest uppercase block mb-1.5"
               style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
               {cocktail.lang === "zh" ? "点这杯" : "Order this"}
@@ -288,7 +288,7 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
 
         {/* Original vibe */}
         <div className="mb-4 p-3 rounded-xl"
-          style={{ background: "rgba(255,255,255,0.6)", border: "1px solid rgba(210,201,189,0.4)" }}>
+          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
           <span className="text-[8px] tracking-widest uppercase block mb-1"
             style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
             {labels.originalVibe}
@@ -337,7 +337,7 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
         {/* Recipe — numbered steps */}
         {!hideRecipe && (
           <div className="mb-4 p-3 rounded-xl"
-            style={{ background: "rgba(224,83,60,0.06)", border: "1px solid rgba(224,83,60,0.18)" }}>
+            style={{ background: "rgba(201,111,84,0.10)", border: "1px solid rgba(201,111,84,0.28)" }}>
             <span className="text-[8px] tracking-widest uppercase block mb-3"
               style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}>
               {labels.howToMake}
@@ -555,7 +555,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         ctx.fillStyle = grad;
         ctx.fillRect(0, H, W, bandH);
         // divider
-        ctx.fillStyle = "rgba(74,62,61,0.18)";
+        ctx.fillStyle = "rgba(255,255,255,0.10)";
         ctx.fillRect(Math.round(W * 0.08), H, Math.round(W * 0.84), 1);
 
         const drawText = () => {
@@ -885,7 +885,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   return (
     <div className="min-h-svh flex flex-col w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative"
-      style={{ background: "linear-gradient(170deg, #fdf8f3 0%, #faf4ed 60%, #f8f0e8 100%)" }}>
+      style={{ background: "transparent" }}>
 
       {/* Offscreen capture target — flat long image, no card frame */}
       <div
@@ -911,7 +911,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           }}
         >
           {/* Hero image */}
-          <div style={{ width: "100%", height: 420, borderRadius: 18, overflow: "hidden", background: "rgba(250,246,240,0.6)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
+          <div style={{ width: "100%", height: 420, borderRadius: 18, overflow: "hidden", background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
             {cocktail.imageUrl ? (
               <img src={cocktail.imageUrl} alt={cocktail.cocktailName} crossOrigin="anonymous" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             ) : imageData ? (
@@ -939,7 +939,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               ? (cocktail as any).flavorKeywords as string[]
               : cocktail.flavorProfile.split(",").map((s: string) => s.trim())
             ).map((f: string) => (
-              <span key={f} style={{ padding: "3px 9px", borderRadius: 4, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(210,201,189,0.6)", color: "var(--app-text-secondary)", whiteSpace: "nowrap", flexShrink: 0 }}>
+              <span key={f} style={{ padding: "3px 9px", borderRadius: 4, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", color: "var(--app-text-secondary)", whiteSpace: "nowrap", flexShrink: 0 }}>
                 {f.trim()}
               </span>
             ))}
@@ -1057,9 +1057,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               className="py-2 px-3 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
               style={{
                 borderRadius: "4px",
-                background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+                background: "linear-gradient(135deg, #A55841 0%, #C96F54 50%, #A55841 100%)",
                 color: "white",
-                boxShadow: "2px 3px 10px rgba(194,65,12,0.22), inset 0 1px 0 rgba(255,255,255,0.15)",
+                boxShadow: "2px 3px 10px rgba(201,111,84,0.40), inset 0 1px 0 rgba(255,255,255,0.15)",
               }}
             >
               <span className="absolute inset-0 pointer-events-none" style={{
@@ -1081,7 +1081,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                 borderRadius: "4px",
                 background: copied ? "rgba(141,163,130,0.15)" : "transparent",
                 color: copied ? "var(--app-states-success)" : "var(--app-text-secondary)",
-                border: copied ? "1.5px solid var(--app-states-success)" : "1.5px solid rgba(74,62,61,0.3)",
+                border: copied ? "1.5px solid var(--app-states-success)" : "1px solid rgba(255,255,255,0.14)",
                 boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
               }}
             >
@@ -1107,7 +1107,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                   borderRadius: "4px",
                   background: "transparent",
                   color: "var(--app-text-secondary)",
-                  border: "1.5px solid rgba(74,62,61,0.3)",
+                  border: "1px solid rgba(255,255,255,0.14)",
                   boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
                 }}
               >
@@ -1130,7 +1130,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                 borderRadius: "4px",
                 background: "transparent",
                 color: "var(--app-text-secondary)",
-                border: "1.5px solid rgba(74,62,61,0.3)",
+                border: "1px solid rgba(255,255,255,0.14)",
                 boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
               }}
             >
@@ -1152,9 +1152,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             className="w-full py-2 px-4 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
             style={{
               borderRadius: "4px",
-              background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+              background: "linear-gradient(135deg, #A55841 0%, #C96F54 50%, #A55841 100%)",
               color: "white",
-              boxShadow: "2px 3px 10px rgba(194,65,12,0.22), inset 0 1px 0 rgba(255,255,255,0.15)",
+              boxShadow: "2px 3px 10px rgba(201,111,84,0.40), inset 0 1px 0 rgba(255,255,255,0.15)",
             }}
           >
             <span className="absolute inset-0 pointer-events-none" style={{
@@ -1214,7 +1214,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               animate={{ y: 0, opacity: 1 }}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md rounded-2xl p-5 flex flex-col gap-5"
-              style={{ background: "#fdf8f3", border: "1px solid rgba(74,62,61,0.15)", maxHeight: "92vh" }}
+              style={{ background: "#fdf8f3", border: "1px solid rgba(255,255,255,0.10)", maxHeight: "92vh" }}
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold tracking-wider uppercase" style={{ color: "var(--app-text-primary)", fontFamily: "var(--font-body)" }}>
@@ -1266,7 +1266,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: "linear-gradient(160deg, #fdf8f3 0%, #faf0e6 100%)",
+                    background: "linear-gradient(160deg, rgba(30,34,40,0.72) 0%, rgba(20,24,28,0.85) 100%)",
                     padding: 10,
                     gap: 6,
                     ...parseFrameCss(previewInnerCss),
@@ -1310,7 +1310,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                       onClick={() => setSelectedFrameId(f.id)}
                       className="flex flex-col items-center gap-1.5 p-1.5 rounded-lg transition flex-shrink-0"
                       style={{
-                        background: isActive ? "rgba(224,83,60,0.10)" : "transparent",
+                        background: isActive ? "rgba(201,111,84,0.16)" : "transparent",
                         border: isActive ? "1.5px solid var(--app-primary)" : "1.5px solid transparent",
                       }}
                     >
@@ -1339,7 +1339,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                   style={{
                     background: "transparent",
                     color: "var(--app-text-secondary)",
-                    border: "1.5px solid rgba(74,62,61,0.3)",
+                    border: "1px solid rgba(255,255,255,0.14)",
                   }}
                 >
                   {t("result.cancel") || "Cancel"}
@@ -1348,10 +1348,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                   onClick={() => { setShowFramePicker(false); handlePrint(selectedFrameId); }}
                   className="flex-1 py-3 text-xs font-semibold tracking-wider uppercase rounded transition"
                   style={{
-                    background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+                    background: "linear-gradient(135deg, #A55841 0%, #C96F54 50%, #A55841 100%)",
                     color: "white",
                     border: "none",
-                    boxShadow: "2px 3px 12px rgba(194,65,12,0.25)",
+                    boxShadow: "2px 3px 12px rgba(201,111,84,0.45)",
                   }}
                 >
                   {t("result.print") || "Print"}
@@ -1447,8 +1447,8 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
     <div
       className="rounded-2xl p-4 space-y-3"
       style={{
-        background: "rgba(255, 255, 255, 0.50)",
-        border: "1px solid rgba(210, 201, 189, 0.45)",
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.10)",
       }}
     >
       <div className="space-y-0.5">
@@ -1469,8 +1469,8 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
           placeholder={copy.placeholder}
           className="flex-1 min-w-0 px-3 py-2.5 text-sm rounded-md outline-none disabled:opacity-60"
           style={{
-            background: "white",
-            border: "1px solid rgba(74,62,61,0.25)",
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.12)",
             color: "var(--app-text)",
           }}
         />
@@ -1479,9 +1479,9 @@ function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
           disabled={status !== "idle"}
           className="px-4 py-2.5 text-xs font-semibold tracking-wider rounded-md disabled:opacity-60 whitespace-nowrap"
           style={{
-            background: "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)",
+            background: "linear-gradient(135deg, #A55841 0%, #C96F54 50%, #A55841 100%)",
             color: "white",
-            boxShadow: "0 2px 8px rgba(194,65,12,0.25)",
+            boxShadow: "0 2px 8px rgba(201,111,84,0.45)",
           }}
         >
           {status === "loading" ? copy.submitting : status === "done" ? "✓" : copy.submit}

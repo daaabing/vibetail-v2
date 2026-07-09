@@ -23,16 +23,17 @@ export default function UserMenu() {
     return (
       <button
         onClick={() => navigate({ to: "/auth" })}
-        className="text-[11px] font-semibold tracking-wider px-3 py-1 rounded-full"
+        className="text-[11px] font-semibold tracking-wider px-3 py-1 rounded-full transition-colors hover:bg-white/10"
         style={{
-          border: "1px solid rgba(74,62,61,0.2)",
-          background: "rgba(255,255,255,0.6)",
-          backdropFilter: "blur(8px)",
+          border: "1px solid rgba(255,255,255,0.14)",
+          background: "rgba(255,255,255,0.05)",
+          backdropFilter: "blur(14px)",
           color: "var(--app-text-secondary)",
         }}
       >
         {isZh ? "登录" : "Sign in"}
       </button>
+
     );
   }
 

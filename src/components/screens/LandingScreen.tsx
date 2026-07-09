@@ -5,14 +5,11 @@ import { useLang } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
 import AuthModal from "@/components/moodtail/AuthModal";
 import UserMenu from "@/components/moodtail/UserMenu";
-import VibetailLogo from "@/components/moodtail/VibetailLogo";
+import GlassVessel from "@/components/moodtail/GlassVessel";
 import { track } from "@/lib/analytics";
 
-
-
-
-/* ---------- Ink-brush style button ---------- */
-function InkButton({
+/** Dark glass CTA. Primary = warm vermouth glow. Ghost = quiet outline. */
+function GlassButton({
   onClick,
   primary = false,
   children,
@@ -23,32 +20,29 @@ function InkButton({
 }) {
   return (
     <motion.button
-      whileTap={{ scale: 0.96 }}
+      whileTap={{ scale: 0.97 }}
       whileHover={{ scale: 1.01 }}
       onClick={onClick}
-      className="w-full relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden"
+      className="w-full relative flex items-center justify-center gap-2 text-sm font-medium tracking-wider overflow-hidden"
       style={{
-        padding: "14px 24px",
-        borderRadius: "4px",
+        padding: "16px 24px",
+        borderRadius: "9999px",
         background: primary
-          ? "linear-gradient(135deg, #C2410C 0%, #E0533C 50%, #C2410C 100%)"
-          : "transparent",
-        color: primary ? "white" : "var(--app-text-secondary)",
-        border: primary ? "none" : "1.5px solid rgba(74,62,61,0.3)",
+          ? "linear-gradient(135deg, #A55841 0%, #C96F54 50%, #A55841 100%)"
+          : "rgba(255,255,255,0.05)",
+        color: primary ? "white" : "var(--app-text)",
+        border: primary ? "1px solid rgba(255,255,255,0.14)" : "1px solid rgba(255,255,255,0.14)",
         boxShadow: primary
-          ? "2px 3px 12px rgba(194,65,12,0.25), inset 0 1px 0 rgba(255,255,255,0.15)"
-          : "1px 2px 8px rgba(0,0,0,0.06)",
+          ? "0 12px 30px -6px rgba(201,111,84,0.45), inset 0 1px 0 rgba(255,255,255,0.15)"
+          : "0 8px 24px -8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)",
+        backdropFilter: "blur(20px) saturate(140%)",
       }}
     >
       {primary && (
         <span className="absolute inset-0 pointer-events-none" style={{
-          background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 55%, transparent 75%)",
+          background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.22) 55%, transparent 75%)",
           animation: "liquid-flow 4s linear infinite",
         }} />
-      )}
-      {primary && (
-        <span className="absolute top-0 left-4 right-4 h-px pointer-events-none"
-          style={{ background: "rgba(255,255,255,0.3)" }} />
       )}
       <span className="relative z-10 flex items-center gap-2">{children}</span>
     </motion.button>
@@ -66,22 +60,26 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
   return (
     <div className="min-h-svh flex flex-col p-5 pb-24 md:pb-5 w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative">
 
-      {/* Top right: auth + language toggle — fades in after hero */}
+      {/* Top bar: language + auth */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 1.1, ease: "easeOut" }}
+        transition={{ duration: 0.5, delay: 1.0, ease: "easeOut" }}
         className="flex justify-end items-center gap-2 mb-2"
       >
         <UserMenu />
         <div className="flex rounded-full overflow-hidden"
-          style={{ border: "1px solid rgba(74,62,61,0.2)", background: "rgba(255,255,255,0.6)", backdropFilter: "blur(8px)" }}>
+          style={{
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(255,255,255,0.05)",
+            backdropFilter: "blur(14px)",
+          }}>
           {(["zh", "en"] as const).map((l) => (
             <motion.button
               key={l}
               whileTap={{ scale: 0.92 }}
               onClick={() => setLang(l)}
-              className="px-3 py-1 text-[11px] font-semibold tracking-wider transition-all"
+              className="px-3 py-1 text-[11px] font-medium tracking-wider transition-all"
               style={{
                 background: lang === l ? "var(--app-primary)" : "transparent",
                 color: lang === l ? "white" : "var(--app-text-muted)",
@@ -94,21 +92,27 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
         </div>
       </motion.div>
 
-      {/* Hero Content Section */}
-      <div className="my-auto py-8 flex flex-col items-center text-center space-y-6">
-        {/* Vibetail brand logo — appears first */}
-        <VibetailLogo size={144} />
+      {/* Hero */}
+      <div className="my-auto py-8 flex flex-col items-center text-center space-y-8">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: [0.34, 1.56, 0.64, 1] }}
+        >
+          <GlassVessel size={200} color="#C96F54" />
+        </motion.div>
 
-
-
-        {/* Title Group */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           <motion.h1
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.35, ease: "easeOut" }}
-            className="text-5xl font-semibold tracking-tight"
-            style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
+            transition={{ duration: 0.6, delay: 0.35, ease: "easeOut" }}
+            className="text-6xl font-normal tracking-tight"
+            style={{
+              fontFamily: "var(--font-heading)",
+              color: "var(--app-text)",
+              letterSpacing: "-0.02em",
+            }}
           >
             Vibetail <span className="sr-only">— AI Cocktail Generator</span>
           </motion.h1>
@@ -116,8 +120,8 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.55, ease: "easeOut" }}
-            className="text-base font-semibold"
-            style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
+            className="text-[11px] uppercase tracking-[0.35em]"
+            style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}
           >
             {t("landing.tagline")}
           </motion.p>
@@ -125,42 +129,39 @@ export default function LandingScreen({ onMix, hideGallery }: { onMix?: () => vo
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.75, ease: "easeOut" }}
-            className="text-xl"
-            style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-primary)" }}
+            className="text-2xl italic"
+            style={{ fontFamily: "var(--font-heading)", color: "var(--app-primary)" }}
           >
             {t("landing.subtitle")}
           </motion.p>
         </div>
       </div>
 
-      {/* CTA buttons — fade in last */}
+      {/* CTA */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.95, ease: "easeOut" }}
+        transition={{ duration: 0.55, delay: 0.9, ease: "easeOut" }}
         className="space-y-3"
       >
-        <InkButton primary onClick={handleMix}>
+        <GlassButton primary onClick={handleMix}>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           {t("landing.cta.mix")}
-        </InkButton>
+        </GlassButton>
 
         {!hideGallery && (
-          <InkButton onClick={() => {
-            if (user) {
-              navigate({ to: "/gallery" });
-            } else {
-              setShowAuth(true);
-            }
+          <GlassButton onClick={() => {
+            if (user) navigate({ to: "/gallery" });
+            else setShowAuth(true);
           }}>
-            <svg className="w-4 h-4" fill="none" stroke="var(--app-secondary)" strokeWidth="1.8" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
               <path d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
                 strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             {t("landing.cta.bar")}
-          </InkButton>
+          </GlassButton>
         )}
       </motion.div>
 
