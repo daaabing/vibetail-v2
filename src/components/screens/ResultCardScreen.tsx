@@ -751,7 +751,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         const qrImg = new Image();
         qrImg.onload = () => {
           const pad = Math.round(W * 0.05);
-          const qrSize = Math.round(bandH * 0.78);
+          const qrSize = Math.round(bandH * 0.72);
           const qrX = pad;
           const qrY = H + Math.round((bandH - qrSize) / 2);
           drawText();
