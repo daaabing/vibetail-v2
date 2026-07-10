@@ -9,6 +9,9 @@ interface VibeBottleProps {
   size?: number;
   mode?: VibeBottleMode;
   glow?: boolean;
+  sliderVal?: number;
+  onSliderValChange?: (val: number) => void;
+  colorStops?: string[];
 }
 
 /** Backwards-compat wrapper. All existing call sites keep working. */
@@ -17,6 +20,19 @@ export default function VibeBottle({
   size = 220,
   mode = "idle",
   glow = true,
+  sliderVal,
+  onSliderValChange,
+  colorStops,
 }: VibeBottleProps) {
-  return <GlassVessel size={size} color={color} mode={mode} glow={glow} />;
+  return (
+    <GlassVessel
+      size={size}
+      color={color}
+      mode={mode}
+      glow={glow}
+      sliderVal={sliderVal}
+      onSliderValChange={onSliderValChange}
+      colorStops={colorStops}
+    />
+  );
 }
