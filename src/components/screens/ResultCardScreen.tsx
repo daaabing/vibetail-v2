@@ -597,7 +597,12 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   // mix their own drink — not to this specific cocktail.
   const brandQrTarget = "https://vibetail.com/";
   useEffect(() => {
-    QRCode.toDataURL(brandQrTarget, { margin: 2, width: 512, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } })
+    QRCode.toDataURL(brandQrTarget, {
+      margin: 2,
+      width: 512,
+      errorCorrectionLevel: "M",
+      color: { dark: "#2A2118", light: "#00000000" },
+    })
       .then(setQrDataUrl)
       .catch((err) => { console.error("QR generation failed", err); setQrDataUrl(null); });
   }, []);
