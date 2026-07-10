@@ -1060,66 +1060,66 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           ref={captureRef}
           style={{
             width: 600,
-            background: "linear-gradient(170deg, #fdf8f3 0%, #faf0e6 60%, #f8ead8 100%)",
-            padding: "40px 44px 44px",
-            fontFamily: "var(--font-body)",
+            background:
+              "radial-gradient(ellipse at 50% 35%, #F3E8D6 0%, #E9DBC4 55%, #C9B79A 100%)",
+            padding: "44px 44px 48px",
+            fontFamily: "var(--font-heading)",
             color: "#2A2118",
-            ["--app-text" as any]: "#2A2118",
-            ["--app-text-secondary" as any]: "#3E3428",
-            ["--app-text-muted" as any]: "#6B5D4B",
-            ["--app-primary" as any]: "#8A7A62",
+            border: "1px solid rgba(80,60,40,0.18)",
+            boxShadow:
+              "inset 0 0 80px rgba(80,55,30,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",
           }}
         >
           {/* Hero image */}
-          <div style={{ width: "100%", height: 420, borderRadius: 18, overflow: "hidden", background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
+          <div style={{ width: "100%", height: 420, borderRadius: 18, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
             {cocktail.imageUrl ? (
-              <img src={cocktail.imageUrl} alt={cocktail.cocktailName} crossOrigin="anonymous" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+              <img src={cocktail.imageUrl} alt={cocktail.cocktailName} crossOrigin="anonymous" style={{ width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply" }} />
             ) : imageData ? (
-              <img src={`data:image/png;base64,${imageData}`} alt={cocktail.cocktailName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+              <img src={`data:image/png;base64,${imageData}`} alt={cocktail.cocktailName} style={{ width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply" }} />
             ) : (
-              <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="var(--app-primary)" strokeWidth="0.8" opacity="0.3">
+              <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#8A7A62" strokeWidth="0.8" opacity="0.3">
                 <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             )}
           </div>
 
           {/* Name */}
-          <h2 style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)", fontSize: 36, fontWeight: 600, lineHeight: 1.15, textAlign: "center", margin: 0 }}>
+          <h2 style={{ fontFamily: "var(--font-heading)", color: "#2A2118", fontSize: 40, fontWeight: 600, lineHeight: 1.15, textAlign: "center", margin: 0 }}>
             {cocktail.cocktailName}
           </h2>
 
           {/* Roast */}
-          <p style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-primary)", fontSize: 15, lineHeight: 1.45, textAlign: "center", marginTop: 12 }}>
+          <p style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "#5C4A36", fontSize: 16, lineHeight: 1.45, textAlign: "center", marginTop: 12 }}>
             "{cocktail.roast}"
           </p>
 
           {/* Flavor keywords */}
-          <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 6, marginTop: 14 }}>
+          <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 6, marginTop: 16 }}>
             {(Array.isArray((cocktail as any).flavorKeywords) && (cocktail as any).flavorKeywords.length > 0
               ? (cocktail as any).flavorKeywords as string[]
               : cocktail.flavorProfile.split(",").map((s: string) => s.trim())
             ).map((f: string) => (
-              <span key={f} style={{ padding: "3px 9px", borderRadius: 4, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", color: "var(--app-text-secondary)", whiteSpace: "nowrap", flexShrink: 0 }}>
+              <span key={f} style={{ padding: "3px 10px", borderRadius: 999, fontFamily: "var(--font-heading)", fontSize: 10, textTransform: "uppercase", letterSpacing: 0.8, background: "rgba(80,55,30,0.06)", border: "1px solid rgba(80,55,30,0.25)", color: "#2A2118", whiteSpace: "nowrap", flexShrink: 0 }}>
                 {f.trim()}
               </span>
             ))}
           </div>
 
           {/* Divider */}
-          <div style={{ height: 1, background: "rgba(210,201,189,0.6)", margin: "28px 0 24px" }} />
+          <div style={{ height: 1, background: "rgba(80,55,30,0.20)", margin: "28px 0 24px" }} />
 
           {/* Original vibe */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)", marginBottom: 6 }}>{cardLabels.originalVibe}</div>
-            <p style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-text-secondary)", fontSize: 14, lineHeight: 1.55, margin: 0 }}>
+          <div style={{ marginBottom: 20, padding: 14, borderRadius: 14, background: "rgba(80,55,30,0.05)", border: "1px solid rgba(80,55,30,0.15)" }}>
+            <div style={{ fontFamily: "var(--font-heading)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#8A7A62", marginBottom: 6 }}>{cardLabels.originalVibe}</div>
+            <p style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "#2A2118", fontSize: 14, lineHeight: 1.55, margin: 0 }}>
               "{cocktail.originalMood}"
             </p>
           </div>
 
           {/* Tasting notes */}
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)", marginBottom: 6 }}>{cardLabels.tastingNotes}</div>
-            <p style={{ color: "var(--app-text-secondary)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>
+            <div style={{ fontFamily: "var(--font-heading)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#8A7A62", marginBottom: 6 }}>{cardLabels.tastingNotes}</div>
+            <p style={{ fontFamily: "var(--font-heading)", color: "#2A2118", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
               {cocktail.tastesLike}
             </p>
           </div>
@@ -1127,28 +1127,28 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           {/* Ingredients */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
-              <span style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-text-muted)" }}>{cardLabels.ingredients}</span>
-              <span style={{ fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: "var(--app-primary)", fontStyle: "italic" }}>· {cardLabels.ingredientsRef}</span>
+              <span style={{ fontFamily: "var(--font-heading)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#8A7A62" }}>{cardLabels.ingredients}</span>
+              <span style={{ fontFamily: "var(--font-heading)", fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: "#8A7A62", fontStyle: "italic" }}>· {cardLabels.ingredientsRef}</span>
             </div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {(cocktail.ingredients as string[]).map((ing, i) => (
-                <li key={i} style={{ position: "relative", paddingLeft: 16, fontSize: 13, color: "var(--app-text-secondary)", marginBottom: 8, lineHeight: 1.55, wordBreak: "break-word" }}>
-                  <span style={{ position: "absolute", left: 0, top: 8, width: 6, height: 6, borderRadius: "50%", background: "var(--app-primary)" }} />
+                <li key={i} style={{ position: "relative", paddingLeft: 16, fontFamily: "var(--font-heading)", fontSize: 13, color: "#2A2118", marginBottom: 8, lineHeight: 1.55, wordBreak: "break-word" }}>
+                  <span style={{ position: "absolute", left: 0, top: 8, width: 6, height: 6, borderRadius: "50%", background: "#2A2118" }} />
                   {simplifyIngredient(ing)}
                 </li>
               ))}
             </ul>
-            <p style={{ fontSize: 10, color: "var(--app-text-muted)", fontStyle: "italic", marginTop: 6, marginBottom: 0 }}>{cardLabels.ingredientsBar}</p>
+            <p style={{ fontFamily: "var(--font-heading)", fontSize: 10, color: "#8A7A62", fontStyle: "italic", marginTop: 6, marginBottom: 0 }}>{cardLabels.ingredientsBar}</p>
           </div>
 
           {/* Recipe */}
           {!isRestaurant && (
-            <div>
-              <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--app-primary)", marginBottom: 12 }}>{cardLabels.howToMake}</div>
+            <div style={{ padding: 14, borderRadius: 14, background: "rgba(80,55,30,0.08)", border: "1px solid rgba(80,55,30,0.18)" }}>
+              <div style={{ fontFamily: "var(--font-heading)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#2A2118", marginBottom: 12 }}>{cardLabels.howToMake}</div>
               <ol style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {cocktail.recipe.split("\n").filter(Boolean).map((line, i) => (
-                  <li key={i} style={{ position: "relative", paddingLeft: 34, minHeight: 24, marginBottom: 12, fontSize: 13, lineHeight: 1.55, color: "var(--app-text-secondary)", wordBreak: "break-word" }}>
-                    <span style={{ position: "absolute", left: 0, top: 0, width: 22, height: 22, borderRadius: "50%", background: "var(--app-primary)", color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                  <li key={i} style={{ position: "relative", paddingLeft: 34, minHeight: 24, marginBottom: 12, fontFamily: "var(--font-heading)", fontSize: 13, lineHeight: 1.55, color: "#2A2118", wordBreak: "break-word" }}>
+                    <span style={{ position: "absolute", left: 0, top: 0, width: 22, height: 22, borderRadius: "50%", background: "#2A2118", color: "#F3E8D6", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
                     {line}
                   </li>
                 ))}
