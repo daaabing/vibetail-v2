@@ -208,6 +208,27 @@
   .breathing-glow, .float-y { animation: none; }
 }
 
+/* ── Liquid wave motion inside MoodBottle ── */
+@keyframes liquid-wave-shift-1 {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes liquid-wave-shift-2 {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.liquid-wave-1 {
+  animation: liquid-wave-shift-1 4.5s linear infinite;
+  transform-origin: center;
+}
+.liquid-wave-2 {
+  animation: liquid-wave-shift-2 3.5s linear infinite;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .liquid-wave-1, .liquid-wave-2 { animation: none; }
+}
+
 /* Legacy glass helpers still referenced */
 .glass-card {
   background: rgba(255,255,255,0.05);

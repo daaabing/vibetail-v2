@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 
 interface GlassVesselProps {
@@ -7,6 +8,10 @@ interface GlassVesselProps {
   color?: string;
   mode?: "idle" | "mixing" | "thumb";
   glow?: boolean;
+  /** Optional fill 0–100. Defaults to 60 when uncontrolled. */
+  sliderVal?: number;
+  /** If provided, the bottle body becomes a vertical drag control. */
+  onSliderValChange?: (val: number) => void;
 }
 
 function hexToRgba(hex: string, a: number): string {
@@ -18,142 +23,391 @@ function hexToRgba(hex: string, a: number): string {
   return `rgba(${r},${g},${b},${a})`;
 }
 
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  speed: number;
+  opacity: number;
+}
+
 /**
- * Dark-mode glass vessel — a semi-transparent bottle silhouette with an inner
- * mood-tinted liquid, breathing halo and drifting particles. Reused across
- * landing, step headers, gallery thumbnails, and result frames.
+ * Mood Bottle — transparent glass vessel with:
+ *  - idle breathing float
+ *  - pointer-driven magnetic tilt / parallax reflections
+ *  - rising micro-bubbles inside the liquid
+ *  - optional vertical drag to control fill (when onSliderValChange is set)
+ *  - `mixing` mode drives brewing waves + shake
  */
 export default function GlassVessel({
   size = 220,
   color = "#99B9C6",
   mode = "idle",
   glow = true,
+  sliderVal,
+  onSliderValChange,
 }: GlassVesselProps) {
-  const isMixing = mode === "mixing";
+  const isBrewing = mode === "mixing";
   const isThumb = mode === "thumb";
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const bottleBodyRef = useRef<HTMLDivElement>(null);
+
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+  const [isClicked, setIsClicked] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const [clickWaves, setClickWaves] = useState<Array<{ id: number }>>([]);
+  const [internalVal, setInternalVal] = useState(60);
+
+  const value = sliderVal ?? internalVal;
+  const canDrag = !!onSliderValChange && !isBrewing && !isThumb;
+
+  const colors = {
+    main: color,
+    glow: hexToRgba(color, 0.55),
+    wave: hexToRgba(color, 0.75),
+  };
+
+  // Seed bubbles once
+  useEffect(() => {
+    const count = isThumb ? 6 : 15;
+    setParticles(
+      Array.from({ length: count }).map((_, i) => ({
+        id: i,
+        x: 10 + Math.random() * 80,
+        y: 5 + Math.random() * 90,
+        size: 1.5 + Math.random() * 3,
+        speed: 0.2 + Math.random() * 0.4,
+        opacity: 0.1 + Math.random() * 0.3,
+      })),
+    );
+  }, [isThumb]);
+
+  // Bubble rise loop
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      setParticles((prev) =>
+        prev.map((p) => {
+          let newY = p.y - p.speed * (isBrewing ? 2.2 : 1);
+          if (newY < -5) newY = 105;
+          return { ...p, y: newY };
+        }),
+      );
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [isBrewing]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current || isThumb) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const normX = (e.clientX - centerX) / (rect.width / 2);
+    const normY = (e.clientY - centerY) / (rect.height / 2);
+    setMousePos({
+      x: Math.max(-1, Math.min(1, normX)),
+      y: Math.max(-1, Math.min(1, normY)),
+    });
+  };
+
+  const handleMouseEnter = () => {
+    if (!isThumb) setIsHovered(true);
+  };
+  const handleMouseLeave = () => {
+    if (!isDragging) {
+      setIsHovered(false);
+      setMousePos({ x: 0, y: 0 });
+    }
+  };
+
+  const handleClick = () => {
+    if (isDragging || isThumb) return;
+    setIsClicked(true);
+    const id = Date.now();
+    setClickWaves((prev) => [...prev, { id }]);
+    setTimeout(() => setIsClicked(false), 800);
+    setTimeout(() => setClickWaves((prev) => prev.filter((w) => w.id !== id)), 1200);
+  };
+
+  const updateValueFromPointer = (clientY: number) => {
+    if (!bottleBodyRef.current || !canDrag) return;
+    const rect = bottleBodyRef.current.getBoundingClientRect();
+    const relativeY = rect.bottom - clientY;
+    const percentage = relativeY / rect.height;
+    const clamped = Math.max(0, Math.min(1, percentage));
+    const newVal = Math.round(clamped * 100);
+    if (onSliderValChange) onSliderValChange(newVal);
+    else setInternalVal(newVal);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!canDrag) return;
+    setIsDragging(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    updateValueFromPointer(e.clientY);
+  };
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDragging) updateValueFromPointer(e.clientY);
+  };
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
+  };
+
+  // Layout scaling: original design is 280×320. Scale everything with size.
+  const scale = size / 280;
+  const px = (n: number) => `${n * scale}px`;
+  const liquidHeight = 22 + value * 0.6;
 
   return (
     <div
-      className="relative inline-flex items-center justify-center"
-      style={{ width: size, height: size }}
+      ref={containerRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onClick={handleClick}
+      className="relative flex items-center justify-center select-none"
+      style={{
+        width: size,
+        height: size * (320 / 280),
+        cursor: canDrag ? "ns-resize" : "default",
+      }}
       aria-hidden
     >
-      {glow && !isThumb && (
+      {/* Ambient background glow */}
+      {glow && (
         <motion.div
-          className="absolute inset-0 rounded-full pointer-events-none"
-          style={{
-            background: `radial-gradient(circle at 50% 55%, ${hexToRgba(color, 0.35)} 0%, ${hexToRgba(color, 0.10)} 45%, transparent 70%)`,
-            filter: "blur(28px)",
-          }}
+          className="absolute rounded-full blur-[70px] pointer-events-none z-0"
+          style={{ width: px(210), height: px(210) }}
           animate={{
-            opacity: isMixing ? [0.55, 0.9, 0.55] : [0.4, 0.7, 0.4],
-            scale:   isMixing ? [1, 1.08, 1]      : [1, 1.05, 1],
+            backgroundColor: colors.main,
+            scale: isBrewing ? 1.2 : isHovered ? (isClicked ? 1.25 : 1.15) : 1,
+            opacity: isBrewing ? 0.5 : isHovered ? (isClicked ? 0.45 : 0.35) : 0.2,
           }}
-          transition={{ duration: isMixing ? 2.4 : 5.2, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ type: "spring", stiffness: 70, damping: 20 }}
         />
       )}
 
+      {/* Click ripples */}
+      {clickWaves.map((wave) => (
+        <motion.div
+          key={wave.id}
+          className="absolute rounded-full border pointer-events-none z-10"
+          style={{
+            borderColor: colors.main,
+            boxShadow: `0 0 15px ${colors.glow}`,
+          }}
+          initial={{ width: px(90), height: px(180), opacity: 0.6, scale: 0.8 }}
+          animate={{ width: px(220), height: px(340), opacity: 0, scale: 1.3 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+        />
+      ))}
+
+      {/* Bottle */}
       <motion.div
-        className={`relative z-10 ${isMixing ? "vibe-bottle-shaker vibe-bottle-shaker--mixing" : mode === "idle" ? "vibe-bottle-shaker vibe-bottle-shaker--idle" : ""}`}
-        style={{ width: size * 0.55, height: size * 0.82 }}
-        animate={mode === "idle" ? { y: [0, -4, 0] } : {}}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="relative flex flex-col items-center justify-end z-20"
+        style={{ originY: 0.85 }}
+        animate={
+          isBrewing
+            ? { rotate: [-6, 6, -6], y: [0, -2, 0] }
+            : {
+                y: isHovered ? mousePos.y * 3.5 : [0, -3.5, 0],
+                x: isHovered ? mousePos.x * 3.5 : 0,
+                rotate: isHovered ? mousePos.x * 2.8 : 0,
+              }
+        }
+        transition={
+          isBrewing
+            ? { duration: 1.05, repeat: Infinity, ease: "easeInOut" }
+            : isHovered
+              ? { type: "spring", stiffness: 85, damping: 18 }
+              : {
+                  y: { repeat: Infinity, duration: 5, ease: "easeInOut" },
+                  x: { duration: 0.5 },
+                  rotate: { duration: 0.5 },
+                }
+        }
       >
-        <svg width="100%" height="100%" viewBox="0 0 100 150" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="gv-glass" x1="0" x2="1" y1="0" y2="1">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.14)" />
-              <stop offset="50%" stopColor="rgba(255,255,255,0.05)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0.10)" />
-            </linearGradient>
-            <linearGradient id="gv-liquid" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor={hexToRgba(color, 0.85)} />
-              <stop offset="100%" stopColor={hexToRgba(color, 0.55)} />
-            </linearGradient>
-            <clipPath id="gv-clip">
-              <path d="M 32,54 L 68,54 L 62,132 C 62,138 58,140 50,140 C 42,140 38,138 38,132 Z" />
-            </clipPath>
-          </defs>
-
-          {/* cap */}
-          <path d="M 40,15 L 60,15 L 58,30 L 42,30 Z"
-            fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.25)" strokeWidth="1.2" />
-          {/* neck */}
-          <path d="M 32,30 L 68,30 C 74,30 76,38 72,46 L 68,54 L 32,54 L 28,46 C 24,38 26,30 32,30 Z"
-            fill="url(#gv-glass)" stroke="rgba(255,255,255,0.22)" strokeWidth="1" />
-          {/* body */}
-          <path d="M 32,54 L 68,54 L 62,132 C 62,138 58,140 50,140 C 42,140 38,138 38,132 Z"
-            fill="url(#gv-glass)" stroke="rgba(255,255,255,0.22)" strokeWidth="1" />
-
-          {/* liquid inside body, lagged sinusoidal surface */}
-          <g clipPath="url(#gv-clip)">
-            <motion.path
-              d="M 20,95 Q 35,90 50,95 T 80,95 L 80,150 L 20,150 Z"
-              fill="url(#gv-liquid)"
-              animate={{
-                d: [
-                  "M 20,95 Q 35,90 50,95 T 80,95 L 80,150 L 20,150 Z",
-                  "M 20,93 Q 35,98 50,93 T 80,93 L 80,150 L 20,150 Z",
-                  "M 20,95 Q 35,90 50,95 T 80,95 L 80,150 L 20,150 Z",
-                ],
-              }}
-              transition={{ duration: isMixing ? 1.6 : 3.4, repeat: Infinity, ease: "easeInOut" }}
+        {/* Wax foil cap */}
+        <div
+          className="relative flex flex-col items-center select-none pointer-events-none"
+          style={{ width: px(18), height: px(26) }}
+        >
+          <div style={{ width: px(14), height: px(4) }} className="bg-[#1a1c1e] rounded-t-sm" />
+          <div
+            style={{ width: px(14), height: px(18) }}
+            className="bg-gradient-to-b from-[#25282f] to-[#141518] border-x border-white/5 relative shadow-inner"
+          >
+            <div
+              className="absolute inset-x-0 bg-gradient-to-r from-amber-400/80 via-amber-200/95 to-amber-500/80"
+              style={{ bottom: px(2), height: px(2.5) }}
             />
-            {/* bubbles */}
-            {isMixing && [0, 1, 2, 3].map((i) => (
-              <motion.circle
-                key={i}
-                cx={40 + i * 5}
-                cy={130}
-                r={1.2 + (i % 2) * 0.6}
-                fill="rgba(255,255,255,0.55)"
-                animate={{ cy: [130, 96], opacity: [0, 0.8, 0] }}
-                transition={{ duration: 2 + i * 0.4, repeat: Infinity, delay: i * 0.3, ease: "easeIn" }}
-              />
-            ))}
-          </g>
-
-          {/* highlight sheen */}
-          <path d="M 38,60 L 42,60 L 44,120 L 41,128"
-            stroke="rgba(255,255,255,0.55)" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
-        </svg>
-      </motion.div>
-
-      {/* Drifting particles around vessel */}
-      {!isThumb && (
-        <div className="absolute inset-0 pointer-events-none">
-          {[0, 1, 2, 3, 4, 5].map((i) => {
-            const angle = (i / 6) * Math.PI * 2;
-            const rad = size * 0.42;
-            const x = 50 + (Math.cos(angle) * rad) / (size / 100);
-            const y = 55 + (Math.sin(angle) * rad) / (size / 100);
-            return (
-              <motion.span
-                key={i}
-                className="absolute rounded-full"
-                style={{
-                  left: `${x}%`,
-                  top: `${y}%`,
-                  width: 3,
-                  height: 3,
-                  background: hexToRgba(color, 0.55),
-                  boxShadow: `0 0 6px ${hexToRgba(color, 0.6)}`,
-                }}
-                animate={{
-                  y: [0, -12, 0],
-                  opacity: [0.15, 0.55, 0.15],
-                }}
-                transition={{
-                  duration: 4 + i * 0.3,
-                  repeat: Infinity,
-                  delay: i * 0.4,
-                  ease: "easeInOut",
-                }}
-              />
-            );
-          })}
+          </div>
+          <div
+            style={{ width: px(18), height: px(4) }}
+            className="bg-white/20 border-b border-white/10 rounded-full"
+          />
         </div>
-      )}
+
+        {/* Neck */}
+        <div
+          className="relative bg-white/[0.04] border-x border-white/15"
+          style={{ width: px(14), height: px(52) }}
+        >
+          <div className="absolute inset-y-0 bg-white/20" style={{ left: px(2.5), width: 1 }} />
+          <div className="absolute inset-y-0 bg-white/10" style={{ right: px(2.5), width: 1 }} />
+          <div
+            className="absolute inset-x-[1px] bg-amber-900/30 blur-[0.5px] rounded-b-sm"
+            style={{ top: 0, height: px(14) }}
+          />
+        </div>
+
+        {/* Sloping shoulders */}
+        <div
+          className="bg-white/[0.04] border-x border-t border-white/15 rounded-t-[32px] relative overflow-hidden"
+          style={{ width: px(92), height: px(28) }}
+        >
+          <div
+            className="absolute inset-x-4 bg-white/20 blur-[0.5px]"
+            style={{ top: px(2), height: 1 }}
+          />
+        </div>
+
+        {/* Body (draggable) */}
+        <div
+          ref={bottleBodyRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          className="relative rounded-b-[14px] border-x border-b border-white/15 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex flex-col justify-end select-none"
+          style={{
+            width: px(92),
+            height: px(190),
+            touchAction: canDrag ? "none" : "auto",
+            cursor: canDrag ? "ns-resize" : "default",
+            boxShadow: isHovered
+              ? `inset 0 4px 30px rgba(255,255,255,0.05), 0 0 25px ${colors.glow}, 0 18px 40px rgba(0,0,0,0.65)`
+              : `inset 0 4px 30px rgba(255,255,255,0.03), 0 18px 40px rgba(0,0,0,0.65)`,
+          }}
+        >
+          {/* Reflections */}
+          <motion.div
+            className="absolute top-0 bottom-0 bg-white/15 rounded-full pointer-events-none z-30"
+            style={{ left: px(5), width: px(2.5) }}
+            animate={{
+              x: isHovered ? mousePos.x * -2 : 0,
+              opacity: isHovered ? 0.35 : 0.18,
+            }}
+            transition={{ type: "spring", stiffness: 90, damping: 20 }}
+          />
+          <motion.div
+            className="absolute top-0 bottom-0 bg-white/10 rounded-full pointer-events-none z-30"
+            style={{ right: px(6), width: 1 }}
+            animate={{ x: isHovered ? mousePos.x * -1.2 : 0 }}
+            transition={{ type: "spring", stiffness: 90, damping: 20 }}
+          />
+
+          {/* Drag guide */}
+          {canDrag && isHovered && (
+            <div
+              className="absolute left-0 right-0 border-t border-dashed border-white/30 pointer-events-none z-30 flex items-center justify-between px-1.5"
+              style={{
+                bottom: `${liquidHeight}%`,
+                transition: isDragging ? "none" : "bottom 0.1s ease-out",
+              }}
+            >
+              <span className="text-[6px] font-mono text-white/50 bg-black/60 px-1 rounded py-[1px]">
+                DRAG
+              </span>
+              <span className="text-[6px] font-mono text-amber-400/90 bg-black/60 px-1 rounded py-[1px]">
+                {value}%
+              </span>
+            </div>
+          )}
+
+          {/* Liquid */}
+          <motion.div
+            className="w-full relative overflow-hidden rounded-b-[12px] pointer-events-none"
+            style={{ zIndex: 15 }}
+            animate={{ height: `${liquidHeight}%` }}
+            transition={
+              isDragging
+                ? { duration: 0.05 }
+                : { type: "spring", stiffness: 45, damping: 15 }
+            }
+          >
+            <svg
+              className="absolute left-0 w-[200%] fill-current pointer-events-none"
+              style={{
+                color: colors.main,
+                height: 24,
+                top: -10,
+                transform: isHovered ? `translateX(${mousePos.x * -7}px)` : "none",
+              }}
+              viewBox="0 0 1200 120"
+              preserveAspectRatio="none"
+            >
+              <path
+                className="liquid-wave-1"
+                style={{ animationDuration: isBrewing ? "1.5s" : "4.5s" }}
+                d="M0,60 C150,90 350,30 500,60 C650,90 850,30 1000,60 C1150,90 1350,30 1500,60 L1500,120 L0,120 Z"
+              />
+            </svg>
+            <svg
+              className="absolute left-0 w-[200%] fill-current pointer-events-none"
+              style={{
+                color: colors.wave,
+                height: 28,
+                top: -13,
+                transform: isHovered ? `translateX(${mousePos.x * -14}px)` : "none",
+              }}
+              viewBox="0 0 1200 120"
+              preserveAspectRatio="none"
+            >
+              <path
+                className="liquid-wave-2"
+                style={{ animationDuration: isBrewing ? "1s" : "3.5s" }}
+                d="M0,50 C150,20 350,80 500,50 C650,20 850,80 1000,50 C1150,20 1350,80 1500,50 L1500,120 L0,120 Z"
+              />
+            </svg>
+
+            <div
+              className="w-full h-full relative transition-colors duration-1000"
+              style={{ backgroundColor: colors.wave }}
+            >
+              {particles.map((p) => {
+                const driftX = isHovered ? mousePos.x * 10 : 0;
+                return (
+                  <motion.div
+                    key={p.id}
+                    className="absolute rounded-full pointer-events-none"
+                    style={{
+                      left: `${p.x}%`,
+                      top: `${p.y}%`,
+                      width: p.size,
+                      height: p.size,
+                      backgroundColor: colors.glow,
+                      opacity: p.opacity + (isClicked || isBrewing ? 0.3 : 0),
+                    }}
+                    animate={{ x: driftX }}
+                    transition={{ type: "spring", stiffness: 40, damping: 15 }}
+                  />
+                );
+              })}
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
     </div>
   );
 }
