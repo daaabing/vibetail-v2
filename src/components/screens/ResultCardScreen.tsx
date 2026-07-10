@@ -1063,7 +1063,11 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             background: "linear-gradient(170deg, #fdf8f3 0%, #faf0e6 60%, #f8ead8 100%)",
             padding: "40px 44px 44px",
             fontFamily: "var(--font-body)",
-            color: "var(--app-text)",
+            color: "#2A2118",
+            ["--app-text" as any]: "#2A2118",
+            ["--app-text-secondary" as any]: "#3E3428",
+            ["--app-text-muted" as any]: "#6B5D4B",
+            ["--app-primary" as any]: "#8A7A62",
           }}
         >
           {/* Hero image */}
