@@ -12,15 +12,38 @@ interface GlassVesselProps {
   sliderVal?: number;
   /** If provided, the bottle body becomes a vertical drag control. */
   onSliderValChange?: (val: number) => void;
+  /** When set, the liquid color interpolates across these stops based on sliderVal (0→100). Overrides `color`. */
+  colorStops?: string[];
 }
 
-function hexToRgba(hex: string, a: number): string {
+function hexToRgb(hex: string): [number, number, number] {
   const m = hex.replace("#", "");
-  if (m.length !== 6) return `rgba(153,185,198,${a})`;
-  const r = parseInt(m.slice(0, 2), 16);
-  const g = parseInt(m.slice(2, 4), 16);
-  const b = parseInt(m.slice(4, 6), 16);
+  if (m.length !== 6) return [153, 185, 198];
+  return [
+    parseInt(m.slice(0, 2), 16),
+    parseInt(m.slice(2, 4), 16),
+    parseInt(m.slice(4, 6), 16),
+  ];
+}
+function rgbToHex(r: number, g: number, b: number): string {
+  const h = (n: number) => Math.round(n).toString(16).padStart(2, "0");
+  return `#${h(r)}${h(g)}${h(b)}`;
+}
+function hexToRgba(hex: string, a: number): string {
+  const [r, g, b] = hexToRgb(hex);
   return `rgba(${r},${g},${b},${a})`;
+}
+function interpolateStops(stops: string[], t: number): string {
+  if (stops.length === 0) return "#99B9C6";
+  if (stops.length === 1) return stops[0];
+  const clamped = Math.max(0, Math.min(1, t));
+  const scaled = clamped * (stops.length - 1);
+  const i = Math.floor(scaled);
+  const f = scaled - i;
+  if (i >= stops.length - 1) return stops[stops.length - 1];
+  const [r1, g1, b1] = hexToRgb(stops[i]);
+  const [r2, g2, b2] = hexToRgb(stops[i + 1]);
+  return rgbToHex(r1 + (r2 - r1) * f, g1 + (g2 - g1) * f, b1 + (b2 - b1) * f);
 }
 
 interface Particle {
@@ -38,6 +61,7 @@ interface Particle {
  *  - pointer-driven magnetic tilt / parallax reflections
  *  - rising micro-bubbles inside the liquid
  *  - optional vertical drag to control fill (when onSliderValChange is set)
+ *  - optional palette interpolation across drag range (colorStops)
  *  - `mixing` mode drives brewing waves + shake
  */
 export default function GlassVessel({
@@ -47,7 +71,9 @@ export default function GlassVessel({
   glow = true,
   sliderVal,
   onSliderValChange,
+  colorStops,
 }: GlassVesselProps) {
+
   const isBrewing = mode === "mixing";
   const isThumb = mode === "thumb";
 
