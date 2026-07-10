@@ -38,6 +38,11 @@ export default function MoodInputScreen({
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [customInputStarted, setCustomInputStarted] = useState(false);
+  const [intensity, setIntensity] = useState(60);
+
+  // Morandi mood palette — from calm cool to warm bold, drives bottle color on drag.
+  const MOOD_PALETTE = ["#99B9C6", "#A9B4A1", "#D8D3C9", "#B7A9B3", "#DAC5C3"];
+
 
 
   const BASE_SPIRITS: { key: string; en: string; zh: string; color: string; flavorEn: string; flavorZh: string }[] = [
