@@ -597,7 +597,12 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   // mix their own drink — not to this specific cocktail.
   const brandQrTarget = "https://vibetail.com/";
   useEffect(() => {
-    QRCode.toDataURL(brandQrTarget, { margin: 2, width: 512, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } })
+    QRCode.toDataURL(brandQrTarget, {
+      margin: 2,
+      width: 512,
+      errorCorrectionLevel: "M",
+      color: { dark: "#2A2118", light: "#00000000" },
+    })
       .then(setQrDataUrl)
       .catch((err) => { console.error("QR generation failed", err); setQrDataUrl(null); });
   }, []);
@@ -704,27 +709,22 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         if (!ctx) return reject(new Error("no ctx"));
         // paint the card
         ctx.drawImage(base, 0, 0, W, H);
-        // footer band
+        // footer band — same parchment tones as the card face
         const grad = ctx.createLinearGradient(0, H, 0, H + bandH);
-        grad.addColorStop(0, "#fdf8f3");
-        grad.addColorStop(1, "#f4e7d6");
+        grad.addColorStop(0, "#F3E8D6");
+        grad.addColorStop(0.55, "#E9DBC4");
+        grad.addColorStop(1, "#DCC9AC");
         ctx.fillStyle = grad;
         ctx.fillRect(0, H, W, bandH);
         // divider
-        ctx.fillStyle = "rgba(255,255,255,0.10)";
+        ctx.fillStyle = "rgba(80,55,30,0.20)";
         ctx.fillRect(Math.round(W * 0.08), H, Math.round(W * 0.84), 1);
 
         const drawText = () => {
           const pad = Math.round(W * 0.05);
-          const qrSize = Math.round(bandH * 0.78);
+          const qrSize = Math.round(bandH * 0.72);
           const qrX = pad;
           const qrY = H + Math.round((bandH - qrSize) / 2);
-          if (qr) {
-            // white quiet zone
-            ctx.fillStyle = "#ffffff";
-            const qz = Math.round(qrSize * 0.06);
-            ctx.fillRect(qrX - qz, qrY - qz, qrSize + qz * 2, qrSize + qz * 2);
-          }
           // text block
           const textX = qrX + qrSize + Math.round(W * 0.04);
           const textW = W - textX - pad;
@@ -732,26 +732,26 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           const scanLine = "Scan to mix your own → vibetail.com";
           const igLine = "Follow @vibe.tail for more cocktails";
 
-          ctx.fillStyle = "#4a3e3d";
+          ctx.fillStyle = "#2A2118";
           ctx.textBaseline = "top";
           ctx.font = `600 ${Math.round(bandH * 0.16)}px "Cormorant Garamond", Georgia, serif`;
-          const sloganY = H + Math.round(bandH * 0.16);
-          wrapText(ctx, slogan, textX, sloganY, textW, Math.round(bandH * 0.19));
+          const sloganY = H + Math.round(bandH * 0.18);
+          wrapText(ctx, slogan, textX, sloganY, textW, Math.round(bandH * 0.20));
 
-          ctx.fillStyle = "#c2410c";
-          ctx.font = `700 ${Math.round(bandH * 0.11)}px "Inter", system-ui, -apple-system, sans-serif`;
+          ctx.fillStyle = "#8A7A62";
+          ctx.font = `600 ${Math.round(bandH * 0.11)}px "Cormorant Garamond", Georgia, serif`;
           ctx.fillText(scanLine, textX, H + Math.round(bandH * 0.58));
 
-          ctx.fillStyle = "#4a3e3d";
-          ctx.font = `500 ${Math.round(bandH * 0.10)}px "Inter", system-ui, -apple-system, sans-serif`;
-          ctx.fillText(igLine, textX, H + Math.round(bandH * 0.78));
+          ctx.fillStyle = "#8A7A62";
+          ctx.font = `500 ${Math.round(bandH * 0.10)}px "Cormorant Garamond", Georgia, serif`;
+          ctx.fillText(igLine, textX, H + Math.round(bandH * 0.80));
         };
 
         if (!qr) { drawText(); return resolve(canvas.toDataURL("image/png")); }
         const qrImg = new Image();
         qrImg.onload = () => {
           const pad = Math.round(W * 0.05);
-          const qrSize = Math.round(bandH * 0.78);
+          const qrSize = Math.round(bandH * 0.72);
           const qrX = pad;
           const qrY = H + Math.round((bandH - qrSize) / 2);
           drawText();
@@ -791,7 +791,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       const raw = await htmlToImage.toPng(captureRef.current, {
         pixelRatio: 2,
         cacheBust: true,
-        backgroundColor: "#fdf8f3",
+        backgroundColor: "#F3E8D6",
       });
       const dataUrl = await compositeQr(raw, qrDataUrl);
       const filename = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
@@ -848,7 +848,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       const raw = await htmlToImage.toPng(captureRef.current, {
         pixelRatio: 2,
         cacheBust: true,
-        backgroundColor: "#fdf8f3",
+        backgroundColor: "#F3E8D6",
       });
       const dataUrl = await compositeQr(raw, qrDataUrl);
       const frame = FRAME_STYLES.find((f) => f.id === frameId) ?? FRAME_STYLES[0];
