@@ -91,11 +91,17 @@ export default function GlassVessel({
   const value = sliderVal ?? internalVal;
   const canDrag = !!onSliderValChange && !isBrewing && !isThumb;
 
+  const activeColor =
+    colorStops && colorStops.length > 0
+      ? interpolateStops(colorStops, value / 100)
+      : color;
+
   const colors = {
-    main: color,
-    glow: hexToRgba(color, 0.55),
-    wave: hexToRgba(color, 0.75),
+    main: activeColor,
+    glow: hexToRgba(activeColor, 0.55),
+    wave: hexToRgba(activeColor, 0.75),
   };
+
 
   // Seed bubbles once
   useEffect(() => {
