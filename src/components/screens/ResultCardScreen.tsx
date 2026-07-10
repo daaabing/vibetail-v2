@@ -848,7 +848,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       const raw = await htmlToImage.toPng(captureRef.current, {
         pixelRatio: 2,
         cacheBust: true,
-        backgroundColor: "#fdf8f3",
+        backgroundColor: "#F3E8D6",
       });
       const dataUrl = await compositeQr(raw, qrDataUrl);
       const frame = FRAME_STYLES.find((f) => f.id === frameId) ?? FRAME_STYLES[0];
