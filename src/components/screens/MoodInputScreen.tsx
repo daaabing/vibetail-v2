@@ -292,7 +292,15 @@ export default function MoodInputScreen({
           >
             {/* Hero bottle — reflects current vibe */}
             <div className="flex justify-center pt-2 pb-1">
-              <VibeBottle color={currentVibeColor} size={180} mode="idle" />
+              <VibeBottle
+                color={currentVibeColor}
+                size={180}
+                mode="idle"
+                sliderVal={intensity}
+                onSliderValChange={setIntensity}
+                colorStops={MOOD_PALETTE}
+              />
+
             </div>
 
             <div className="text-center">
