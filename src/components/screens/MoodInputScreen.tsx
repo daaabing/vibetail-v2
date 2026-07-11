@@ -670,7 +670,7 @@ interface CloudChip {
   yAmp: number;
 }
 
-const ROW_COUNT = 5;
+const ROW_COUNT = 6;
 
 // Deterministic PRNG so hydration + re-renders don't reshuffle the cloud.
 function hashStr(s: string) {
