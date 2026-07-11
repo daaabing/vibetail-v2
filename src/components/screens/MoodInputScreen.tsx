@@ -312,54 +312,73 @@ export default function MoodInputScreen({
               </p>
             </div>
 
-            {/* Vibe chips */}
+            {/* Vibe chips — drifting cloud marquee */}
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
                 style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
                 {t("mood.chips.label")}
               </label>
-              <div className="flex flex-wrap gap-2">
-                {VIBE_CHIPS.map((chip) => {
-                  const displayLabel = lang === "zh" ? chip.label : (chip.labelEn ?? chip.label);
-                  const isSelected = mood === displayLabel;
+              <div
+                className="relative overflow-hidden group"
+                style={{
+                  maskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+                  WebkitMaskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+                }}
+              >
+                <motion.div
+                  className="flex gap-2 w-max py-1"
+                  animate={{ x: ["-50%", "0%"] }}
+                  transition={{ duration: 38, ease: "linear", repeat: Infinity }}
+                  style={{ willChange: "transform" }}
+                  whileHover={{ animationPlayState: "paused" }}
+                >
+                  {[...VIBE_CHIPS, ...VIBE_CHIPS].map((chip, idx) => {
+                    const displayLabel = lang === "zh" ? chip.label : (chip.labelEn ?? chip.label);
+                    const isSelected = mood === displayLabel;
+                    const floatDelay = (idx % VIBE_CHIPS.length) * 0.35;
+                    const floatDur = 5 + ((idx * 7) % 5) * 0.6;
 
-                  return (
-                    <motion.button
-                      key={chip.labelEn ?? chip.label}
-                      whileTap={{ scale: 0.88 }}
-                      onClick={() => {
-                        if (isSelected) {
-                          setMood("");
-                          setSelectedTag(null);
-                        } else {
-                          setMood(displayLabel);
-                          setSelectedTag(displayLabel);
-                          setCustomInputStarted(false);
-                          track("vibe_tag_selected", { selected_tag: displayLabel });
-                        }
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-                      style={{
-                        border: isSelected ? `1.5px solid ${chip.color}` : "1px solid rgba(255,255,255,0.12)",
-                        backgroundColor: isSelected ? `${chip.color}18` : "rgba(255,255,255,0.05)",
-                        backdropFilter: "blur(6px)",
-                        color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
-                        fontWeight: isSelected ? 600 : 400,
-                        boxShadow: isSelected ? `0 0 0 3px ${chip.color}22` : "none",
-                      }}
-                    >
-                      <span className="flex-shrink-0 rounded-full" style={{
-                        width: 7, height: 7,
-                        backgroundColor: chip.color,
-                        opacity: isSelected ? 1 : 0.7,
-                        boxShadow: isSelected ? `0 0 4px ${chip.color}88` : "none",
-                      }} />
-                      {displayLabel}
-                    </motion.button>
-                  );
-                })}
+                    return (
+                      <motion.button
+                        key={`${chip.labelEn ?? chip.label}-${idx}`}
+                        whileTap={{ scale: 0.88 }}
+                        animate={{ y: [0, -4, 0, 3, 0] }}
+                        transition={{ duration: floatDur, delay: floatDelay, repeat: Infinity, ease: "easeInOut" }}
+                        onClick={() => {
+                          if (isSelected) {
+                            setMood("");
+                            setSelectedTag(null);
+                          } else {
+                            setMood(displayLabel);
+                            setSelectedTag(displayLabel);
+                            setCustomInputStarted(false);
+                            track("vibe_tag_selected", { selected_tag: displayLabel });
+                          }
+                        }}
+                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
+                        style={{
+                          border: isSelected ? `1.5px solid ${chip.color}` : "1px solid rgba(255,255,255,0.12)",
+                          backgroundColor: isSelected ? `${chip.color}18` : "rgba(255,255,255,0.05)",
+                          backdropFilter: "blur(6px)",
+                          color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
+                          fontWeight: isSelected ? 600 : 400,
+                          boxShadow: isSelected ? `0 0 0 3px ${chip.color}22` : "none",
+                        }}
+                      >
+                        <span className="flex-shrink-0 rounded-full" style={{
+                          width: 7, height: 7,
+                          backgroundColor: chip.color,
+                          opacity: isSelected ? 1 : 0.7,
+                          boxShadow: isSelected ? `0 0 4px ${chip.color}88` : "none",
+                        }} />
+                        {displayLabel}
+                      </motion.button>
+                    );
+                  })}
+                </motion.div>
               </div>
             </div>
+
 
             {/* Divider */}
             <div className="flex items-center gap-3">
