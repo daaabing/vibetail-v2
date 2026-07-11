@@ -740,26 +740,25 @@ function VibeCloud({ rows, mood, onPick, label }: VibeCloudProps) {
         {label}
       </label>
       <div
-        className="relative overflow-hidden py-2"
+        className="relative overflow-hidden py-3"
         style={{
+          minHeight: 360,
           maskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
           WebkitMaskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
         }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-4">
           {cloudRows.map((bucket, rowIdx) => {
             const containsSelected = !!mood && bucket.chips.some((c) => c.label === mood);
             const paused = hovered || containsSelected;
             const from = bucket.dir === "ltr" ? "-50%" : "0%";
             const to = bucket.dir === "ltr" ? "0%" : "-50%";
-            // Slight vertical offset per row so chips overlap like cloud puffs.
-            const rowY = (rowIdx % 2 === 0 ? -1 : 1) * 2;
             return (
-              <div key={rowIdx} className="relative overflow-hidden" style={{ marginTop: rowY }}>
+              <div key={rowIdx} className="relative overflow-hidden" style={{ minHeight: 40 }}>
                 <motion.div
-                  className="flex gap-2 w-max"
+                  className="flex gap-3 w-max items-center"
                   animate={paused ? { x: from } : { x: [from, to] }}
                   transition={
                     paused
