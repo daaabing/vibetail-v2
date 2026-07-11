@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { encodeCocktailToHash, type Cocktail } from "@/lib/cocktails-store";
@@ -316,84 +316,24 @@ export default function MoodInputScreen({
               </p>
             </div>
 
-            {/* Vibe cloud — multiple drifting rows, one per hidden category */}
-            <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
-                style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
-                {t("mood.chips.label")}
-              </label>
-              <div
-                className="relative overflow-hidden space-y-2 py-1"
-                style={{
-                  maskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
-                  WebkitMaskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
-                }}
-              >
-                {(lang === "zh" ? VIBE_ROWS_ZH : VIBE_ROWS_EN).map((row, rowIdx) => {
-                  const hasSelectedInRow = row.labels.includes(mood);
-                  // Slower for longer rows so speed feels consistent.
-                  const duration = Math.max(48, row.labels.length * 2.2);
-                  const from = row.dir === "ltr" ? "-50%" : "0%";
-                  const to = row.dir === "ltr" ? "0%" : "-50%";
-                  return (
-                    <div key={rowIdx} className="relative overflow-hidden">
-                      <motion.div
-                        className="flex gap-2 w-max"
-                        animate={hasSelectedInRow ? { x: from } : { x: [from, to] }}
-                        transition={
-                          hasSelectedInRow
-                            ? { duration: 0 }
-                            : { duration, ease: "linear", repeat: Infinity }
-                        }
-                        style={{ willChange: "transform" }}
-                      >
-                        {[...row.labels, ...row.labels].map((label, idx) => {
-                          const isSelected = mood === label;
-                          const floatDelay = (idx % row.labels.length) * 0.28 + rowIdx * 0.15;
-                          const floatDur = 5 + ((idx * 7) % 5) * 0.6;
-                          return (
-                            <motion.button
-                              key={`${rowIdx}-${label}-${idx}`}
-                              whileTap={{ scale: 0.9 }}
-                              animate={{ y: [0, -4, 0, 3, 0] }}
-                              transition={{ duration: floatDur, delay: floatDelay, repeat: Infinity, ease: "easeInOut" }}
-                              onClick={() => {
-                                if (isSelected) {
-                                  setMood("");
-                                  setSelectedTag(null);
-                                } else {
-                                  setMood(label);
-                                  setSelectedTag(label);
-                                  setCustomInputStarted(false);
-                                  track("vibe_tag_selected", { selected_tag: label });
-                                }
-                              }}
-                              className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
-                              style={{
-                                border: isSelected ? `1.5px solid ${row.color}` : "1px solid rgba(255,255,255,0.12)",
-                                backgroundColor: isSelected ? `${row.color}22` : "rgba(255,255,255,0.05)",
-                                backdropFilter: "blur(6px)",
-                                color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
-                                fontWeight: isSelected ? 600 : 400,
-                                boxShadow: isSelected ? `0 0 0 3px ${row.color}22, 0 0 18px ${row.color}44` : "none",
-                              }}
-                            >
-                              <span className="flex-shrink-0 rounded-full" style={{
-                                width: 7, height: 7,
-                                backgroundColor: row.color,
-                                opacity: isSelected ? 1 : 0.7,
-                                boxShadow: isSelected ? `0 0 4px ${row.color}88` : "none",
-                              }} />
-                              {label}
-                            </motion.button>
-                          );
-                        })}
-                      </motion.div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            {/* Vibe cloud — chips scattered across rows like a drifting cloud */}
+            <VibeCloud
+              rows={lang === "zh" ? VIBE_ROWS_ZH : VIBE_ROWS_EN}
+              mood={mood}
+              onPick={(label) => {
+                if (mood === label) {
+                  setMood("");
+                  setSelectedTag(null);
+                } else {
+                  setMood(label);
+                  setSelectedTag(label);
+                  setCustomInputStarted(false);
+                  track("vibe_tag_selected", { selected_tag: label });
+                }
+              }}
+              label={t("mood.chips.label")}
+            />
+
 
 
 
@@ -705,3 +645,183 @@ export default function MoodInputScreen({
     </div>
   );
 }
+
+// ── Cloud of drifting vibe chips ──────────────────────────────────────────
+// - Mixes labels from all categories across all rows (no per-category rows).
+// - Chips have varied sizes and vertical float offsets so it reads like a
+//   soft cloud, not a marching caterpillar.
+// - Hovering ANYWHERE inside the cloud pauses every row.
+// - The row that contains the currently selected mood also stays paused
+//   even after the pointer leaves, so the selection stays visible.
+
+interface VibeCloudProps {
+  rows: { color: string; dir: "ltr" | "rtl"; labels: string[] }[];
+  mood: string;
+  onPick: (label: string) => void;
+  label: string;
+}
+
+interface CloudChip {
+  label: string;
+  color: string;
+  scale: number;
+  floatDur: number;
+  floatDelay: number;
+  yAmp: number;
+}
+
+const ROW_COUNT = 5;
+
+// Deterministic PRNG so hydration + re-renders don't reshuffle the cloud.
+function hashStr(s: string) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function mulberry32(a: number) {
+  return function () {
+    let t = (a += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function VibeCloud({ rows, mood, onPick, label }: VibeCloudProps) {
+  const [hovered, setHovered] = useState(false);
+
+  const cloudRows = useMemo(() => {
+    const all: CloudChip[] = [];
+    for (const r of rows) {
+      for (const l of r.labels) all.push({
+        label: l, color: r.color,
+        scale: 1, floatDur: 0, floatDelay: 0, yAmp: 0,
+      });
+    }
+    const seed = hashStr(all.map((c) => c.label).join("|"));
+    const rand = mulberry32(seed);
+    // Fisher-Yates
+    for (let i = all.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [all[i], all[j]] = [all[j], all[i]];
+    }
+    // Assign per-chip float + size variance
+    for (const c of all) {
+      const r1 = rand();
+      const r2 = rand();
+      const r3 = rand();
+      c.scale = 0.82 + r1 * 0.4;          // 0.82 – 1.22
+      c.floatDur = 4.5 + r2 * 3.5;         // 4.5 – 8s
+      c.floatDelay = r3 * 4;               // 0 – 4s
+      c.yAmp = 3 + rand() * 5;             // 3 – 8px
+    }
+    // Distribute round-robin into ROW_COUNT rows, alternating direction.
+    const buckets: { chips: CloudChip[]; dir: "ltr" | "rtl"; duration: number }[] = [];
+    for (let i = 0; i < ROW_COUNT; i++) {
+      buckets.push({
+        chips: [],
+        dir: i % 2 === 0 ? "rtl" : "ltr",
+        duration: 55 + i * 6 + rand() * 10,
+      });
+    }
+    all.forEach((c, i) => buckets[i % ROW_COUNT].chips.push(c));
+    return buckets;
+  }, [rows]);
+
+  return (
+    <div>
+      <label
+        className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
+        style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}
+      >
+        {label}
+      </label>
+      <div
+        className="relative overflow-hidden py-2"
+        style={{
+          maskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
+          WebkitMaskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
+        }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <div className="space-y-1.5">
+          {cloudRows.map((bucket, rowIdx) => {
+            const containsSelected = !!mood && bucket.chips.some((c) => c.label === mood);
+            const paused = hovered || containsSelected;
+            const from = bucket.dir === "ltr" ? "-50%" : "0%";
+            const to = bucket.dir === "ltr" ? "0%" : "-50%";
+            // Slight vertical offset per row so chips overlap like cloud puffs.
+            const rowY = (rowIdx % 2 === 0 ? -1 : 1) * 2;
+            return (
+              <div key={rowIdx} className="relative overflow-hidden" style={{ marginTop: rowY }}>
+                <motion.div
+                  className="flex gap-2 w-max"
+                  animate={paused ? { x: from } : { x: [from, to] }}
+                  transition={
+                    paused
+                      ? { duration: 0 }
+                      : { duration: bucket.duration, ease: "linear", repeat: Infinity }
+                  }
+                  style={{ willChange: "transform" }}
+                >
+                  {[...bucket.chips, ...bucket.chips].map((chip, idx) => {
+                    const isSelected = mood === chip.label;
+                    return (
+                      <motion.button
+                        key={`${rowIdx}-${chip.label}-${idx}`}
+                        whileTap={{ scale: 0.9 }}
+                        animate={{ y: [0, -chip.yAmp, 0, chip.yAmp * 0.6, 0] }}
+                        transition={{
+                          duration: chip.floatDur,
+                          delay: chip.floatDelay,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                        onClick={() => onPick(chip.label)}
+                        className="flex-shrink-0 flex items-center gap-1.5 rounded-full font-medium whitespace-nowrap"
+                        style={{
+                          padding: `${5 * chip.scale}px ${11 * chip.scale}px`,
+                          fontSize: `${11 * chip.scale}px`,
+                          border: isSelected
+                            ? `1.5px solid ${chip.color}`
+                            : "1px solid rgba(255,255,255,0.10)",
+                          backgroundColor: isSelected
+                            ? `${chip.color}26`
+                            : "rgba(255,255,255,0.045)",
+                          backdropFilter: "blur(8px)",
+                          color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
+                          fontWeight: isSelected ? 600 : 400,
+                          opacity: isSelected ? 1 : 0.72 + (chip.scale - 0.82) * 0.5,
+                          boxShadow: isSelected
+                            ? `0 0 0 3px ${chip.color}22, 0 0 20px ${chip.color}55`
+                            : "none",
+                        }}
+                      >
+                        <span
+                          className="flex-shrink-0 rounded-full"
+                          style={{
+                            width: 6 * chip.scale,
+                            height: 6 * chip.scale,
+                            backgroundColor: chip.color,
+                            opacity: isSelected ? 1 : 0.65,
+                            boxShadow: isSelected ? `0 0 4px ${chip.color}88` : "none",
+                          }}
+                        />
+                        {chip.label}
+                      </motion.button>
+                    );
+                  })}
+                </motion.div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
