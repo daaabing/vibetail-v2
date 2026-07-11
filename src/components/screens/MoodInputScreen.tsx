@@ -1,5 +1,5 @@
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { encodeCocktailToHash, type Cocktail } from "@/lib/cocktails-store";
