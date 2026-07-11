@@ -670,7 +670,10 @@ interface CloudChip {
   yAmp: number;
 }
 
-const ROW_COUNT = 6;
+const ROW_COUNT = 4;
+// Each row needs enough chips so a single copy is wider than the container;
+// otherwise the browser clamps scrollLeft and the auto-drift appears frozen.
+const MIN_CHIPS_PER_ROW = 10;
 
 // Deterministic PRNG so hydration + re-renders don't reshuffle the cloud.
 function hashStr(s: string) {
