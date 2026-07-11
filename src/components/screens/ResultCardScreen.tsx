@@ -570,6 +570,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const mixingStartedAtRef = useRef(Date.now());
   const wasMixingRef = useRef(false);
   const captureRef = useRef<HTMLDivElement>(null);
+  const captureRawImageSource = cocktail?.imageUrl ?? (imageData ? `data:image/png;base64,${imageData}` : null);
+  const captureParchmentSource = useParchmentImage(captureRawImageSource);
   const isPreview = !id || id === "preview";
   const isPersisted = !isPreview || persistedId !== null;
 
@@ -1072,10 +1074,24 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         >
           {/* Hero image */}
           <div style={{ width: "100%", height: 420, borderRadius: 18, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
-            {cocktail.imageUrl ? (
-              <img src={cocktail.imageUrl} alt={cocktail.cocktailName} crossOrigin="anonymous" style={{ width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply" }} />
-            ) : imageData ? (
-              <img src={`data:image/png;base64,${imageData}`} alt={cocktail.cocktailName} style={{ width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply" }} />
+            {captureRawImageSource ? (
+              <img
+                src={captureParchmentSource ?? captureRawImageSource}
+                alt={cocktail.cocktailName}
+                crossOrigin="anonymous"
+                style={{
+                  width: "112%",
+                  height: "112%",
+                  objectFit: "contain",
+                  maxWidth: "none",
+                  mixBlendMode: "normal",
+                  filter: "contrast(1.05) saturate(0.96)",
+                  WebkitMaskImage:
+                    "radial-gradient(ellipse at center, black 38%, rgba(0,0,0,0.92) 52%, rgba(0,0,0,0.55) 66%, rgba(0,0,0,0.18) 78%, transparent 90%)",
+                  maskImage:
+                    "radial-gradient(ellipse at center, black 38%, rgba(0,0,0,0.92) 52%, rgba(0,0,0,0.55) 66%, rgba(0,0,0,0.18) 78%, transparent 90%)",
+                }}
+              />
             ) : (
               <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#8A7A62" strokeWidth="0.8" opacity="0.3">
                 <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z" strokeLinecap="round" strokeLinejoin="round" />
