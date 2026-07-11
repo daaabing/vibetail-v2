@@ -732,6 +732,12 @@ function VibeCloud({ rows, mood, onPick, label }: VibeCloudProps) {
       });
     }
     all.forEach((c, i) => buckets[i % ROW_COUNT].chips.push(c));
+    // Pad short rows by repeating chips until we have enough width to scroll.
+    for (const b of buckets) {
+      if (b.chips.length === 0) continue;
+      const base = [...b.chips];
+      while (b.chips.length < MIN_CHIPS_PER_ROW) b.chips.push(...base);
+    }
     return buckets;
   }, [rows]);
 
