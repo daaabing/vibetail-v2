@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { encodeCocktailToHash, type Cocktail } from "@/lib/cocktails-store";
 import { toast } from "sonner";
 import { FLAVOR_CHIPS, MOOD_PLACEHOLDERS_EN, MOOD_PLACEHOLDERS_ZH, CUSTOM_FLAVOR_PLACEHOLDERS_EN, CUSTOM_FLAVOR_PLACEHOLDERS_ZH, VIBE_CHIPS } from "@/lib/moodtail-data";
+import { VIBE_ROWS_EN, VIBE_ROWS_ZH } from "@/lib/vibe-cloud";
 import { pickTashiRecipe } from "@/lib/tashi-recipes";
 import { pickVibeExample } from "@/lib/vibe-examples";
 import { useLang } from "@/lib/i18n";
@@ -67,8 +68,11 @@ export default function MoodInputScreen({
   const moodPlaceholder = moodPlaceholders[randomMoodIdx.current % moodPlaceholders.length];
   const customPlaceholder = customPlaceholders[randomCustomIdx.current % customPlaceholders.length];
 
-  // Derive the bottle color from current selections (mood chip → spirit → flavor → primary).
+  // Derive the bottle color from current selections (cloud row → mood chip → spirit → flavor → primary).
   const currentVibeColor = (() => {
+    const rows = lang === "zh" ? VIBE_ROWS_ZH : VIBE_ROWS_EN;
+    const row = rows.find((r) => r.labels.includes(mood));
+    if (row) return row.color;
     const chip = VIBE_CHIPS.find(
       (c) => c.label === mood || c.labelEn === mood,
     );
@@ -312,72 +316,85 @@ export default function MoodInputScreen({
               </p>
             </div>
 
-            {/* Vibe chips — drifting cloud marquee */}
+            {/* Vibe cloud — multiple drifting rows, one per hidden category */}
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
                 style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
                 {t("mood.chips.label")}
               </label>
               <div
-                className="relative overflow-hidden group"
+                className="relative overflow-hidden space-y-2 py-1"
                 style={{
-                  maskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
-                  WebkitMaskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+                  maskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
+                  WebkitMaskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
                 }}
               >
-                <motion.div
-                  className="flex gap-2 w-max py-1"
-                  animate={{ x: ["-50%", "0%"] }}
-                  transition={{ duration: 38, ease: "linear", repeat: Infinity }}
-                  style={{ willChange: "transform" }}
-                  whileHover={{ animationPlayState: "paused" }}
-                >
-                  {[...VIBE_CHIPS, ...VIBE_CHIPS].map((chip, idx) => {
-                    const displayLabel = lang === "zh" ? chip.label : (chip.labelEn ?? chip.label);
-                    const isSelected = mood === displayLabel;
-                    const floatDelay = (idx % VIBE_CHIPS.length) * 0.35;
-                    const floatDur = 5 + ((idx * 7) % 5) * 0.6;
-
-                    return (
-                      <motion.button
-                        key={`${chip.labelEn ?? chip.label}-${idx}`}
-                        whileTap={{ scale: 0.88 }}
-                        animate={{ y: [0, -4, 0, 3, 0] }}
-                        transition={{ duration: floatDur, delay: floatDelay, repeat: Infinity, ease: "easeInOut" }}
-                        onClick={() => {
-                          if (isSelected) {
-                            setMood("");
-                            setSelectedTag(null);
-                          } else {
-                            setMood(displayLabel);
-                            setSelectedTag(displayLabel);
-                            setCustomInputStarted(false);
-                            track("vibe_tag_selected", { selected_tag: displayLabel });
-                          }
-                        }}
-                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
-                        style={{
-                          border: isSelected ? `1.5px solid ${chip.color}` : "1px solid rgba(255,255,255,0.12)",
-                          backgroundColor: isSelected ? `${chip.color}18` : "rgba(255,255,255,0.05)",
-                          backdropFilter: "blur(6px)",
-                          color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
-                          fontWeight: isSelected ? 600 : 400,
-                          boxShadow: isSelected ? `0 0 0 3px ${chip.color}22` : "none",
-                        }}
+                {(lang === "zh" ? VIBE_ROWS_ZH : VIBE_ROWS_EN).map((row, rowIdx) => {
+                  const hasSelectedInRow = row.labels.includes(mood);
+                  // Slower for longer rows so speed feels consistent.
+                  const duration = Math.max(48, row.labels.length * 2.2);
+                  const from = row.dir === "ltr" ? "-50%" : "0%";
+                  const to = row.dir === "ltr" ? "0%" : "-50%";
+                  return (
+                    <div key={rowIdx} className="relative overflow-hidden">
+                      <motion.div
+                        className="flex gap-2 w-max"
+                        animate={hasSelectedInRow ? { x: from } : { x: [from, to] }}
+                        transition={
+                          hasSelectedInRow
+                            ? { duration: 0 }
+                            : { duration, ease: "linear", repeat: Infinity }
+                        }
+                        style={{ willChange: "transform" }}
                       >
-                        <span className="flex-shrink-0 rounded-full" style={{
-                          width: 7, height: 7,
-                          backgroundColor: chip.color,
-                          opacity: isSelected ? 1 : 0.7,
-                          boxShadow: isSelected ? `0 0 4px ${chip.color}88` : "none",
-                        }} />
-                        {displayLabel}
-                      </motion.button>
-                    );
-                  })}
-                </motion.div>
+                        {[...row.labels, ...row.labels].map((label, idx) => {
+                          const isSelected = mood === label;
+                          const floatDelay = (idx % row.labels.length) * 0.28 + rowIdx * 0.15;
+                          const floatDur = 5 + ((idx * 7) % 5) * 0.6;
+                          return (
+                            <motion.button
+                              key={`${rowIdx}-${label}-${idx}`}
+                              whileTap={{ scale: 0.9 }}
+                              animate={{ y: [0, -4, 0, 3, 0] }}
+                              transition={{ duration: floatDur, delay: floatDelay, repeat: Infinity, ease: "easeInOut" }}
+                              onClick={() => {
+                                if (isSelected) {
+                                  setMood("");
+                                  setSelectedTag(null);
+                                } else {
+                                  setMood(label);
+                                  setSelectedTag(label);
+                                  setCustomInputStarted(false);
+                                  track("vibe_tag_selected", { selected_tag: label });
+                                }
+                              }}
+                              className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
+                              style={{
+                                border: isSelected ? `1.5px solid ${row.color}` : "1px solid rgba(255,255,255,0.12)",
+                                backgroundColor: isSelected ? `${row.color}22` : "rgba(255,255,255,0.05)",
+                                backdropFilter: "blur(6px)",
+                                color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
+                                fontWeight: isSelected ? 600 : 400,
+                                boxShadow: isSelected ? `0 0 0 3px ${row.color}22, 0 0 18px ${row.color}44` : "none",
+                              }}
+                            >
+                              <span className="flex-shrink-0 rounded-full" style={{
+                                width: 7, height: 7,
+                                backgroundColor: row.color,
+                                opacity: isSelected ? 1 : 0.7,
+                                boxShadow: isSelected ? `0 0 4px ${row.color}88` : "none",
+                              }} />
+                              {label}
+                            </motion.button>
+                          );
+                        })}
+                      </motion.div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
+
 
 
             {/* Divider */}
