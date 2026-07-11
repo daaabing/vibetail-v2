@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { encodeCocktailToHash, type Cocktail } from "@/lib/cocktails-store";
 import { toast } from "sonner";
 import { FLAVOR_CHIPS, MOOD_PLACEHOLDERS_EN, MOOD_PLACEHOLDERS_ZH, CUSTOM_FLAVOR_PLACEHOLDERS_EN, CUSTOM_FLAVOR_PLACEHOLDERS_ZH, VIBE_CHIPS } from "@/lib/moodtail-data";
+import { VIBE_ROWS_EN, VIBE_ROWS_ZH } from "@/lib/vibe-cloud";
 import { pickTashiRecipe } from "@/lib/tashi-recipes";
 import { pickVibeExample } from "@/lib/vibe-examples";
 import { useLang } from "@/lib/i18n";
