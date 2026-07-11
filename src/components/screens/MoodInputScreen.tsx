@@ -752,7 +752,7 @@ function VibeCloud({ rows, mood, onPick, label }: VibeCloudProps) {
       <div
         className="relative overflow-hidden py-3"
         style={{
-          minHeight: 360,
+          minHeight: 240,
           maskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
           WebkitMaskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
         }}
