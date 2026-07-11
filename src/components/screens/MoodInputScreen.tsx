@@ -68,8 +68,11 @@ export default function MoodInputScreen({
   const moodPlaceholder = moodPlaceholders[randomMoodIdx.current % moodPlaceholders.length];
   const customPlaceholder = customPlaceholders[randomCustomIdx.current % customPlaceholders.length];
 
-  // Derive the bottle color from current selections (mood chip → spirit → flavor → primary).
+  // Derive the bottle color from current selections (cloud row → mood chip → spirit → flavor → primary).
   const currentVibeColor = (() => {
+    const rows = lang === "zh" ? VIBE_ROWS_ZH : VIBE_ROWS_EN;
+    const row = rows.find((r) => r.labels.includes(mood));
+    if (row) return row.color;
     const chip = VIBE_CHIPS.find(
       (c) => c.label === mood || c.labelEn === mood,
     );
