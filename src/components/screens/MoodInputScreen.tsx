@@ -719,12 +719,13 @@ function VibeCloud({ rows, mood, onPick, label }: VibeCloudProps) {
       c.yAmp = 1.5 + rand() * 2.5;         // 1.5 – 4px (stays inside its row)
     }
     // Distribute round-robin into ROW_COUNT rows, alternating direction.
-    const buckets: { chips: CloudChip[]; dir: "ltr" | "rtl"; duration: number }[] = [];
+    const buckets: { chips: CloudChip[]; dir: "ltr" | "rtl"; speed: number }[] = [];
     for (let i = 0; i < ROW_COUNT; i++) {
       buckets.push({
         chips: [],
         dir: i % 2 === 0 ? "rtl" : "ltr",
-        duration: 140 + i * 12 + rand() * 30, // very slow drift, 140–210s
+        // px per second — a bit faster than before, varies per row.
+        speed: 22 + i * 2 + rand() * 6, // ~22–36 px/s
       });
     }
     all.forEach((c, i) => buckets[i % ROW_COUNT].chips.push(c));
