@@ -670,7 +670,7 @@ interface CloudChip {
   yAmp: number;
 }
 
-const ROW_COUNT = 5;
+const ROW_COUNT = 6;
 
 // Deterministic PRNG so hydration + re-renders don't reshuffle the cloud.
 function hashStr(s: string) {
@@ -713,10 +713,10 @@ function VibeCloud({ rows, mood, onPick, label }: VibeCloudProps) {
       const r1 = rand();
       const r2 = rand();
       const r3 = rand();
-      c.scale = 0.82 + r1 * 0.4;          // 0.82 – 1.22
-      c.floatDur = 4.5 + r2 * 3.5;         // 4.5 – 8s
-      c.floatDelay = r3 * 4;               // 0 – 4s
-      c.yAmp = 3 + rand() * 5;             // 3 – 8px
+      c.scale = 0.85 + r1 * 0.35;         // 0.85 – 1.20
+      c.floatDur = 6 + r2 * 4;             // 6 – 10s
+      c.floatDelay = r3 * 5;               // 0 – 5s
+      c.yAmp = 1.5 + rand() * 2.5;         // 1.5 – 4px (stays inside its row)
     }
     // Distribute round-robin into ROW_COUNT rows, alternating direction.
     const buckets: { chips: CloudChip[]; dir: "ltr" | "rtl"; duration: number }[] = [];
@@ -724,7 +724,7 @@ function VibeCloud({ rows, mood, onPick, label }: VibeCloudProps) {
       buckets.push({
         chips: [],
         dir: i % 2 === 0 ? "rtl" : "ltr",
-        duration: 55 + i * 6 + rand() * 10,
+        duration: 140 + i * 12 + rand() * 30, // very slow drift, 140–210s
       });
     }
     all.forEach((c, i) => buckets[i % ROW_COUNT].chips.push(c));
@@ -740,26 +740,25 @@ function VibeCloud({ rows, mood, onPick, label }: VibeCloudProps) {
         {label}
       </label>
       <div
-        className="relative overflow-hidden py-2"
+        className="relative overflow-hidden py-3"
         style={{
+          minHeight: 360,
           maskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
           WebkitMaskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
         }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-4">
           {cloudRows.map((bucket, rowIdx) => {
             const containsSelected = !!mood && bucket.chips.some((c) => c.label === mood);
             const paused = hovered || containsSelected;
             const from = bucket.dir === "ltr" ? "-50%" : "0%";
             const to = bucket.dir === "ltr" ? "0%" : "-50%";
-            // Slight vertical offset per row so chips overlap like cloud puffs.
-            const rowY = (rowIdx % 2 === 0 ? -1 : 1) * 2;
             return (
-              <div key={rowIdx} className="relative overflow-hidden" style={{ marginTop: rowY }}>
+              <div key={rowIdx} className="relative overflow-hidden" style={{ minHeight: 40 }}>
                 <motion.div
-                  className="flex gap-2 w-max"
+                  className="flex gap-3 w-max items-center"
                   animate={paused ? { x: from } : { x: [from, to] }}
                   transition={
                     paused
