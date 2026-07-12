@@ -933,7 +933,7 @@ function VibeCloud({ rows, mood, onPick, label }: VibeCloudProps) {
         chips: [],
         dir: i % 2 === 0 ? "rtl" : "ltr",
         // px per second — a bit faster than before, varies per row.
-        speed: 22 + i * 3 + rand() * 6, // ~22–36 px/s
+        speed: 26 + rand() * 10, // ~26–36 px/s
       });
     }
     all.forEach((c, i) => buckets[i % ROW_COUNT].chips.push(c));
