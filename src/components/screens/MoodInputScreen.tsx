@@ -674,6 +674,7 @@ const ROW_COUNT = 4;
 // Each row needs enough chips so a single copy is wider than the container;
 // otherwise the browser clamps scrollLeft and the auto-drift appears frozen.
 const MIN_CHIPS_PER_ROW = 10;
+const CLOUD_ROW_COPIES = 6;
 
 // Deterministic PRNG so hydration + re-renders don't reshuffle the cloud.
 function hashStr(s: string) {
@@ -792,15 +793,20 @@ function CloudRow({
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
   const userActiveUntilRef = useRef(0);
+  const loopWidthRef = useRef(0);
 
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
     const dir = bucket.dir === "ltr" ? -1 : 1;
+    const measureLoopWidth = () => {
+      loopWidthRef.current = el.scrollWidth / CLOUD_ROW_COPIES;
+      return loopWidthRef.current;
+    };
     // Start midway for ltr rows so there's room to scroll leftward.
     const setInitial = () => {
-      const half = el.scrollWidth / 2;
-      if (half > 0) el.scrollLeft = dir === -1 ? half : 0;
+      const loopWidth = measureLoopWidth();
+      if (loopWidth > 0) el.scrollLeft = dir === -1 ? loopWidth : 0;
     };
     setInitial();
 
@@ -814,17 +820,17 @@ function CloudRow({
     const step = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      const half = el.scrollWidth / 2;
-      if (half > 0) {
+      const loopWidth = loopWidthRef.current || measureLoopWidth();
+      if (loopWidth > 0) {
         if (!pausedRef.current && now > userActiveUntilRef.current) {
           let next = el.scrollLeft + dir * bucket.speed * dt;
-          if (next >= half) next -= half;
-          if (next < 0) next += half;
+          if (next >= loopWidth) next -= loopWidth;
+          if (next < 0) next += loopWidth;
           el.scrollLeft = next;
         } else {
           // Even while user drags, seamlessly wrap so the loop stays infinite.
-          if (el.scrollLeft >= half) el.scrollLeft -= half;
-          else if (el.scrollLeft < 0) el.scrollLeft += half;
+          if (el.scrollLeft >= loopWidth) el.scrollLeft %= loopWidth;
+          else if (el.scrollLeft < 0) el.scrollLeft += loopWidth;
         }
       }
       raf = requestAnimationFrame(step);
@@ -852,7 +858,7 @@ function CloudRow({
     >
       <style>{`.vibe-cloud-row::-webkit-scrollbar{display:none}`}</style>
       <div className="flex gap-3 w-max items-center py-1">
-        {[...bucket.chips, ...bucket.chips].map((chip, idx) => {
+        {Array.from({ length: CLOUD_ROW_COPIES }).flatMap(() => bucket.chips).map((chip, idx) => {
           const isSelected = mood === chip.label;
           return (
             <motion.button
