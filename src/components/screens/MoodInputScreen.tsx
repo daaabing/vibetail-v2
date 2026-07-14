@@ -1062,7 +1062,7 @@ function CloudRow({
           minHeight: 40,
           scrollbarWidth: "none",
           msOverflowStyle: "none",
-          touchAction: "pan-x",
+          touchAction: "pan-x pan-y",
           WebkitOverflowScrolling: "touch",
         } as React.CSSProperties
       }
