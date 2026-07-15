@@ -283,6 +283,7 @@ export type Database = {
           enabled_game_ids: string[]
           game_display_order: string[]
           id: string
+          menu_theme: string | null
           merchant_id: string
           name: string
           published_version_id: string | null
@@ -297,6 +298,7 @@ export type Database = {
           enabled_game_ids?: string[]
           game_display_order?: string[]
           id?: string
+          menu_theme?: string | null
           merchant_id: string
           name: string
           published_version_id?: string | null
@@ -311,6 +313,7 @@ export type Database = {
           enabled_game_ids?: string[]
           game_display_order?: string[]
           id?: string
+          menu_theme?: string | null
           merchant_id?: string
           name?: string
           published_version_id?: string | null
