@@ -28,11 +28,33 @@ const inkButtonStyle = {
   boxShadow: "2px 3px 12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
 };
 
-export default function MoodInputScreen({ restaurantId, menuSlug }: { restaurantId?: string; menuSlug?: "dcp" } = {}) {
+type MenuContext = {
+  merchantSlug: string;
+  menuSlug: string;
+  gameId: string;
+  restaurantName?: string;
+};
+
+export default function MoodInputScreen({
+  restaurantId,
+  menuSlug,
+  menuContext,
+}: {
+  restaurantId?: string;
+  menuSlug?: "dcp";
+  menuContext?: MenuContext;
+} = {}) {
   const navigate = useNavigate();
   const { t, lang } = useLang();
-  const isRestaurant = !!restaurantId || !!menuSlug;
-  const restaurantParam = restaurantId ?? (menuSlug === "dcp" ? "double-chicken-please" : undefined);
+  // Legacy: menuSlug="dcp" is aliased to the unified menu context.
+  const effectiveMenuContext: MenuContext | undefined =
+    menuContext ??
+    (menuSlug === "dcp"
+      ? { merchantSlug: "double-chicken-please", menuSlug: "main", gameId: "vibetail-mood" }
+      : undefined);
+  const isRestaurant = !!restaurantId || !!effectiveMenuContext;
+  const restaurantParam =
+    restaurantId ?? effectiveMenuContext?.merchantSlug;
   const [step, setStep] = useState<1 | 2>(1);
   const [mood, setMood] = useState("");
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);

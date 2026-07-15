@@ -22,6 +22,7 @@ import { Route as ApiMenuMatchRouteImport } from './routes/api/menu-match'
 import { Route as ApiMatchDcpCocktailRouteImport } from './routes/api/match-dcp-cocktail'
 import { Route as ApiGenerateCocktailImageRouteImport } from './routes/api/generate-cocktail-image'
 import { Route as ApiGenerateCocktailRouteImport } from './routes/api/generate-cocktail'
+import { Route as MMerchantSlugMenuSlugRouteImport } from './routes/m.$merchantSlug.$menuSlug'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -91,6 +92,11 @@ const ApiGenerateCocktailRoute = ApiGenerateCocktailRouteImport.update({
   path: '/api/generate-cocktail',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MMerchantSlugMenuSlugRoute = MMerchantSlugMenuSlugRouteImport.update({
+  id: '/m/$merchantSlug/$menuSlug',
+  path: '/m/$merchantSlug/$menuSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
   '/restaurant/$id': typeof RestaurantIdRoute
   '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
+  '/m/$merchantSlug/$menuSlug': typeof MMerchantSlugMenuSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
   '/restaurant/$id': typeof RestaurantIdRoute
   '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
+  '/m/$merchantSlug/$menuSlug': typeof MMerchantSlugMenuSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
   '/restaurant/$id': typeof RestaurantIdRoute
   '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
+  '/m/$merchantSlug/$menuSlug': typeof MMerchantSlugMenuSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/guides/mood-cocktail-recipes'
     | '/restaurant/$id'
     | '/restaurants/double-chicken-please'
+    | '/m/$merchantSlug/$menuSlug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/guides/mood-cocktail-recipes'
     | '/restaurant/$id'
     | '/restaurants/double-chicken-please'
+    | '/m/$merchantSlug/$menuSlug'
   id:
     | '__root__'
     | '/'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/guides/mood-cocktail-recipes'
     | '/restaurant/$id'
     | '/restaurants/double-chicken-please'
+    | '/m/$merchantSlug/$menuSlug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -200,6 +212,7 @@ export interface RootRouteChildren {
   GuidesMoodCocktailRecipesRoute: typeof GuidesMoodCocktailRecipesRoute
   RestaurantIdRoute: typeof RestaurantIdRoute
   RestaurantsDoubleChickenPleaseRoute: typeof RestaurantsDoubleChickenPleaseRoute
+  MMerchantSlugMenuSlugRoute: typeof MMerchantSlugMenuSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -295,6 +308,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGenerateCocktailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/m/$merchantSlug/$menuSlug': {
+      id: '/m/$merchantSlug/$menuSlug'
+      path: '/m/$merchantSlug/$menuSlug'
+      fullPath: '/m/$merchantSlug/$menuSlug'
+      preLoaderRoute: typeof MMerchantSlugMenuSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -312,6 +332,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesMoodCocktailRecipesRoute: GuidesMoodCocktailRecipesRoute,
   RestaurantIdRoute: RestaurantIdRoute,
   RestaurantsDoubleChickenPleaseRoute: RestaurantsDoubleChickenPleaseRoute,
+  MMerchantSlugMenuSlugRoute: MMerchantSlugMenuSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
