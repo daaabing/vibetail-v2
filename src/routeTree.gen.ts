@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RestaurantsDoubleChickenPleaseRouteImport } from './routes/restaurants.double-chicken-please'
 import { Route as RestaurantIdRouteImport } from './routes/restaurant.$id'
+import { Route as MMenuSlugRouteImport } from './routes/m.$menuSlug'
 import { Route as GuidesMoodCocktailRecipesRouteImport } from './routes/guides.mood-cocktail-recipes'
 import { Route as DrinksIdRouteImport } from './routes/drinks.$id'
 import { Route as ApiMatchEventMenuRouteImport } from './routes/api/match-event-menu'
@@ -57,6 +58,11 @@ const RestaurantsDoubleChickenPleaseRoute =
 const RestaurantIdRoute = RestaurantIdRouteImport.update({
   id: '/restaurant/$id',
   path: '/restaurant/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MMenuSlugRoute = MMenuSlugRouteImport.update({
+  id: '/m/$menuSlug',
+  path: '/m/$menuSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GuidesMoodCocktailRecipesRoute =
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/api/match-event-menu': typeof ApiMatchEventMenuRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
+  '/m/$menuSlug': typeof MMenuSlugRoute
   '/restaurant/$id': typeof RestaurantIdRoute
   '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
 }
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/api/match-event-menu': typeof ApiMatchEventMenuRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
+  '/m/$menuSlug': typeof MMenuSlugRoute
   '/restaurant/$id': typeof RestaurantIdRoute
   '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
 }
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/api/match-event-menu': typeof ApiMatchEventMenuRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
+  '/m/$menuSlug': typeof MMenuSlugRoute
   '/restaurant/$id': typeof RestaurantIdRoute
   '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
 }
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/api/match-event-menu'
     | '/drinks/$id'
     | '/guides/mood-cocktail-recipes'
+    | '/m/$menuSlug'
     | '/restaurant/$id'
     | '/restaurants/double-chicken-please'
   fileRoutesByTo: FileRoutesByTo
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/api/match-event-menu'
     | '/drinks/$id'
     | '/guides/mood-cocktail-recipes'
+    | '/m/$menuSlug'
     | '/restaurant/$id'
     | '/restaurants/double-chicken-please'
   id:
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/api/match-event-menu'
     | '/drinks/$id'
     | '/guides/mood-cocktail-recipes'
+    | '/m/$menuSlug'
     | '/restaurant/$id'
     | '/restaurants/double-chicken-please'
   fileRoutesById: FileRoutesById
@@ -198,6 +210,7 @@ export interface RootRouteChildren {
   ApiMatchEventMenuRoute: typeof ApiMatchEventMenuRoute
   DrinksIdRoute: typeof DrinksIdRoute
   GuidesMoodCocktailRecipesRoute: typeof GuidesMoodCocktailRecipesRoute
+  MMenuSlugRoute: typeof MMenuSlugRoute
   RestaurantIdRoute: typeof RestaurantIdRoute
   RestaurantsDoubleChickenPleaseRoute: typeof RestaurantsDoubleChickenPleaseRoute
 }
@@ -251,6 +264,13 @@ declare module '@tanstack/react-router' {
       path: '/restaurant/$id'
       fullPath: '/restaurant/$id'
       preLoaderRoute: typeof RestaurantIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/m/$menuSlug': {
+      id: '/m/$menuSlug'
+      path: '/m/$menuSlug'
+      fullPath: '/m/$menuSlug'
+      preLoaderRoute: typeof MMenuSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/guides/mood-cocktail-recipes': {
@@ -310,6 +330,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMatchEventMenuRoute: ApiMatchEventMenuRoute,
   DrinksIdRoute: DrinksIdRoute,
   GuidesMoodCocktailRecipesRoute: GuidesMoodCocktailRecipesRoute,
+  MMenuSlugRoute: MMenuSlugRoute,
   RestaurantIdRoute: RestaurantIdRoute,
   RestaurantsDoubleChickenPleaseRoute: RestaurantsDoubleChickenPleaseRoute,
 }

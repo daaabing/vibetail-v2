@@ -28,11 +28,12 @@ const inkButtonStyle = {
   boxShadow: "2px 3px 12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
 };
 
-export default function MoodInputScreen({ restaurantId, menuSlug }: { restaurantId?: string; menuSlug?: "dcp" } = {}) {
+export default function MoodInputScreen({ restaurantId, menuSlug, eventMenuId, eventMenuName }: { restaurantId?: string; menuSlug?: string; eventMenuId?: string; eventMenuName?: string } = {}) {
   const navigate = useNavigate();
   const { t, lang } = useLang();
+  const isEventMenu = !!menuSlug && menuSlug !== "dcp";
   const isRestaurant = !!restaurantId || !!menuSlug;
-  const restaurantParam = restaurantId ?? (menuSlug === "dcp" ? "double-chicken-please" : undefined);
+  const restaurantParam = restaurantId ?? (menuSlug === "dcp" ? "double-chicken-please" : menuSlug);
   const [step, setStep] = useState<1 | 2>(1);
   const [mood, setMood] = useState("");
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
