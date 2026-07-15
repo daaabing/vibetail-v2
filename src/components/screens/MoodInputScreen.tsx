@@ -307,12 +307,28 @@ export default function MoodInputScreen({
           toast.error(
             lang === "zh" ? "请求太频繁，请稍等片刻再试。" : "Too many requests. Please slow down and retry.",
           );
+        } else if (res.status === 409 && effectiveMenuContext) {
+          const detail = (await res.text().catch(() => "")).toLowerCase();
+          if (detail.includes("no active items") || detail.includes("has no")) {
+            toast.error(
+              lang === "zh"
+                ? "这份菜单暂时没有可点的酒，请稍后再试。"
+                : "This menu has no available drinks right now.",
+            );
+          } else if (detail.includes("not enabled")) {
+            toast.error(
+              lang === "zh" ? "该菜单未启用此玩法。" : "This game isn't enabled for this menu.",
+            );
+          } else {
+            toast.error(lang === "zh" ? "AI 调制失败，请重试。" : "AI couldn't mix this. Please retry.");
+          }
         } else {
           toast.error(lang === "zh" ? "AI 调制失败，请重试。" : "AI couldn't mix this. Please retry.");
         }
         setIsGenerating(false);
         return;
       }
+
       const generated = await res.json();
       const cocktail: Cocktail = {
         id: 0,
