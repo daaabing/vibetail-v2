@@ -10,8 +10,10 @@ import {
   createMenu,
   createMenuItem,
   deleteMenuItem,
+  setMenuTheme,
 } from "@/lib/menu/manage.functions";
 import { listActiveGames } from "@/lib/games/registry";
+import { AVAILABLE_THEMES } from "@/lib/menu/themes";
 
 export const Route = createFileRoute("/manage/$privateToken")({
   head: () => ({
