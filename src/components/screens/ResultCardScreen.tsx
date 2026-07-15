@@ -428,12 +428,32 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
             style={{ background: "rgba(80,55,30,0.08)", border: "1px solid rgba(80,55,30,0.18)" }}>
             <span className="text-[8px] tracking-widest uppercase block mb-1.5"
               style={{ fontFamily: "var(--font-body)", color: "#2A2118" }}>
-              {cocktail.lang === "zh" ? "点这杯" : "Order this"}
+              {cocktail.lang === "zh" ? "本场最适合你的酒" : "Your menu match"}
             </span>
-            <p className="text-xs leading-relaxed" style={{ color: "#2A2118" }}>
+            <p className="text-sm font-semibold leading-snug mb-1" style={{ fontFamily: "var(--font-heading)", color: "#2A2118" }}>
               {cocktail.menuItemName || cocktail.cocktailName}
               {cocktail.menuPrice ? ` · ${cocktail.menuPrice}` : ""}
-              {cocktail.restaurantName ? ` @ ${cocktail.restaurantName}` : ""}
+            </p>
+            {cocktail.restaurantName && (
+              <p className="text-[10px] italic" style={{ color: "#8A7A62", fontFamily: "var(--font-heading)" }}>
+                @ {cocktail.restaurantName}
+              </p>
+            )}
+            <p className="mt-2 text-[10px] tracking-wider uppercase" style={{ color: "#8A7A62", fontFamily: "var(--font-body)" }}>
+              {cocktail.lang === "zh" ? "拿这张卡去吧台点单" : "Show this screen to the bar"}
+            </p>
+          </div>
+        )}
+
+        {/* No eligible menu drink — friendly note on event-menu flows */}
+        {cocktail.noMenuMatch && (
+          <div className="mb-4 p-3 rounded-xl"
+            style={{ background: "rgba(80,55,30,0.06)", border: "1px dashed rgba(80,55,30,0.25)" }}>
+            <p className="text-xs leading-relaxed" style={{ color: "#2A2118", fontFamily: "var(--font-heading)", fontStyle: "italic" }}>
+              {cocktail.noMenuMatchMessage ||
+                (cocktail.lang === "zh"
+                  ? "当前菜单里暂时没有符合你偏好的饮品，可以向吧台询问其他选择。"
+                  : "No drink on tonight's menu fits your vibe yet — ask the bar for other options.")}
             </p>
           </div>
         )}
