@@ -302,7 +302,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
           <img
             src={parchmentImageSource ?? rawImageSource}
             alt={cocktail.cocktailName}
-            className="w-[112%] h-[112%] object-contain max-w-none"
+            className="w-full h-full object-contain max-w-none"
             style={{
               mixBlendMode: "normal",
               filter: "contrast(1.05) saturate(0.96)",
@@ -1106,8 +1106,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                 alt={cocktail.cocktailName}
                 crossOrigin="anonymous"
                 style={{
-                  width: "112%",
-                  height: "112%",
+                  width: "100%",
+                  height: "100%",
                   objectFit: "contain",
                   maxWidth: "none",
                   mixBlendMode: "normal",
