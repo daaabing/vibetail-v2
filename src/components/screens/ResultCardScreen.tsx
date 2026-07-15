@@ -351,23 +351,31 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
 
 
 
-        {/* Flavor keywords from tasting notes */}
-        <div className="flex justify-center gap-1.5 mt-3 flex-wrap">
-          {(Array.isArray((cocktail as any).flavorKeywords) && (cocktail as any).flavorKeywords.length > 0
-            ? (cocktail as any).flavorKeywords as string[]
-            : cocktail.flavorProfile.split(",").map((s: string) => s.trim())
-          ).map((f: string) => (
-            <span key={f} className="px-2 py-0.5 rounded text-[9px] uppercase"
-              style={{
-                background: "rgba(80,55,30,0.08)",
-                border: "1px solid rgba(80,55,30,0.15)",
-                fontFamily: "var(--font-body)",
-                color: "#8A7A62",
-              }}>
-              {f.trim()}
-            </span>
-          ))}
-        </div>
+        {/* Vibe-based tasting note (front) — for menu matches, prefer the narrative
+            tastesLike over the sentence-shaped flavorProfile which reads oddly as a chip. */}
+        {cocktail.matchedFromMenu ? (
+          <p className="text-center text-[11px] mt-3 leading-relaxed px-2"
+            style={{ fontFamily: "var(--font-body)", color: "#8A7A62" }}>
+            {cocktail.tastesLike}
+          </p>
+        ) : (
+          <div className="flex justify-center gap-1.5 mt-3 flex-wrap">
+            {(Array.isArray((cocktail as any).flavorKeywords) && (cocktail as any).flavorKeywords.length > 0
+              ? (cocktail as any).flavorKeywords as string[]
+              : cocktail.flavorProfile.split(",").map((s: string) => s.trim())
+            ).map((f: string) => (
+              <span key={f} className="px-2 py-0.5 rounded text-[9px] uppercase"
+                style={{
+                  background: "rgba(80,55,30,0.08)",
+                  border: "1px solid rgba(80,55,30,0.15)",
+                  fontFamily: "var(--font-body)",
+                  color: "#8A7A62",
+                }}>
+                {f.trim()}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
 
