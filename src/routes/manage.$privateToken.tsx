@@ -7,7 +7,11 @@ import {
   setItemAvailability,
   publishMenu,
   setMenuStatus,
+  createMenu,
+  createMenuItem,
+  deleteMenuItem,
 } from "@/lib/menu/manage.functions";
+import { listActiveGames } from "@/lib/games/registry";
 
 export const Route = createFileRoute("/manage/$privateToken")({
   head: () => ({
