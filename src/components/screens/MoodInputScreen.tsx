@@ -327,7 +327,7 @@ export default function MoodInputScreen({
         roast: generated.roast,
         category: generated.category,
         imageData: null,
-        imageUrl: null,
+        imageUrl: generated.imageUrl ?? null,
         lang,
         createdAt: new Date().toISOString(),
         userId: null,
