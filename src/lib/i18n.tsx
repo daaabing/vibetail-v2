@@ -20,7 +20,7 @@ export const translations: Record<Lang, Record<string, string>> = {
   zh: {
     // Landing
     "landing.tagline": "人不一定清醒，酒一定要对味",
-    "landing.subtitle": "把此刻的心情，调成一杯专属的酒",
+    "landing.subtitle": "把此刻的心情，调成难忘体验",
     "landing.cta.mix": "测一下我的 Vibe",
     "landing.cta.bar": "去 Vibe Bar 看看",
     "lang.toggle": "EN",
