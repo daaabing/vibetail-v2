@@ -196,7 +196,24 @@ function ManagePage() {
               </span>
             </button>
           ))}
+          {menus.length === 0 && (
+            <div className="text-sm" style={{ color: "var(--app-text-muted)" }}>
+              No menus yet — create your first one below.
+            </div>
+          )}
         </div>
+
+        <NewMenuForm
+          busy={busy}
+          activeGames={activeGames}
+          onCreate={async (payload) => {
+            await runTogglable("Menu created", async () => {
+              const res = await addMenu({ data: { token: privateToken, ...payload } });
+              await reloadMenus();
+              setActiveMenuId(res.menuId);
+            });
+          }}
+        />
       </section>
 
       {activeMenu && (
