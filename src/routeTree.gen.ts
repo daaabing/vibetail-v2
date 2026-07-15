@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RestaurantsDoubleChickenPleaseRouteImport } from './routes/restaurants.double-chicken-please'
 import { Route as RestaurantIdRouteImport } from './routes/restaurant.$id'
+import { Route as ManagePrivateTokenRouteImport } from './routes/manage.$privateToken'
 import { Route as GuidesMoodCocktailRecipesRouteImport } from './routes/guides.mood-cocktail-recipes'
 import { Route as DrinksIdRouteImport } from './routes/drinks.$id'
 import { Route as ApiMenuMatchRouteImport } from './routes/api/menu-match'
@@ -58,6 +59,11 @@ const RestaurantsDoubleChickenPleaseRoute =
 const RestaurantIdRoute = RestaurantIdRouteImport.update({
   id: '/restaurant/$id',
   path: '/restaurant/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManagePrivateTokenRoute = ManagePrivateTokenRouteImport.update({
+  id: '/manage/$privateToken',
+  path: '/manage/$privateToken',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GuidesMoodCocktailRecipesRoute =
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/api/menu-match': typeof ApiMenuMatchRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
+  '/manage/$privateToken': typeof ManagePrivateTokenRoute
   '/restaurant/$id': typeof RestaurantIdRoute
   '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
   '/m/$merchantSlug/$menuSlug': typeof MMerchantSlugMenuSlugRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/api/menu-match': typeof ApiMenuMatchRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
+  '/manage/$privateToken': typeof ManagePrivateTokenRoute
   '/restaurant/$id': typeof RestaurantIdRoute
   '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
   '/m/$merchantSlug/$menuSlug': typeof MMerchantSlugMenuSlugRoute
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/api/menu-match': typeof ApiMenuMatchRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
+  '/manage/$privateToken': typeof ManagePrivateTokenRoute
   '/restaurant/$id': typeof RestaurantIdRoute
   '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
   '/m/$merchantSlug/$menuSlug': typeof MMerchantSlugMenuSlugRoute
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/api/menu-match'
     | '/drinks/$id'
     | '/guides/mood-cocktail-recipes'
+    | '/manage/$privateToken'
     | '/restaurant/$id'
     | '/restaurants/double-chicken-please'
     | '/m/$merchantSlug/$menuSlug'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/api/menu-match'
     | '/drinks/$id'
     | '/guides/mood-cocktail-recipes'
+    | '/manage/$privateToken'
     | '/restaurant/$id'
     | '/restaurants/double-chicken-please'
     | '/m/$merchantSlug/$menuSlug'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/api/menu-match'
     | '/drinks/$id'
     | '/guides/mood-cocktail-recipes'
+    | '/manage/$privateToken'
     | '/restaurant/$id'
     | '/restaurants/double-chicken-please'
     | '/m/$merchantSlug/$menuSlug'
@@ -210,6 +222,7 @@ export interface RootRouteChildren {
   ApiMenuMatchRoute: typeof ApiMenuMatchRoute
   DrinksIdRoute: typeof DrinksIdRoute
   GuidesMoodCocktailRecipesRoute: typeof GuidesMoodCocktailRecipesRoute
+  ManagePrivateTokenRoute: typeof ManagePrivateTokenRoute
   RestaurantIdRoute: typeof RestaurantIdRoute
   RestaurantsDoubleChickenPleaseRoute: typeof RestaurantsDoubleChickenPleaseRoute
   MMerchantSlugMenuSlugRoute: typeof MMerchantSlugMenuSlugRoute
@@ -264,6 +277,13 @@ declare module '@tanstack/react-router' {
       path: '/restaurant/$id'
       fullPath: '/restaurant/$id'
       preLoaderRoute: typeof RestaurantIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manage/$privateToken': {
+      id: '/manage/$privateToken'
+      path: '/manage/$privateToken'
+      fullPath: '/manage/$privateToken'
+      preLoaderRoute: typeof ManagePrivateTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/guides/mood-cocktail-recipes': {
@@ -330,6 +350,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMenuMatchRoute: ApiMenuMatchRoute,
   DrinksIdRoute: DrinksIdRoute,
   GuidesMoodCocktailRecipesRoute: GuidesMoodCocktailRecipesRoute,
+  ManagePrivateTokenRoute: ManagePrivateTokenRoute,
   RestaurantIdRoute: RestaurantIdRoute,
   RestaurantsDoubleChickenPleaseRoute: RestaurantsDoubleChickenPleaseRoute,
   MMerchantSlugMenuSlugRoute: MMerchantSlugMenuSlugRoute,
