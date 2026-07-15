@@ -33,6 +33,7 @@ type MenuContext = {
   menuSlug: string;
   gameId: string;
   restaurantName?: string;
+  menuTheme?: string | null;
 };
 
 export default function MoodInputScreen({
