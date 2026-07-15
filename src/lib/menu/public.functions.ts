@@ -63,7 +63,7 @@ export const getPublishedMenu = createServerFn({ method: "GET" })
     const { data: menu, error: menuErr } = await supabase
       .from("menus")
       .select(
-        "id, slug, name, status, short_intro, cover_image_url, enabled_game_ids, game_display_order, published_version_id",
+        "id, slug, name, status, short_intro, cover_image_url, enabled_game_ids, game_display_order, published_version_id, menu_theme",
       )
       .eq("merchant_id", merchant.id)
       .eq("slug", data.menuSlug)
@@ -125,6 +125,7 @@ export const getPublishedMenu = createServerFn({ method: "GET" })
       enabledGameIds: menu.enabled_game_ids ?? [],
       gameDisplayOrder: menu.game_display_order ?? [],
       hasAlcoholic: mapped.some((i) => i.alcoholic && i.availabilityStatus === "active"),
+      menuTheme: (menu as { menu_theme: string | null }).menu_theme ?? null,
       items: mapped,
     };
   });
