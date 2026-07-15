@@ -27,6 +27,8 @@ export interface Cocktail {
   whyThisMatch?: string | null;
   // The actual menu item name to order (may differ from the generated vibe name).
   menuItemName?: string | null;
+  // The uploaded photo of the actual menu item (shown on the back with "Order this").
+  menuItemImageUrl?: string | null;
 
 }
 

@@ -327,7 +327,9 @@ export default function MoodInputScreen({
         roast: generated.roast,
         category: generated.category,
         imageData: null,
-        imageUrl: generated.imageUrl ?? null,
+        // For menu matches we keep the AI-generated illustration on the front,
+        // and stash the uploaded menu photo separately for the back "Order this".
+        imageUrl: generated.matchedFromMenu ? null : (generated.imageUrl ?? null),
         lang,
         createdAt: new Date().toISOString(),
         userId: null,
@@ -337,6 +339,7 @@ export default function MoodInputScreen({
         menuPrice: generated.menuPrice ?? null,
         whyThisMatch: generated.whyThisMatch ?? null,
         menuItemName: generated.menuItemName ?? null,
+        menuItemImageUrl: generated.matchedFromMenu ? (generated.imageUrl ?? null) : null,
       };
       const encoded = encodeCocktailToHash(cocktail);
       track("cocktail_generated", {
