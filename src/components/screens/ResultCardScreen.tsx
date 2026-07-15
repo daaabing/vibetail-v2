@@ -1106,8 +1106,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                 alt={cocktail.cocktailName}
                 crossOrigin="anonymous"
                 style={{
-                  width: "112%",
-                  height: "112%",
+                  width: "100%",
+                  height: "100%",
                   objectFit: "contain",
                   maxWidth: "none",
                   mixBlendMode: "normal",
