@@ -344,8 +344,8 @@ export default function MoodInputScreen({
         selected_tag: selectedTag,
         selected_flavor: selectedFlavors,
         custom_text_length: mood.trim().length,
-        menu_source: menuSlug ?? null,
-        matched_from_menu: !!menuSlug,
+        menu_source: effectiveMenuContext?.merchantSlug ?? null,
+        matched_from_menu: !!effectiveMenuContext,
       });
       navigate({
         to: "/drinks/$id",
