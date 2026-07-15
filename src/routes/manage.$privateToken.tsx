@@ -50,6 +50,10 @@ function ManagePage() {
   const toggleAvail = useServerFn(setItemAvailability);
   const publish = useServerFn(publishMenu);
   const setStatus = useServerFn(setMenuStatus);
+  const addMenu = useServerFn(createMenu);
+  const addItem = useServerFn(createMenuItem);
+  const removeItem = useServerFn(deleteMenuItem);
+  const activeGames = listActiveGames();
 
   const [status, setStatusMsg] = useState<"loading" | "ok" | "unauth" | "error">("loading");
   const [merchant, setMerchant] = useState<Merchant | null>(null);
