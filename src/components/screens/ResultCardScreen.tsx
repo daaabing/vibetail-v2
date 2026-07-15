@@ -1206,7 +1206,20 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         <div
           className="w-full cursor-pointer select-none"
           style={{ perspective: 1200, maxWidth: 440 }}
-          onClick={() => setFlipped((f) => !f)}
+          onClick={() => setFlipped((f) => {
+            const next = !f;
+            if (next && cocktail?.matchedFromMenu) {
+              track("recommendation_revealed", {
+                menu_id: cocktail.menuId ?? null,
+                menu_slug: cocktail.menuSlug ?? null,
+                menu_name: cocktail.menuName ?? cocktail.restaurantName ?? null,
+                matched_drink_id: cocktail.matchedDrinkId ?? null,
+                matched_drink_name: cocktail.menuItemName ?? null,
+                game_id: "current-vibetail-game",
+              });
+            }
+            return next;
+          })}
         >
           <motion.div
             className="relative w-full max-h-[400px] md:max-h-[520px]"
