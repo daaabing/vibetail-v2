@@ -350,7 +350,11 @@ export default function MoodInputScreen({
       navigate({
         to: "/drinks/$id",
         params: { id: "preview" },
-        search: { d: encoded, ...(restaurantParam ? { restaurant: restaurantParam } : {}) },
+        search: {
+          d: encoded,
+          ...(restaurantParam ? { restaurant: restaurantParam } : {}),
+          ...(effectiveMenuContext ? { menu: effectiveMenuContext.menuSlug } : {}),
+        },
       });
     } catch {
       toast.error(lang === "zh" ? "无法读取你的 vibe，请重试！" : "Couldn't read your vibe. Try again!");
