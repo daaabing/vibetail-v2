@@ -438,11 +438,21 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
               style={{ fontFamily: "var(--font-body)", color: "#2A2118" }}>
               {cocktail.lang === "zh" ? "点这杯" : "Order this"}
             </span>
-            <p className="text-xs leading-relaxed" style={{ color: "#2A2118" }}>
-              {cocktail.menuItemName || cocktail.cocktailName}
-              {cocktail.menuPrice ? ` · ${cocktail.menuPrice}` : ""}
-              {cocktail.restaurantName ? ` @ ${cocktail.restaurantName}` : ""}
-            </p>
+            <div className="flex items-center gap-3">
+              {cocktail.menuItemImageUrl && (
+                <img
+                  src={cocktail.menuItemImageUrl}
+                  alt={cocktail.menuItemName ?? cocktail.cocktailName}
+                  className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                  style={{ border: "1px solid rgba(80,55,30,0.18)" }}
+                />
+              )}
+              <p className="text-xs leading-relaxed flex-1" style={{ color: "#2A2118" }}>
+                {cocktail.menuItemName || cocktail.cocktailName}
+                {cocktail.menuPrice ? ` · ${cocktail.menuPrice}` : ""}
+                {cocktail.restaurantName ? ` @ ${cocktail.restaurantName}` : ""}
+              </p>
+            </div>
           </div>
         )}
 
