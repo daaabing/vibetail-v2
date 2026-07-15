@@ -561,10 +561,11 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
 /* ── Main screen ── */
 export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const navigate = useNavigate();
-  const search = useSearch({ from: "/drinks/$id" }) as { from?: string; d?: string; restaurant?: string; menu?: string };
+  const search = useSearch({ from: "/drinks/$id" }) as { from?: string; d?: string; restaurant?: string; menu?: string; theme?: string };
   const fromGallery = search.from === "gallery";
   const restaurantId = search.restaurant;
   const menuSlug = search.menu;
+  const menuTheme = getMenuTheme(search.theme);
   const isRestaurant = !!restaurantId;
   const goToRestaurant = () => {
     if (menuSlug && restaurantId) {
