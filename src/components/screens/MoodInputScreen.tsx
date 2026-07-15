@@ -304,39 +304,71 @@ export default function MoodInputScreen({ restaurantId, menuSlug, eventMenuId, e
         return;
       }
       const generated = await res.json();
+
+      // Event menu with no eligible drink: fall back to a regular Vibetail
+      // cocktail so the front card still works, and flag the back with a
+      // friendly menu-side message.
+      let cocktailSource = generated;
+      let noMenuMatchMessage: string | null = null;
+      if (isEventMenu && generated?.noMenuMatch) {
+        noMenuMatchMessage = generated.message ?? null;
+        try {
+          const fallback = await fetch("/api/generate-cocktail", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mood, selectedFlavors, customPreference: mergedPreference, photoIngredients, lang, tashiReference, vibeReference }),
+          });
+          if (fallback.ok) cocktailSource = await fallback.json();
+        } catch { /* keep original */ }
+        const evPayload = { menu_id: eventMenuId ?? null, menu_slug: menuSlug ?? null, menu_name: eventMenuName ?? null, game_id: "current-vibetail-game" };
+        track("no_eligible_menu_item", evPayload);
+        track("menu_game_completed", { ...evPayload, matched: false });
+      }
+
       const cocktail: Cocktail = {
         id: 0,
-        cocktailName: generated.cocktailName,
+        cocktailName: cocktailSource.cocktailName,
         originalMood: mood,
         selectedFlavors,
         customPreference,
-        flavorProfile: generated.flavorProfile,
-        tastesLike: generated.tastesLike,
-        ingredients: generated.ingredients,
-        recipe: generated.recipe,
-        roast: generated.roast,
-        category: generated.category,
+        flavorProfile: cocktailSource.flavorProfile,
+        tastesLike: cocktailSource.tastesLike,
+        ingredients: cocktailSource.ingredients,
+        recipe: cocktailSource.recipe,
+        roast: cocktailSource.roast,
+        category: cocktailSource.category,
         imageData: null,
-        imageUrl: null,
+        imageUrl: cocktailSource.imageUrl ?? null,
         lang,
         createdAt: new Date().toISOString(),
         userId: null,
-        matchedFromMenu: !!generated.matchedFromMenu,
-        restaurantName: generated.restaurantName ?? null,
-        menuSection: generated.menuSection ?? null,
-        menuPrice: generated.menuPrice ?? null,
-        whyThisMatch: generated.whyThisMatch ?? null,
-        menuItemName: generated.menuItemName ?? null,
+        matchedFromMenu: !!cocktailSource.matchedFromMenu,
+        restaurantName: cocktailSource.restaurantName ?? null,
+        menuSection: cocktailSource.menuSection ?? null,
+        menuPrice: cocktailSource.menuPrice ?? null,
+        whyThisMatch: cocktailSource.whyThisMatch ?? null,
+        menuItemName: cocktailSource.menuItemName ?? null,
+        menuId: cocktailSource.menuId ?? eventMenuId ?? null,
+        menuSlug: cocktailSource.menuSlug ?? menuSlug ?? null,
+        menuName: cocktailSource.menuName ?? eventMenuName ?? null,
+        matchedDrinkId: cocktailSource.matchedDrinkId ?? null,
+        noMenuMatch: !!noMenuMatchMessage,
+        noMenuMatchMessage,
       };
       const encoded = encodeCocktailToHash(cocktail);
       track("cocktail_generated", {
-        cocktail_name: generated.cocktailName,
+        cocktail_name: cocktail.cocktailName,
         selected_tag: selectedTag,
         selected_flavor: selectedFlavors,
         custom_text_length: mood.trim().length,
         menu_source: menuSlug ?? null,
-        matched_from_menu: !!menuSlug,
+        matched_from_menu: cocktail.matchedFromMenu,
       });
+      if (isEventMenu && cocktail.matchedFromMenu) {
+        const evPayload = { menu_id: cocktail.menuId, menu_slug: cocktail.menuSlug, menu_name: cocktail.menuName, matched_drink_id: cocktail.matchedDrinkId, matched_drink_name: cocktail.menuItemName, game_id: "current-vibetail-game" };
+        track("menu_match_generated", evPayload);
+        track("menu_game_completed", { ...evPayload, matched: true });
+      }
       navigate({
         to: "/drinks/$id",
         params: { id: "preview" },
