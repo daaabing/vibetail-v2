@@ -271,19 +271,26 @@ export default function MoodInputScreen({
           }
         : null;
 
-      const endpoint = menuSlug === "dcp" ? "/api/match-dcp-cocktail" : "/api/generate-cocktail";
-      const body =
-        menuSlug === "dcp"
-          ? JSON.stringify({ mood, selectedFlavors, customPreference: mergedPreference, lang })
-          : JSON.stringify({
-              mood,
-              selectedFlavors,
-              customPreference: mergedPreference,
-              photoIngredients,
-              lang,
-              tashiReference,
-              vibeReference,
-            });
+      const endpoint = effectiveMenuContext ? "/api/menu-match" : "/api/generate-cocktail";
+      const body = effectiveMenuContext
+        ? JSON.stringify({
+            merchantSlug: effectiveMenuContext.merchantSlug,
+            menuSlug: effectiveMenuContext.menuSlug,
+            gameId: effectiveMenuContext.gameId,
+            mood,
+            selectedFlavors,
+            customPreference: mergedPreference,
+            lang,
+          })
+        : JSON.stringify({
+            mood,
+            selectedFlavors,
+            customPreference: mergedPreference,
+            photoIngredients,
+            lang,
+            tashiReference,
+            vibeReference,
+          });
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
