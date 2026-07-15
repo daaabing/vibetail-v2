@@ -1073,7 +1073,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   return (
     <div className="min-h-svh flex flex-col w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative"
-      style={{ background: "transparent" }}>
+      style={{ background: menuTheme?.landingBackground ?? "transparent" }}>
+      {menuTheme?.resultDecoration}
+
 
       {/* Offscreen capture target — flat long image, no card frame */}
       <div
