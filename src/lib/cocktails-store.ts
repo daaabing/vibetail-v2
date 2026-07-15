@@ -27,13 +27,7 @@ export interface Cocktail {
   whyThisMatch?: string | null;
   // The actual menu item name to order (may differ from the generated vibe name).
   menuItemName?: string | null;
-  // Event-menu extras
-  menuId?: string | null;
-  menuSlug?: string | null;
-  menuName?: string | null;
-  matchedDrinkId?: string | null;
-  noMenuMatch?: boolean;
-  noMenuMatchMessage?: string | null;
+
 }
 
 export interface GeneratedCocktailFields {
