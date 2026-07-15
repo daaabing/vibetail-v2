@@ -112,7 +112,7 @@ export const Route = createFileRoute("/api/match-event-menu")({
             category: "chaos",
             matchedFromMenu: true,
             restaurantName: menu.name,
-            menuItemName_: drink.name,
+
             menuSection: null,
             menuPrice: null,
             whyThisMatch: isZh ? "根据你当下的心情从菜单里挑出来的一杯。" : "Picked from the menu based on your current vibe.",
