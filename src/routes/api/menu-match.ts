@@ -293,6 +293,7 @@ export const Route = createFileRoute("/api/menu-match")({
           menuSection: menuItem.section,
           menuPrice: null,
           whyThisMatch: parsed.whyThisMatch,
+          imageUrl: menuItem.imageUrl ?? null,
         };
 
         return new Response(JSON.stringify(shaped), {
