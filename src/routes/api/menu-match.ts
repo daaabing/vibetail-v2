@@ -267,9 +267,8 @@ export const Route = createFileRoute("/api/menu-match")({
                 menu_id: loaded.menu.id,
                 menu_version_id: loaded.menu.published_version_id,
                 matched_menu_item_id: menuItem.id,
-                rank: 1,
                 score: 1,
-                reason: parsed.whyThisMatch,
+                recommendation_reason: parsed.whyThisMatch,
               });
             }
           }
