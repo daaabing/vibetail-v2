@@ -16,8 +16,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RestaurantsDoubleChickenPleaseRouteImport } from './routes/restaurants.double-chicken-please'
 import { Route as RestaurantIdRouteImport } from './routes/restaurant.$id'
+import { Route as MMenuSlugRouteImport } from './routes/m.$menuSlug'
 import { Route as GuidesMoodCocktailRecipesRouteImport } from './routes/guides.mood-cocktail-recipes'
 import { Route as DrinksIdRouteImport } from './routes/drinks.$id'
+import { Route as ApiMatchEventMenuRouteImport } from './routes/api/match-event-menu'
 import { Route as ApiMatchDcpCocktailRouteImport } from './routes/api/match-dcp-cocktail'
 import { Route as ApiGenerateCocktailImageRouteImport } from './routes/api/generate-cocktail-image'
 import { Route as ApiGenerateCocktailRouteImport } from './routes/api/generate-cocktail'
@@ -58,6 +60,11 @@ const RestaurantIdRoute = RestaurantIdRouteImport.update({
   path: '/restaurant/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MMenuSlugRoute = MMenuSlugRouteImport.update({
+  id: '/m/$menuSlug',
+  path: '/m/$menuSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GuidesMoodCocktailRecipesRoute =
   GuidesMoodCocktailRecipesRouteImport.update({
     id: '/guides/mood-cocktail-recipes',
@@ -67,6 +74,11 @@ const GuidesMoodCocktailRecipesRoute =
 const DrinksIdRoute = DrinksIdRouteImport.update({
   id: '/drinks/$id',
   path: '/drinks/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMatchEventMenuRoute = ApiMatchEventMenuRouteImport.update({
+  id: '/api/match-event-menu',
+  path: '/api/match-event-menu',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMatchDcpCocktailRoute = ApiMatchDcpCocktailRouteImport.update({
@@ -95,8 +107,10 @@ export interface FileRoutesByFullPath {
   '/api/generate-cocktail': typeof ApiGenerateCocktailRoute
   '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
   '/api/match-dcp-cocktail': typeof ApiMatchDcpCocktailRoute
+  '/api/match-event-menu': typeof ApiMatchEventMenuRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
+  '/m/$menuSlug': typeof MMenuSlugRoute
   '/restaurant/$id': typeof RestaurantIdRoute
   '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
 }
@@ -109,8 +123,10 @@ export interface FileRoutesByTo {
   '/api/generate-cocktail': typeof ApiGenerateCocktailRoute
   '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
   '/api/match-dcp-cocktail': typeof ApiMatchDcpCocktailRoute
+  '/api/match-event-menu': typeof ApiMatchEventMenuRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
+  '/m/$menuSlug': typeof MMenuSlugRoute
   '/restaurant/$id': typeof RestaurantIdRoute
   '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
 }
@@ -124,8 +140,10 @@ export interface FileRoutesById {
   '/api/generate-cocktail': typeof ApiGenerateCocktailRoute
   '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
   '/api/match-dcp-cocktail': typeof ApiMatchDcpCocktailRoute
+  '/api/match-event-menu': typeof ApiMatchEventMenuRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
+  '/m/$menuSlug': typeof MMenuSlugRoute
   '/restaurant/$id': typeof RestaurantIdRoute
   '/restaurants/double-chicken-please': typeof RestaurantsDoubleChickenPleaseRoute
 }
@@ -140,8 +158,10 @@ export interface FileRouteTypes {
     | '/api/generate-cocktail'
     | '/api/generate-cocktail-image'
     | '/api/match-dcp-cocktail'
+    | '/api/match-event-menu'
     | '/drinks/$id'
     | '/guides/mood-cocktail-recipes'
+    | '/m/$menuSlug'
     | '/restaurant/$id'
     | '/restaurants/double-chicken-please'
   fileRoutesByTo: FileRoutesByTo
@@ -154,8 +174,10 @@ export interface FileRouteTypes {
     | '/api/generate-cocktail'
     | '/api/generate-cocktail-image'
     | '/api/match-dcp-cocktail'
+    | '/api/match-event-menu'
     | '/drinks/$id'
     | '/guides/mood-cocktail-recipes'
+    | '/m/$menuSlug'
     | '/restaurant/$id'
     | '/restaurants/double-chicken-please'
   id:
@@ -168,8 +190,10 @@ export interface FileRouteTypes {
     | '/api/generate-cocktail'
     | '/api/generate-cocktail-image'
     | '/api/match-dcp-cocktail'
+    | '/api/match-event-menu'
     | '/drinks/$id'
     | '/guides/mood-cocktail-recipes'
+    | '/m/$menuSlug'
     | '/restaurant/$id'
     | '/restaurants/double-chicken-please'
   fileRoutesById: FileRoutesById
@@ -183,8 +207,10 @@ export interface RootRouteChildren {
   ApiGenerateCocktailRoute: typeof ApiGenerateCocktailRoute
   ApiGenerateCocktailImageRoute: typeof ApiGenerateCocktailImageRoute
   ApiMatchDcpCocktailRoute: typeof ApiMatchDcpCocktailRoute
+  ApiMatchEventMenuRoute: typeof ApiMatchEventMenuRoute
   DrinksIdRoute: typeof DrinksIdRoute
   GuidesMoodCocktailRecipesRoute: typeof GuidesMoodCocktailRecipesRoute
+  MMenuSlugRoute: typeof MMenuSlugRoute
   RestaurantIdRoute: typeof RestaurantIdRoute
   RestaurantsDoubleChickenPleaseRoute: typeof RestaurantsDoubleChickenPleaseRoute
 }
@@ -240,6 +266,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RestaurantIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/m/$menuSlug': {
+      id: '/m/$menuSlug'
+      path: '/m/$menuSlug'
+      fullPath: '/m/$menuSlug'
+      preLoaderRoute: typeof MMenuSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/guides/mood-cocktail-recipes': {
       id: '/guides/mood-cocktail-recipes'
       path: '/guides/mood-cocktail-recipes'
@@ -252,6 +285,13 @@ declare module '@tanstack/react-router' {
       path: '/drinks/$id'
       fullPath: '/drinks/$id'
       preLoaderRoute: typeof DrinksIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/match-event-menu': {
+      id: '/api/match-event-menu'
+      path: '/api/match-event-menu'
+      fullPath: '/api/match-event-menu'
+      preLoaderRoute: typeof ApiMatchEventMenuRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/match-dcp-cocktail': {
@@ -287,8 +327,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGenerateCocktailRoute: ApiGenerateCocktailRoute,
   ApiGenerateCocktailImageRoute: ApiGenerateCocktailImageRoute,
   ApiMatchDcpCocktailRoute: ApiMatchDcpCocktailRoute,
+  ApiMatchEventMenuRoute: ApiMatchEventMenuRoute,
   DrinksIdRoute: DrinksIdRoute,
   GuidesMoodCocktailRecipesRoute: GuidesMoodCocktailRecipesRoute,
+  MMenuSlugRoute: MMenuSlugRoute,
   RestaurantIdRoute: RestaurantIdRoute,
   RestaurantsDoubleChickenPleaseRoute: RestaurantsDoubleChickenPleaseRoute,
 }
