@@ -28,11 +28,33 @@ const inkButtonStyle = {
   boxShadow: "2px 3px 12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
 };
 
-export default function MoodInputScreen({ restaurantId, menuSlug }: { restaurantId?: string; menuSlug?: "dcp" } = {}) {
+type MenuContext = {
+  merchantSlug: string;
+  menuSlug: string;
+  gameId: string;
+  restaurantName?: string;
+};
+
+export default function MoodInputScreen({
+  restaurantId,
+  menuSlug,
+  menuContext,
+}: {
+  restaurantId?: string;
+  menuSlug?: "dcp";
+  menuContext?: MenuContext;
+} = {}) {
   const navigate = useNavigate();
   const { t, lang } = useLang();
-  const isRestaurant = !!restaurantId || !!menuSlug;
-  const restaurantParam = restaurantId ?? (menuSlug === "dcp" ? "double-chicken-please" : undefined);
+  // Legacy: menuSlug="dcp" is aliased to the unified menu context.
+  const effectiveMenuContext: MenuContext | undefined =
+    menuContext ??
+    (menuSlug === "dcp"
+      ? { merchantSlug: "double-chicken-please", menuSlug: "main", gameId: "vibetail-mood" }
+      : undefined);
+  const isRestaurant = !!restaurantId || !!effectiveMenuContext;
+  const restaurantParam =
+    restaurantId ?? effectiveMenuContext?.merchantSlug;
   const [step, setStep] = useState<1 | 2>(1);
   const [mood, setMood] = useState("");
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
@@ -249,19 +271,26 @@ export default function MoodInputScreen({ restaurantId, menuSlug }: { restaurant
           }
         : null;
 
-      const endpoint = menuSlug === "dcp" ? "/api/match-dcp-cocktail" : "/api/generate-cocktail";
-      const body =
-        menuSlug === "dcp"
-          ? JSON.stringify({ mood, selectedFlavors, customPreference: mergedPreference, lang })
-          : JSON.stringify({
-              mood,
-              selectedFlavors,
-              customPreference: mergedPreference,
-              photoIngredients,
-              lang,
-              tashiReference,
-              vibeReference,
-            });
+      const endpoint = effectiveMenuContext ? "/api/menu-match" : "/api/generate-cocktail";
+      const body = effectiveMenuContext
+        ? JSON.stringify({
+            merchantSlug: effectiveMenuContext.merchantSlug,
+            menuSlug: effectiveMenuContext.menuSlug,
+            gameId: effectiveMenuContext.gameId,
+            mood,
+            selectedFlavors,
+            customPreference: mergedPreference,
+            lang,
+          })
+        : JSON.stringify({
+            mood,
+            selectedFlavors,
+            customPreference: mergedPreference,
+            photoIngredients,
+            lang,
+            tashiReference,
+            vibeReference,
+          });
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -315,8 +344,8 @@ export default function MoodInputScreen({ restaurantId, menuSlug }: { restaurant
         selected_tag: selectedTag,
         selected_flavor: selectedFlavors,
         custom_text_length: mood.trim().length,
-        menu_source: menuSlug ?? null,
-        matched_from_menu: !!menuSlug,
+        menu_source: effectiveMenuContext?.merchantSlug ?? null,
+        matched_from_menu: !!effectiveMenuContext,
       });
       navigate({
         to: "/drinks/$id",

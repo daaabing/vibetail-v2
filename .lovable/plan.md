@@ -1,145 +1,103 @@
-# Vibetail — Mood Cocktail Lab Redesign
+# Menu Onboarding & Drink Matching — Sunday MVP
 
-Complete visual + motion overhaul. **No flow, route, or business-logic changes.** All existing buttons, chips, inputs, i18n keys, analytics events, auth, DCP match, gallery, and API endpoints stay wired exactly as they are — we only replace the visual layer and add higher-craft motion.
+按你的确认收紧到最小可用链路：Merchant 通过 SQL 后台手动创建；DCP 迁移到新架构并 301；游戏输出加结构化字段并顺便优化正面文案；PDF/图片识别、Duplicate、多语言编辑、Advanced UI 全部延后。
 
----
+## 目标端到端链路（唯一必须跑通的）
+1. 我用 SQL 建一个 Merchant + 一个私密管理 token（bcrypt 哈希）
+2. Merchant 打开 `/manage/:privateToken`，创建 Menu、手动加饮品、勾选启用游戏、Preview、Publish
+3. 生成 `/m/:merchantSlug/:menuSlug` 公开 URL + QR
+4. 用户扫码 → 21+ 确认 → 现有 Vibetail 游戏（保留所有问题/交互）→ 正面显示现有心情结果 → 点击卡片翻面 → 背面显示匹配的真实 Menu Drink
+5. Sold out 立即生效；PostHog 事件带 merchant/menu/game 上下文
 
-## 1. Design tokens (src/styles.css)
+## 架构分层
+- **Game Layer**: `src/lib/games/registry.ts`，注册现有 Vibetail 游戏（`vibetail-mood`, v1）
+- **Recommendation Layer**: `src/lib/recommendation/engine.ts`，纯函数 `matchMenu(profile, menuItems) → { itemId, score, breakdown, reason }`，权重集中 `weights.ts`
+- **Menu Layer**: Supabase 表 + `src/lib/menu/*.functions.ts` server functions
 
-Replace the warm-cream light theme with a dark Mood Lab palette. Keep all existing CSS variable *names* so components don't break — only swap values.
+三者互不耦合。未来新游戏只需注册 + 输出 `MatchProfile`。
 
+## 数据库 migration（一次性）
+新表（全部 `GRANT SELECT,INSERT,UPDATE,DELETE ... TO service_role`；公开读的 `menus`/`menu_versions`/`menu_items` view 走 anon SELECT with published-only policy）：
+
+- `merchants` (id, slug UNIQUE, name, logo_url, cover_image_url, short_intro, is_active, timestamps)
+- `merchant_access_tokens` (id, merchant_id, token_hash, revoked_at, created_at) — token 用 bcrypt/scrypt 哈希，不明文
+- `menus` (id, merchant_id, slug, name, status enum draft|published|paused, enabled_game_ids text[], game_display_order text[], published_version_id, timestamps) — UNIQUE(merchant_id, slug)
+- `menu_items` (id, menu_id, name, description, ingredients text[], image_url, alcoholic bool, base_spirit, flavor_tags text[], mood_tags text[], dimensions jsonb, allergens text[], recommendation_priority int default 0, availability_status enum active|sold_out|hidden, original_language, translations jsonb, timestamps) — 无价格字段
+- `menu_versions` (id, menu_id, version_number, snapshot jsonb, published_at)
+- `game_sessions` (id, anonymous_session_id, merchant_id, menu_id, menu_version_id, game_id, game_version, is_preview bool, created_at)
+- `game_results` (id, game_session_id, display_result jsonb, match_profile jsonb, created_at)
+- `recommendations` (id, game_result_id, menu_id, menu_version_id, matched_menu_item_id, score numeric, score_breakdown jsonb, recommendation_reason text, no_match_reason text, created_at)
+
+RLS：所有表默认拒绝；公开读只针对已发布 menu snapshot 通过 server function 曝光，anon 直连仅限 `merchants(is_active=true)` 和 `menus(status='published')` 的公开字段。管理写全部走 server function + token 校验，不给 anon 直接 write。
+
+## Routes（TanStack Start）
+- `src/routes/index.tsx`：改为「Vibetail 游戏大厅」，列出 registry 中 active 游戏（当前只有 Vibetail Mood）
+- `src/routes/games.$gameSlug.tsx`：普通游戏模式（现有 landing/mood-input/result 复用，无 menu context）
+- `src/routes/m.$merchantSlug.$menuSlug.tsx`：Menu 落地页（Logo/名称/介绍/21+ gate/游戏选择或单一 CTA）
+- `src/routes/m.$merchantSlug.$menuSlug.play.$gameSlug.tsx`：带 menu context 的游戏（同样复用现有组件，注入 `menuContext` prop）
+- `src/routes/manage.$privateToken.tsx`：Merchant 管理首页（Menu 列表 + Edit/Preview/QR/Pause）
+- `src/routes/manage.$privateToken.menu.$menuId.tsx`：Menu 编辑（Basic / Enabled Games / Drinks / Preview / Publish）
+- 兼容 301：`src/routes/restaurants.double-chicken-please.tsx` 保留，改为 `throw redirect({ to: '/m/$merchantSlug/$menuSlug', ...})`；`src/routes/restaurant.$id.tsx` 同理
+
+DCP 迁移：写一个 seed migration 把当前 `dcp-menu.ts` 硬编码菜单塞进 `merchants`（slug=`double-chicken-please`）+ `menus`（slug=`main`）+ `menu_items` + 一个 published `menu_versions`。删除 `api/match-dcp-cocktail`，改走统一 recommendation engine。
+
+## Server Functions（`src/lib/**/*.functions.ts`）
+- `menu/public.functions.ts`：`getPublishedMenu({merchantSlug, menuSlug})` — 匿名可调，读 published version snapshot
+- `menu/manage.functions.ts`：所有写操作，入参含 `privateToken`，内部 bcrypt 验证 → 返回 merchantId；`createMenu` / `updateMenu` / `upsertMenuItem` / `setAvailability` / `publishMenu` / `pauseMenu` / `setEnabledGames`
+- `game/session.functions.ts`：`recordGameSession`, `recordGameResult`（写 game_sessions/game_results，preview_mode 标记）
+- `recommendation/match.functions.ts`：`matchAndPersist({gameResultId, menuId})` → 跑 engine → 写 recommendations → 返回 matched item；`refreshIfStale({recommendationId})` 处理 sold_out/version 变更
+
+管理入口保护：token 明文只在 URL；服务器每次调用都 bcrypt.compare。前端在 `manage.$privateToken` 的 client-only loader 里做一次 `verifyToken` server fn，通过后把 merchantId 放进 route context 供子组件使用。不写入 localStorage。
+
+## MatchProfile & 生成
+扩展 `src/routes/api/generate-cocktail.ts` 的 AI schema，新增：
 ```
---app-bg-deep:      #101715   /* deep ink green */
---app-bg-charcoal:  #12151A   /* charcoal blue-black */
---app-bg-coffee:    #17120F   /* warm black coffee */
---app-text:         #E7D9C6   /* warm cream */
---app-text-secondary: #B8AFA3
---app-text-muted:   #7A7267
---app-primary:      #C96F54   /* muted vermouth */
---app-secondary:    #B98A87   /* dusty rose */
---app-accent-lav:   #9A91B2
---app-accent-sage:  #8FA99B
---app-accent-blue:  #748A9A
---app-glass-bg:     rgba(255,255,255,0.06)
---app-glass-bg-strong: rgba(255,255,255,0.10)
---app-glass-border: rgba(255,255,255,0.12)
---app-glass-shadow: 0 20px 60px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)
---radius-lg: 28px
+matchProfile: {
+  moodTags: string[], flavorTags: string[],
+  dimensions: { sweetness, acidity, bitterness, body, strength }, // 0-1
+  preferredBaseSpirits: string[],
+  alcoholPreference: 'alcoholic'|'non_alcoholic'|'either',
+  exclusions: { allergens, ingredients, baseSpirits }
+}
 ```
+正面卡片继续用现有 `cocktail_name / tastes_like / ingredients / recipe / roast` 字段——顺便按你答复微调文案 tone，但不改布局。
 
-- Body background: radial + linear composite of deep-green → charcoal → coffee, fixed, with 3 slow-drifting blurred blobs (already have blob keyframes — retune colors to muted sage/lavender/vermouth at ~8% opacity).
-- Update the shadcn `oklch` tokens (`--background`, `--card`, `--foreground`, `--primary`, `--border`, etc.) to dark equivalents so shadcn components inherit correctly.
-- Add utility classes: `.glass-panel`, `.glass-panel-strong`, `.glass-chip`, `.liquid-shimmer`, `.breathing-glow`.
-- Add fonts: keep Playfair Display for display; add **Cormorant Garamond** (headings/cocktail names) and **Inter** (UI/body) via `<link>` in `src/routes/__root.tsx` head. Register `--font-display: "Cormorant Garamond"`, `--font-heading: "Playfair Display"`, `--font-body: "Inter"`.
+## Recommendation Engine
+纯函数 + 权重表：
+```
+flavorTagMatch 0.30, moodTagMatch 0.25, dimensionSimilarity 0.20,
+baseSpiritMatch 0.10, alcoholPreferenceMatch 0.10, merchantPriorityBoost 0.05
+```
+- Hard filters: availability≠active、alcohol 冲突、allergens/ingredients/baseSpirits 命中 → 直接排除
+- 相似度：tags 用 Jaccard；dimensions 用 1 − avg(|Δ|)
+- Priority boost 只在 top-3 打平（top1 − top2 < 0.05）时轻度分流
+- 推荐理由：模板拼接命中的 top-2 维度，不再调 AI
+- 无匹配：返回 `noMatchReason='all_filtered'`，背面显示「当前菜单里暂时没有符合你偏好的饮品」
 
-## 2. Global chrome
+## 卡片翻面（餐厅模式）
+`ResultCardScreen` 增加可选 `menuMatch` prop：有则背面渲染真实 drink（名/图/配料/描述/推荐理由/Show this screen to the bar），无则保持现有背面。点击翻面时 fire `recommendation_revealed`。
 
-- `BottomNav.tsx`: dark glass bar, thin top border, muted icons; active tab gets soft amber glow instead of solid fill. Same 3 tabs (Home / Vibe Bar / Instagram).
-- `Toaster`: dark theme variant.
-- Root layout: swap the light gradient body background for the dark composite; blobs retinted.
+## 无酒精处理 & 21+ Gate
+Menu 落地页 loader 读 snapshot：若有 alcoholic=true 且 active 的饮品，显示一次性 21+ 确认（sessionStorage key = menuId）。全无则跳过。
 
-## 3. Page-by-page
+## PostHog
+在 `src/lib/analytics.ts` 加辅助 `trackMenuEvent(name, ctx)`，自动合并 merchant/menu/version/game/session/result/recommendation/preview_mode 上下文。新增事件：`menu_landing_viewed / age_gate_viewed / age_gate_confirmed / game_selected / game_started / game_completed / menu_match_generated / recommendation_revealed / no_eligible_menu_item / match_restarted / menu_unavailable_viewed`。Preview 模式全部带 `preview_mode:true`。
 
-### Landing (`LandingScreen.tsx`)
-- Dark hero, centered.
-- Replace `VibetailLogo` decorative SVG with a **floating glass vessel** component (new `GlassVessel.tsx`): semi-transparent shaker silhouette with subtle inner liquid gradient, breathing halo (4–6s), 2px slow vertical float.
-- Title "Vibetail" in Cormorant 56px, tagline in Inter 13px tracking-wide, subtitle in Playfair italic.
-- Primary CTA "Check My Vibe" → glass button with amber inner glow + liquid shimmer sweep on hover; secondary "View the Vibe Bar" → ghost glass button.
-- Top-right auth + language toggle → smaller, thinner glass pills.
+## 明确不做（这次）
+PDF/图片 AI 提取、Merchant 注册/登录、Duplicate、多语言编辑 UI、Advanced score breakdown UI、图片上传（先只支持贴 URL）、饮品价格、AI 假饮品图、下单/支付/核销。管理 UI 走最朴素表单，不做拖拽排序（用 number input 控制顺序）。
 
-### Step 01 — Choose Vibe (`MoodInputScreen.tsx` mood step)
-- Header: "Exit Lab" text-only + minimal capsule progress `● ○` (Step 01 / 02).
-- Central mini glass vessel above the title; when a chip is tapped, animate a colored droplet from chip → vessel (Framer Motion `layoutId` or absolute-positioned motion.div with keyframed path).
-- Quick Vibe chips → translucent glass chips with a tiny colored mood dot (color derived from chip category). Selected state: inner amber glow + soft scale.
-- "OR TYPE YOUR OWN" divider with hairline rules.
-- Big textarea: dark glass, thin border that glows on focus (animated border-image or box-shadow transition).
-- "Surprise Me" as inline ghost pill.
-- Bottom "Next — Choose Flavor": disabled = flat glass; enabled = amber glow.
+## 交付清单
+1. supabase migration（含 seed DCP）
+2. Server functions 模块（menu/public, menu/manage, game/session, recommendation/match）
+3. Recommendation engine + 权重文件 + 单元覆盖思路
+4. Routes：大厅 `/`、`/games/$slug`、`/m/$merchant/$menu`、`/m/$merchant/$menu/play/$game`、`/manage/$token`、`/manage/$token/menu/$menuId`；DCP 老 URL 301
+5. `ResultCardScreen` 增加 menuMatch 背面
+6. AI schema 扩 matchProfile
+7. PostHog `trackMenuEvent` + 事件接入
+8. 本地测试步骤 + 周日现场操作 SOP + 已知 fallback（无图片上传/无 PDF 识别）
 
-### Step 02 — Choose Flavor (same screen, flavor step)
-- Selected vibe shows as a **sample vial card** at top (small vial SVG with liquid tinted by vibe color + text).
-- Flavor Modifier chips: same glass-chip system, colored dots per flavor family (bitter=lav, citrusy=cream, smoky=blue-grey…).
-- Base Spirit: custom dark glass Select with subtle backdrop-blur menu.
-- Long / Short drink: two side-by-side glass cards, each with a mini glass shape that fills with liquid when selected.
-- Reference input: wide dark glass input.
-- "Mix My Drink": full-width primary glass CTA with amber glow.
+## 需要你在批准后配合
+- 告诉我第一个 Merchant 的 name/slug/简介，我在 migration 里 seed 好并给你私密管理 URL
+- 是否需要在 `/` 大厅里保留现有 landing 视觉（我打算沿用，只加一个「Play」按钮 → `/games/vibetail-mood`）
 
-### Mixing / Loading (`MixingOverlay.tsx` + `VibeBottle.tsx`)
-This is the marquee upgrade. Rebuild `VibeBottle` as a layered SVG shaker:
-- Glass body with gradient stroke + highlight sheen that shifts with rotation.
-- Inner `<clipPath>` liquid rect animated with a sine-wave `<path>` surface (Framer Motion `useTime` driving a sinusoidal `d` attr) — liquid **lags** the shaker by ~150ms (separate `useSpring` with lower stiffness).
-- 12–18 particles (dust/bubbles) floating around, radial-gaussian distribution, `animate={{ y: [-, +], opacity: [.2,.6,.2] }}` with staggered delays.
-- Shaker rotation: small ±8° with easeInOut and 0.7s period (not stepped/cartoon).
-- Below: rotating status lines from existing `lines` prop, but restyle with Cormorant italic + thin horizontal liquid progress line (already exists, retint to muted amber → transparent).
-- Overlay backdrop: dark radial with heavy blur+saturate, not the current cream.
-- Respect `prefers-reduced-motion`.
-
-### Result — Cocktail Card (`ResultCardScreen.tsx`)
-- Dark page background; central card becomes a **dark glass cocktail menu card** with hairline border, soft inner glow, 28px radius, subtle grain overlay.
-- Front:
-  - Small "VIBE CHECKED ✓" top badge (Inter 10px tracking).
-  - Central visual: reuse the existing generated image but frame it in a **glass vessel silhouette** with a soft inner shadow and floating micro-particles overlay (absolute positioned).
-  - Cocktail name in Cormorant 40px, centered.
-  - Poetic quote in Playfair italic, `--app-secondary` (dusty rose).
-  - Tag capsules: thin border, uppercase Inter 10px, tracked, low-sat colors.
-  - "Tap to flip" hint at bottom in Inter 10px muted.
-- Back:
-  - Header "Your Mood Recipe" (Cormorant, small caps).
-  - Structured rows: Base / Top Note / Middle / Finish / Intensity / Body Feel / Mood Color — hairline dividers between rows, label left (muted), value right (cream). Map from existing recipe/tasting-notes/roast data — no schema changes.
-  - "Why this drink" block in italic.
-  - DCP "Order this" block stays as-is per prior memory, restyled as an amber-tinted glass panel.
-- Card flip: existing flip logic kept; upgrade to a longer, damped 3D flip (`rotateY` with spring stiffness ~90, damping ~18), soft shadow beneath during flip.
-- Entrance: liquid → name → quote → tags staggered (0.15s apart) with `y: 12 → 0` + fade, no bounce.
-- Action stack (unchanged order per memory): Save / Share / Follow grid → Save to Vibe Bar → Guest list glass panel → Check Another Vibe.
-- Buttons: primary = dark glass + amber glow; secondary = ghost glass; guest list panel styled quiet and editorial (not marketing).
-
-### Vibe Bar / Gallery (`GalleryScreen.tsx`)
-- Header "My Vibe Bar" in Cormorant.
-- Filter chips row (new UI only, no new filter logic unless trivial client-side): Today / Week / Month; Deep / Calm / Bright; flavor families. If existing store has no time/mood metadata, wire filters client-side over `createdAt` + tag arrays already present.
-- Cards: horizontal glass "bottle-label" cards — left column has a mini liquid vial thumbnail (small SVG driven by mood color), right column stacks name (Cormorant), timestamp, vibe keywords, flavor tag capsules, one-line summary.
-- Grid: 1-col mobile, 2-col ≥ md.
-- Filter transitions: Framer Motion `AnimatePresence` with fade+slide, `layout` prop for reflow.
-- Sign-in modal + auth handling: untouched (recent bugfixes preserved).
-
-## 4. Motion system
-
-- Standardize easings: `[0.22, 0.61, 0.36, 1]` for entrances, `[0.4, 0, 0.2, 1]` for exits.
-- Page transitions via a single `<PageTransition>` wrapper around each route's content (fade + 8px y). Route-specific transitions (droplet-into-vessel between steps, chips-into-shaker before mixing) implemented locally with `layoutId` where possible; fallback to overlay component for cross-page.
-- All animations respect `prefers-reduced-motion`.
-
-## 5. File changes (all edits, no route changes)
-
-Edit:
-- `src/styles.css` — token overhaul + utilities + fonts.
-- `src/routes/__root.tsx` — font `<link>`s, dark background blobs retint.
-- `src/components/moodtail/VibetailLogo.tsx` → replace internals with glass vessel.
-- `src/components/moodtail/VibeBottle.tsx` → new layered SVG shaker + liquid physics.
-- `src/components/moodtail/MixingOverlay.tsx` → dark backdrop, new copy rotation styling.
-- `src/components/moodtail/BottomNav.tsx` → dark glass.
-- `src/components/moodtail/AuthModal.tsx` → dark glass panel.
-- `src/components/moodtail/UserMenu.tsx` → dark glass.
-- `src/components/screens/LandingScreen.tsx` → dark hero + glass CTAs.
-- `src/components/screens/MoodInputScreen.tsx` → step 01 + 02 visuals, chips, vial, inputs.
-- `src/components/screens/ResultCardScreen.tsx` → dark card, front/back restyle, action stack polish.
-- `src/components/screens/GalleryScreen.tsx` → Vibe Bar restyle + filter chips.
-
-Add:
-- `src/components/moodtail/GlassVessel.tsx` — shared glass vessel/vial SVG (reused on Landing, Step 01 header, Gallery thumbs, Result frame). Props: `size`, `color`, `mode: "idle" | "mixing" | "thumb"`.
-- `src/components/moodtail/GlassButton.tsx` — variants: `primary | secondary | ghost`, shared shimmer + glow.
-- `src/components/moodtail/GlassChip.tsx` — used for vibes, flavors, filters.
-- `src/components/moodtail/PageTransition.tsx` — motion wrapper.
-
-Not touching: routes, API handlers, `analytics.ts`, `cocktails-store.ts`, `dcp-menu.ts`, i18n keys/strings (only where a new UI string is truly new), Supabase integration files, sitemap, SEO heads.
-
-## 6. Verification
-
-- `bun run build` clean.
-- Playwright: screenshot each of the 6 screens (Landing, Step 01, Step 02, mid-mixing overlay, Result front, Result back, Gallery) at 390×844 to confirm dark theme, no clipped CTAs above the bottom nav, card flip works, action order preserved.
-- Confirm existing bugfixes still hold: gallery sign-in stays on `/gallery`, DCP back nav returns to `/restaurants/double-chicken-please`, result card front fits above nav.
-
-## Out of scope (call out before build)
-
-- No copy rewrites beyond the exact strings you listed. Existing i18n Chinese strings stay.
-- No new backend fields for Gallery filters — filter over data already in the store.
-- Guest list form: visual restyle only; keep whatever submit behavior exists today.
-- Not swapping generated cocktail imagery pipeline.
+批准后我进 build 模式开工。
