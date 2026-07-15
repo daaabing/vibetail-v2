@@ -56,6 +56,7 @@ function ManagePage() {
   const addMenu = useServerFn(createMenu);
   const addItem = useServerFn(createMenuItem);
   const removeItem = useServerFn(deleteMenuItem);
+  const updateTheme = useServerFn(setMenuTheme);
   const activeGames = listActiveGames();
 
   const [status, setStatusMsg] = useState<"loading" | "ok" | "unauth" | "error">("loading");
