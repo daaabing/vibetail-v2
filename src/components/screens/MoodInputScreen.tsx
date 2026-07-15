@@ -250,19 +250,37 @@ export default function MoodInputScreen({ restaurantId, menuSlug, eventMenuId, e
           }
         : null;
 
-      const endpoint = menuSlug === "dcp" ? "/api/match-dcp-cocktail" : "/api/generate-cocktail";
+      const endpoint =
+        menuSlug === "dcp"
+          ? "/api/match-dcp-cocktail"
+          : isEventMenu
+            ? "/api/match-event-menu"
+            : "/api/generate-cocktail";
+      const spiritKey = baseSpirit || undefined;
+      const alcoholPreference: "alcoholic" | "non_alcoholic" | "either" =
+        spiritKey === "nonalcoholic" ? "non_alcoholic" : spiritKey ? "alcoholic" : "either";
       const body =
         menuSlug === "dcp"
           ? JSON.stringify({ mood, selectedFlavors, customPreference: mergedPreference, lang })
-          : JSON.stringify({
-              mood,
-              selectedFlavors,
-              customPreference: mergedPreference,
-              photoIngredients,
-              lang,
-              tashiReference,
-              vibeReference,
-            });
+          : isEventMenu
+            ? JSON.stringify({
+                menuSlug,
+                mood,
+                selectedFlavors,
+                customPreference: mergedPreference,
+                baseSpirit: spiritKey && spiritKey !== "nonalcoholic" ? spiritKey : undefined,
+                alcoholPreference,
+                lang,
+              })
+            : JSON.stringify({
+                mood,
+                selectedFlavors,
+                customPreference: mergedPreference,
+                photoIngredients,
+                lang,
+                tashiReference,
+                vibeReference,
+              });
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
