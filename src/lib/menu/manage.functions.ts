@@ -193,3 +193,121 @@ export const setMenuStatus = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ---------- Create menu ----------
+
+const CreateMenuInput = TokenInput.extend({
+  name: z.string().min(1).max(120),
+  slug: z
+    .string()
+    .min(1)
+    .max(80)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "slug must be lowercase, hyphen-separated"),
+  shortIntro: z.string().max(280).optional().nullable(),
+  enabledGameIds: z.array(z.string().min(1)).min(1),
+});
+
+export const createMenu = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => CreateMenuInput.parse(input))
+  .handler(async ({ data }) => {
+    const merchantId = await verifyAndGetMerchantId(data.token);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("menus")
+      .insert({
+        merchant_id: merchantId,
+        name: data.name,
+        slug: data.slug,
+        short_intro: data.shortIntro ?? null,
+        enabled_game_ids: data.enabledGameIds,
+        game_display_order: data.enabledGameIds,
+        status: "draft",
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { ok: true, menuId: row.id };
+  });
+
+// ---------- Menu item CRUD ----------
+
+const ItemCoreInput = z.object({
+  name: z.string().min(1).max(200),
+  section: z.string().max(120).optional().nullable(),
+  ingredients: z.array(z.string().min(1)).default([]),
+  baseSpirit: z.string().max(120).optional().nullable(),
+  alcoholic: z.boolean().default(true),
+  description: z.string().max(1000).optional().nullable(),
+  imageUrl: z.string().url().optional().nullable().or(z.literal("")),
+  flavorTags: z.array(z.string().min(1)).default([]),
+  moodTags: z.array(z.string().min(1)).default([]),
+  sortOrder: z.number().int().optional(),
+});
+
+const CreateItemInput = TokenInput.extend({ menuId: z.string().uuid() }).merge(ItemCoreInput);
+
+export const createMenuItem = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => CreateItemInput.parse(input))
+  .handler(async ({ data }) => {
+    const merchantId = await verifyAndGetMerchantId(data.token);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: menu, error: mErr } = await supabaseAdmin
+      .from("menus")
+      .select("id, merchant_id")
+      .eq("id", data.menuId)
+      .single();
+    if (mErr) throw new Error(mErr.message);
+    if (menu.merchant_id !== merchantId) throw new Error("Forbidden");
+
+    const { data: maxRow } = await supabaseAdmin
+      .from("menu_items")
+      .select("sort_order")
+      .eq("menu_id", data.menuId)
+      .order("sort_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const nextSort = data.sortOrder ?? (maxRow?.sort_order ?? 0) + 10;
+
+    const { data: row, error } = await supabaseAdmin
+      .from("menu_items")
+      .insert({
+        menu_id: data.menuId,
+        name: data.name,
+        section: data.section ?? null,
+        ingredients: data.ingredients,
+        base_spirit: data.baseSpirit ?? null,
+        alcoholic: data.alcoholic,
+        description: data.description ?? "",
+        image_url: data.imageUrl ? data.imageUrl : null,
+        flavor_tags: data.flavorTags,
+        mood_tags: data.moodTags,
+        sort_order: nextSort,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { ok: true, itemId: row.id };
+  });
+
+const DeleteItemInput = TokenInput.extend({ menuItemId: z.string().uuid() });
+
+export const deleteMenuItem = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => DeleteItemInput.parse(input))
+  .handler(async ({ data }) => {
+    const merchantId = await verifyAndGetMerchantId(data.token);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error: rowErr } = await supabaseAdmin
+      .from("menu_items")
+      .select("id, menus:menu_id(merchant_id)")
+      .eq("id", data.menuItemId)
+      .single();
+    if (rowErr) throw new Error(rowErr.message);
+    const owner = (row.menus as unknown as { merchant_id: string } | null)?.merchant_id;
+    if (owner !== merchantId) throw new Error("Forbidden");
+    const { error } = await supabaseAdmin
+      .from("menu_items")
+      .delete()
+      .eq("id", data.menuItemId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
