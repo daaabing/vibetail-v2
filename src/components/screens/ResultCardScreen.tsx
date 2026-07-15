@@ -829,10 +829,13 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         canShare?: (data: { files: File[] }) => boolean;
         share?: (data: { files: File[]; title?: string }) => Promise<void>;
       };
-      // Prefer Web Share API whenever the browser supports sharing files
-      // (Chrome Android, Safari iOS, Edge mobile) — this lets the user save
-      // directly to Photos/Files rather than the Downloads folder.
-      if (nav.canShare && nav.share && nav.canShare({ files: [file] })) {
+      // On mobile (touch-only, no hover), prefer Web Share so users can save
+      // directly to Photos/Files. On desktop, always download the file directly
+      // — desktop Safari/Chrome would otherwise pop the macOS share sheet.
+      const isMobile =
+        typeof window !== "undefined" &&
+        window.matchMedia?.("(hover: none) and (pointer: coarse)").matches;
+      if (isMobile && nav.canShare && nav.share && nav.canShare({ files: [file] })) {
         try {
           await nav.share({ files: [file], title: cocktail.cocktailName });
           return;
