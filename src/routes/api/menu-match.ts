@@ -114,9 +114,10 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
       `- 'matchedName' MUST be one of the menu names above, spelled EXACTLY.`,
       `- 'vibeName' is a creative, vibe-driven title for the card front — NOT the menu name. 2-4 words.`,
       `- Weigh both flavor compatibility AND emotional fit.`,
-      `- 'tastesLike' and 'whyThisMatch' should reference REAL ingredients of the matched drink, tied to the user's vibe.`,
+      `- 'tastesLike' is a warm, evocative 1-2 sentence tasting note tied to the user's vibe (like a sommelier's poetic description). Reference REAL ingredients of the matched drink.`,
+      `- 'whyThisMatch' is a PLAYFUL, cheeky 1-2 sentence explanation of why this specific drink fits this specific vibe — witty and fun, like a bartender teasing a regular. Reference the drink's ingredients or character.`,
       `- 'roast' is one sharp witty one-liner about the user's vibe, 12 words or fewer.`,
-      `- Write positive fields ('tastesLike','whyThisMatch') warmly — celebrate the match; save the bite for 'roast' only.`,
+      `- Keep 'tastesLike' warm and celebratory; let 'whyThisMatch' be the fun, teasing one; save the real bite for 'roast'.`,
     ].join("\n"),
   };
 }
