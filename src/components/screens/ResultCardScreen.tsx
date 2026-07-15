@@ -32,7 +32,9 @@ function isNearBackgroundColor(r: number, g: number, b: number, a: number, bg: [
   const luma = r * 0.299 + g * 0.587 + b * 0.114;
   const chroma = Math.max(r, g, b) - Math.min(r, g, b);
   const distance = Math.hypot(r - bg[0], g - bg[1], b - bg[2]);
-  return luma > (loose ? 155 : 172) && chroma < (loose ? 92 : 74) && distance < (loose ? 96 : 72);
+  // Stricter thresholds — only remove near-white low-chroma pixels very close to the sampled bg
+  // so that light highlights on glass stems / ice / rim are preserved.
+  return luma > (loose ? 232 : 240) && chroma < (loose ? 20 : 14) && distance < (loose ? 24 : 16);
 }
 
 async function removeConnectedLightBackground(source: string): Promise<string> {
@@ -117,7 +119,7 @@ async function removeConnectedLightBackground(source: string): Promise<string> {
           }
         }
 
-        for (let pass = 0; pass < 3; pass++) {
+        for (let pass = 0; pass < 1; pass++) {
           const expanded = new Uint8Array(mask);
           for (let pixel = 0; pixel < total; pixel++) {
             if (mask[pixel]) continue;
