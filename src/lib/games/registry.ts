@@ -21,7 +21,7 @@ export const GAMES: GameDefinition[] = [
   {
     id: "vibetail-mood",
     slug: "vibetail-mood",
-    name: "Mood Cocktail",
+    name: "Vibetail",
     shortDescription: "把此刻的心情，调成难忘体验",
     status: "active",
     version: "1",
