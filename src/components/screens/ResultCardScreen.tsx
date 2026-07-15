@@ -546,6 +546,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const goToRestaurant = () => {
     if (restaurantId === "double-chicken-please") {
       navigate({ to: "/restaurants/double-chicken-please" });
+    } else if (restaurantId && restaurantId !== "0") {
+      // Event menu slug
+      navigate({ to: "/m/$menuSlug", params: { menuSlug: restaurantId } });
     } else {
       navigate({ to: "/restaurant/$id", params: { id: restaurantId! } });
     }
