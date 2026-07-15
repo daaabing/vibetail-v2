@@ -33,7 +33,6 @@ type MenuContext = {
   menuSlug: string;
   gameId: string;
   restaurantName?: string;
-  menuTheme?: string | null;
 };
 
 export default function MoodInputScreen({
@@ -358,7 +357,6 @@ export default function MoodInputScreen({
           d: encoded,
           ...(restaurantParam ? { restaurant: restaurantParam } : {}),
           ...(effectiveMenuContext ? { menu: effectiveMenuContext.menuSlug } : {}),
-          ...(effectiveMenuContext?.menuTheme ? { theme: effectiveMenuContext.menuTheme } : {}),
         },
       });
     } catch {

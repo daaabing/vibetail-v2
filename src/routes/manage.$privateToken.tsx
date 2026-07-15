@@ -10,10 +10,8 @@ import {
   createMenu,
   createMenuItem,
   deleteMenuItem,
-  setMenuTheme,
 } from "@/lib/menu/manage.functions";
 import { listActiveGames } from "@/lib/games/registry";
-import { AVAILABLE_THEMES } from "@/lib/menu/themes";
 
 export const Route = createFileRoute("/manage/$privateToken")({
   head: () => ({
@@ -34,7 +32,6 @@ type Menu = {
   short_intro: string | null;
   enabled_game_ids: string[];
   published_version_id: string | null;
-  menu_theme: string | null;
 };
 type Item = {
   id: string;
@@ -56,7 +53,6 @@ function ManagePage() {
   const addMenu = useServerFn(createMenu);
   const addItem = useServerFn(createMenuItem);
   const removeItem = useServerFn(deleteMenuItem);
-  const updateTheme = useServerFn(setMenuTheme);
   const activeGames = listActiveGames();
 
   const [status, setStatusMsg] = useState<"loading" | "ok" | "unauth" | "error">("loading");
@@ -280,50 +276,6 @@ function ManagePage() {
             )}
             {msg && <span className="text-xs" style={{ color: "var(--app-text-muted)" }}>{msg}</span>}
           </section>
-
-          <section className="mb-6">
-            <div className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--app-text-muted)" }}>
-              Theme (optional visual skin)
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {[{ id: "", label: "Default" }, ...AVAILABLE_THEMES].map((opt) => {
-                const active = (activeMenu.menu_theme ?? "") === opt.id;
-                return (
-                  <button
-                    key={opt.id || "none"}
-                    disabled={busy || active}
-                    onClick={() =>
-                      runTogglable(
-                        `Theme: ${opt.label}`,
-                        () =>
-                          updateTheme({
-                            data: {
-                              token: privateToken,
-                              menuId: activeMenu.id,
-                              menuTheme: (opt.id || null) as "world_cup_final_2026" | null,
-                            },
-                          }),
-                        reloadMenus,
-                      )
-                    }
-                    className="px-3 py-1.5 rounded-full text-xs"
-                    style={{
-                      background: active ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.12)",
-                      fontFamily: "var(--font-heading)",
-                      opacity: busy && !active ? 0.5 : 1,
-                    }}
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-2 text-[11px]" style={{ color: "var(--app-text-muted)" }}>
-              Themes only skin visuals — questions, layout, card structure, and interactions stay the same.
-            </p>
-          </section>
-
 
           <section>
             <div className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--app-text-muted)" }}>

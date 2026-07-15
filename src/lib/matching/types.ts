@@ -68,7 +68,5 @@ export interface PublicMenu {
   enabledGameIds: string[];
   gameDisplayOrder: string[];
   hasAlcoholic: boolean;
-  /** Optional static theme id (see src/lib/menu/themes.tsx). */
-  menuTheme: string | null;
   items: PublicMenuItem[];
 }
