@@ -13,6 +13,7 @@ import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
+import { getMenuTheme } from "@/lib/menu/themes";
 
 /** Strip quantity / measurement prefixes from AI-generated ingredient strings. */
 function simplifyIngredient(name: string): string {
@@ -561,10 +562,11 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
 /* ── Main screen ── */
 export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const navigate = useNavigate();
-  const search = useSearch({ from: "/drinks/$id" }) as { from?: string; d?: string; restaurant?: string; menu?: string };
+  const search = useSearch({ from: "/drinks/$id" }) as { from?: string; d?: string; restaurant?: string; menu?: string; theme?: string };
   const fromGallery = search.from === "gallery";
   const restaurantId = search.restaurant;
   const menuSlug = search.menu;
+  const menuTheme = getMenuTheme(search.theme);
   const isRestaurant = !!restaurantId;
   const goToRestaurant = () => {
     if (menuSlug && restaurantId) {
@@ -1071,7 +1073,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   return (
     <div className="min-h-svh flex flex-col w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative"
-      style={{ background: "transparent" }}>
+      style={{ background: menuTheme?.landingBackground ?? "transparent" }}>
+      {menuTheme?.resultDecoration}
+
 
       {/* Offscreen capture target — flat long image, no card frame */}
       <div

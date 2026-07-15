@@ -38,7 +38,7 @@ export const getMerchantForToken = createServerFn({ method: "POST" })
     const { data: menus, error: menusErr } = await supabaseAdmin
       .from("menus")
       .select(
-        "id, slug, name, status, short_intro, enabled_game_ids, game_display_order, published_version_id, updated_at",
+        "id, slug, name, status, short_intro, enabled_game_ids, game_display_order, published_version_id, menu_theme, updated_at",
       )
       .eq("merchant_id", merchantId)
       .order("updated_at", { ascending: false });
@@ -196,6 +196,8 @@ export const setMenuStatus = createServerFn({ method: "POST" })
 
 // ---------- Create menu ----------
 
+const ThemeIdSchema = z.enum(["world_cup_final_2026"]).nullable().optional();
+
 const CreateMenuInput = TokenInput.extend({
   name: z.string().min(1).max(120),
   slug: z
@@ -205,6 +207,7 @@ const CreateMenuInput = TokenInput.extend({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "slug must be lowercase, hyphen-separated"),
   shortIntro: z.string().max(280).optional().nullable(),
   enabledGameIds: z.array(z.string().min(1)).min(1),
+  menuTheme: ThemeIdSchema,
 });
 
 export const createMenu = createServerFn({ method: "POST" })
@@ -222,11 +225,37 @@ export const createMenu = createServerFn({ method: "POST" })
         enabled_game_ids: data.enabledGameIds,
         game_display_order: data.enabledGameIds,
         status: "draft",
+        menu_theme: data.menuTheme ?? null,
       })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
     return { ok: true, menuId: row.id };
+  });
+
+const SetThemeInput = TokenInput.extend({
+  menuId: z.string().uuid(),
+  menuTheme: ThemeIdSchema,
+});
+
+export const setMenuTheme = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => SetThemeInput.parse(input))
+  .handler(async ({ data }) => {
+    const merchantId = await verifyAndGetMerchantId(data.token);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: menu, error: mErr } = await supabaseAdmin
+      .from("menus")
+      .select("id, merchant_id")
+      .eq("id", data.menuId)
+      .single();
+    if (mErr) throw new Error(mErr.message);
+    if (menu.merchant_id !== merchantId) throw new Error("Forbidden");
+    const { error } = await supabaseAdmin
+      .from("menus")
+      .update({ menu_theme: data.menuTheme ?? null })
+      .eq("id", data.menuId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 // ---------- Menu item CRUD ----------

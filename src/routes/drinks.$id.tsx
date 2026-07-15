@@ -2,10 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import ResultCardScreen from "@/components/screens/ResultCardScreen";
 
 export const Route = createFileRoute("/drinks/$id")({
-  validateSearch: (s: Record<string, unknown>): { from?: string; d?: string; restaurant?: string } => ({
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { from?: string; d?: string; restaurant?: string; menu?: string; theme?: string } => ({
     from: typeof s.from === "string" ? s.from : undefined,
     d: typeof s.d === "string" ? s.d : undefined,
     restaurant: typeof s.restaurant === "string" ? s.restaurant : undefined,
+    menu: typeof s.menu === "string" ? s.menu : undefined,
+    theme: typeof s.theme === "string" ? s.theme : undefined,
   }),
   head: ({ params }) => {
     const shortId = params.id.slice(0, 8);
