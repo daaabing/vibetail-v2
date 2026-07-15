@@ -472,14 +472,16 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
           </p>
         </div>
 
-        {/* Tasting notes */}
+        {/* Tasting notes — for menu matches, this becomes a playful "why this match" note */}
         <div className="mb-4">
           <span className="text-[8px] tracking-widest uppercase block mb-1.5"
             style={{ fontFamily: "var(--font-body)", color: "#8A7A62" }}>
-            {labels.tastingNotes}
+            {cocktail.matchedFromMenu
+              ? (cocktail.lang === "zh" ? "为什么是这杯" : "WHY THIS ONE")
+              : labels.tastingNotes}
           </span>
           <p className="text-xs leading-relaxed" style={{ color: "#2A2118" }}>
-            {cocktail.tastesLike}
+            {cocktail.matchedFromMenu ? (cocktail.whyThisMatch || cocktail.tastesLike) : cocktail.tastesLike}
           </p>
         </div>
 
