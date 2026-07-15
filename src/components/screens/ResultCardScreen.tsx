@@ -119,7 +119,7 @@ async function removeConnectedLightBackground(source: string): Promise<string> {
           }
         }
 
-        for (let pass = 0; pass < 3; pass++) {
+        for (let pass = 0; pass < 1; pass++) {
           const expanded = new Uint8Array(mask);
           for (let pixel = 0; pixel < total; pixel++) {
             if (mask[pixel]) continue;
