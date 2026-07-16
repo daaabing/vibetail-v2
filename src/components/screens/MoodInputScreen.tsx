@@ -14,7 +14,7 @@ import VibeBottle from "@/components/moodtail/VibeBottle";
 import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import FlowProgress from "@/components/moodtail/vibeflow/FlowProgress";
 import FloatingVibes from "@/components/moodtail/vibeflow/FloatingVibes";
-import CustomVibeSheet from "@/components/moodtail/vibeflow/CustomVibeSheet";
+import { MOOD_PLACEHOLDERS_EN, MOOD_PLACEHOLDERS_ZH } from "@/lib/moodtail-data";
 import SensoryControl from "@/components/moodtail/vibeflow/SensoryControl";
 
 import {
