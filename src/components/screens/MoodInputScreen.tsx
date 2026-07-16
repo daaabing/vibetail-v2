@@ -1,32 +1,36 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { encodeCocktailToHash, type Cocktail } from "@/lib/cocktails-store";
 import { toast } from "sonner";
-import {
-  FLAVOR_CHIPS,
-  MOOD_PLACEHOLDERS_EN,
-  MOOD_PLACEHOLDERS_ZH,
-  CUSTOM_FLAVOR_PLACEHOLDERS_EN,
-  CUSTOM_FLAVOR_PLACEHOLDERS_ZH,
-  VIBE_CHIPS,
-} from "@/lib/moodtail-data";
-import { VIBE_ROWS_EN, VIBE_ROWS_ZH } from "@/lib/vibe-cloud";
+
+import { encodeCocktailToHash, type Cocktail } from "@/lib/cocktails-store";
+import { FLAVOR_CHIPS } from "@/lib/moodtail-data";
 import { pickTashiRecipe } from "@/lib/tashi-recipes";
 import { pickVibeExample } from "@/lib/vibe-examples";
 import { useLang } from "@/lib/i18n";
-import VibeBottle from "@/components/moodtail/VibeBottle";
-import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import { track } from "@/lib/analytics";
 
-const inkButtonStyle = {
-  padding: "14px 24px",
-  borderRadius: "4px",
-  background:
-    "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
-  color: "white" as const,
-  boxShadow: "2px 3px 12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
-};
+import VibeBottle from "@/components/moodtail/VibeBottle";
+import MixingOverlay from "@/components/moodtail/MixingOverlay";
+import FlowProgress from "@/components/moodtail/vibeflow/FlowProgress";
+import FloatingVibes from "@/components/moodtail/vibeflow/FloatingVibes";
+import CustomVibeSheet from "@/components/moodtail/vibeflow/CustomVibeSheet";
+import SensoryControl from "@/components/moodtail/vibeflow/SensoryControl";
+
+import {
+  DEFAULT_SENSORY,
+  QUICK_VIBES,
+  computeBottleColor,
+  computeFill,
+  getVibe,
+  loadingLines,
+  sensorySummary,
+  sensoryTouched,
+  sensoryToFlavors,
+  strengthToDrinkLength,
+  type SensoryState,
+  type VibeKey,
+} from "@/lib/vibeflow";
 
 type MenuContext = {
   merchantSlug: string;
@@ -34,6 +38,21 @@ type MenuContext = {
   gameId: string;
   restaurantName?: string;
 };
+
+type Stage = "vibe" | "transition" | "sensory";
+
+const BASE_SPIRITS: { key: string; en: string; zh: string; color: string }[] = [
+  { key: "gin", en: "Gin", zh: "金酒", color: "#7fb069" },
+  { key: "vodka", en: "Vodka", zh: "伏特加", color: "#a3b8c4" },
+  { key: "rum", en: "Rum", zh: "朗姆", color: "#c08457" },
+  { key: "tequila", en: "Tequila", zh: "龙舌兰", color: "#e0b96b" },
+  { key: "whiskey", en: "Whiskey", zh: "威士忌", color: "#a0522d" },
+  { key: "mezcal", en: "Mezcal", zh: "梅斯卡尔", color: "#8b6f4e" },
+  { key: "brandy", en: "Brandy", zh: "白兰地", color: "#b8602e" },
+  { key: "sake", en: "Sake", zh: "清酒", color: "#e8dcc4" },
+  { key: "tashi", en: "Tashi", zh: "Tashi 青稞酒", color: "#c9a84c" },
+  { key: "nonalcoholic", en: "No alcohol", zh: "无酒精", color: "#d4a5c4" },
+];
 
 export default function MoodInputScreen({
   restaurantId,
@@ -46,188 +65,160 @@ export default function MoodInputScreen({
 } = {}) {
   const navigate = useNavigate();
   const { t, lang } = useLang();
-  // Legacy: menuSlug="dcp" is aliased to the unified menu context.
+
   const effectiveMenuContext: MenuContext | undefined =
     menuContext ??
     (menuSlug === "dcp"
-      ? { merchantSlug: "double-chicken-please", menuSlug: "main", gameId: "vibetail-mood" }
+      ? {
+          merchantSlug: "double-chicken-please",
+          menuSlug: "main",
+          gameId: "vibetail-mood",
+        }
       : undefined);
-  const isRestaurant = !!restaurantId || !!effectiveMenuContext;
-  const restaurantParam =
-    restaurantId ?? effectiveMenuContext?.merchantSlug;
-  const [step, setStep] = useState<1 | 2>(1);
-  const [mood, setMood] = useState("");
-  const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
+  const isMenuFlow = !!effectiveMenuContext;
+  const restaurantParam = restaurantId ?? effectiveMenuContext?.merchantSlug;
+
+  // ── Stage 1: vibe ─────────────────────────────────────────────────
+  const [stage, setStage] = useState<Stage>("vibe");
+  const [selectedVibe, setSelectedVibe] = useState<VibeKey | null>(null);
+  const [customMood, setCustomMood] = useState<string>(""); // when non-empty, overrides vibe pill
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  // ── Stage 2: sensory + optional accordions ────────────────────────
+  const [sensory, setSensory] = useState<SensoryState>(DEFAULT_SENSORY);
+  const [expandedFlavors, setExpandedFlavors] = useState(false);
+  const [manualFlavors, setManualFlavors] = useState<string[]>([]);
+  const [expandedStrength, setExpandedStrength] = useState(false);
+  const [expandedSpirit, setExpandedSpirit] = useState(false);
   const [baseSpirit, setBaseSpirit] = useState<string>("");
-  const [spiritOpen, setSpiritOpen] = useState(false);
-  const [customPreference, setCustomPreference] = useState("");
-  const [drinkLength, setDrinkLength] = useState<"" | "long" | "short">("");
+  const [expandedRef, setExpandedRef] = useState(false);
+  const [referenceDrink, setReferenceDrink] = useState<string>("");
+
+  // ── Generation ────────────────────────────────────────────────────
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [customInputStarted, setCustomInputStarted] = useState(false);
-  const [intensity, setIntensity] = useState(60);
 
-  // Morandi mood palette — from calm cool to warm bold, drives bottle color on drag.
-  const MOOD_PALETTE = ["#99B9C6", "#A9B4A1", "#D8D3C9", "#B7A9B3", "#DAC5C3"];
+  // ── Derived vibe ──────────────────────────────────────────────────
+  const vibeObj = getVibe(selectedVibe);
+  const hasVibe = !!vibeObj || customMood.trim().length > 0;
 
-  const BASE_SPIRITS: { key: string; en: string; zh: string; color: string; flavorEn: string; flavorZh: string }[] = [
-    {
-      key: "gin",
-      en: "Gin",
-      zh: "金酒",
-      color: "#7fb069",
-      flavorEn: "Crisp, herbal, juniper-forward",
-      flavorZh: "清冽草本，杜松子香气",
-    },
-    {
-      key: "vodka",
-      en: "Vodka",
-      zh: "伏特加",
-      color: "#a3b8c4",
-      flavorEn: "Neutral, clean, lets mixers shine",
-      flavorZh: "中性纯净，凸显其他风味",
-    },
-    {
-      key: "rum",
-      en: "Rum",
-      zh: "朗姆",
-      color: "#c08457",
-      flavorEn: "Sweet, tropical, molasses warmth",
-      flavorZh: "甜润热带，蔗糖暖意",
-    },
-    {
-      key: "tequila",
-      en: "Tequila",
-      zh: "龙舌兰",
-      color: "#e0b96b",
-      flavorEn: "Earthy agave, peppery, bright",
-      flavorZh: "龙舌兰土香，胡椒明亮",
-    },
-    {
-      key: "whiskey",
-      en: "Whiskey",
-      zh: "威士忌",
-      color: "#a0522d",
-      flavorEn: "Oaky, smoky, caramel depth",
-      flavorZh: "橡木烟熏，焦糖醇厚",
-    },
-    {
-      key: "mezcal",
-      en: "Mezcal",
-      zh: "梅斯卡尔",
-      color: "#8b6f4e",
-      flavorEn: "Smoky, mineral, wild agave",
-      flavorZh: "浓郁烟熏，矿物野性",
-    },
-    {
-      key: "brandy",
-      en: "Brandy",
-      zh: "白兰地",
-      color: "#b8602e",
-      flavorEn: "Fruity, velvety, oak-aged",
-      flavorZh: "果香丝滑，橡木陈年",
-    },
-    {
-      key: "sake",
-      en: "Sake",
-      zh: "清酒",
-      color: "#e8dcc4",
-      flavorEn: "Delicate, rice-sweet, umami",
-      flavorZh: "清雅米香，鲜甜柔和",
-    },
-    {
-      key: "tashi",
-      en: "Tashi",
-      zh: "Tashi 青稞酒",
-      color: "#c9a84c",
-      flavorEn: "Highland barley, mellow and sweet, plateau grain",
-      flavorZh: "青稞清香，柔和甘甜，高原谷物",
-    },
-    {
-      key: "nonalcoholic",
-      en: "No alcohol",
-      zh: "无酒精",
-      color: "#d4a5c4",
-      flavorEn: "Fresh, fruity mocktail",
-      flavorZh: "清爽果香无酒精",
-    },
-  ];
-  const photoIngredients: string[] | null = null;
+  const moodText = useMemo(() => {
+    if (customMood.trim()) return customMood.trim();
+    if (!vibeObj) return "";
+    return lang === "zh" ? vibeObj.moodZh : vibeObj.moodEn;
+  }, [customMood, vibeObj, lang]);
 
-  const moodPlaceholders = lang === "zh" ? MOOD_PLACEHOLDERS_ZH : MOOD_PLACEHOLDERS_EN;
-  const customPlaceholders = lang === "zh" ? CUSTOM_FLAVOR_PLACEHOLDERS_ZH : CUSTOM_FLAVOR_PLACEHOLDERS_EN;
+  const replyLine = useMemo(() => {
+    if (customMood.trim()) {
+      return lang === "zh"
+        ? "收到，这个状态很适合调一杯。"
+        : "Got it. That's a good state to mix from.";
+    }
+    if (!vibeObj) return "";
+    return lang === "zh" ? vibeObj.replyZh : vibeObj.replyEn;
+  }, [customMood, vibeObj, lang]);
 
-  const [moodPlaceholderIdx, setMoodPlaceholderIdx] = useState(() =>
-    Math.floor(Math.random() * moodPlaceholders.length)
-  );
-  const randomCustomIdx = useRef(Math.floor(Math.random() * customPlaceholders.length));
-  const moodPlaceholder = moodPlaceholders[moodPlaceholderIdx % moodPlaceholders.length];
-  const customPlaceholder = customPlaceholders[randomCustomIdx.current % customPlaceholders.length];
+  const baseColor = vibeObj?.color ?? (customMood.trim() ? "#B7A9B3" : "#99B9C6");
+  const liveBottleColor = computeBottleColor(baseColor, sensory);
+  const liveFill = computeFill(hasVibe, sensory);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMoodPlaceholderIdx((prev) => (prev + 1) % moodPlaceholders.length);
-    }, 3500);
-    return () => clearInterval(interval);
-  }, [moodPlaceholders.length]);
-
-  // Derive the bottle color from current selections (cloud row → mood chip → spirit → flavor → primary).
-  const currentVibeColor = (() => {
-    const rows = lang === "zh" ? VIBE_ROWS_ZH : VIBE_ROWS_EN;
-    const row = rows.find((r) => r.labels.includes(mood));
-    if (row) return row.color;
-    const chip = VIBE_CHIPS.find((c) => c.label === mood || c.labelEn === mood);
-    if (chip) return chip.color;
-    const spirit = BASE_SPIRITS.find((s) => s.key === baseSpirit);
-    if (spirit) return spirit.color;
-    const flavor = FLAVOR_CHIPS.find((f) => selectedFlavors.includes(f.label));
-    if (flavor?.color) return flavor.color;
-    return "#E0533C";
-  })();
-
-  const mixingLines =
-    lang === "zh"
-      ? ["正在捕捉你的当下味道…", "正在调和你的情绪基酒…", "加入一点不理智的香气…", "摇匀一份只属于你的 vibe…"]
-      : [
-          "Capturing your current flavor…",
-          "Blending your emotional base spirit…",
-          "Adding a dash of unreason…",
-          "Shaking up a vibe just for you…",
-        ];
-
-  const goNext = () => {
-    if (!mood.trim()) {
-      toast.error(lang === "zh" ? "先描述一下你的状态吧！" : "Describe your vibe first!");
+  // ── Flow control ──────────────────────────────────────────────────
+  const goHome = () => {
+    if (isMenuFlow && effectiveMenuContext) {
+      navigate({
+        to: "/m/$merchantSlug/$menuSlug",
+        params: {
+          merchantSlug: effectiveMenuContext.merchantSlug,
+          menuSlug: effectiveMenuContext.menuSlug,
+        },
+      });
       return;
     }
-    if (selectedTag) {
-      // tag path — nothing extra to track beyond the earlier vibe_tag_selected
-    } else {
-      track("vibe_custom_input_submitted", { custom_text_length: mood.trim().length });
+    if (restaurantParam === "double-chicken-please") {
+      navigate({ to: "/restaurants/double-chicken-please" });
+      return;
     }
-    if (!selectedTag && !customInputStarted) {
-      track("vibe_selection_skipped");
-    }
-    setStep(2);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    navigate({ to: "/" });
   };
 
-  const goBack = () => {
-    setStep((s) => (s > 1 ? ((s - 1) as 1 | 2) : 1));
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const pickVibe = (key: VibeKey) => {
+    if (selectedVibe === key) {
+      setSelectedVibe(null);
+      return;
+    }
+    setSelectedVibe(key);
+    setCustomMood("");
+    track("vibe_quick_selected", {
+      selected_vibe: key,
+      source: "quick",
+      restaurant_id: restaurantParam ?? null,
+      menu_id: effectiveMenuContext?.menuSlug ?? null,
+    });
+    // Small tactile ripple.
+    if ("vibrate" in navigator) {
+      try { (navigator as any).vibrate?.(8); } catch {}
+    }
   };
 
-  const toggleFlavor = (label: string) => {
-    setSelectedFlavors((prev) => {
-      const next = prev.includes(label) ? prev.filter((f) => f !== label) : [...prev, label];
-      if (!prev.includes(label)) track("flavor_selected", { selected_flavor: label });
-      return next;
+  const submitCustom = (text: string) => {
+    setCustomMood(text);
+    setSelectedVibe(null);
+    setSheetOpen(false);
+    track("vibe_custom_submitted", {
+      custom_text_length: text.length,
+      source: "custom",
+      restaurant_id: restaurantParam ?? null,
+      menu_id: effectiveMenuContext?.menuSlug ?? null,
     });
   };
 
+  const enterSensory = () => {
+    if (!hasVibe) return;
+    setStage("transition");
+    window.setTimeout(() => setStage("sensory"), 950);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const changeSensory = (name: keyof SensoryState, v: number) => {
+    setSensory((s) => ({ ...s, [name]: v }));
+    track("sensory_control_changed", {
+      control_name: name,
+      control_value: v,
+      restaurant_id: restaurantParam ?? null,
+      menu_id: effectiveMenuContext?.menuSlug ?? null,
+    });
+  };
+
+  const toggleManualFlavor = (label: string) => {
+    setManualFlavors((prev) => {
+      if (prev.includes(label)) return prev.filter((f) => f !== label);
+      if (prev.length >= 3) {
+        toast(lang === "zh" ? "最多选 3 个就够了" : "3 flavors is plenty");
+        return prev;
+      }
+      return [...prev, label];
+    });
+  };
+
+  // ── Submit ────────────────────────────────────────────────────────
   const handleMix = async () => {
+    if (!hasVibe || isGenerating) return;
     setIsGenerating(true);
-    if (selectedFlavors.length === 0) track("flavor_skipped");
+
+    const flavorsFromSensory = sensoryToFlavors(sensory);
+    const finalFlavors = manualFlavors.length ? manualFlavors : flavorsFromSensory;
+    const drinkLength = strengthToDrinkLength(sensory);
+
+    track("drink_generation_started", {
+      restaurant_id: restaurantParam ?? null,
+      menu_id: effectiveMenuContext?.menuSlug ?? null,
+      selected_vibe: selectedVibe,
+      source: customMood.trim() ? "custom" : "quick",
+      sensory_touched: sensoryTouched(sensory),
+      final_flavors: finalFlavors,
+      drink_length: drinkLength || null,
+      base_spirit: baseSpirit || null,
+    });
+
     try {
       const spiritObj = BASE_SPIRITS.find((s) => s.key === baseSpirit);
       const spiritNote = spiritObj
@@ -245,11 +236,13 @@ export default function MoodInputScreen({
               ? "杯型：短饮（小杯，烈酒为主，少 mixer，浓郁集中）。"
               : "Format: Short drink (small glass, spirit-forward, minimal mixer, concentrated). "
             : "";
-      const mergedPreference = (spiritNote + lengthNote + (customPreference || "")).trim();
+      const summary = sensorySummary(lang, sensory);
+      const mergedPreference = (spiritNote + lengthNote + summary + " " + (referenceDrink || "")).trim();
 
-      // When the user picks Tashi, pick one of the brand's signature recipes
-      // as a creative reference and attach its brand illustration to the card.
-      const tashiPick = baseSpirit === "tashi" ? pickTashiRecipe({ selectedFlavors, mood }) : null;
+      const tashiPick =
+        baseSpirit === "tashi"
+          ? pickTashiRecipe({ selectedFlavors: finalFlavors, mood: moodText })
+          : null;
       const tashiReference = tashiPick
         ? {
             name: tashiPick.name,
@@ -259,13 +252,10 @@ export default function MoodInputScreen({
           }
         : null;
 
-      // Chinese mode → always attach a handwritten-menu style reference so
-      // the AI mimics the witty, abstract bistro-menu tone. Matching now
-      // weighs mood + scene + flavor chips + base spirit + drink length.
       const vibePick =
         lang === "zh"
-          ? pickVibeExample(mood, {
-              selectedFlavors,
+          ? pickVibeExample(moodText, {
+              selectedFlavors: finalFlavors,
               customPreference: mergedPreference,
               baseSpirit,
               drinkLength,
@@ -286,53 +276,51 @@ export default function MoodInputScreen({
             merchantSlug: effectiveMenuContext.merchantSlug,
             menuSlug: effectiveMenuContext.menuSlug,
             gameId: effectiveMenuContext.gameId,
-            mood,
-            selectedFlavors,
+            mood: moodText,
+            selectedFlavors: finalFlavors,
             customPreference: mergedPreference,
             lang,
           })
         : JSON.stringify({
-            mood,
-            selectedFlavors,
+            mood: moodText,
+            selectedFlavors: finalFlavors,
             customPreference: mergedPreference,
-            photoIngredients,
+            photoIngredients: null,
             lang,
             tashiReference,
             vibeReference,
           });
+
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body,
       });
+
       if (!res.ok) {
         if (res.status === 402) {
           toast.error(
             lang === "zh"
-              ? "AI 额度不足，请稍后再试或为工作区充值。"
-              : "AI credits exhausted. Please top up your workspace.",
+              ? "AI 额度不足，请稍后再试。"
+              : "AI credits exhausted. Please retry later.",
           );
         } else if (res.status === 429) {
           toast.error(
-            lang === "zh" ? "请求太频繁，请稍等片刻再试。" : "Too many requests. Please slow down and retry.",
+            lang === "zh" ? "请求太频繁，请稍等再试。" : "Too many requests. Slow down.",
           );
         } else if (res.status === 409 && effectiveMenuContext) {
           const detail = (await res.text().catch(() => "")).toLowerCase();
           if (detail.includes("no active items") || detail.includes("has no")) {
             toast.error(
               lang === "zh"
-                ? "这份菜单暂时没有可点的酒，请稍后再试。"
-                : "This menu has no available drinks right now.",
-            );
-          } else if (detail.includes("not enabled")) {
-            toast.error(
-              lang === "zh" ? "该菜单未启用此玩法。" : "This game isn't enabled for this menu.",
+                ? "这份菜单暂时没有可点的酒。"
+                : "This menu has nothing pourable right now.",
             );
           } else {
-            toast.error(lang === "zh" ? "AI 调制失败，请重试。" : "AI couldn't mix this. Please retry.");
+            toast.error(lang === "zh" ? "AI 调制失败，请重试。" : "AI couldn't mix this.");
           }
         } else {
-          toast.error(lang === "zh" ? "AI 调制失败，请重试。" : "AI couldn't mix this. Please retry.");
+          toast.error(lang === "zh" ? "AI 调制失败，请重试。" : "AI couldn't mix this.");
         }
         setIsGenerating(false);
         return;
@@ -342,9 +330,9 @@ export default function MoodInputScreen({
       const cocktail: Cocktail = {
         id: 0,
         cocktailName: generated.cocktailName,
-        originalMood: mood,
-        selectedFlavors,
-        customPreference,
+        originalMood: moodText,
+        selectedFlavors: finalFlavors,
+        customPreference: referenceDrink,
         flavorProfile: generated.flavorProfile,
         tastesLike: generated.tastesLike,
         ingredients: generated.ingredients,
@@ -352,8 +340,6 @@ export default function MoodInputScreen({
         roast: generated.roast,
         category: generated.category,
         imageData: null,
-        // For menu matches we keep the AI-generated illustration on the front,
-        // and stash the uploaded menu photo separately for the back "Order this".
         imageUrl: generated.matchedFromMenu ? null : (generated.imageUrl ?? null),
         lang,
         createdAt: new Date().toISOString(),
@@ -366,15 +352,17 @@ export default function MoodInputScreen({
         menuItemName: generated.menuItemName ?? null,
         menuItemImageUrl: generated.matchedFromMenu ? (generated.imageUrl ?? null) : null,
       };
+
       const encoded = encodeCocktailToHash(cocktail);
       track("cocktail_generated", {
         cocktail_name: generated.cocktailName,
-        selected_tag: selectedTag,
-        selected_flavor: selectedFlavors,
-        custom_text_length: mood.trim().length,
+        selected_vibe: selectedVibe,
+        source: customMood.trim() ? "custom" : "quick",
+        selected_flavor: finalFlavors,
         menu_source: effectiveMenuContext?.merchantSlug ?? null,
         matched_from_menu: !!effectiveMenuContext,
       });
+
       navigate({
         to: "/drinks/$id",
         params: { id: "preview" },
@@ -385,807 +373,731 @@ export default function MoodInputScreen({
         },
       });
     } catch {
-      toast.error(lang === "zh" ? "无法读取你的 vibe，请重试！" : "Couldn't read your vibe. Try again!");
+      toast.error(lang === "zh" ? "无法读取你的 vibe，请重试！" : "Couldn't read your vibe. Retry.");
       setIsGenerating(false);
     }
   };
 
-  return (
-    <div className="w-full md:max-w-2xl lg:max-w-3xl md:mx-auto min-h-svh" style={{ background: "transparent" }}>
-      {/* ── Top bar ── */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-4">
-        {isRestaurant && step === 1 ? (
-          <span className="w-4" />
-        ) : (
-          <motion.button
-            whileTap={{ scale: 0.88 }}
-            onClick={step === 1 ? () => navigate({ to: "/" }) : goBack}
-            className="flex items-center gap-1.5 text-xs"
-            style={{ color: "var(--app-text-secondary)" }}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M15.75 19.5L8.25 12l7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="text-[10px] tracking-wider" style={{ fontFamily: "var(--font-body)" }}>
-              {step === 1 ? t("mood.exit") : t("mood.back")}
-            </span>
-          </motion.button>
-        )}
-
-        <div className="flex items-center gap-2">
-          {[1, 2].map((s) => (
-            <div
-              key={s}
-              className="transition-all duration-300"
-              style={{
-                width: step === s ? 20 : 6,
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: step === s ? "var(--app-primary)" : "rgba(255,255,255,0.12)",
-              }}
-            />
-          ))}
-        </div>
-
-        <div
-          className="text-[10px] tracking-wider"
-          style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}
-        >
-          {step === 1 ? t("mood.step1") : t("mood.step2")}
-        </div>
-      </div>
-
-      {/* ── 自然滚动内容区，按钮在内容末尾，不固定底部 ── */}
-      <AnimatePresence mode="wait">
-        {step === 1 ? (
-          <motion.div
-            key="step1"
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -24 }}
-            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-            className="px-5 pb-28 space-y-5"
-          >
-            {/* Hero bottle — reflects current vibe */}
-            <div className="flex justify-center pt-2 pb-1">
-              <VibeBottle
-                color={currentVibeColor}
-                size={180}
-                mode="idle"
-                sliderVal={intensity}
-                onSliderValChange={setIntensity}
-                colorStops={MOOD_PALETTE}
-              />
-            </div>
-
-            <div className="text-center">
-              <h1
-                className="text-2xl font-semibold"
-                style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
-              >
-                {t("mood.title")}
-              </h1>
-              <p
-                className="text-sm mt-1"
-                style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-text-secondary)" }}
-              >
-                {t("mood.subtitle")}
-              </p>
-            </div>
-
-            {/* Vibe cloud — chips scattered across rows like a drifting cloud */}
-            <VibeCloud
-              rows={lang === "zh" ? VIBE_ROWS_ZH : VIBE_ROWS_EN}
-              mood={mood}
-              onPick={(label) => {
-                if (mood === label) {
-                  setMood("");
-                  setSelectedTag(null);
-                } else {
-                  setMood(label);
-                  setSelectedTag(label);
-                  setCustomInputStarted(false);
-                  track("vibe_tag_selected", { selected_tag: label });
-                }
-              }}
-              label={t("mood.chips.label")}
-            />
-
-            {/* Divider */}
-            <div className="flex items-center gap-3">
-              <span className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.12)" }} />
-              <span
-                className="text-[10px] tracking-wider"
-                style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}
-              >
-                {t("mood.divider")}
-              </span>
-              <span className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.12)" }} />
-            </div>
-
-            {/* Textarea */}
-            <div className="relative">
-              <textarea
-                value={mood}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setMood(v);
-                  if (v && !customInputStarted && !selectedTag) {
-                    setCustomInputStarted(true);
-                    track("vibe_custom_input_started");
-                  }
-                  if (selectedTag && v !== selectedTag) setSelectedTag(null);
-                }}
-                className="w-full rounded-2xl p-4 resize-none leading-relaxed"
-                style={{
-                  minHeight: 96,
-                  fontSize: 15,
-                  backgroundColor: "rgba(255,255,255,0.045)",
-                  backdropFilter: "blur(8px)",
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  color: "var(--app-text)",
-                  fontFamily: "var(--font-heading)",
-                  fontStyle: "italic",
-                  outline: "none",
-                }}
-                placeholder={`"${moodPlaceholder}"`}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.22)";
-                  e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.06)";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
-                  e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.045)";
-                }}
-              />
-              <motion.button
-                whileTap={{ scale: 0.92 }}
-                onClick={() => setMood(moodPlaceholder)}
-                className="absolute right-3 bottom-3 rounded-full whitespace-nowrap"
-                style={{
-                  padding: "5px 11px",
-                  fontSize: 11,
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  backgroundColor: "rgba(255,255,255,0.045)",
-                  backdropFilter: "blur(8px)",
-                  color: "var(--app-text-secondary)",
-                  fontFamily: "var(--font-body)",
-                  opacity: 0.85,
-                }}
-              >
-                {t("mood.surprise")}
-              </motion.button>
-
-            </div>
-
-            {/* CTA — 内容末尾，随页面滚动 */}
-            <motion.button
-              whileTap={{ scale: 0.96 }}
-              onClick={goNext}
-              disabled={!mood.trim()}
-              className="w-full relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden disabled:opacity-40"
-              style={inkButtonStyle}
-            >
-              <span
-                className="absolute top-0 left-4 right-4 h-px pointer-events-none"
-                style={{ background: "rgba(255,255,255,0.3)" }}
-              />
-              <span className="relative z-10 flex items-center gap-2">
-                {t("mood.next")}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-            </motion.button>
-          </motion.div>
-        ) : step === 2 ? (
-          <motion.div
-            key="step2"
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -24 }}
-            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-            className="px-5 pb-28 space-y-5"
-          >
-            <div>
-              <h1
-                className="text-2xl font-semibold"
-                style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
-              >
-                {t("flavor.title")}
-              </h1>
-              <p
-                className="text-sm mt-1"
-                style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-text-secondary)" }}
-              >
-                {t("flavor.subtitle")}
-              </p>
-            </div>
-
-            {/* Vibe preview pill */}
-            <div
-              className="flex items-start gap-2 p-3 rounded-xl"
-              style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(0,0,0,0.45)" }}
-            >
-              <svg
-                className="w-4 h-4 flex-shrink-0 mt-0.5"
-                fill="none"
-                stroke="var(--app-primary)"
-                strokeWidth="1.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <p
-                className="text-xs leading-relaxed"
-                style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "var(--app-text-secondary)" }}
-              >
-                "{mood.length > 80 ? mood.slice(0, 80) + "…" : mood}"
-              </p>
-            </div>
-
-            {/* Flavor chips */}
-            <div>
-              <label
-                className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
-                style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}
-              >
-                {t("flavor.chips.label")}
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {FLAVOR_CHIPS.map((chip) => {
-                  const isSelected = selectedFlavors.includes(chip.label);
-                  return (
-                    <motion.button
-                      key={chip.label}
-                      whileTap={{ scale: 0.88 }}
-                      onClick={() => toggleFlavor(chip.label)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-                      style={{
-                        border: isSelected ? `1.5px solid ${chip.color}` : "1px solid rgba(255,255,255,0.12)",
-                        backgroundColor: isSelected ? `${chip.color}18` : "rgba(255,255,255,0.05)",
-                        backdropFilter: "blur(6px)",
-                        color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
-                        fontWeight: isSelected ? 600 : 400,
-                        boxShadow: isSelected ? `0 0 0 3px ${chip.color}22` : "none",
-                      }}
-                    >
-                      <span
-                        className="flex-shrink-0 rounded-full"
-                        style={{
-                          width: 7,
-                          height: 7,
-                          backgroundColor: chip.color,
-                          opacity: isSelected ? 1 : 0.7,
-                          boxShadow: isSelected ? `0 0 4px ${chip.color}88` : "none",
-                        }}
-                      />
-                      {lang === "zh" ? chip.labelZh : chip.label}
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Base spirit dropdown */}
-            <div>
-              <label
-                className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
-                style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}
-              >
-                {lang === "zh" ? "基酒（可选）" : "Base spirit (optional)"}
-              </label>
-              {(() => {
-                const selected = BASE_SPIRITS.find((s) => s.key === baseSpirit);
-                return (
-                  <div className="relative">
-                    <motion.button
-                      type="button"
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setSpiritOpen((v) => !v)}
-                      className="w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm transition-all"
-                      style={{
-                        backgroundColor: "rgba(255,255,255,0.05)",
-                        backdropFilter: "blur(8px)",
-                        border: selected ? `1.5px solid ${selected.color}` : "1px solid rgba(255,255,255,0.12)",
-                        color: "var(--app-text)",
-                        boxShadow: selected ? `0 0 0 3px ${selected.color}22` : "none",
-                      }}
-                    >
-                      <span className="flex items-center gap-2 min-w-0">
-                        <span
-                          className="flex-shrink-0 rounded-full"
-                          style={{
-                            width: 9,
-                            height: 9,
-                            backgroundColor: selected?.color ?? "rgba(255,255,255,0.12)",
-                            boxShadow: selected ? `0 0 4px ${selected.color}88` : "none",
-                          }}
-                        />
-                        <span className="flex flex-col items-start min-w-0">
-                          <span
-                            className="font-medium truncate"
-                            style={{ color: selected ? "var(--app-text)" : "var(--app-text-muted)" }}
-                          >
-                            {selected
-                              ? lang === "zh"
-                                ? selected.zh
-                                : selected.en
-                              : lang === "zh"
-                                ? "选择基酒（可选）"
-                                : "Pick a base spirit (optional)"}
-                          </span>
-                          {selected && (
-                            <span
-                              className="text-[10px] truncate"
-                              style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}
-                            >
-                              {lang === "zh" ? selected.flavorZh : selected.flavorEn}
-                            </span>
-                          )}
-                        </span>
-                      </span>
-                      <svg
-                        className="w-4 h-4 flex-shrink-0 transition-transform"
-                        style={{
-                          transform: spiritOpen ? "rotate(180deg)" : "rotate(0)",
-                          color: "var(--app-text-muted)",
-                        }}
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M19.5 8.25l-7.5 7.5-7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </motion.button>
-
-                    <AnimatePresence>
-                      {spiritOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -4 }}
-                          transition={{ duration: 0.15 }}
-                          className="absolute z-20 mt-1.5 w-full rounded-xl overflow-hidden max-h-80 overflow-y-auto"
-                          style={{
-                            backgroundColor: "rgba(24,28,34,0.95)",
-                            backdropFilter: "blur(12px)",
-                            border: "1px solid rgba(255,255,255,0.12)",
-                            boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-                          }}
-                        >
-                          {BASE_SPIRITS.map((s) => {
-                            const isSelected = baseSpirit === s.key;
-                            return (
-                              <button
-                                key={s.key}
-                                type="button"
-                                onClick={() => {
-                                  setBaseSpirit(isSelected ? "" : s.key);
-                                  setSpiritOpen(false);
-                                }}
-                                className="w-full flex items-start gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-black/5"
-                                style={{ backgroundColor: isSelected ? `${s.color}18` : "transparent" }}
-                              >
-                                <span
-                                  className="flex-shrink-0 rounded-full mt-1.5"
-                                  style={{
-                                    width: 9,
-                                    height: 9,
-                                    backgroundColor: s.color,
-                                    boxShadow: isSelected ? `0 0 4px ${s.color}88` : "none",
-                                  }}
-                                />
-                                <span className="flex flex-col min-w-0">
-                                  <span className="text-sm font-medium" style={{ color: "var(--app-text)" }}>
-                                    {lang === "zh" ? s.zh : s.en}
-                                  </span>
-                                  <span
-                                    className="text-[11px] leading-tight"
-                                    style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}
-                                  >
-                                    {lang === "zh" ? s.flavorZh : s.flavorEn}
-                                  </span>
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* Long vs Short drink */}
-            <div>
-              <label
-                className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
-                style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}
-              >
-                {lang === "zh" ? "杯型（可选）" : "Drink format (optional)"}
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {(
-                  [
-                    {
-                      key: "long",
-                      en: "Long drink",
-                      zh: "长饮",
-                      descEn: "Tall, icy, sippable",
-                      descZh: "高杯加冰，慢慢享用",
-                    },
-                    {
-                      key: "short",
-                      en: "Short drink",
-                      zh: "短饮",
-                      descEn: "Small, spirit-forward",
-                      descZh: "小杯，烈酒为主",
-                    },
-                  ] as const
-                ).map((opt) => {
-                  const isSelected = drinkLength === opt.key;
-                  return (
-                    <motion.button
-                      key={opt.key}
-                      type="button"
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => setDrinkLength(isSelected ? "" : opt.key)}
-                      className="flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl text-left transition-all"
-                      style={{
-                        border: isSelected ? "1.5px solid var(--app-primary)" : "1px solid rgba(255,255,255,0.12)",
-                        backgroundColor: isSelected ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.05)",
-                        backdropFilter: "blur(8px)",
-                        boxShadow: isSelected ? "0 0 0 3px rgba(0,0,0,0.45)" : "none",
-                      }}
-                    >
-                      <span className="text-sm font-medium" style={{ color: "var(--app-text)" }}>
-                        {lang === "zh" ? opt.zh : opt.en}
-                      </span>
-                      <span
-                        className="text-[10px]"
-                        style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}
-                      >
-                        {lang === "zh" ? opt.descZh : opt.descEn}
-                      </span>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Custom preference */}
-            <div>
-              <label
-                className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
-                style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}
-              >
-                {t("flavor.custom.label")}
-              </label>
-              <input
-                value={customPreference}
-                onChange={(e) => setCustomPreference(e.target.value)}
-                type="text"
-                className="w-full rounded-xl px-4 py-3 text-sm"
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  backdropFilter: "blur(8px)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  color: "var(--app-text)",
-                  outline: "none",
-                }}
-                placeholder=""
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "var(--app-primary)";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
-                }}
-              />
-            </div>
-
-            {/* CTA — 内容末尾，随页面滚动 */}
-            <motion.button
-              whileTap={{ scale: 0.96 }}
-              onClick={handleMix}
-              disabled={isGenerating}
-              className="w-full relative flex items-center justify-center gap-2 text-sm font-semibold tracking-wider overflow-hidden disabled:opacity-50"
-              style={inkButtonStyle}
-            >
-              <span
-                className="absolute top-0 left-4 right-4 h-px pointer-events-none"
-                style={{ background: "rgba(255,255,255,0.3)" }}
-              />
-              <span className="relative z-10 flex items-center gap-2">
-                {isGenerating ? t("flavor.loading") : lang === "zh" ? "调制我的酒" : "Mix My Drink"}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-            </motion.button>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-
-      <MixingOverlay open={isGenerating} color={currentVibeColor} lines={mixingLines} />
-    </div>
-  );
-}
-
-// ── Cloud of drifting vibe chips ──────────────────────────────────────────
-// - Mixes labels from all categories across all rows (no per-category rows).
-// - Chips have varied sizes and vertical float offsets so it reads like a
-//   soft cloud, not a marching caterpillar.
-// - Hovering ANYWHERE inside the cloud pauses every row.
-// - The row that contains the currently selected mood also stays paused
-//   even after the pointer leaves, so the selection stays visible.
-
-interface VibeCloudProps {
-  rows: { color: string; dir: "ltr" | "rtl"; labels: string[] }[];
-  mood: string;
-  onPick: (label: string) => void;
-  label: string;
-}
-
-interface CloudChip {
-  label: string;
-  color: string;
-  scale: number;
-  floatDur: number;
-  floatDelay: number;
-  yAmp: number;
-}
-
-const ROW_COUNT = 4;
-// Each row needs enough chips so a single copy is wider than the container;
-// otherwise the browser clamps scrollLeft and the auto-drift appears frozen.
-const MIN_CHIPS_PER_ROW = 10;
-const CLOUD_ROW_COPIES = 6;
-
-// Deterministic PRNG so hydration + re-renders don't reshuffle the cloud.
-function hashStr(s: string) {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-function mulberry32(a: number) {
-  return function () {
-    let t = (a += 0x6d2b79f5);
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function VibeCloud({ rows, mood, onPick, label }: VibeCloudProps) {
-  const [hovered, setHovered] = useState(false);
-
-  const cloudRows = useMemo(() => {
-    const all: CloudChip[] = [];
-    for (const r of rows) {
-      for (const l of r.labels)
-        all.push({
-          label: l,
-          color: r.color,
-          scale: 1,
-          floatDur: 0,
-          floatDelay: 0,
-          yAmp: 0,
-        });
-    }
-    const seed = hashStr(all.map((c) => c.label).join("|"));
-    const rand = mulberry32(seed);
-    // Fisher-Yates
-    for (let i = all.length - 1; i > 0; i--) {
-      const j = Math.floor(rand() * (i + 1));
-      [all[i], all[j]] = [all[j], all[i]];
-    }
-    // Assign per-chip float + size variance
-    for (const c of all) {
-      const r1 = rand();
-      const r2 = rand();
-      const r3 = rand();
-      c.scale = 0.85 + r1 * 0.35; // 0.85 – 1.20
-      c.floatDur = 6 + r2 * 4; // 6 – 10s
-      c.floatDelay = r3 * 5; // 0 – 5s
-      c.yAmp = 1.5 + rand() * 2.5; // 1.5 – 4px (stays inside its row)
-    }
-    // Distribute round-robin into ROW_COUNT rows, alternating direction.
-    const buckets: { chips: CloudChip[]; dir: "ltr" | "rtl"; speed: number }[] = [];
-    for (let i = 0; i < ROW_COUNT; i++) {
-      buckets.push({
-        chips: [],
-        dir: i % 2 === 0 ? "rtl" : "ltr",
-        // px per second — a bit faster than before, varies per row.
-        speed: 26 + rand() * 10, // ~26–36 px/s
-      });
-    }
-    all.forEach((c, i) => buckets[i % ROW_COUNT].chips.push(c));
-    // Pad short rows by repeating chips until we have enough width to scroll.
-    for (const b of buckets) {
-      if (b.chips.length === 0) continue;
-      const base = [...b.chips];
-      while (b.chips.length < MIN_CHIPS_PER_ROW) b.chips.push(...base);
-    }
-    return buckets;
-  }, [rows]);
-
-  return (
-    <div>
-      <label
-        className="text-[10px] font-semibold uppercase tracking-wider block mb-2"
-        style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}
-      >
-        {label}
-      </label>
-      <div
-        className="relative overflow-hidden py-3"
-        style={{
-          minHeight: 240,
-          maskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
-          WebkitMaskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
-        }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
-        <div className="flex flex-col gap-4">
-          {cloudRows.map((bucket, rowIdx) => (
-            <CloudRow
-              key={rowIdx}
-              bucket={bucket}
-              mood={mood}
-              paused={hovered || (!!mood && bucket.chips.some((c) => c.label === mood))}
-              onPick={onPick}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// One horizontally-scrolling row inside the vibe cloud.
-// - Auto-drifts via rAF (px/sec, honors direction).
-// - Native touch-scroll on mobile; wheel/trackpad on desktop.
-// - Auto-scroll pauses while user is interacting, and stays paused when the
-//   parent tells us to (hover / contains selected chip).
-function CloudRow({
-  bucket,
-  mood,
-  paused,
-  onPick,
-}: {
-  bucket: { chips: CloudChip[]; dir: "ltr" | "rtl"; speed: number };
-  mood: string;
-  paused: boolean;
-  onPick: (label: string) => void;
-}) {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const pausedRef = useRef(paused);
-  pausedRef.current = paused;
-  const userActiveUntilRef = useRef(0);
-  const loopWidthRef = useRef(0);
-
-  useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const dir = bucket.dir === "ltr" ? -1 : 1;
-    const measureLoopWidth = () => {
-      loopWidthRef.current = el.scrollWidth / CLOUD_ROW_COPIES;
-      return loopWidthRef.current;
-    };
-    // Start midway for ltr rows so there's room to scroll leftward.
-    const setInitial = () => {
-      const loopWidth = measureLoopWidth();
-      if (loopWidth > 0) el.scrollLeft = dir === -1 ? loopWidth : 0;
-    };
-    setInitial();
-
-    const onUser = () => {
-      userActiveUntilRef.current = performance.now() + 1600;
-    };
-    el.addEventListener("pointerdown", onUser, { passive: true });
-    el.addEventListener("touchstart", onUser, { passive: true });
-    el.addEventListener("wheel", onUser, { passive: true });
-
-    let raf = 0;
-    let last = performance.now();
-    const step = (now: number) => {
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      const loopWidth = loopWidthRef.current || measureLoopWidth();
-      if (loopWidth > 0) {
-        if (!pausedRef.current && now > userActiveUntilRef.current) {
-          let next = el.scrollLeft + dir * bucket.speed * dt;
-          if (next >= loopWidth) next -= loopWidth;
-          if (next < 0) next += loopWidth;
-          el.scrollLeft = next;
-        } else {
-          // Even while user drags, seamlessly wrap so the loop stays infinite.
-          if (el.scrollLeft >= loopWidth) el.scrollLeft %= loopWidth;
-          else if (el.scrollLeft < 0) el.scrollLeft += loopWidth;
-        }
-      }
-      raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => {
-      cancelAnimationFrame(raf);
-      el.removeEventListener("pointerdown", onUser);
-      el.removeEventListener("touchstart", onUser);
-      el.removeEventListener("wheel", onUser);
-    };
-  }, [bucket.dir, bucket.speed]);
+  const bottleSize =
+    stage === "vibe" ? 200 : stage === "transition" ? 220 : 160;
 
   return (
     <div
-      ref={scrollerRef}
-      className="relative overflow-x-auto vibe-cloud-row"
-      style={
-        {
-          minHeight: 40,
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-          touchAction: "pan-x pan-y",
-          WebkitOverflowScrolling: "touch",
-        } as React.CSSProperties
-      }
+      className="w-full md:max-w-[520px] md:mx-auto min-h-svh flex flex-col"
+      data-vibetail-flow="vibeflow"
+      style={{ background: "transparent" }}
     >
-      <style>{`.vibe-cloud-row::-webkit-scrollbar{display:none}`}</style>
-      <div className="flex gap-3 w-max items-center py-1">
-        {Array.from({ length: CLOUD_ROW_COPIES })
-          .flatMap(() => bucket.chips)
-          .map((chip, idx) => {
-            const isSelected = mood === chip.label;
-            return (
-              <motion.button
-                key={`${chip.label}-${idx}`}
-                whileTap={{ scale: 0.9 }}
-                animate={{ y: [0, -chip.yAmp, 0, chip.yAmp * 0.6, 0] }}
-                transition={{
-                  duration: chip.floatDur,
-                  delay: chip.floatDelay,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                onClick={() => onPick(chip.label)}
-                className="flex-shrink-0 flex items-center gap-1.5 rounded-full font-medium whitespace-nowrap"
-                style={{
-                  padding: `${5 * chip.scale}px ${11 * chip.scale}px`,
-                  fontSize: `${11 * chip.scale}px`,
-                  border: isSelected ? `1.5px solid ${chip.color}` : "1px solid rgba(255,255,255,0.10)",
-                  backgroundColor: isSelected ? `${chip.color}26` : "rgba(255,255,255,0.045)",
-                  backdropFilter: "blur(8px)",
-                  color: isSelected ? "var(--app-text)" : "var(--app-text-secondary)",
-                  fontWeight: isSelected ? 600 : 400,
-                  opacity: isSelected ? 1 : 0.72 + (chip.scale - 0.82) * 0.5,
-                  boxShadow: isSelected ? `0 0 0 3px ${chip.color}22, 0 0 20px ${chip.color}55` : "none",
-                }}
-              >
-                <span
-                  className="flex-shrink-0 rounded-full"
-                  style={{
-                    width: 6 * chip.scale,
-                    height: 6 * chip.scale,
-                    backgroundColor: chip.color,
-                    opacity: isSelected ? 1 : 0.65,
-                    boxShadow: isSelected ? `0 0 4px ${chip.color}88` : "none",
-                  }}
-                />
-                {chip.label}
-              </motion.button>
-            );
-          })}
+      {/* ── Top bar ── */}
+      <div className="flex items-center justify-between px-5 pt-5 pb-3">
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={stage === "sensory" ? () => setStage("vibe") : goHome}
+          className="flex items-center gap-1.5"
+          style={{ color: "var(--app-text-secondary)" }}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path d="M15.75 19.5L8.25 12l7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="text-[10px] tracking-wider" style={{ fontFamily: "var(--font-body)" }}>
+            {stage === "sensory" ? t("mood.back") : t("mood.exit")}
+          </span>
+        </motion.button>
+
+        <FlowProgress stage={stage === "sensory" ? 2 : 1} />
+
+        <span className="w-10" />
       </div>
+
+      <AnimatePresence mode="wait">
+        {stage === "vibe" && (
+          <StageOne
+            key="vibe"
+            lang={lang}
+            liveBottleColor={liveBottleColor}
+            liveFill={liveFill}
+            bottleSize={bottleSize}
+            replyLine={replyLine}
+            selectedVibe={selectedVibe}
+            customMood={customMood}
+            hasVibe={hasVibe}
+            onPickVibe={pickVibe}
+            onOpenSheet={() => setSheetOpen(true)}
+            onClearCustom={() => setCustomMood("")}
+            onNext={enterSensory}
+          />
+        )}
+
+        {stage === "transition" && (
+          <TransitionStage
+            key="transition"
+            liveBottleColor={liveBottleColor}
+            liveFill={liveFill}
+            lang={lang}
+          />
+        )}
+
+        {stage === "sensory" && (
+          <StageTwo
+            key="sensory"
+            lang={lang}
+            isMenuFlow={isMenuFlow}
+            liveBottleColor={liveBottleColor}
+            liveFill={liveFill}
+            bottleSize={bottleSize}
+            sensory={sensory}
+            summary={sensorySummary(lang, sensory)}
+            changeSensory={changeSensory}
+            expandedFlavors={expandedFlavors}
+            setExpandedFlavors={(v) => {
+              setExpandedFlavors(v);
+              if (v)
+                track("detailed_flavors_expanded", {
+                  restaurant_id: restaurantParam ?? null,
+                  menu_id: effectiveMenuContext?.menuSlug ?? null,
+                });
+            }}
+            manualFlavors={manualFlavors}
+            toggleManualFlavor={toggleManualFlavor}
+            expandedStrength={expandedStrength}
+            setExpandedStrength={setExpandedStrength}
+            expandedSpirit={expandedSpirit}
+            setExpandedSpirit={(v) => {
+              setExpandedSpirit(v);
+              if (v)
+                track("base_spirit_preference_opened", {
+                  restaurant_id: restaurantParam ?? null,
+                  menu_id: effectiveMenuContext?.menuSlug ?? null,
+                });
+            }}
+            baseSpirit={baseSpirit}
+            setBaseSpirit={setBaseSpirit}
+            expandedRef={expandedRef}
+            setExpandedRef={(v) => {
+              setExpandedRef(v);
+              if (v)
+                track("reference_drink_expanded", {
+                  restaurant_id: restaurantParam ?? null,
+                  menu_id: effectiveMenuContext?.menuSlug ?? null,
+                });
+            }}
+            referenceDrink={referenceDrink}
+            setReferenceDrink={setReferenceDrink}
+            isGenerating={isGenerating}
+            touched={sensoryTouched(sensory) || manualFlavors.length > 0 || baseSpirit !== "" || referenceDrink !== ""}
+            onMix={handleMix}
+          />
+        )}
+      </AnimatePresence>
+
+      <CustomVibeSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        onSubmit={submitCustom}
+        lang={lang}
+      />
+
+      <MixingOverlay
+        open={isGenerating}
+        color={liveBottleColor}
+        lines={loadingLines(lang, isMenuFlow)}
+      />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Stage 1 — "Pour your state into the bottle"
+// ─────────────────────────────────────────────────────────────────────────
+function StageOne({
+  lang,
+  liveBottleColor,
+  liveFill,
+  bottleSize,
+  replyLine,
+  selectedVibe,
+  customMood,
+  hasVibe,
+  onPickVibe,
+  onOpenSheet,
+  onClearCustom,
+  onNext,
+}: {
+  lang: "zh" | "en";
+  liveBottleColor: string;
+  liveFill: number;
+  bottleSize: number;
+  replyLine: string;
+  selectedVibe: VibeKey | null;
+  customMood: string;
+  hasVibe: boolean;
+  onPickVibe: (k: VibeKey) => void;
+  onOpenSheet: () => void;
+  onClearCustom: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <motion.div
+      key="stage1"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+      className="flex-1 flex flex-col px-5"
+    >
+      <div className="text-center pt-2">
+        <h1
+          className="text-[26px] leading-tight"
+          style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
+        >
+          {lang === "zh" ? "把你现在的状态，倒进来。" : "Pour your state in."}
+        </h1>
+        <p
+          className="text-xs mt-1.5 italic"
+          style={{
+            fontFamily: "var(--font-heading)",
+            color: "var(--app-text-secondary)",
+          }}
+        >
+          {lang === "zh"
+            ? "选一个最像的，或者随便写一句。"
+            : "Pick one that fits, or type your own."}
+        </p>
+      </div>
+
+      {/* Bottle */}
+      <div className="flex justify-center pt-3 pb-1">
+        <VibeBottle
+          color={liveBottleColor}
+          size={bottleSize}
+          mode="idle"
+          sliderVal={liveFill}
+        />
+      </div>
+
+      {/* Reply / state line */}
+      <div className="h-6 mt-1 flex items-center justify-center">
+        <AnimatePresence mode="wait">
+          {hasVibe && (
+            <motion.span
+              key={replyLine + customMood + selectedVibe}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.22 }}
+              className="text-xs italic"
+              style={{
+                fontFamily: "var(--font-heading)",
+                color: "var(--app-primary)",
+              }}
+            >
+              {replyLine}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Floating vibes cloud */}
+      <div className="mt-2">
+        <FloatingVibes lang={lang} selected={selectedVibe} onPick={onPickVibe} />
+      </div>
+
+      {/* Custom mood chip / entry */}
+      <div className="mt-1 flex justify-center px-4">
+        {customMood ? (
+          <button
+            type="button"
+            onClick={onClearCustom}
+            className="text-xs px-3 py-2 rounded-full max-w-full truncate"
+            style={{
+              fontFamily: "var(--font-heading)",
+              fontStyle: "italic",
+              color: "var(--app-text)",
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.14)",
+              backdropFilter: "blur(10px)",
+            }}
+            title={customMood}
+          >
+            "{customMood.length > 44 ? customMood.slice(0, 44) + "…" : customMood}"
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onOpenSheet}
+            className="text-xs tracking-wide flex items-center gap-1"
+            style={{
+              fontFamily: "var(--font-body)",
+              color: "var(--app-text-secondary)",
+            }}
+          >
+            <span>
+              {lang === "zh"
+                ? "还是你自己说：今天到底怎么了？"
+                : "Or say it your own way — what's going on?"}
+            </span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* CTA — hidden until vibe */}
+      <div className="mt-auto pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
+        <AnimatePresence>
+          {hasVibe && (
+            <motion.button
+              key="cta1"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              transition={{ duration: 0.24 }}
+              onClick={onNext}
+              whileTap={{ scale: 0.97 }}
+              className="w-full rounded-full py-4 text-sm font-semibold tracking-wider"
+              style={{
+                fontFamily: "var(--font-heading)",
+                color: "white",
+                background:
+                  "linear-gradient(135deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.16) 100%)",
+                border: "1px solid rgba(255,255,255,0.18)",
+                boxShadow:
+                  "0 12px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.14)",
+              }}
+            >
+              {lang === "zh" ? "继续调味" : "Continue → season it"}
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Stage transition
+// ─────────────────────────────────────────────────────────────────────────
+function TransitionStage({
+  liveBottleColor,
+  liveFill,
+  lang,
+}: {
+  liveBottleColor: string;
+  liveFill: number;
+  lang: "zh" | "en";
+}) {
+  return (
+    <motion.div
+      key="transition"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="flex-1 flex flex-col items-center justify-center px-5"
+    >
+      <motion.div
+        animate={{ rotate: [0, -4, 4, -2, 0] }}
+        transition={{ duration: 0.85, ease: "easeInOut" }}
+      >
+        <VibeBottle
+          color={liveBottleColor}
+          size={220}
+          mode="mixing"
+          sliderVal={liveFill}
+        />
+      </motion.div>
+      <motion.p
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25, duration: 0.35 }}
+        className="mt-6 text-sm italic text-center"
+        style={{
+          fontFamily: "var(--font-heading)",
+          color: "var(--app-text-secondary)",
+        }}
+      >
+        {lang === "zh" ? "收到。现在给它一点味道。" : "Got it. Now give it a taste."}
+      </motion.p>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Stage 2 — sensory console
+// ─────────────────────────────────────────────────────────────────────────
+function StageTwo(props: {
+  lang: "zh" | "en";
+  isMenuFlow: boolean;
+  liveBottleColor: string;
+  liveFill: number;
+  bottleSize: number;
+  sensory: SensoryState;
+  summary: string;
+  changeSensory: (name: keyof SensoryState, v: number) => void;
+  expandedFlavors: boolean;
+  setExpandedFlavors: (v: boolean) => void;
+  manualFlavors: string[];
+  toggleManualFlavor: (label: string) => void;
+  expandedStrength: boolean;
+  setExpandedStrength: (v: boolean) => void;
+  expandedSpirit: boolean;
+  setExpandedSpirit: (v: boolean) => void;
+  baseSpirit: string;
+  setBaseSpirit: (v: string) => void;
+  expandedRef: boolean;
+  setExpandedRef: (v: boolean) => void;
+  referenceDrink: string;
+  setReferenceDrink: (v: string) => void;
+  isGenerating: boolean;
+  touched: boolean;
+  onMix: () => void;
+}) {
+  const {
+    lang,
+    liveBottleColor,
+    liveFill,
+    bottleSize,
+    sensory,
+    summary,
+    changeSensory,
+    expandedFlavors,
+    setExpandedFlavors,
+    manualFlavors,
+    toggleManualFlavor,
+    expandedStrength,
+    setExpandedStrength,
+    expandedSpirit,
+    setExpandedSpirit,
+    baseSpirit,
+    setBaseSpirit,
+    expandedRef,
+    setExpandedRef,
+    referenceDrink,
+    setReferenceDrink,
+    isGenerating,
+    touched,
+    onMix,
+  } = props;
+
+  const zh = lang === "zh";
+  const ctaLabel = isGenerating
+    ? zh
+      ? "正在调制…"
+      : "Mixing…"
+    : touched
+      ? zh
+        ? "按这个感觉调一杯"
+        : "Mix it this way"
+      : zh
+        ? "这杯交给你了"
+        : "Leave it to you";
+
+  return (
+    <motion.div
+      key="stage2"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+      className="flex-1 flex flex-col px-5 pb-[calc(env(safe-area-inset-bottom)+96px)]"
+    >
+      <div className="text-center pt-1">
+        <h1
+          className="text-[24px] leading-tight"
+          style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
+        >
+          {zh ? "想把它调成什么感觉？" : "How should it feel?"}
+        </h1>
+        <p
+          className="text-xs mt-1 italic"
+          style={{
+            fontFamily: "var(--font-heading)",
+            color: "var(--app-text-secondary)",
+          }}
+        >
+          {zh ? "凭直觉选，不用懂酒。" : "Pick by instinct — no cocktail lingo needed."}
+        </p>
+      </div>
+
+      <div className="flex justify-center pt-1 pb-2">
+        <VibeBottle
+          color={liveBottleColor}
+          size={bottleSize}
+          mode="idle"
+          sliderVal={liveFill}
+        />
+      </div>
+
+      {/* Three sensory sliders */}
+      <div className="mt-1 space-y-5">
+        <SensoryControl
+          value={sensory.fresh}
+          onChange={(v) => changeSensory("fresh", v)}
+          leftLabel={zh ? "清爽" : "Crisp"}
+          rightLabel={zh ? "浓郁" : "Rich"}
+        />
+        <SensoryControl
+          value={sensory.soft}
+          onChange={(v) => changeSensory("soft", v)}
+          leftLabel={zh ? "柔和" : "Soft"}
+          rightLabel={zh ? "刺激" : "Bold"}
+          accent="var(--app-accent-lav)"
+        />
+        <SensoryControl
+          value={sensory.familiar}
+          onChange={(v) => changeSensory("familiar", v)}
+          leftLabel={zh ? "熟悉" : "Familiar"}
+          rightLabel={zh ? "意外" : "Unexpected"}
+          accent="var(--app-accent-sage)"
+        />
+      </div>
+
+      <p
+        className="mt-4 text-xs text-center"
+        style={{
+          fontFamily: "var(--font-body)",
+          color: "var(--app-text-secondary)",
+        }}
+      >
+        {summary}
+      </p>
+
+      {/* Accordions */}
+      <div className="mt-5 space-y-2">
+        <Accordion
+          open={expandedFlavors}
+          onToggle={() => setExpandedFlavors(!expandedFlavors)}
+          label={
+            zh
+              ? `我想自己选具体味道${manualFlavors.length ? ` · ${manualFlavors.length}/3` : ""}`
+              : `Pick specific flavors${manualFlavors.length ? ` · ${manualFlavors.length}/3` : ""}`
+          }
+        >
+          <div className="flex flex-wrap gap-2 pt-1">
+            {FLAVOR_CHIPS.map((c) => {
+              const sel = manualFlavors.includes(c.label);
+              return (
+                <button
+                  key={c.label}
+                  type="button"
+                  onClick={() => toggleManualFlavor(c.label)}
+                  className="text-xs px-3 py-1.5 rounded-full transition"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    border: sel
+                      ? `1.4px solid ${c.color}`
+                      : "1px solid rgba(255,255,255,0.10)",
+                    background: sel ? `${c.color}22` : "rgba(255,255,255,0.045)",
+                    color: sel ? "var(--app-text)" : "var(--app-text-secondary)",
+                    backdropFilter: "blur(8px)",
+                    boxShadow: sel ? `0 0 12px ${c.color}55` : "none",
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: 6,
+                      height: 6,
+                      borderRadius: 999,
+                      background: c.color,
+                      marginRight: 6,
+                      verticalAlign: "middle",
+                    }}
+                  />
+                  {zh ? c.labelZh : c.label}
+                </button>
+              );
+            })}
+          </div>
+        </Accordion>
+
+        <Accordion
+          open={expandedStrength}
+          onToggle={() => setExpandedStrength(!expandedStrength)}
+          label={
+            zh
+              ? "今晚想慢慢喝，还是来点狠的？"
+              : "Slow sip, or hit me?"
+          }
+        >
+          <div className="pt-2">
+            <SensoryControl
+              value={sensory.strength}
+              onChange={(v) => changeSensory("strength", v)}
+              leftLabel={zh ? "慢慢喝" : "Slow sip"}
+              rightLabel={zh ? "来点狠的" : "Hit me"}
+              accent="var(--app-accent-vermouth)"
+            />
+          </div>
+        </Accordion>
+
+        <Accordion
+          open={expandedSpirit}
+          onToggle={() => setExpandedSpirit(!expandedSpirit)}
+          label={
+            baseSpirit
+              ? zh
+                ? `基酒：${BASE_SPIRITS.find((s) => s.key === baseSpirit)?.zh ?? ""}`
+                : `Base spirit: ${BASE_SPIRITS.find((s) => s.key === baseSpirit)?.en ?? ""}`
+              : zh
+                ? "基酒交给我们 · 我有偏好"
+                : "Base spirit — leave it / I have a preference"
+          }
+        >
+          <div className="pt-1 grid grid-cols-2 gap-2">
+            {BASE_SPIRITS.map((s) => {
+              const sel = baseSpirit === s.key;
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => setBaseSpirit(sel ? "" : s.key)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-left text-xs"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    border: sel
+                      ? `1.4px solid ${s.color}`
+                      : "1px solid rgba(255,255,255,0.10)",
+                    background: sel ? `${s.color}22` : "rgba(255,255,255,0.045)",
+                    color: sel ? "var(--app-text)" : "var(--app-text-secondary)",
+                    backdropFilter: "blur(8px)",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 999,
+                      background: s.color,
+                      boxShadow: sel ? `0 0 6px ${s.color}` : "none",
+                    }}
+                  />
+                  {zh ? s.zh : s.en}
+                </button>
+              );
+            })}
+          </div>
+        </Accordion>
+
+        <Accordion
+          open={expandedRef}
+          onToggle={() => setExpandedRef(!expandedRef)}
+          label={
+            referenceDrink
+              ? `"${referenceDrink.length > 32 ? referenceDrink.slice(0, 32) + "…" : referenceDrink}"`
+              : zh
+                ? "＋ 我脑子里已经有一杯酒"
+                : "＋ I already have a drink in mind"
+          }
+        >
+          <input
+            type="text"
+            value={referenceDrink}
+            onChange={(e) => setReferenceDrink(e.target.value)}
+            placeholder={zh ? "比如：像 Mojito，但不要那么甜" : "e.g. like a Mojito, but less sweet"}
+            className="w-full mt-2 rounded-xl px-4 py-3 text-sm"
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "var(--app-text)",
+              fontFamily: "var(--font-heading)",
+              fontStyle: "italic",
+              outline: "none",
+            }}
+          />
+        </Accordion>
+      </div>
+
+      {/* Sticky CTA */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-30"
+        style={{
+          paddingBottom: "calc(env(safe-area-inset-bottom) + 14px)",
+          paddingTop: 12,
+          background:
+            "linear-gradient(180deg, rgba(20,22,25,0) 0%, rgba(20,22,25,0.72) 40%, rgba(20,22,25,0.95) 100%)",
+        }}
+      >
+        <div className="mx-auto max-w-[520px] px-5">
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={onMix}
+            disabled={isGenerating}
+            className="w-full rounded-full py-4 text-sm font-semibold tracking-wider disabled:opacity-60"
+            style={{
+              fontFamily: "var(--font-heading)",
+              color: "white",
+              background:
+                "linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.18) 100%)",
+              border: "1px solid rgba(255,255,255,0.22)",
+              boxShadow:
+                "0 12px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.16)",
+            }}
+          >
+            {ctaLabel}
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── tiny local accordion ──
+function Accordion({
+  open,
+  onToggle,
+  label,
+  children,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="rounded-2xl"
+      style={{
+        background: "rgba(255,255,255,0.035)",
+        border: "1px solid rgba(255,255,255,0.08)",
+      }}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-4 py-3 text-xs"
+        style={{
+          fontFamily: "var(--font-body)",
+          color: "var(--app-text-secondary)",
+        }}
+      >
+        <span className="text-left truncate pr-3">{label}</span>
+        <motion.svg
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M19.5 8.25l-7.5 7.5-7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
+        </motion.svg>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            style={{ overflow: "hidden" }}
+          >
+            <div className="px-4 pb-4">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
