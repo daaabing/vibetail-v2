@@ -14,7 +14,7 @@ import VibeBottle from "@/components/moodtail/VibeBottle";
 import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import FlowProgress from "@/components/moodtail/vibeflow/FlowProgress";
 import FloatingVibes from "@/components/moodtail/vibeflow/FloatingVibes";
-import CustomVibeSheet from "@/components/moodtail/vibeflow/CustomVibeSheet";
+import { MOOD_PLACEHOLDERS_EN, MOOD_PLACEHOLDERS_ZH } from "@/lib/moodtail-data";
 import SensoryControl from "@/components/moodtail/vibeflow/SensoryControl";
 
 import {
@@ -83,7 +83,6 @@ export default function MoodInputScreen({
   const [pickedLabel, setPickedLabel] = useState<string | null>(null);
   const [pickedColor, setPickedColor] = useState<string>("#99B9C6");
   const [customMood, setCustomMood] = useState<string>(""); // when non-empty, overrides pill
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   // ── Stage 2: sensory + optional accordions ────────────────────────
   const [sensory, setSensory] = useState<SensoryState>(DEFAULT_SENSORY);
@@ -159,14 +158,15 @@ export default function MoodInputScreen({
 
   const submitCustom = (text: string) => {
     setCustomMood(text);
-    setPickedLabel(null);
-    setSheetOpen(false);
-    track("vibe_custom_submitted", {
-      custom_text_length: text.length,
-      source: "custom",
-      restaurant_id: restaurantParam ?? null,
-      menu_id: effectiveMenuContext?.menuSlug ?? null,
-    });
+    if (text.trim()) {
+      setPickedLabel(null);
+      track("vibe_custom_submitted", {
+        custom_text_length: text.length,
+        source: "custom",
+        restaurant_id: restaurantParam ?? null,
+        menu_id: effectiveMenuContext?.menuSlug ?? null,
+      });
+    }
   };
 
   const enterSensory = () => {
@@ -419,7 +419,7 @@ export default function MoodInputScreen({
             customMood={customMood}
             hasVibe={hasVibe}
             onPickVibe={pickVibe}
-            onOpenSheet={() => setSheetOpen(true)}
+            onCustomChange={submitCustom}
             onClearCustom={() => setCustomMood("")}
             onNext={enterSensory}
           />
@@ -487,12 +487,6 @@ export default function MoodInputScreen({
         )}
       </AnimatePresence>
 
-      <CustomVibeSheet
-        open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        onSubmit={submitCustom}
-        lang={lang}
-      />
 
       <MixingOverlay
         open={isGenerating}
@@ -516,8 +510,8 @@ function StageOne({
   customMood,
   hasVibe,
   onPickVibe,
-  onOpenSheet,
-  onClearCustom,
+  onCustomChange,
+  onClearCustom: _onClearCustom,
   onNext,
 }: {
   lang: "zh" | "en";
@@ -529,10 +523,17 @@ function StageOne({
   customMood: string;
   hasVibe: boolean;
   onPickVibe: (label: string, color: string) => void;
-  onOpenSheet: () => void;
+  onCustomChange: (text: string) => void;
   onClearCustom: () => void;
   onNext: () => void;
 }) {
+  const placeholders = lang === "zh" ? MOOD_PLACEHOLDERS_ZH : MOOD_PLACEHOLDERS_EN;
+  const [phIdx, setPhIdx] = useState(() =>
+    Math.floor(Math.random() * placeholders.length),
+  );
+  const ph = placeholders[phIdx % placeholders.length];
+  const shrunkBottle = Math.round(bottleSize * 0.85);
+
   return (
     <motion.div
       key="stage1"
@@ -542,15 +543,15 @@ function StageOne({
       transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
       className="flex-1 flex flex-col px-5"
     >
-      <div className="text-center pt-2">
+      <div className="text-center pt-1">
         <h1
-          className="text-[26px] leading-tight"
+          className="text-[24px] leading-tight"
           style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
         >
           {lang === "zh" ? "把你现在的状态，倒进来。" : "Pour your state in."}
         </h1>
         <p
-          className="text-xs mt-1.5 italic"
+          className="text-xs mt-1 italic"
           style={{
             fontFamily: "var(--font-heading)",
             color: "var(--app-text-secondary)",
@@ -563,17 +564,17 @@ function StageOne({
       </div>
 
       {/* Bottle */}
-      <div className="flex justify-center pt-3 pb-1">
+      <div className="flex justify-center pt-1 pb-0">
         <VibeBottle
           color={liveBottleColor}
-          size={bottleSize}
+          size={shrunkBottle}
           mode="idle"
           sliderVal={liveFill}
         />
       </div>
 
       {/* Reply / state line */}
-      <div className="h-6 mt-1 flex items-center justify-center">
+      <div className="h-5 flex items-center justify-center">
         <AnimatePresence mode="wait">
           {hasVibe && (
             <motion.span
@@ -594,54 +595,76 @@ function StageOne({
         </AnimatePresence>
       </div>
 
-      {/* Floating vibes cloud */}
-      <div className="mt-2">
+      {/* Central floating vibe cloud */}
+      <div className="mt-1">
         <FloatingVibes lang={lang} selected={pickedLabel} onPick={onPickVibe} />
       </div>
 
-      {/* Custom mood chip / entry */}
-      <div className="mt-1 flex justify-center px-4">
-        {customMood ? (
-          <button
-            type="button"
-            onClick={onClearCustom}
-            className="text-xs px-3 py-2 rounded-full max-w-full truncate"
+      {/* Inline custom mood input */}
+      <div className="mt-3">
+        <label
+          className="block text-[11px] tracking-wider mb-1.5 px-1"
+          style={{
+            fontFamily: "var(--font-body)",
+            color: "var(--app-text-secondary)",
+            letterSpacing: "0.08em",
+          }}
+        >
+          {lang === "zh"
+            ? "描述一下现在的精神状态"
+            : "Describe your current headspace"}
+        </label>
+        <div
+          className="relative rounded-2xl"
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+            transition: "border-color 200ms, box-shadow 200ms",
+            boxShadow: customMood
+              ? "0 0 0 1px rgba(153,185,198,0.35), 0 0 16px rgba(153,185,198,0.18)"
+              : "none",
+          }}
+        >
+          <textarea
+            value={customMood}
+            onChange={(e) => onCustomChange(e.target.value)}
+            placeholder={ph}
+            rows={3}
+            className="w-full resize-none bg-transparent outline-none rounded-2xl px-4 pt-3 pb-8 text-sm leading-relaxed"
             style={{
-              fontFamily: "var(--font-heading)",
-              fontStyle: "italic",
+              minHeight: 110,
+              maxHeight: 200,
               color: "var(--app-text)",
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.14)",
-              backdropFilter: "blur(10px)",
+              fontFamily: "var(--font-heading)",
+              fontStyle: customMood ? "normal" : "italic",
             }}
-            title={customMood}
-          >
-            "{customMood.length > 44 ? customMood.slice(0, 44) + "…" : customMood}"
-          </button>
-        ) : (
+          />
           <button
             type="button"
-            onClick={onOpenSheet}
-            className="text-xs tracking-wide flex items-center gap-1"
+            onClick={() =>
+              setPhIdx((i) => {
+                let next = Math.floor(Math.random() * placeholders.length);
+                if (next === i % placeholders.length) next = (next + 1) % placeholders.length;
+                return next;
+              })
+            }
+            className="absolute bottom-2 right-3 text-[10px] tracking-wider px-2 py-1 rounded-full"
             style={{
               fontFamily: "var(--font-body)",
-              color: "var(--app-text-secondary)",
+              color: "var(--app-text-muted)",
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <span>
-              {lang === "zh"
-                ? "还是你自己说：今天到底怎么了？"
-                : "Or say it your own way — what's going on?"}
-            </span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            {lang === "zh" ? "随机来一句" : "Random line"}
           </button>
-        )}
+        </div>
       </div>
 
       {/* CTA — hidden until vibe */}
-      <div className="mt-auto pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
+      <div className="mt-auto pt-3 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <AnimatePresence>
           {hasVibe && (
             <motion.button
@@ -671,6 +694,7 @@ function StageOne({
     </motion.div>
   );
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────
 // Stage transition

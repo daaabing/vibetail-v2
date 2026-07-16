@@ -1,144 +1,163 @@
-import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { useMemo } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import type { Lang } from "@/lib/i18n";
-import { VIBE_ROWS_EN, VIBE_ROWS_ZH, type VibeCloudRow } from "@/lib/vibe-cloud";
+import { VIBE_ROWS_EN, VIBE_ROWS_ZH } from "@/lib/vibe-cloud";
 
 interface Props {
   lang: Lang;
-  /** Currently picked chip label (raw string) or null. */
   selected: string | null;
   onPick: (label: string, color: string) => void;
 }
 
 /**
- * Drifting cloud of vibe chips — rows alternate direction and gently float
- * horizontally. Tapping a chip picks it. Fills the center of the screen.
+ * Central vibe cloud — all pills sit inside one soft container, wrap
+ * naturally, and each pill drifts a few pixels around its own resting spot.
+ * No marquee, no horizontal scroll — the cloud stays put.
  */
 export default function FloatingVibes({ lang, selected, onPick }: Props) {
   const rows = lang === "zh" ? VIBE_ROWS_ZH : VIBE_ROWS_EN;
+  const items = useMemo(
+    () => rows.flatMap((r) => r.labels.map((label) => ({ label, color: r.color }))),
+    [rows],
+  );
+  const anyPicked = !!selected;
 
   return (
     <div
-      className="relative w-full overflow-hidden"
+      className="relative w-full mx-auto"
       style={{
-        height: 300,
+        maxWidth: "calc(100vw - 32px)",
+        height: 260,
+        overflowY: "auto",
+        overflowX: "hidden",
+        WebkitOverflowScrolling: "touch",
         maskImage:
-          "linear-gradient(90deg, transparent 0, black 8%, black 92%, transparent 100%)",
+          "linear-gradient(180deg, transparent 0, black 10%, black 88%, transparent 100%)",
         WebkitMaskImage:
-          "linear-gradient(90deg, transparent 0, black 8%, black 92%, transparent 100%)",
+          "linear-gradient(180deg, transparent 0, black 10%, black 88%, transparent 100%)",
       }}
     >
-      <div className="flex flex-col justify-center h-full gap-3 py-2">
-        {rows.map((row, i) => (
-          <DriftRow
-            key={i}
-            row={row}
-            selected={selected}
-            onPick={onPick}
-            speed={44 + i * 6}
-          />
-        ))}
+      <div className="flex flex-wrap justify-center gap-1.5 px-2 py-3">
+        {items.map((it, i) => {
+          const isSel = selected === it.label;
+          return (
+            <FloatChip
+              key={`${it.label}-${i}`}
+              idx={i}
+              label={it.label}
+              color={it.color}
+              selected={isSel}
+              dimmed={anyPicked && !isSel}
+              onPick={onPick}
+            />
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function DriftRow({
-  row,
-  selected,
-  onPick,
-  speed,
-}: {
-  row: VibeCloudRow;
-  selected: string | null;
-  onPick: (label: string, color: string) => void;
-  speed: number;
-}) {
-  // Duplicate labels for a seamless marquee loop.
-  const track = [...row.labels, ...row.labels];
-  const trackRef = useRef<HTMLDivElement>(null);
-  const offsetRef = useRef(0);
-  const rafRef = useRef<number | null>(null);
-  const pausedRef = useRef(false);
+// Deterministic float configs so we don't hydration-mismatch or jitter.
+// Small movement only — 4–10px, ≤1.5deg.
+const FLOAT_CONFIGS = [
+  { fx: 6, fy: -5, r: 1.0, d: 6.2 },
+  { fx: -5, fy: 7, r: -1.2, d: 7.1 },
+  { fx: 4, fy: 6, r: 0.8, d: 5.6 },
+  { fx: -6, fy: -4, r: -0.9, d: 7.4 },
+  { fx: 8, fy: 3, r: 1.3, d: 6.8 },
+  { fx: -4, fy: -6, r: -1.0, d: 5.9 },
+  { fx: 5, fy: -7, r: 1.1, d: 7.6 },
+  { fx: -7, fy: 4, r: -1.3, d: 6.4 },
+  { fx: 3, fy: 8, r: 0.6, d: 5.4 },
+  { fx: -5, fy: -3, r: -0.7, d: 7.0 },
+  { fx: 7, fy: 5, r: 1.4, d: 6.6 },
+  { fx: -3, fy: -8, r: -1.1, d: 5.8 },
+];
 
-  useEffect(() => {
-    let last = performance.now();
-    const step = (now: number) => {
-      const dt = (now - last) / 1000;
-      last = now;
-      if (!pausedRef.current && trackRef.current) {
-        const el = trackRef.current;
-        const halfWidth = el.scrollWidth / 2;
-        offsetRef.current += (row.dir === "rtl" ? -1 : 1) * speed * dt;
-        // wrap
-        if (row.dir === "rtl" && offsetRef.current <= -halfWidth) {
-          offsetRef.current += halfWidth;
-        } else if (row.dir === "ltr" && offsetRef.current >= 0) {
-          offsetRef.current -= halfWidth;
-        }
-        el.style.transform = `translate3d(${offsetRef.current}px,0,0)`;
-      }
-      rafRef.current = requestAnimationFrame(step);
-    };
-    // Seed offset so ltr rows don't blank on first frame.
-    if (row.dir === "ltr") offsetRef.current = -1;
-    rafRef.current = requestAnimationFrame(step);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [row.dir, speed]);
+function FloatChip({
+  idx,
+  label,
+  color,
+  selected,
+  dimmed,
+  onPick,
+}: {
+  idx: number;
+  label: string;
+  color: string;
+  selected: boolean;
+  dimmed: boolean;
+  onPick: (label: string, color: string) => void;
+}) {
+  const reduce = useReducedMotion();
+  const cfg = FLOAT_CONFIGS[idx % FLOAT_CONFIGS.length];
+  const delay = (idx % 11) * 0.23;
+
+  // Slight size variation based on text length (not random).
+  const len = label.length;
+  const fontSize = len <= 3 ? 11 : len >= 12 ? 12.5 : 12;
+  const padY = len <= 3 ? 5 : 6;
+  const padX = len <= 3 ? 10 : 12;
 
   return (
-    <div
-      className="relative w-full"
-      style={{ touchAction: "pan-x pan-y" }}
-      onPointerEnter={() => (pausedRef.current = true)}
-      onPointerLeave={() => (pausedRef.current = false)}
+    <motion.button
+      type="button"
+      onClick={() => onPick(label, color)}
+      animate={
+        reduce
+          ? undefined
+          : {
+              x: [0, cfg.fx, 0, -cfg.fx * 0.6, 0],
+              y: [0, cfg.fy, cfg.fy * 0.4, -cfg.fy * 0.5, 0],
+              rotate: [0, cfg.r, 0, -cfg.r * 0.7, 0],
+            }
+      }
+      transition={
+        reduce
+          ? undefined
+          : {
+              duration: cfg.d,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay,
+            }
+      }
+      whileTap={{ scale: 0.94 }}
+      className="shrink-0 rounded-full"
+      style={{
+        fontFamily: "var(--font-body)",
+        fontSize,
+        padding: `${padY}px ${padX}px`,
+        lineHeight: 1.1,
+        border: selected
+          ? `1.4px solid ${color}`
+          : "1px solid rgba(255,255,255,0.10)",
+        background: selected
+          ? `${color}2E`
+          : "rgba(255,255,255,0.045)",
+        color: selected ? "var(--app-text)" : "var(--app-text-secondary)",
+        opacity: dimmed ? 0.5 : 1,
+        transform: selected ? "scale(1.04)" : undefined,
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        boxShadow: selected ? `0 0 14px ${color}55` : "none",
+        transition: "background 200ms, border-color 200ms, opacity 200ms",
+        willChange: "transform",
+      }}
     >
-      <div
-        ref={trackRef}
-        className="flex gap-2 whitespace-nowrap will-change-transform"
-      >
-        {track.map((label, i) => {
-          const isSel = selected === label;
-          return (
-            <motion.button
-              key={`${label}-${i}`}
-              type="button"
-              whileTap={{ scale: 0.94 }}
-              onClick={() => onPick(label, row.color)}
-              className="shrink-0 rounded-full px-3.5 py-1.5 text-xs"
-              style={{
-                fontFamily: "var(--font-body)",
-                border: isSel
-                  ? `1.4px solid ${row.color}`
-                  : "1px solid rgba(255,255,255,0.10)",
-                background: isSel
-                  ? `${row.color}2E`
-                  : "rgba(255,255,255,0.045)",
-                color: isSel ? "var(--app-text)" : "var(--app-text-secondary)",
-                backdropFilter: "blur(8px)",
-                WebkitBackdropFilter: "blur(8px)",
-                boxShadow: isSel ? `0 0 14px ${row.color}66` : "none",
-              }}
-            >
-              <span
-                style={{
-                  display: "inline-block",
-                  width: 5,
-                  height: 5,
-                  borderRadius: 999,
-                  background: row.color,
-                  marginRight: 6,
-                  verticalAlign: "middle",
-                  opacity: isSel ? 1 : 0.7,
-                }}
-              />
-              {label}
-            </motion.button>
-          );
-        })}
-      </div>
-    </div>
+      <span
+        style={{
+          display: "inline-block",
+          width: 5,
+          height: 5,
+          borderRadius: 999,
+          background: color,
+          marginRight: 6,
+          verticalAlign: "middle",
+          opacity: selected ? 1 : 0.7,
+        }}
+      />
+      {label}
+    </motion.button>
   );
 }
