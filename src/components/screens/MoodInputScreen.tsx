@@ -15,6 +15,7 @@ import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import FlowProgress from "@/components/moodtail/vibeflow/FlowProgress";
 import FloatingVibes from "@/components/moodtail/vibeflow/FloatingVibes";
 import { MOOD_PLACEHOLDERS_EN, MOOD_PLACEHOLDERS_ZH } from "@/lib/moodtail-data";
+import { getMoodConfig } from "@/lib/mood-config";
 import SensoryControl from "@/components/moodtail/vibeflow/SensoryControl";
 
 import {
@@ -105,14 +106,23 @@ export default function MoodInputScreen({
     return pickedLabel ?? "";
   }, [customMood, pickedLabel]);
 
+  // Mood-specific liquid color + reply line (falls back to picked row color).
+  const moodCfg = useMemo(
+    () => getMoodConfig(pickedLabel, pickedColor, lang),
+    [pickedLabel, pickedColor, lang],
+  );
+
   const replyLine = useMemo(() => {
     if (!hasVibe) return "";
-    return lang === "zh"
-      ? "收到，这个状态很适合调一杯。"
-      : "Got it. That's a good state to mix from.";
-  }, [hasVibe, lang]);
+    if (customMood.trim()) {
+      return lang === "zh"
+        ? "收到，这个状态很适合调一杯。"
+        : "Got it. That's a good state to mix from.";
+    }
+    return moodCfg.response;
+  }, [hasVibe, customMood, moodCfg, lang]);
 
-  const baseColor = customMood.trim() ? "#B7A9B3" : pickedColor;
+  const baseColor = customMood.trim() ? "#B7A9B3" : moodCfg.color;
   const liveBottleColor = computeBottleColor(baseColor, sensory);
   const liveFill = computeFill(hasVibe, sensory);
 
@@ -600,8 +610,16 @@ function StageOne({
         </AnimatePresence>
       </div>
 
-      {/* Tag cloud — flexes to fill remaining space, internal scroll */}
-      <div className="flex-1 min-h-0 relative mt-1">
+      {/* Tag cloud — compact, capped height, internal infinite scroll */}
+      <div
+        className="relative mt-1 w-full mx-auto"
+        style={{
+          flex: "1 1 0",
+          minHeight: 180,
+          maxHeight: 260,
+          maxWidth: 600,
+        }}
+      >
         <FloatingVibes lang={lang} selected={pickedLabel} onPick={onPickVibe} />
       </div>
 
