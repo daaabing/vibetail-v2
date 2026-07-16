@@ -760,6 +760,19 @@ function StageOne({
           position: relative;
           z-index: 1;
         }
+        .bottle-aura {
+          position: absolute;
+          width: 200%;
+          height: 200%;
+          left: -50%;
+          top: -50%;
+          z-index: 0;
+          filter: blur(44px);
+          opacity: 0.28;
+          pointer-events: none;
+          transform: scale(1.2);
+        }
+
         @media (max-height: 780px) {
           .bottle-section {
             flex-basis: 300px !important;
