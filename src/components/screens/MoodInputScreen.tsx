@@ -880,7 +880,7 @@ export default function MoodInputScreen({
                   color: "var(--app-text)",
                   outline: "none",
                 }}
-                placeholder={customPlaceholder}
+                placeholder=""
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = "var(--app-primary)";
                 }}
