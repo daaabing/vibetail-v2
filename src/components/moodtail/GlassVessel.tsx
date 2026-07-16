@@ -293,15 +293,8 @@ export default function GlassVessel({
             </clipPath>
           </defs>
 
-          {/* Glow behind the glass */}
-          <ellipse
-            cx="110"
-            cy="250"
-            rx="95"
-            ry="150"
-            fill={colors.glow}
-            opacity="0.22"
-          />
+          {/* No sharp SVG ellipse glow — soft CSS radial gradient is applied
+              by the parent component so the aura stays diffuse and frame-rate-friendly. */}
 
           {/* Cap / cork — wider than the neck */}
           <rect
