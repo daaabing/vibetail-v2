@@ -203,14 +203,10 @@ export const FLAVOR_CHIPS = [
 ];
 
 export const MOOD_PLACEHOLDERS_EN = [
-  "sleep-deprived, caffeinated, and pretending my demo works",
-  "in a talking stage but acting unbothered",
-  "debugging at 2am with suspicious confidence",
-  "ghosted but thriving allegedly",
-  "locked in, dramatic, and running on vibes",
-  "romantically delusional but fully self-aware",
-  "five tabs open, zero decisions made",
-  "caffeinated, delusional, and trusting the LLM too much",
+  "a little anxious about tomorrow's interview",
+  "the company is about to lay off and I'm scrolling Blind",
+  "Friday afternoon, sun is out, finally weekend — so happy",
+  "late-night rain feels calm, want to put on a song",
 ];
 
 export const MOOD_PLACEHOLDERS_ZH = [
