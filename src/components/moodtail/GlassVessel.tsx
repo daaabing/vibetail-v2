@@ -353,6 +353,15 @@ export default function GlassVessel({
             style={{ touchAction: canDrag ? "none" : "auto", cursor: canDrag ? "ns-resize" : "default" }}
           />
 
+          {/* Subtle glass body volume — soft gradient, no hard oval sticker */}
+          <path
+            d={BODY_PATH}
+            fill="url(#glass-body-gradient)"
+            stroke="none"
+            style={{ mixBlendMode: "overlay" }}
+          />
+
+
           {/* Liquid + bubbles + waves, clipped to the body */}
           <g clipPath="url(#body-clip)">
             <rect
