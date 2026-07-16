@@ -512,7 +512,7 @@ function StageOne({
   liveFill,
   bottleSize,
   replyLine,
-  selectedVibe,
+  pickedLabel,
   customMood,
   hasVibe,
   onPickVibe,
@@ -525,10 +525,10 @@ function StageOne({
   liveFill: number;
   bottleSize: number;
   replyLine: string;
-  selectedVibe: VibeKey | null;
+  pickedLabel: string | null;
   customMood: string;
   hasVibe: boolean;
-  onPickVibe: (k: VibeKey) => void;
+  onPickVibe: (label: string, color: string) => void;
   onOpenSheet: () => void;
   onClearCustom: () => void;
   onNext: () => void;
