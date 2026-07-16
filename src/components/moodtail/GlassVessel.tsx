@@ -291,7 +291,20 @@ export default function GlassVessel({
             <clipPath id="body-clip">
               <path d={BODY_PATH} />
             </clipPath>
+            <radialGradient
+              id="glass-body-gradient"
+              cx="50%"
+              cy="35%"
+              r="65%"
+              fx="50%"
+              fy="30%"
+            >
+              <stop offset="0%" stopColor="rgba(255,255,255,0.045)" />
+              <stop offset="60%" stopColor="rgba(255,255,255,0.015)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+            </radialGradient>
           </defs>
+
 
           {/* No sharp SVG ellipse glow — soft CSS radial gradient is applied
               by the parent component so the aura stays diffuse and frame-rate-friendly. */}
