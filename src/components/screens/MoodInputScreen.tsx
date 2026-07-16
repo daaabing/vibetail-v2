@@ -826,7 +826,7 @@ function StageTwo(props: {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="flex-1 flex flex-col px-5 pb-[calc(env(safe-area-inset-bottom)+96px)]"
+      className="flex-1 min-h-0 flex flex-col px-5 pb-[calc(env(safe-area-inset-bottom)+96px)] overflow-y-auto no-scrollbar"
     >
       <div className="text-center pt-1">
         <h1
