@@ -596,7 +596,12 @@ function StageOne({
           justifyContent: "center",
         }}
       >
-        <div className="bottle-visual">
+        <div
+          className="bottle-visual"
+          style={{
+            filter: `drop-shadow(0 0 80px ${hexToRgba(liveBottleColor, 0.08)})`,
+          }}
+        >
           <VibeBottle
             color={liveBottleColor}
             size={300}
