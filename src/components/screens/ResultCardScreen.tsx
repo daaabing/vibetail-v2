@@ -444,7 +444,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const wasMixingRef = useRef(false);
   const captureRef = useRef<HTMLDivElement>(null);
   const captureRawImageSource = cocktail?.imageUrl ?? (imageData ? `data:image/png;base64,${imageData}` : null);
-  const captureParchmentSource = useParchmentImage(captureRawImageSource);
+  
   const isPreview = !id || id === "preview";
   const isPersisted = !isPreview || persistedId !== null;
 
