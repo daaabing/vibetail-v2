@@ -577,7 +577,7 @@ function StageOne({
         <AnimatePresence mode="wait">
           {hasVibe && (
             <motion.span
-              key={replyLine + customMood + selectedVibe}
+              key={replyLine + customMood + pickedLabel}
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
@@ -596,7 +596,7 @@ function StageOne({
 
       {/* Floating vibes cloud */}
       <div className="mt-2">
-        <FloatingVibes lang={lang} selected={selectedVibe} onPick={onPickVibe} />
+        <FloatingVibes lang={lang} selected={pickedLabel} onPick={onPickVibe} />
       </div>
 
       {/* Custom mood chip / entry */}
