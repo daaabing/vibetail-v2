@@ -80,8 +80,9 @@ export default function MoodInputScreen({
 
   // ── Stage 1: vibe ─────────────────────────────────────────────────
   const [stage, setStage] = useState<Stage>("vibe");
-  const [selectedVibe, setSelectedVibe] = useState<VibeKey | null>(null);
-  const [customMood, setCustomMood] = useState<string>(""); // when non-empty, overrides vibe pill
+  const [pickedLabel, setPickedLabel] = useState<string | null>(null);
+  const [pickedColor, setPickedColor] = useState<string>("#99B9C6");
+  const [customMood, setCustomMood] = useState<string>(""); // when non-empty, overrides pill
   const [sheetOpen, setSheetOpen] = useState(false);
 
   // ── Stage 2: sensory + optional accordions ────────────────────────
@@ -98,26 +99,21 @@ export default function MoodInputScreen({
   const [isGenerating, setIsGenerating] = useState(false);
 
   // ── Derived vibe ──────────────────────────────────────────────────
-  const vibeObj = getVibe(selectedVibe);
-  const hasVibe = !!vibeObj || customMood.trim().length > 0;
+  const hasVibe = !!pickedLabel || customMood.trim().length > 0;
 
   const moodText = useMemo(() => {
     if (customMood.trim()) return customMood.trim();
-    if (!vibeObj) return "";
-    return lang === "zh" ? vibeObj.moodZh : vibeObj.moodEn;
-  }, [customMood, vibeObj, lang]);
+    return pickedLabel ?? "";
+  }, [customMood, pickedLabel]);
 
   const replyLine = useMemo(() => {
-    if (customMood.trim()) {
-      return lang === "zh"
-        ? "收到，这个状态很适合调一杯。"
-        : "Got it. That's a good state to mix from.";
-    }
-    if (!vibeObj) return "";
-    return lang === "zh" ? vibeObj.replyZh : vibeObj.replyEn;
-  }, [customMood, vibeObj, lang]);
+    if (!hasVibe) return "";
+    return lang === "zh"
+      ? "收到，这个状态很适合调一杯。"
+      : "Got it. That's a good state to mix from.";
+  }, [hasVibe, lang]);
 
-  const baseColor = vibeObj?.color ?? (customMood.trim() ? "#B7A9B3" : "#99B9C6");
+  const baseColor = customMood.trim() ? "#B7A9B3" : pickedColor;
   const liveBottleColor = computeBottleColor(baseColor, sensory);
   const liveFill = computeFill(hasVibe, sensory);
 
@@ -140,28 +136,30 @@ export default function MoodInputScreen({
     navigate({ to: "/" });
   };
 
-  const pickVibe = (key: VibeKey) => {
-    if (selectedVibe === key) {
-      setSelectedVibe(null);
+  const pickVibe = (label: string, color: string) => {
+    if (pickedLabel === label) {
+      setPickedLabel(null);
       return;
     }
-    setSelectedVibe(key);
+    setPickedLabel(label);
+    setPickedColor(color);
     setCustomMood("");
     track("vibe_quick_selected", {
-      selected_vibe: key,
+      selected_vibe: label,
       source: "quick",
       restaurant_id: restaurantParam ?? null,
       menu_id: effectiveMenuContext?.menuSlug ?? null,
     });
-    // Small tactile ripple.
     if ("vibrate" in navigator) {
       try { (navigator as any).vibrate?.(8); } catch {}
     }
   };
 
+
+
   const submitCustom = (text: string) => {
     setCustomMood(text);
-    setSelectedVibe(null);
+    setPickedLabel(null);
     setSheetOpen(false);
     track("vibe_custom_submitted", {
       custom_text_length: text.length,
@@ -211,7 +209,7 @@ export default function MoodInputScreen({
     track("drink_generation_started", {
       restaurant_id: restaurantParam ?? null,
       menu_id: effectiveMenuContext?.menuSlug ?? null,
-      selected_vibe: selectedVibe,
+      selected_vibe: pickedLabel,
       source: customMood.trim() ? "custom" : "quick",
       sensory_touched: sensoryTouched(sensory),
       final_flavors: finalFlavors,
@@ -356,7 +354,7 @@ export default function MoodInputScreen({
       const encoded = encodeCocktailToHash(cocktail);
       track("cocktail_generated", {
         cocktail_name: generated.cocktailName,
-        selected_vibe: selectedVibe,
+        selected_vibe: pickedLabel,
         source: customMood.trim() ? "custom" : "quick",
         selected_flavor: finalFlavors,
         menu_source: effectiveMenuContext?.merchantSlug ?? null,
@@ -417,7 +415,7 @@ export default function MoodInputScreen({
             liveFill={liveFill}
             bottleSize={bottleSize}
             replyLine={replyLine}
-            selectedVibe={selectedVibe}
+            pickedLabel={pickedLabel}
             customMood={customMood}
             hasVibe={hasVibe}
             onPickVibe={pickVibe}
@@ -514,7 +512,7 @@ function StageOne({
   liveFill,
   bottleSize,
   replyLine,
-  selectedVibe,
+  pickedLabel,
   customMood,
   hasVibe,
   onPickVibe,
@@ -527,10 +525,10 @@ function StageOne({
   liveFill: number;
   bottleSize: number;
   replyLine: string;
-  selectedVibe: VibeKey | null;
+  pickedLabel: string | null;
   customMood: string;
   hasVibe: boolean;
-  onPickVibe: (k: VibeKey) => void;
+  onPickVibe: (label: string, color: string) => void;
   onOpenSheet: () => void;
   onClearCustom: () => void;
   onNext: () => void;
@@ -579,7 +577,7 @@ function StageOne({
         <AnimatePresence mode="wait">
           {hasVibe && (
             <motion.span
-              key={replyLine + customMood + selectedVibe}
+              key={replyLine + customMood + pickedLabel}
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
@@ -598,7 +596,7 @@ function StageOne({
 
       {/* Floating vibes cloud */}
       <div className="mt-2">
-        <FloatingVibes lang={lang} selected={selectedVibe} onPick={onPickVibe} />
+        <FloatingVibes lang={lang} selected={pickedLabel} onPick={onPickVibe} />
       </div>
 
       {/* Custom mood chip / entry */}
