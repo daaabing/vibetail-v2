@@ -146,22 +146,23 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
           "0 24px 60px rgba(0,0,0,0.55), inset 0 0 80px rgba(80,55,30,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",
       }}
     >
-      {/* AI illustration — full drink visible, parchment blends with card */}
+      {/* AI illustration — printed directly onto the parchment, no frame */}
       <div
-        className="mx-4 mt-4 flex-shrink-0 flex items-center justify-center h-[250px] md:h-[340px] relative overflow-hidden"
-        style={{
-          background: "#E9DBC4",
-          borderRadius: 18,
-        }}
+        className="flex-shrink-0 flex items-center justify-center h-[320px] md:h-[400px] relative overflow-hidden"
       >
         {rawImageSource ? (
           <img
             src={rawImageSource}
             alt={cocktail.cocktailName}
-            className="w-full h-full object-contain max-w-none"
-            style={{ objectPosition: "center" }}
+            className="h-full w-auto max-w-none"
+            style={{
+              objectFit: "contain",
+              objectPosition: "center",
+              mixBlendMode: "multiply",
+              transform: "scale(1.15)",
+              transformOrigin: "center",
+            }}
           />
-
         ) : imageLoading ? (
           <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
             <VibeBottle size={110} mode="mixing" />
@@ -177,6 +178,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
           </div>
         )}
       </div>
+
 
 
 
