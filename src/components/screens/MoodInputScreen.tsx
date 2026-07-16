@@ -602,10 +602,10 @@ function StageOne({
             style={{
               background: `radial-gradient(
                 circle at center,
-                ${hexToRgba(liveBottleColor, 0.08)} 0%,
-                ${hexToRgba(liveBottleColor, 0.03)} 25%,
-                ${hexToRgba(liveBottleColor, 0.01)} 45%,
-                transparent 70%
+                ${hexToRgba(liveBottleColor, 0.05)} 0%,
+                ${hexToRgba(liveBottleColor, 0.02)} 28%,
+                ${hexToRgba(liveBottleColor, 0.005)} 48%,
+                transparent 72%
               )`,
             }}
           />
