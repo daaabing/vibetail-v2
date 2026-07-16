@@ -507,13 +507,13 @@ export default function MoodInputScreen({
                   }
                   if (selectedTag && v !== selectedTag) setSelectedTag(null);
                 }}
-                className="w-full rounded-xl p-4 resize-none leading-relaxed"
+                className="w-full rounded-2xl p-4 resize-none leading-relaxed"
                 style={{
                   minHeight: 96,
-                  fontSize: 16,
-                  backgroundColor: "rgba(255,255,255,0.05)",
+                  fontSize: 15,
+                  backgroundColor: "rgba(255,255,255,0.045)",
                   backdropFilter: "blur(8px)",
-                  border: "1px solid rgba(255,255,255,0.12)",
+                  border: "1px solid rgba(255,255,255,0.10)",
                   color: "var(--app-text)",
                   fontFamily: "var(--font-heading)",
                   fontStyle: "italic",
@@ -521,20 +521,32 @@ export default function MoodInputScreen({
                 }}
                 placeholder={`"${moodPlaceholder}"`}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "var(--app-primary)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.22)";
+                  e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.06)";
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
+                  e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.045)";
                 }}
               />
               <motion.button
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.92 }}
                 onClick={() => setMood(moodPlaceholder)}
-                className="absolute right-3 bottom-3 text-[10px] opacity-70 hover:opacity-100"
-                style={{ fontFamily: "var(--font-body)", color: "var(--app-primary)" }}
+                className="absolute right-3 bottom-3 rounded-full whitespace-nowrap"
+                style={{
+                  padding: "5px 11px",
+                  fontSize: 11,
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  backgroundColor: "rgba(255,255,255,0.045)",
+                  backdropFilter: "blur(8px)",
+                  color: "var(--app-text-secondary)",
+                  fontFamily: "var(--font-body)",
+                  opacity: 0.85,
+                }}
               >
                 {t("mood.surprise")}
               </motion.button>
+
             </div>
 
             {/* CTA — 内容末尾，随页面滚动 */}
