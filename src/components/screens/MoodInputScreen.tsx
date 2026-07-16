@@ -754,6 +754,28 @@ function StageOne({
           transform: scale(1);
           transform-origin: center;
         }
+        .bottle-visual {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .bottle-aura {
+          position: absolute;
+          width: 160%;
+          height: 160%;
+          border-radius: 999px;
+          pointer-events: none;
+          z-index: 0;
+          filter: blur(28px);
+          opacity: 0.45;
+          transform: translateZ(0);
+          transition: background 0.4s ease;
+        }
+        .bottle-visual > :not(.bottle-aura) {
+          position: relative;
+          z-index: 1;
+        }
         @media (max-height: 780px) {
           .bottle-section {
             flex-basis: 300px !important;
