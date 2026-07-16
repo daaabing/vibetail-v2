@@ -148,7 +148,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
     >
       {/* AI illustration — printed directly onto the parchment, no frame */}
       <div
-        className="flex-shrink-0 flex items-center justify-center h-[220px] md:h-[300px] relative overflow-hidden"
+        className="flex-shrink-0 flex items-center justify-center h-[320px] md:h-[400px] relative overflow-hidden"
       >
         {rawImageSource ? (
           <img
@@ -949,7 +949,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           }}
         >
           {/* Hero image — printed directly onto parchment */}
-          <div style={{ width: "100%", height: 360, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
+          <div style={{ width: "100%", height: 480, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
             {captureRawImageSource ? (
               <img
                 src={captureRawImageSource}
