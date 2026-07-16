@@ -247,11 +247,11 @@ export default function GlassVessel({
 
       {/* Bottle */}
       <motion.div
-        className="relative z-20"
+        className={isBrewing ? "relative z-20 mixing-bottle" : "relative z-20"}
         style={{ width, height: size, originY: 0.85 }}
         animate={
           isBrewing
-            ? { rotate: [-6, 6, -6], y: [0, -2, 0] }
+            ? undefined
             : {
                 y: isHovered ? mousePos.y * 3.5 : [0, -3.5, 0],
                 x: isHovered ? mousePos.x * 3.5 : 0,
@@ -260,7 +260,7 @@ export default function GlassVessel({
         }
         transition={
           isBrewing
-            ? { duration: 1.05, repeat: Infinity, ease: "easeInOut" }
+            ? undefined
             : isHovered
               ? { type: "spring", stiffness: 85, damping: 18 }
               : {
