@@ -597,18 +597,6 @@ function StageOne({
         }}
       >
         <div className="bottle-visual">
-          <div
-            className="bottle-aura"
-            style={{
-              background: `radial-gradient(
-                circle at center,
-                ${hexToRgba(liveBottleColor, 0.02)} 0%,
-                ${hexToRgba(liveBottleColor, 0.008)} 30%,
-                ${hexToRgba(liveBottleColor, 0.002)} 55%,
-                transparent 80%
-              )`,
-            }}
-          />
           <VibeBottle
             color={liveBottleColor}
             size={300}
