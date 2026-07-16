@@ -203,25 +203,17 @@ export const FLAVOR_CHIPS = [
 ];
 
 export const MOOD_PLACEHOLDERS_EN = [
-  "sleep-deprived, caffeinated, and pretending my demo works",
-  "in a talking stage but acting unbothered",
-  "debugging at 2am with suspicious confidence",
-  "ghosted but thriving allegedly",
-  "locked in, dramatic, and running on vibes",
-  "romantically delusional but fully self-aware",
-  "five tabs open, zero decisions made",
-  "caffeinated, delusional, and trusting the LLM too much",
+  "a little anxious about tomorrow's interview",
+  "the company is about to lay off and I'm scrolling Blind",
+  "Friday afternoon, sun is out, finally weekend — so happy",
+  "late-night rain feels calm, want to put on a song",
 ];
 
 export const MOOD_PLACEHOLDERS_ZH = [
-  "睡眠不足，咖啡因过量，demo 还没跑通",
-  "在暧昧期但假装很淡定",
-  "凌晨两点 debug，莫名充满信心",
-  "被拉黑了但据说活得挺好",
-  "锁定状态，情绪丰富，靠 vibe 续命",
-  "感情上幻觉，但自我意识清醒",
-  "开了五个 tab，一个决定没做",
-  "喝多咖啡，过度信任 AI，继续摆烂",
+  "有些焦虑，不知道明天面试行不行",
+  "公司马上要 layoff 了，在刷一亩三分地",
+  "周五下午！阳光真好，终于要放假了，好开心！",
+  "深夜的雨声让人很平静，想听一首歌。",
 ];
 
 export const MOOD_PLACEHOLDERS = MOOD_PLACEHOLDERS_EN;
