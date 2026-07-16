@@ -949,22 +949,21 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           }}
         >
           {/* Hero image */}
-          <div style={{ width: "100%", height: 420, borderRadius: 18, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24, background: "radial-gradient(ellipse at 50% 35%, #F3E8D6 0%, #E9DBC4 55%, #C9B79A 100%)" }}>
+          <div style={{ width: "100%", height: 420, borderRadius: 18, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24, background: "#E9DBC4" }}>
             {captureRawImageSource ? (
               <img
-                src={captureParchmentSource ?? captureRawImageSource}
+                src={captureRawImageSource}
                 alt={cocktail.cocktailName}
                 crossOrigin="anonymous"
                 style={{
                   width: "100%",
                   height: "100%",
-                  objectFit: "cover",
+                  objectFit: "contain",
                   maxWidth: "none",
                   objectPosition: "center",
-                  mixBlendMode: "normal",
-                  filter: "contrast(1.05) saturate(0.96)",
                 }}
               />
+
             ) : (
               <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#8A7A62" strokeWidth="0.8" opacity="0.3">
                 <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z" strokeLinecap="round" strokeLinejoin="round" />
