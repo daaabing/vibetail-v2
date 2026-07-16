@@ -762,13 +762,13 @@ function StageOne({
         }
         .bottle-aura {
           position: absolute;
-          width: 280%;
-          height: 280%;
+          width: 300%;
+          height: 300%;
           border-radius: 999px;
           pointer-events: none;
           z-index: 0;
-          filter: blur(60px);
-          opacity: 0.16;
+          filter: blur(72px);
+          opacity: 0.10;
           transform: translateZ(0);
           transition: background 0.4s ease;
         }
