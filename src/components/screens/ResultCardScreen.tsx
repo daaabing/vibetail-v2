@@ -132,7 +132,6 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
   distillingText: string;
 }) {
   const rawImageSource = imageUrl ?? (imageData ? `data:image/png;base64,${imageData}` : null);
-  const parchmentImageSource = useParchmentImage(rawImageSource);
 
   return (
     <div
@@ -141,33 +140,28 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
       style={{
         backfaceVisibility: "hidden",
         WebkitBackfaceVisibility: "hidden",
-        background:
-          "radial-gradient(ellipse at 50% 35%, #F3E8D6 0%, #E9DBC4 55%, #C9B79A 100%)",
+        background: "#E9DBC4",
         border: "1px solid rgba(80,60,40,0.18)",
         boxShadow:
           "0 24px 60px rgba(0,0,0,0.55), inset 0 0 80px rgba(80,55,30,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",
       }}
     >
-      {/* AI illustration — fills the parchment frame edge-to-edge */}
+      {/* AI illustration — full drink visible, parchment blends with card */}
       <div
         className="mx-4 mt-4 flex-shrink-0 flex items-center justify-center h-[250px] md:h-[340px] relative overflow-hidden"
         style={{
-          background:
-            "radial-gradient(ellipse at 50% 35%, #F3E8D6 0%, #E9DBC4 55%, #C9B79A 100%)",
+          background: "#E9DBC4",
           borderRadius: 18,
         }}
       >
         {rawImageSource ? (
           <img
-            src={parchmentImageSource ?? rawImageSource}
+            src={rawImageSource}
             alt={cocktail.cocktailName}
-            className="w-full h-full object-cover max-w-none"
-            style={{
-              mixBlendMode: "normal",
-              filter: "contrast(1.05) saturate(0.96)",
-              objectPosition: "center",
-            }}
+            className="w-full h-full object-contain max-w-none"
+            style={{ objectPosition: "center" }}
           />
+
         ) : imageLoading ? (
           <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
             <VibeBottle size={110} mode="mixing" />
