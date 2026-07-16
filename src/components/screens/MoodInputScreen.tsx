@@ -596,12 +596,26 @@ function StageOne({
           justifyContent: "center",
         }}
       >
-        <VibeBottle
-          color={liveBottleColor}
-          size={300}
-          mode="idle"
-          sliderVal={liveFill}
-        />
+        <div className="bottle-visual">
+          <div
+            className="bottle-aura"
+            style={{
+              background: `radial-gradient(
+                circle at center,
+                ${hexToRgba(liveBottleColor, 0.24)} 0%,
+                ${hexToRgba(liveBottleColor, 0.10)} 28%,
+                ${hexToRgba(liveBottleColor, 0.04)} 46%,
+                transparent 72%
+              )`,
+            }}
+          />
+          <VibeBottle
+            color={liveBottleColor}
+            size={300}
+            mode="idle"
+            sliderVal={liveFill}
+          />
+        </div>
         {/* Reply line sticks directly under the bottle */}
         <div className="mood-response" style={{ marginTop: 10, minHeight: 26 }}>
           <AnimatePresence mode="wait">
