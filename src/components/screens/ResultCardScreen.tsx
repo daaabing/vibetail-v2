@@ -1105,7 +1105,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           }}
         >
           {/* Hero image */}
-          <div style={{ width: "100%", height: 420, borderRadius: 18, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
+          <div style={{ width: "100%", height: 420, borderRadius: 18, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24, background: "radial-gradient(ellipse at 50% 35%, #F3E8D6 0%, #E9DBC4 55%, #C9B79A 100%)" }}>
             {captureRawImageSource ? (
               <img
                 src={captureParchmentSource ?? captureRawImageSource}
@@ -1114,14 +1114,11 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                 style={{
                   width: "100%",
                   height: "100%",
-                  objectFit: "contain",
+                  objectFit: "cover",
                   maxWidth: "none",
+                  objectPosition: "center",
                   mixBlendMode: "normal",
                   filter: "contrast(1.05) saturate(0.96)",
-                  WebkitMaskImage:
-                    "radial-gradient(ellipse at center, black 38%, rgba(0,0,0,0.92) 52%, rgba(0,0,0,0.55) 66%, rgba(0,0,0,0.18) 78%, transparent 90%)",
-                  maskImage:
-                    "radial-gradient(ellipse at center, black 38%, rgba(0,0,0,0.92) 52%, rgba(0,0,0,0.55) 66%, rgba(0,0,0,0.18) 78%, transparent 90%)",
                 }}
               />
             ) : (
