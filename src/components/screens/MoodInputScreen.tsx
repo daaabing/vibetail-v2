@@ -610,10 +610,15 @@ function StageOne({
         </AnimatePresence>
       </div>
 
-      {/* Tag cloud — fixed compact height, internal infinite scroll */}
+      {/* Tag cloud — compact, capped height, internal infinite scroll */}
       <div
-        className="flex-none relative mt-1 w-full mx-auto"
-        style={{ height: "clamp(200px, 30vh, 250px)", maxWidth: 600 }}
+        className="relative mt-1 w-full mx-auto"
+        style={{
+          flex: "1 1 0",
+          minHeight: 180,
+          maxHeight: 260,
+          maxWidth: 600,
+        }}
       >
         <FloatingVibes lang={lang} selected={pickedLabel} onPick={onPickVibe} />
       </div>
