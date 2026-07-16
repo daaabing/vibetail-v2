@@ -487,12 +487,6 @@ export default function MoodInputScreen({
         )}
       </AnimatePresence>
 
-      <CustomVibeSheet
-        open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        onSubmit={submitCustom}
-        lang={lang}
-      />
 
       <MixingOverlay
         open={isGenerating}
