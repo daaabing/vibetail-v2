@@ -24,17 +24,16 @@ export default function FloatingVibes({ lang, selected, onPick }: Props) {
 
   return (
     <div
-      className="relative w-full mx-auto"
+      className="relative w-full h-full mx-auto no-scrollbar"
       style={{
         maxWidth: "calc(100vw - 32px)",
-        height: 260,
         overflowY: "auto",
         overflowX: "hidden",
         WebkitOverflowScrolling: "touch",
         maskImage:
-          "linear-gradient(180deg, transparent 0, black 10%, black 88%, transparent 100%)",
+          "linear-gradient(180deg, transparent 0, black 8%, black 82%, transparent 100%)",
         WebkitMaskImage:
-          "linear-gradient(180deg, transparent 0, black 10%, black 88%, transparent 100%)",
+          "linear-gradient(180deg, transparent 0, black 8%, black 82%, transparent 100%)",
       }}
     >
       <div className="flex flex-wrap justify-center gap-1.5 px-2 py-3">
@@ -56,6 +55,7 @@ export default function FloatingVibes({ lang, selected, onPick }: Props) {
     </div>
   );
 }
+
 
 // Deterministic float configs so we don't hydration-mismatch or jitter.
 // Small movement only — 4–10px, ≤1.5deg.
