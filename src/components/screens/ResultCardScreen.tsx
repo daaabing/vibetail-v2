@@ -950,28 +950,31 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               "inset 0 0 80px rgba(80,55,30,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",
           }}
         >
-          {/* Hero image */}
-          <div style={{ width: "100%", height: 420, borderRadius: 18, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24, background: "#E9DBC4" }}>
+          {/* Hero image — printed directly onto parchment */}
+          <div style={{ width: "100%", height: 480, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
             {captureRawImageSource ? (
               <img
                 src={captureRawImageSource}
                 alt={cocktail.cocktailName}
                 crossOrigin="anonymous"
                 style={{
-                  width: "100%",
                   height: "100%",
-                  objectFit: "contain",
+                  width: "auto",
                   maxWidth: "none",
+                  objectFit: "contain",
                   objectPosition: "center",
+                  mixBlendMode: "multiply",
+                  transform: "scale(1.15)",
+                  transformOrigin: "center",
                 }}
               />
-
             ) : (
               <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#8A7A62" strokeWidth="0.8" opacity="0.3">
                 <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             )}
           </div>
+
 
           {/* Name */}
           <h2 style={{ fontFamily: "var(--font-heading)", color: "#2A2118", fontSize: 40, fontWeight: 600, lineHeight: 1.15, textAlign: "center", margin: 0 }}>
