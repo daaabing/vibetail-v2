@@ -381,12 +381,12 @@ export default function MoodInputScreen({
 
   return (
     <div
-      className="w-full md:max-w-[520px] md:mx-auto min-h-svh flex flex-col"
+      className="w-full md:max-w-[520px] md:mx-auto flex flex-col overflow-hidden"
       data-vibetail-flow="vibeflow"
-      style={{ background: "transparent" }}
+      style={{ background: "transparent", height: "100dvh" }}
     >
       {/* ── Top bar ── */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-3">
+      <div className="flex-none flex items-center justify-between px-5 pt-[max(12px,env(safe-area-inset-top))] pb-2">
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={stage === "sensory" ? () => setStage("vibe") : goHome}
@@ -405,6 +405,7 @@ export default function MoodInputScreen({
 
         <span className="w-10" />
       </div>
+
 
       <AnimatePresence mode="wait">
         {stage === "vibe" && (
