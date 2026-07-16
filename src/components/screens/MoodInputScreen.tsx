@@ -614,6 +614,7 @@ function StageOne({
             size={300}
             mode="idle"
             sliderVal={liveFill}
+            glow={false}
           />
         </div>
         {/* Reply line sticks directly under the bottle */}
