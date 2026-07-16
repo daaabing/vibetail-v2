@@ -126,22 +126,10 @@ export default function GlassVessel({
     );
   }, [isThumb]);
 
-  // Bubble rise loop
-  useEffect(() => {
-    let raf = 0;
-    const tick = () => {
-      setParticles((prev) =>
-        prev.map((p) => {
-          let newY = p.y - p.speed * (isBrewing ? 2.2 : 1);
-          if (newY < -5) newY = 105;
-          return { ...p, y: newY };
-        }),
-      );
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [isBrewing]);
+  // Bubble motion is CSS-driven (see .bubble in styles.css). No per-frame
+  // setState here — that used to re-render the whole vessel every frame and
+  // would restart the Framer Motion shake keyframes mid-cycle.
+
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current || isThumb) return;
