@@ -83,7 +83,6 @@ export default function MoodInputScreen({
   const [pickedLabel, setPickedLabel] = useState<string | null>(null);
   const [pickedColor, setPickedColor] = useState<string>("#99B9C6");
   const [customMood, setCustomMood] = useState<string>(""); // when non-empty, overrides pill
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   // ── Stage 2: sensory + optional accordions ────────────────────────
   const [sensory, setSensory] = useState<SensoryState>(DEFAULT_SENSORY);
