@@ -610,8 +610,11 @@ function StageOne({
         </AnimatePresence>
       </div>
 
-      {/* Tag cloud — flexes to fill remaining space, internal scroll */}
-      <div className="flex-1 min-h-0 relative mt-1">
+      {/* Tag cloud — fixed compact height, internal infinite scroll */}
+      <div
+        className="flex-none relative mt-1 w-full mx-auto"
+        style={{ height: "clamp(200px, 30vh, 250px)", maxWidth: 600 }}
+      >
         <FloatingVibes lang={lang} selected={pickedLabel} onPick={onPickVibe} />
       </div>
 
