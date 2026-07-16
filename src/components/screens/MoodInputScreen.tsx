@@ -209,7 +209,7 @@ export default function MoodInputScreen({
     track("drink_generation_started", {
       restaurant_id: restaurantParam ?? null,
       menu_id: effectiveMenuContext?.menuSlug ?? null,
-      selected_vibe: selectedVibe,
+      selected_vibe: pickedLabel,
       source: customMood.trim() ? "custom" : "quick",
       sensory_touched: sensoryTouched(sensory),
       final_flavors: finalFlavors,
@@ -354,7 +354,7 @@ export default function MoodInputScreen({
       const encoded = encodeCocktailToHash(cocktail);
       track("cocktail_generated", {
         cocktail_name: generated.cocktailName,
-        selected_vibe: selectedVibe,
+        selected_vibe: pickedLabel,
         source: customMood.trim() ? "custom" : "quick",
         selected_flavor: finalFlavors,
         menu_source: effectiveMenuContext?.merchantSlug ?? null,
