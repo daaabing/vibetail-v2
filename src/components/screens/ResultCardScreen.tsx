@@ -949,7 +949,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           }}
         >
           {/* Hero image — printed directly onto parchment */}
-          <div style={{ width: "100%", height: 360, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
+          <div style={{ width: "100%", height: 480, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
             {captureRawImageSource ? (
               <img
                 src={captureRawImageSource}
