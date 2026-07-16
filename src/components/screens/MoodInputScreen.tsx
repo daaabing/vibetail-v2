@@ -106,14 +106,23 @@ export default function MoodInputScreen({
     return pickedLabel ?? "";
   }, [customMood, pickedLabel]);
 
+  // Mood-specific liquid color + reply line (falls back to picked row color).
+  const moodCfg = useMemo(
+    () => getMoodConfig(pickedLabel, pickedColor, lang),
+    [pickedLabel, pickedColor, lang],
+  );
+
   const replyLine = useMemo(() => {
     if (!hasVibe) return "";
-    return lang === "zh"
-      ? "收到，这个状态很适合调一杯。"
-      : "Got it. That's a good state to mix from.";
-  }, [hasVibe, lang]);
+    if (customMood.trim()) {
+      return lang === "zh"
+        ? "收到，这个状态很适合调一杯。"
+        : "Got it. That's a good state to mix from.";
+    }
+    return moodCfg.response;
+  }, [hasVibe, customMood, moodCfg, lang]);
 
-  const baseColor = customMood.trim() ? "#B7A9B3" : pickedColor;
+  const baseColor = customMood.trim() ? "#B7A9B3" : moodCfg.color;
   const liveBottleColor = computeBottleColor(baseColor, sensory);
   const liveFill = computeFill(hasVibe, sensory);
 
