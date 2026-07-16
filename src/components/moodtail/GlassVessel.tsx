@@ -410,22 +410,22 @@ export default function GlassVessel({
               />
             </svg>
 
-            {/* Bubbles */}
-            {particles.map((p) => {
-              const driftX = isHovered ? mousePos.x * 10 : 0;
-              return (
-                <motion.circle
-                  key={p.id}
-                  cx={`${p.x}%`}
-                  cy={`${p.y}%`}
-                  r={p.size}
-                  fill={colors.glow}
-                  opacity={p.opacity + (isClicked || isBrewing ? 0.3 : 0)}
-                  animate={{ x: driftX }}
-                  transition={{ type: "spring", stiffness: 40, damping: 15 }}
-                />
-              );
-            })}
+            {/* Bubbles — CSS-animated so they don't cause React re-renders */}
+            {particles.map((p) => (
+              <circle
+                key={p.id}
+                className={isBrewing ? "bubble bubble-brewing" : "bubble"}
+                cx={`${p.x}%`}
+                cy={`${p.y}%`}
+                r={p.size}
+                fill={colors.glow}
+                opacity={p.opacity + (isClicked || isBrewing ? 0.25 : 0)}
+                style={{
+                  animationDuration: `${(isBrewing ? 2.2 : 5) + p.speed * (isBrewing ? 1.2 : 3)}s`,
+                  animationDelay: `${p.id * -0.35}s`,
+                }}
+              />
+            ))}
           </g>
 
           {/* Body highlights with mouse parallax */}
