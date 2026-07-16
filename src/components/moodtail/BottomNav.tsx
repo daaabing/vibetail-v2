@@ -12,6 +12,13 @@ export default function BottomNav() {
   const { user } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
 
+  // Hide the global bottom nav while inside the mixology flow.
+  const isVibeFlow =
+    pathname === "/mood-input" ||
+    pathname.startsWith("/restaurant/") ||
+    /^\/m\/[^/]+\/[^/]+$/.test(pathname);
+  if (isVibeFlow) return null;
+
   const tabs = [
     {
       to: "/",
