@@ -387,7 +387,7 @@ export default function MoodInputScreen({
   };
 
   const bottleSize =
-    stage === "vibe" ? 200 : stage === "transition" ? 220 : 160;
+    stage === "vibe" ? 300 : stage === "transition" ? 220 : 180;
 
   return (
     <div
@@ -575,11 +575,11 @@ function StageOne({
         </p>
       </div>
 
-      {/* Bottle (visual center — fixed, larger) */}
+      {/* Bottle (visual center — fixed, natural proportion) */}
       <div
         className="bottle-section flex items-center justify-center"
         style={{
-          flex: "0 0 390px",
+          flex: "0 0 330px",
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -587,25 +587,14 @@ function StageOne({
           justifyContent: "center",
         }}
       >
-        <div
-          className="bottle-graphic"
-          style={{
-            transform: "scale(1.18)",
-            transformOrigin: "center",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <VibeBottle
-            color={liveBottleColor}
-            size={340}
-            mode="idle"
-            sliderVal={liveFill}
-          />
-        </div>
+        <VibeBottle
+          color={liveBottleColor}
+          size={300}
+          mode="idle"
+          sliderVal={liveFill}
+        />
         {/* Reply line sticks directly under the bottle */}
-        <div className="mood-response" style={{ marginTop: 14, minHeight: 28 }}>
+        <div className="mood-response" style={{ marginTop: 10, minHeight: 26 }}>
           <AnimatePresence mode="wait">
             {hasVibe && (
               <motion.span
@@ -616,7 +605,7 @@ function StageOne({
                 transition={{ duration: 0.22 }}
                 style={{
                   fontFamily: "var(--font-heading)",
-                  fontSize: 20,
+                  fontSize: 19,
                   lineHeight: 1.35,
                   color: "var(--app-primary)",
                   fontStyle: "italic",
@@ -733,6 +722,43 @@ function StageOne({
           )}
         </AnimatePresence>
       </div>
+
+      <style>{`
+        .bottle-section svg,
+        .bottle-section img {
+          max-height: 300px;
+          width: auto;
+          transform: scale(1);
+          transform-origin: center;
+        }
+        @media (max-height: 780px) {
+          .bottle-section {
+            flex-basis: 300px !important;
+          }
+          .bottle-section svg,
+          .bottle-section img {
+            max-height: 270px;
+            transform: scale(0.9);
+          }
+        }
+        @media (max-height: 720px) {
+          .mood-tags-section {
+            flex-basis: 145px !important;
+          }
+          .mood-tag {
+            height: 36px !important;
+            padding: 0 14px !important;
+            font-size: 17px !important;
+          }
+          .bottle-section {
+            flex-basis: 310px !important;
+          }
+          .bottle-section svg,
+          .bottle-section img {
+            max-height: 280px;
+          }
+        }
+      `}</style>
     </motion.div>
   );
 }
