@@ -415,7 +415,7 @@ export default function MoodInputScreen({
             liveFill={liveFill}
             bottleSize={bottleSize}
             replyLine={replyLine}
-            selectedVibe={selectedVibe}
+            pickedLabel={pickedLabel}
             customMood={customMood}
             hasVibe={hasVibe}
             onPickVibe={pickVibe}
