@@ -419,7 +419,7 @@ export default function MoodInputScreen({
             customMood={customMood}
             hasVibe={hasVibe}
             onPickVibe={pickVibe}
-            onOpenSheet={() => setSheetOpen(true)}
+            onCustomChange={submitCustom}
             onClearCustom={() => setCustomMood("")}
             onNext={enterSensory}
           />
