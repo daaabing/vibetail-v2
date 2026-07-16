@@ -343,7 +343,7 @@ export default function GlassVessel({
           <path
             ref={bottleBodyRef}
             d={BODY_PATH}
-            fill="rgba(255,255,255,0.045)"
+            fill="rgba(255,255,255,0.02)"
             stroke="rgba(255,255,255,0.18)"
             strokeWidth="3"
             onPointerDown={handlePointerDown}
