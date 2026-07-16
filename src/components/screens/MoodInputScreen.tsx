@@ -158,14 +158,15 @@ export default function MoodInputScreen({
 
   const submitCustom = (text: string) => {
     setCustomMood(text);
-    setPickedLabel(null);
-    setSheetOpen(false);
-    track("vibe_custom_submitted", {
-      custom_text_length: text.length,
-      source: "custom",
-      restaurant_id: restaurantParam ?? null,
-      menu_id: effectiveMenuContext?.menuSlug ?? null,
-    });
+    if (text.trim()) {
+      setPickedLabel(null);
+      track("vibe_custom_submitted", {
+        custom_text_length: text.length,
+        source: "custom",
+        restaurant_id: restaurantParam ?? null,
+        menu_id: effectiveMenuContext?.menuSlug ?? null,
+      });
+    }
   };
 
   const enterSensory = () => {
