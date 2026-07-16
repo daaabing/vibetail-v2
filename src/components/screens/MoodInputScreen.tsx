@@ -597,6 +597,12 @@ function StageOne({
         }}
       >
         <div className="bottle-visual">
+          <div
+            className="bottle-aura"
+            style={{
+              background: `radial-gradient(ellipse at 50% 45%, ${liveBottleColor}22 0%, ${liveBottleColor}08 35%, transparent 70%)`,
+            }}
+          />
           <VibeBottle
             color={liveBottleColor}
             size={300}
@@ -605,6 +611,7 @@ function StageOne({
             glow={false}
           />
         </div>
+
         {/* Reply line sticks directly under the bottle */}
         <div className="mood-response" style={{ marginTop: 10, minHeight: 26 }}>
           <AnimatePresence mode="wait">
