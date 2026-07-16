@@ -575,11 +575,11 @@ function StageOne({
         </p>
       </div>
 
-      {/* Bottle (visual center — fixed, larger) */}
+      {/* Bottle (visual center — fixed, natural proportion) */}
       <div
         className="bottle-section flex items-center justify-center"
         style={{
-          flex: "0 0 390px",
+          flex: "0 0 330px",
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -587,25 +587,14 @@ function StageOne({
           justifyContent: "center",
         }}
       >
-        <div
-          className="bottle-graphic"
-          style={{
-            transform: "scale(1.18)",
-            transformOrigin: "center",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <VibeBottle
-            color={liveBottleColor}
-            size={340}
-            mode="idle"
-            sliderVal={liveFill}
-          />
-        </div>
+        <VibeBottle
+          color={liveBottleColor}
+          size={300}
+          mode="idle"
+          sliderVal={liveFill}
+        />
         {/* Reply line sticks directly under the bottle */}
-        <div className="mood-response" style={{ marginTop: 14, minHeight: 28 }}>
+        <div className="mood-response" style={{ marginTop: 10, minHeight: 26 }}>
           <AnimatePresence mode="wait">
             {hasVibe && (
               <motion.span
@@ -616,7 +605,7 @@ function StageOne({
                 transition={{ duration: 0.22 }}
                 style={{
                   fontFamily: "var(--font-heading)",
-                  fontSize: 20,
+                  fontSize: 19,
                   lineHeight: 1.35,
                   color: "var(--app-primary)",
                   fontStyle: "italic",
