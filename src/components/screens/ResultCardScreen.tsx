@@ -298,20 +298,24 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
           "0 24px 60px rgba(0,0,0,0.55), inset 0 0 80px rgba(80,55,30,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",
       }}
     >
-      {/* AI illustration — sits directly on the parchment card, no separate frame */}
-      <div className="mx-4 mt-4 flex-shrink-0 flex items-center justify-center h-[250px] md:h-[340px] relative">
+      {/* AI illustration — fills the parchment frame edge-to-edge */}
+      <div
+        className="mx-4 mt-4 flex-shrink-0 flex items-center justify-center h-[250px] md:h-[340px] relative overflow-hidden"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 35%, #F3E8D6 0%, #E9DBC4 55%, #C9B79A 100%)",
+          borderRadius: 18,
+        }}
+      >
         {rawImageSource ? (
           <img
             src={parchmentImageSource ?? rawImageSource}
             alt={cocktail.cocktailName}
-            className="w-full h-full object-contain max-w-none"
+            className="w-full h-full object-cover max-w-none"
             style={{
               mixBlendMode: "normal",
               filter: "contrast(1.05) saturate(0.96)",
-              WebkitMaskImage:
-                "radial-gradient(ellipse at center, black 38%, rgba(0,0,0,0.92) 52%, rgba(0,0,0,0.55) 66%, rgba(0,0,0,0.18) 78%, transparent 90%)",
-              maskImage:
-                "radial-gradient(ellipse at center, black 38%, rgba(0,0,0,0.92) 52%, rgba(0,0,0,0.55) 66%, rgba(0,0,0,0.18) 78%, transparent 90%)",
+              objectPosition: "center",
             }}
           />
         ) : imageLoading ? (
