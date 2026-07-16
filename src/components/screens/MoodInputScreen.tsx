@@ -159,7 +159,7 @@ export default function MoodInputScreen({
 
   const submitCustom = (text: string) => {
     setCustomMood(text);
-    setSelectedVibe(null);
+    setPickedLabel(null);
     setSheetOpen(false);
     track("vibe_custom_submitted", {
       custom_text_length: text.length,
