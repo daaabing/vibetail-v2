@@ -148,7 +148,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
     >
       {/* AI illustration — printed directly onto the parchment, no frame */}
       <div
-        className="flex-1 min-h-0 flex items-center justify-center relative overflow-hidden"
+        className="flex-1 min-h-0 flex items-center justify-center relative overflow-hidden max-h-[58%]"
       >
         {rawImageSource ? (
           <img
