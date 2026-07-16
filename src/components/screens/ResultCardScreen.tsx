@@ -181,7 +181,7 @@ function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, disti
 
 
       {/* Cocktail name + vibe diagnosis */}
-      <div className="px-5 pt-4 pb-3 flex-1" style={{ minHeight: 0 }}>
+      <div className="px-5 pt-4 pb-3" style={{ minHeight: 0 }}>
         <h1
           className="font-semibold leading-tight text-center"
           style={{
