@@ -107,7 +107,7 @@ function Chip({
     <button
       type="button"
       onClick={() => onPick(label, color)}
-      className="shrink-0 rounded-full active:scale-95"
+      className="mood-tag shrink-0 rounded-full active:scale-95"
       style={{
         fontFamily: "var(--font-body)",
         fontSize: 12,
