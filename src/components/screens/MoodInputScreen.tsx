@@ -722,6 +722,43 @@ function StageOne({
           )}
         </AnimatePresence>
       </div>
+
+      <style>{`
+        .bottle-section svg,
+        .bottle-section img {
+          max-height: 300px;
+          width: auto;
+          transform: scale(1);
+          transform-origin: center;
+        }
+        @media (max-height: 780px) {
+          .bottle-section {
+            flex-basis: 300px !important;
+          }
+          .bottle-section svg,
+          .bottle-section img {
+            max-height: 270px;
+            transform: scale(0.9);
+          }
+        }
+        @media (max-height: 720px) {
+          .mood-tags-section {
+            flex-basis: 145px !important;
+          }
+          .mood-tag {
+            height: 36px !important;
+            padding: 0 14px !important;
+            font-size: 17px !important;
+          }
+          .bottle-section {
+            flex-basis: 310px !important;
+          }
+          .bottle-section svg,
+          .bottle-section img {
+            max-height: 280px;
+          }
+        }
+      `}</style>
     </motion.div>
   );
 }
