@@ -754,19 +754,7 @@ function StageOne({
           align-items: center;
           justify-content: center;
         }
-        .bottle-aura {
-          position: absolute;
-          width: 400%;
-          height: 400%;
-          border-radius: 999px;
-          pointer-events: none;
-          z-index: 0;
-          filter: blur(100px);
-          opacity: 0.05;
-          transform: translateZ(0);
-          transition: background 0.4s ease;
-        }
-        .bottle-visual > :not(.bottle-aura) {
+        .bottle-visual > * {
           position: relative;
           z-index: 1;
         }
