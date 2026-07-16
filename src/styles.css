@@ -240,6 +240,39 @@
   .liquid-wave-1, .liquid-wave-2 { animation: none; }
 }
 
+/* ── Mixing shaker shake (CSS-driven so it doesn't restart on re-render) ── */
+.mixing-bottle {
+  transform-origin: 50% 86%;
+  animation: moodtail-shake 0.82s infinite linear;
+  will-change: transform;
+}
+@keyframes moodtail-shake {
+  0%   { transform: rotate(-8deg) translateY(0px); }
+  18%  { transform: rotate(7deg)  translateY(-4px); }
+  36%  { transform: rotate(-6deg) translateY(2px); }
+  54%  { transform: rotate(8deg)  translateY(-3px); }
+  72%  { transform: rotate(-5deg) translateY(1px); }
+  100% { transform: rotate(-8deg) translateY(0px); }
+}
+
+/* ── Bubble rise (CSS-driven, no per-frame React state) ── */
+.bubble {
+  animation: bubble-rise 5s infinite linear;
+  will-change: transform, opacity;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.bubble-brewing { animation-duration: 2.2s; }
+@keyframes bubble-rise {
+  0%   { transform: translateY(28px); opacity: 0.12; }
+  50%  { opacity: 0.45; }
+  100% { transform: translateY(-80px); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mixing-bottle { animation: none; }
+  .bubble { animation: none; }
+}
+
 /* Legacy glass helpers still referenced */
 .glass-card {
   background: rgba(255,255,255,0.05);
