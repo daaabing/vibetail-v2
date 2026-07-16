@@ -157,10 +157,19 @@ export default function MoodInputScreen({
   const moodPlaceholders = lang === "zh" ? MOOD_PLACEHOLDERS_ZH : MOOD_PLACEHOLDERS_EN;
   const customPlaceholders = lang === "zh" ? CUSTOM_FLAVOR_PLACEHOLDERS_ZH : CUSTOM_FLAVOR_PLACEHOLDERS_EN;
 
-  const randomMoodIdx = useRef(Math.floor(Math.random() * 8));
-  const randomCustomIdx = useRef(Math.floor(Math.random() * 6));
-  const moodPlaceholder = moodPlaceholders[randomMoodIdx.current % moodPlaceholders.length];
+  const [moodPlaceholderIdx, setMoodPlaceholderIdx] = useState(() =>
+    Math.floor(Math.random() * moodPlaceholders.length)
+  );
+  const randomCustomIdx = useRef(Math.floor(Math.random() * customPlaceholders.length));
+  const moodPlaceholder = moodPlaceholders[moodPlaceholderIdx % moodPlaceholders.length];
   const customPlaceholder = customPlaceholders[randomCustomIdx.current % customPlaceholders.length];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMoodPlaceholderIdx((prev) => (prev + 1) % moodPlaceholders.length);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [moodPlaceholders.length]);
 
   // Derive the bottle color from current selections (cloud row → mood chip → spirit → flavor → primary).
   const currentVibeColor = (() => {
