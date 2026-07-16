@@ -54,34 +54,38 @@ export default function FloatingVibes({ lang, selected, onPick }: Props) {
     <div
       ref={scrollRef}
       onScroll={handleScroll}
-      className="relative w-full h-full no-scrollbar"
+      className="mood-tags-scroll relative w-full h-full no-scrollbar"
       style={{
         maxWidth: 600,
         margin: "0 auto",
         overflowY: "auto",
         overflowX: "hidden",
         WebkitOverflowScrolling: "touch",
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        alignContent: "flex-start",
+        gap: "10px 10px",
+        padding: "8px 14px 24px",
         maskImage:
           "linear-gradient(180deg, transparent 0, black 12%, black 82%, transparent 100%)",
         WebkitMaskImage:
           "linear-gradient(180deg, transparent 0, black 12%, black 82%, transparent 100%)",
       }}
     >
-      <div className="flex flex-wrap justify-center gap-2 px-3 py-2">
-        {loopItems.map((it, i) => {
-          const isSel = selected === it.label;
-          return (
-            <Chip
-              key={`${it.label}-${i}`}
-              label={it.label}
-              color={it.color}
-              selected={isSel}
-              dimmed={anyPicked && !isSel}
-              onPick={onPick}
-            />
-          );
-        })}
-      </div>
+      {loopItems.map((it, i) => {
+        const isSel = selected === it.label;
+        return (
+          <Chip
+            key={`${it.label}-${i}`}
+            label={it.label}
+            color={it.color}
+            selected={isSel}
+            dimmed={anyPicked && !isSel}
+            onPick={onPick}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -103,7 +107,7 @@ function Chip({
     <button
       type="button"
       onClick={() => onPick(label, color)}
-      className="shrink-0 rounded-full active:scale-95"
+      className="mood-tag shrink-0 rounded-full active:scale-95"
       style={{
         fontFamily: "var(--font-body)",
         fontSize: 12,
