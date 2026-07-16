@@ -42,6 +42,15 @@ type MenuContext = {
 
 type Stage = "vibe" | "transition" | "sensory";
 
+function hexToRgba(hex: string, alpha: number): string {
+  const clean = hex.replace("#", "");
+  if (clean.length !== 6) return `rgba(143, 182, 200, ${alpha})`;
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 const BASE_SPIRITS: { key: string; en: string; zh: string; color: string }[] = [
   { key: "gin", en: "Gin", zh: "金酒", color: "#7fb069" },
   { key: "vodka", en: "Vodka", zh: "伏特加", color: "#a3b8c4" },
@@ -587,12 +596,22 @@ function StageOne({
           justifyContent: "center",
         }}
       >
-        <VibeBottle
-          color={liveBottleColor}
-          size={300}
-          mode="idle"
-          sliderVal={liveFill}
-        />
+        <div className="bottle-visual">
+          <div
+            className="bottle-aura"
+            style={{
+              background: `radial-gradient(ellipse at 50% 45%, ${liveBottleColor}22 0%, ${liveBottleColor}08 35%, transparent 70%)`,
+            }}
+          />
+          <VibeBottle
+            color={liveBottleColor}
+            size={300}
+            mode="idle"
+            sliderVal={liveFill}
+            glow={false}
+          />
+        </div>
+
         {/* Reply line sticks directly under the bottle */}
         <div className="mood-response" style={{ marginTop: 10, minHeight: 26 }}>
           <AnimatePresence mode="wait">
@@ -731,6 +750,29 @@ function StageOne({
           transform: scale(1);
           transform-origin: center;
         }
+        .bottle-visual {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .bottle-visual > * {
+          position: relative;
+          z-index: 1;
+        }
+        .bottle-aura {
+          position: absolute;
+          width: 200%;
+          height: 200%;
+          left: -50%;
+          top: -50%;
+          z-index: 0;
+          filter: blur(44px);
+          opacity: 0.28;
+          pointer-events: none;
+          transform: scale(1.2);
+        }
+
         @media (max-height: 780px) {
           .bottle-section {
             flex-basis: 300px !important;
