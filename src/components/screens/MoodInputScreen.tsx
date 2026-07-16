@@ -387,7 +387,7 @@ export default function MoodInputScreen({
   };
 
   const bottleSize =
-    stage === "vibe" ? 200 : stage === "transition" ? 220 : 160;
+    stage === "vibe" ? 300 : stage === "transition" ? 220 : 180;
 
   return (
     <div
