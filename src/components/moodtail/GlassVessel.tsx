@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 
 interface GlassVesselProps {
+  /** Visual height of the bottle in px. The width is derived from the 220×420 viewBox. */
   size?: number;
   color?: string;
   mode?: "idle" | "mixing" | "thumb";
@@ -55,14 +56,23 @@ interface Particle {
   opacity: number;
 }
 
+const VIEWBOX_W = 220;
+const VIEWBOX_H = 420;
+
+const BODY_PATH =
+  "M52 165 C52 138 72 118 99 118 H121 C148 118 168 138 168 165 V345 C168 378 148 398 115 398 H105 C72 398 52 378 52 345 V165 Z";
+
+const LIQUID_BOTTOM = 398;
+const LIQUID_TOP = 118;
+const LIQUID_HEIGHT = LIQUID_BOTTOM - LIQUID_TOP;
+
 /**
- * Mood Bottle — transparent glass vessel with:
- *  - idle breathing float
- *  - pointer-driven magnetic tilt / parallax reflections
- *  - rising micro-bubbles inside the liquid
- *  - optional vertical drag to control fill (when onSliderValChange is set)
- *  - optional palette interpolation across drag range (colorStops)
- *  - `mixing` mode drives brewing waves + shake
+ * Mood Bottle — transparent glass vessel with natural proportions.
+ * SVG-based body/neck/cap with thick neck, rounded shoulders and a collar.
+ * Keeps idle breathing, mouse parallax, rising bubbles, wave surface and drag fill.
+ *
+ * The `size` prop now controls the rendered height (px); width is derived from
+ * the 220×420 viewBox aspect ratio so the bottle never looks like a wide jar.
  */
 export default function GlassVessel({
   size = 220,
@@ -73,12 +83,11 @@ export default function GlassVessel({
   onSliderValChange,
   colorStops,
 }: GlassVesselProps) {
-
   const isBrewing = mode === "mixing";
   const isThumb = mode === "thumb";
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const bottleBodyRef = useRef<HTMLDivElement>(null);
+  const bottleBodyRef = useRef<SVGPathElement>(null);
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
@@ -101,7 +110,6 @@ export default function GlassVessel({
     glow: hexToRgba(activeColor, 0.55),
     wave: hexToRgba(activeColor, 0.75),
   };
-
 
   // Seed bubbles once
   useEffect(() => {
@@ -178,16 +186,16 @@ export default function GlassVessel({
     else setInternalVal(newVal);
   };
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerDown = (e: React.PointerEvent<SVGPathElement>) => {
     if (!canDrag) return;
     setIsDragging(true);
     e.currentTarget.setPointerCapture(e.pointerId);
     updateValueFromPointer(e.clientY);
   };
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerMove = (e: React.PointerEvent<SVGPathElement>) => {
     if (isDragging) updateValueFromPointer(e.clientY);
   };
-  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerUp = (e: React.PointerEvent<SVGPathElement>) => {
     if (!isDragging) return;
     setIsDragging(false);
     try {
@@ -195,10 +203,15 @@ export default function GlassVessel({
     } catch {}
   };
 
-  // Layout scaling: original design is 280×320. Scale everything with size.
-  const scale = size / 280;
-  const px = (n: number) => `${n * scale}px`;
-  const liquidHeight = 22 + value * 0.6;
+  const width = size * (VIEWBOX_W / VIEWBOX_H);
+  const liquidTop = LIQUID_BOTTOM - (value / 100) * LIQUID_HEIGHT;
+
+  // Body vertical position in the rendered container for the drag guide.
+  const bodyTopRatio = LIQUID_TOP / VIEWBOX_H;
+  const bodyBottomRatio = LIQUID_BOTTOM / VIEWBOX_H;
+  const bodyHeightPx = (bodyBottomRatio - bodyTopRatio) * size;
+  const liquidRatio = (liquidTop - LIQUID_TOP) / LIQUID_HEIGHT;
+  const guideBottomPx = (1 - liquidRatio) * bodyHeightPx;
 
   return (
     <div
@@ -209,8 +222,8 @@ export default function GlassVessel({
       onClick={handleClick}
       className="relative flex items-center justify-center select-none"
       style={{
-        width: size,
-        height: size * (320 / 280),
+        width,
+        height: size,
         cursor: canDrag ? "ns-resize" : "default",
       }}
       aria-hidden
@@ -219,7 +232,7 @@ export default function GlassVessel({
       {glow && (
         <motion.div
           className="absolute rounded-full blur-[70px] pointer-events-none z-0"
-          style={{ width: px(210), height: px(210) }}
+          style={{ width: size * 0.7, height: size * 0.7 }}
           animate={{
             backgroundColor: colors.main,
             scale: isBrewing ? 1.2 : isHovered ? (isClicked ? 1.25 : 1.15) : 1,
@@ -238,16 +251,16 @@ export default function GlassVessel({
             borderColor: colors.main,
             boxShadow: `0 0 15px ${colors.glow}`,
           }}
-          initial={{ width: px(90), height: px(180), opacity: 0.6, scale: 0.8 }}
-          animate={{ width: px(220), height: px(340), opacity: 0, scale: 1.3 }}
+          initial={{ width: width * 0.35, height: size * 0.45, opacity: 0.6, scale: 0.8 }}
+          animate={{ width: width * 0.95, height: size * 0.85, opacity: 0, scale: 1.3 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
         />
       ))}
 
       {/* Bottle */}
       <motion.div
-        className="relative flex flex-col items-center justify-end z-20"
-        style={{ originY: 0.85 }}
+        className="relative z-20"
+        style={{ width, height: size, originY: 0.85 }}
         animate={
           isBrewing
             ? { rotate: [-6, 6, -6], y: [0, -2, 0] }
@@ -269,176 +282,185 @@ export default function GlassVessel({
                 }
         }
       >
-        {/* Wax foil cap */}
-        <div
-          className="relative flex flex-col items-center select-none pointer-events-none"
-          style={{ width: px(18), height: px(26) }}
+        <svg
+          viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+          className="w-full h-full"
+          style={{ overflow: "visible" }}
         >
-          <div style={{ width: px(14), height: px(4) }} className="bg-[#1a1c1e] rounded-t-sm" />
-          <div
-            style={{ width: px(14), height: px(18) }}
-            className="bg-gradient-to-b from-[#25282f] to-[#141518] border-x border-white/5 relative shadow-inner"
-          >
-            <div
-              className="absolute inset-x-0 bg-gradient-to-r from-amber-400/80 via-amber-200/95 to-amber-500/80"
-              style={{ bottom: px(2), height: px(2.5) }}
+          <defs>
+            <clipPath id="body-clip">
+              <path d={BODY_PATH} />
+            </clipPath>
+          </defs>
+
+          {/* Glow behind the glass */}
+          <ellipse
+            cx="110"
+            cy="250"
+            rx="95"
+            ry="150"
+            fill={colors.glow}
+            opacity="0.22"
+          />
+
+          {/* Cap / cork — wider than the neck */}
+          <rect
+            x="82"
+            y="18"
+            width="56"
+            height="28"
+            rx="8"
+            fill="rgba(20,20,22,0.92)"
+          />
+          <rect
+            x="84"
+            y="45"
+            width="52"
+            height="10"
+            rx="5"
+            fill="rgba(255,190,60,0.85)"
+          />
+
+          {/* Neck — thick and proportionate */}
+          <rect
+            x="88"
+            y="35"
+            width="44"
+            height="115"
+            rx="14"
+            fill="rgba(255,255,255,0.05)"
+            stroke="rgba(255,255,255,0.18)"
+            strokeWidth="3"
+          />
+          {/* Neck highlights */}
+          <rect x="98" y="42" width="4" height="100" rx="2" fill="rgba(255,255,255,0.16)" />
+          <rect x="118" y="42" width="4" height="100" rx="2" fill="rgba(255,255,255,0.08)" />
+
+          {/* Collar / shoulder ring */}
+          <rect
+            x="78"
+            y="140"
+            width="64"
+            height="14"
+            rx="7"
+            fill="rgba(255,255,255,0.18)"
+          />
+
+          {/* Body path with rounded shoulders */}
+          <path
+            ref={bottleBodyRef}
+            d={BODY_PATH}
+            fill="rgba(255,255,255,0.045)"
+            stroke="rgba(255,255,255,0.18)"
+            strokeWidth="3"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            style={{ touchAction: canDrag ? "none" : "auto", cursor: canDrag ? "ns-resize" : "default" }}
+          />
+
+          {/* Liquid + bubbles + waves, clipped to the body */}
+          <g clipPath="url(#body-clip)">
+            <rect
+              x="0"
+              y={liquidTop}
+              width="220"
+              height={VIEWBOX_H - liquidTop}
+              fill={colors.wave}
+              opacity="0.78"
             />
-          </div>
-          <div
-            style={{ width: px(18), height: px(4) }}
-            className="bg-white/20 border-b border-white/10 rounded-full"
-          />
-        </div>
 
-        {/* Neck */}
-        <div
-          className="relative bg-white/[0.04] border-x border-white/15"
-          style={{ width: px(14), height: px(52) }}
-        >
-          <div className="absolute inset-y-0 bg-white/20" style={{ left: px(2.5), width: 1 }} />
-          <div className="absolute inset-y-0 bg-white/10" style={{ right: px(2.5), width: 1 }} />
-          <div
-            className="absolute inset-x-[1px] bg-amber-900/30 blur-[0.5px] rounded-b-sm"
-            style={{ top: 0, height: px(14) }}
-          />
-        </div>
-
-        {/* Sloping shoulders */}
-        <div
-          className="bg-white/[0.04] border-x border-t border-white/15 rounded-t-[32px] relative overflow-hidden"
-          style={{ width: px(92), height: px(28) }}
-        >
-          <div
-            className="absolute inset-x-4 bg-white/20 blur-[0.5px]"
-            style={{ top: px(2), height: 1 }}
-          />
-        </div>
-
-        {/* Body (draggable) */}
-        <div
-          ref={bottleBodyRef}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          className="relative rounded-b-[14px] border-x border-b border-white/15 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex flex-col justify-end select-none"
-          style={{
-            width: px(92),
-            height: px(190),
-            touchAction: canDrag ? "none" : "auto",
-            cursor: canDrag ? "ns-resize" : "default",
-            boxShadow: isHovered
-              ? `inset 0 4px 30px rgba(255,255,255,0.05), 0 0 25px ${colors.glow}, 0 18px 40px rgba(0,0,0,0.65)`
-              : `inset 0 4px 30px rgba(255,255,255,0.03), 0 18px 40px rgba(0,0,0,0.65)`,
-          }}
-        >
-          {/* Reflections */}
-          <motion.div
-            className="absolute top-0 bottom-0 bg-white/15 rounded-full pointer-events-none z-30"
-            style={{ left: px(5), width: px(2.5) }}
-            animate={{
-              x: isHovered ? mousePos.x * -2 : 0,
-              opacity: isHovered ? 0.35 : 0.18,
-            }}
-            transition={{ type: "spring", stiffness: 90, damping: 20 }}
-          />
-          <motion.div
-            className="absolute top-0 bottom-0 bg-white/10 rounded-full pointer-events-none z-30"
-            style={{ right: px(6), width: 1 }}
-            animate={{ x: isHovered ? mousePos.x * -1.2 : 0 }}
-            transition={{ type: "spring", stiffness: 90, damping: 20 }}
-          />
-
-          {/* Drag guide */}
-          {canDrag && isHovered && (
-            <div
-              className="absolute left-0 right-0 border-t border-dashed border-white/30 pointer-events-none z-30 flex items-center justify-between px-1.5"
-              style={{
-                bottom: `${liquidHeight}%`,
-                transition: isDragging ? "none" : "bottom 0.1s ease-out",
-              }}
-            >
-              <span className="text-[6px] font-mono text-white/50 bg-black/60 px-1 rounded py-[1px]">
-                DRAG
-              </span>
-              <span className="text-[6px] font-mono text-amber-400/90 bg-black/60 px-1 rounded py-[1px]">
-                {value}%
-              </span>
-            </div>
-          )}
-
-          {/* Liquid */}
-          <motion.div
-            className="w-full relative overflow-hidden rounded-b-[12px] pointer-events-none"
-            style={{ zIndex: 15 }}
-            animate={{ height: `${liquidHeight}%` }}
-            transition={
-              isDragging
-                ? { duration: 0.05 }
-                : { type: "spring", stiffness: 45, damping: 15 }
-            }
-          >
+            {/* Primary wave */}
             <svg
-              className="absolute left-0 w-[200%] fill-current pointer-events-none"
-              style={{
-                color: colors.main,
-                height: 24,
-                top: -10,
-                transform: isHovered ? `translateX(${mousePos.x * -7}px)` : "none",
-              }}
+              x="0"
+              y={liquidTop - 12}
+              width="220"
+              height="24"
               viewBox="0 0 1200 120"
               preserveAspectRatio="none"
+              style={{ color: colors.main }}
             >
               <path
                 className="liquid-wave-1"
                 style={{ animationDuration: isBrewing ? "1.5s" : "4.5s" }}
                 d="M0,60 C150,90 350,30 500,60 C650,90 850,30 1000,60 C1150,90 1350,30 1500,60 L1500,120 L0,120 Z"
+                fill="currentColor"
               />
             </svg>
+
+            {/* Secondary wave */}
             <svg
-              className="absolute left-0 w-[200%] fill-current pointer-events-none"
-              style={{
-                color: colors.wave,
-                height: 28,
-                top: -13,
-                transform: isHovered ? `translateX(${mousePos.x * -14}px)` : "none",
-              }}
+              x="0"
+              y={liquidTop - 14}
+              width="220"
+              height="28"
               viewBox="0 0 1200 120"
               preserveAspectRatio="none"
+              style={{ color: colors.wave }}
             >
               <path
                 className="liquid-wave-2"
                 style={{ animationDuration: isBrewing ? "1s" : "3.5s" }}
                 d="M0,50 C150,20 350,80 500,50 C650,20 850,80 1000,50 C1150,20 1350,80 1500,50 L1500,120 L0,120 Z"
+                fill="currentColor"
               />
             </svg>
 
-            <div
-              className="w-full h-full relative transition-colors duration-1000"
-              style={{ backgroundColor: colors.wave }}
-            >
-              {particles.map((p) => {
-                const driftX = isHovered ? mousePos.x * 10 : 0;
-                return (
-                  <motion.div
-                    key={p.id}
-                    className="absolute rounded-full pointer-events-none"
-                    style={{
-                      left: `${p.x}%`,
-                      top: `${p.y}%`,
-                      width: p.size,
-                      height: p.size,
-                      backgroundColor: colors.glow,
-                      opacity: p.opacity + (isClicked || isBrewing ? 0.3 : 0),
-                    }}
-                    animate={{ x: driftX }}
-                    transition={{ type: "spring", stiffness: 40, damping: 15 }}
-                  />
-                );
-              })}
-            </div>
-          </motion.div>
-        </div>
+            {/* Bubbles */}
+            {particles.map((p) => {
+              const driftX = isHovered ? mousePos.x * 10 : 0;
+              return (
+                <motion.circle
+                  key={p.id}
+                  cx={`${p.x}%`}
+                  cy={`${p.y}%`}
+                  r={p.size}
+                  fill={colors.glow}
+                  opacity={p.opacity + (isClicked || isBrewing ? 0.3 : 0)}
+                  animate={{ x: driftX }}
+                  transition={{ type: "spring", stiffness: 40, damping: 15 }}
+                />
+              );
+            })}
+          </g>
+
+          {/* Body highlights with mouse parallax */}
+          <motion.path
+            d="M68 178 V340"
+            stroke="rgba(255,255,255,0.12)"
+            strokeWidth="5"
+            strokeLinecap="round"
+            animate={{ x: isHovered ? mousePos.x * -2 : 0 }}
+            transition={{ type: "spring", stiffness: 90, damping: 20 }}
+          />
+          <motion.path
+            d="M154 178 V340"
+            stroke="rgba(255,255,255,0.08)"
+            strokeWidth="4"
+            strokeLinecap="round"
+            animate={{ x: isHovered ? mousePos.x * -1.2 : 0 }}
+            transition={{ type: "spring", stiffness: 90, damping: 20 }}
+          />
+        </svg>
+
+        {/* Drag guide — positioned over the body */}
+        {canDrag && isHovered && (
+          <div
+            className="absolute left-0 right-0 border-t border-dashed border-white/30 pointer-events-none z-30 flex items-center justify-between px-1.5"
+            style={{
+              bottom: `${guideBottomPx}px`,
+              transition: isDragging ? "none" : "bottom 0.1s ease-out",
+            }}
+          >
+            <span className="text-[6px] font-mono text-white/50 bg-black/60 px-1 rounded py-[1px]">
+              DRAG
+            </span>
+            <span className="text-[6px] font-mono text-amber-400/90 bg-black/60 px-1 rounded py-[1px]">
+              {value}%
+            </span>
+          </div>
+        )}
       </motion.div>
     </div>
   );
