@@ -381,12 +381,12 @@ export default function MoodInputScreen({
 
   return (
     <div
-      className="w-full md:max-w-[520px] md:mx-auto min-h-svh flex flex-col"
+      className="w-full md:max-w-[520px] md:mx-auto flex flex-col overflow-hidden"
       data-vibetail-flow="vibeflow"
-      style={{ background: "transparent" }}
+      style={{ background: "transparent", height: "100dvh" }}
     >
       {/* ── Top bar ── */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-3">
+      <div className="flex-none flex items-center justify-between px-5 pt-[max(12px,env(safe-area-inset-top))] pb-2">
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={stage === "sensory" ? () => setStage("vibe") : goHome}
@@ -405,6 +405,7 @@ export default function MoodInputScreen({
 
         <span className="w-10" />
       </div>
+
 
       <AnimatePresence mode="wait">
         {stage === "vibe" && (
@@ -541,40 +542,44 @@ function StageOne({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
-      className="flex-1 flex flex-col px-5"
+      className="flex-1 min-h-0 flex flex-col px-5 overflow-hidden"
     >
-      <div className="text-center pt-1">
+      {/* Title (fixed) */}
+      <div className="flex-none text-center">
         <h1
-          className="text-[24px] leading-tight"
+          className="text-[22px] leading-tight"
           style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
         >
           {lang === "zh" ? "把你现在的状态，倒进来。" : "Pour your state in."}
         </h1>
         <p
-          className="text-xs mt-1 italic"
+          className="text-[11px] mt-0.5 italic"
           style={{
             fontFamily: "var(--font-heading)",
             color: "var(--app-text-secondary)",
           }}
         >
           {lang === "zh"
-            ? "选一个最像的，或者随便写一句。"
+            ? "选一个最像的,或者随便写一句。"
             : "Pick one that fits, or type your own."}
         </p>
       </div>
 
-      {/* Bottle */}
-      <div className="flex justify-center pt-1 pb-0">
+      {/* Bottle (fixed) */}
+      <div
+        className="flex-none flex items-center justify-center"
+        style={{ height: Math.min(shrunkBottle + 8, 190) }}
+      >
         <VibeBottle
           color={liveBottleColor}
-          size={shrunkBottle}
+          size={Math.min(shrunkBottle, 170)}
           mode="idle"
           sliderVal={liveFill}
         />
       </div>
 
-      {/* Reply / state line */}
-      <div className="h-5 flex items-center justify-center">
+      {/* Reply line (fixed tiny slot) */}
+      <div className="flex-none h-4 flex items-center justify-center">
         <AnimatePresence mode="wait">
           {hasVibe && (
             <motion.span
@@ -583,7 +588,7 @@ function StageOne({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.22 }}
-              className="text-xs italic"
+              className="text-[11px] italic"
               style={{
                 fontFamily: "var(--font-heading)",
                 color: "var(--app-primary)",
@@ -595,15 +600,15 @@ function StageOne({
         </AnimatePresence>
       </div>
 
-      {/* Central floating vibe cloud */}
-      <div className="mt-1">
+      {/* Tag cloud — flexes to fill remaining space, internal scroll */}
+      <div className="flex-1 min-h-0 relative mt-1">
         <FloatingVibes lang={lang} selected={pickedLabel} onPick={onPickVibe} />
       </div>
 
-      {/* Inline custom mood input */}
-      <div className="mt-3">
+      {/* Inline custom mood input (fixed) */}
+      <div className="flex-none mt-2">
         <label
-          className="block text-[11px] tracking-wider mb-1.5 px-1"
+          className="block text-[11px] tracking-wider mb-1 px-1"
           style={{
             fontFamily: "var(--font-body)",
             color: "var(--app-text-secondary)",
@@ -631,11 +636,10 @@ function StageOne({
             value={customMood}
             onChange={(e) => onCustomChange(e.target.value)}
             placeholder={ph}
-            rows={3}
-            className="w-full resize-none bg-transparent outline-none rounded-2xl px-4 pt-3 pb-8 text-sm leading-relaxed"
+            rows={2}
+            className="w-full resize-none bg-transparent outline-none rounded-2xl px-4 pt-2.5 pb-7 text-sm leading-snug"
             style={{
-              minHeight: 110,
-              maxHeight: 200,
+              height: 78,
               color: "var(--app-text)",
               fontFamily: "var(--font-heading)",
               fontStyle: customMood ? "normal" : "italic",
@@ -650,7 +654,7 @@ function StageOne({
                 return next;
               })
             }
-            className="absolute bottom-2 right-3 text-[10px] tracking-wider px-2 py-1 rounded-full"
+            className="absolute bottom-1.5 right-2 text-[10px] tracking-wider px-2 py-1 rounded-full"
             style={{
               fontFamily: "var(--font-body)",
               color: "var(--app-text-muted)",
@@ -663,8 +667,8 @@ function StageOne({
         </div>
       </div>
 
-      {/* CTA — hidden until vibe */}
-      <div className="mt-auto pt-3 pb-[calc(env(safe-area-inset-bottom)+18px)]">
+      {/* CTA — reserves fixed slot so layout never shifts */}
+      <div className="flex-none pt-2 pb-[calc(env(safe-area-inset-bottom)+12px)]">
         <AnimatePresence>
           {hasVibe && (
             <motion.button
@@ -675,7 +679,7 @@ function StageOne({
               transition={{ duration: 0.24 }}
               onClick={onNext}
               whileTap={{ scale: 0.97 }}
-              className="w-full rounded-full py-4 text-sm font-semibold tracking-wider"
+              className="w-full rounded-full py-3.5 text-sm font-semibold tracking-wider"
               style={{
                 fontFamily: "var(--font-heading)",
                 color: "white",
@@ -694,6 +698,7 @@ function StageOne({
     </motion.div>
   );
 }
+
 
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -821,7 +826,7 @@ function StageTwo(props: {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="flex-1 flex flex-col px-5 pb-[calc(env(safe-area-inset-bottom)+96px)]"
+      className="flex-1 min-h-0 flex flex-col px-5 pb-[calc(env(safe-area-inset-bottom)+96px)] overflow-y-auto no-scrollbar"
     >
       <div className="text-center pt-1">
         <h1
