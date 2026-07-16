@@ -126,22 +126,10 @@ export default function GlassVessel({
     );
   }, [isThumb]);
 
-  // Bubble rise loop
-  useEffect(() => {
-    let raf = 0;
-    const tick = () => {
-      setParticles((prev) =>
-        prev.map((p) => {
-          let newY = p.y - p.speed * (isBrewing ? 2.2 : 1);
-          if (newY < -5) newY = 105;
-          return { ...p, y: newY };
-        }),
-      );
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [isBrewing]);
+  // Bubble motion is CSS-driven (see .bubble in styles.css). No per-frame
+  // setState here — that used to re-render the whole vessel every frame and
+  // would restart the Framer Motion shake keyframes mid-cycle.
+
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current || isThumb) return;
@@ -259,11 +247,11 @@ export default function GlassVessel({
 
       {/* Bottle */}
       <motion.div
-        className="relative z-20"
+        className={isBrewing ? "relative z-20 mixing-bottle" : "relative z-20"}
         style={{ width, height: size, originY: 0.85 }}
         animate={
           isBrewing
-            ? { rotate: [-6, 6, -6], y: [0, -2, 0] }
+            ? undefined
             : {
                 y: isHovered ? mousePos.y * 3.5 : [0, -3.5, 0],
                 x: isHovered ? mousePos.x * 3.5 : 0,
@@ -272,7 +260,7 @@ export default function GlassVessel({
         }
         transition={
           isBrewing
-            ? { duration: 1.05, repeat: Infinity, ease: "easeInOut" }
+            ? undefined
             : isHovered
               ? { type: "spring", stiffness: 85, damping: 18 }
               : {
@@ -422,22 +410,22 @@ export default function GlassVessel({
               />
             </svg>
 
-            {/* Bubbles */}
-            {particles.map((p) => {
-              const driftX = isHovered ? mousePos.x * 10 : 0;
-              return (
-                <motion.circle
-                  key={p.id}
-                  cx={`${p.x}%`}
-                  cy={`${p.y}%`}
-                  r={p.size}
-                  fill={colors.glow}
-                  opacity={p.opacity + (isClicked || isBrewing ? 0.3 : 0)}
-                  animate={{ x: driftX }}
-                  transition={{ type: "spring", stiffness: 40, damping: 15 }}
-                />
-              );
-            })}
+            {/* Bubbles — CSS-animated so they don't cause React re-renders */}
+            {particles.map((p) => (
+              <circle
+                key={p.id}
+                className={isBrewing ? "bubble bubble-brewing" : "bubble"}
+                cx={`${p.x}%`}
+                cy={`${p.y}%`}
+                r={p.size}
+                fill={colors.glow}
+                opacity={p.opacity + (isClicked || isBrewing ? 0.25 : 0)}
+                style={{
+                  animationDuration: `${(isBrewing ? 2.2 : 5) + p.speed * (isBrewing ? 1.2 : 3)}s`,
+                  animationDelay: `${p.id * -0.35}s`,
+                }}
+              />
+            ))}
           </g>
 
           {/* Body highlights with mouse parallax */}
