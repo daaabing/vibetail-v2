@@ -575,49 +575,58 @@ function StageOne({
         </p>
       </div>
 
-      {/* Bottle (fixed) */}
+      {/* Bottle (visual center — fixed, larger) */}
       <div
-        className="flex-none flex items-center justify-center"
-        style={{ height: Math.min(shrunkBottle + 8, 190) }}
+        className="bottle-section flex items-center justify-center"
+        style={{
+          flex: "0 0 390px",
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
         <VibeBottle
           color={liveBottleColor}
-          size={Math.min(shrunkBottle, 170)}
+          size={340}
           mode="idle"
           sliderVal={liveFill}
         />
+        {/* Reply line sticks directly under the bottle */}
+        <div className="mood-response" style={{ marginTop: 14, minHeight: 28 }}>
+          <AnimatePresence mode="wait">
+            {hasVibe && (
+              <motion.span
+                key={replyLine + customMood + pickedLabel}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.22 }}
+                style={{
+                  fontFamily: "var(--font-heading)",
+                  fontSize: 20,
+                  lineHeight: 1.35,
+                  color: "var(--app-primary)",
+                  fontStyle: "italic",
+                  textAlign: "center",
+                }}
+              >
+                {replyLine}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
-      {/* Reply line (fixed tiny slot) */}
-      <div className="flex-none h-4 flex items-center justify-center">
-        <AnimatePresence mode="wait">
-          {hasVibe && (
-            <motion.span
-              key={replyLine + customMood + pickedLabel}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.22 }}
-              className="text-[11px] italic"
-              style={{
-                fontFamily: "var(--font-heading)",
-                color: "var(--app-primary)",
-              }}
-            >
-              {replyLine}
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Tag cloud — compact, capped height, internal infinite scroll */}
+      {/* Tag cloud — compact, fixed height, internal infinite scroll */}
       <div
-        className="relative mt-1 w-full mx-auto"
+        className="mood-tags-section relative w-full mx-auto"
         style={{
-          flex: "1 1 0",
-          minHeight: 180,
-          maxHeight: 260,
+          flex: "0 0 190px",
           maxWidth: 600,
+          marginTop: 4,
+          overflow: "hidden",
         }}
       >
         <FloatingVibes lang={lang} selected={pickedLabel} onPick={onPickVibe} />
