@@ -489,6 +489,17 @@ export default function MoodInputScreen({
             toggleManualFlavor={toggleManualFlavor}
             expandedStrength={expandedStrength}
             setExpandedStrength={setExpandedStrength}
+            expandedAlcohol={expandedAlcohol}
+            setExpandedAlcohol={(v) => {
+              setExpandedAlcohol(v);
+              if (v)
+                track("alcohol_level_opened", {
+                  restaurant_id: restaurantParam ?? null,
+                  menu_id: effectiveMenuContext?.menuSlug ?? null,
+                });
+            }}
+            selectedAlcoholLevel={selectedAlcoholLevel}
+            setSelectedAlcoholLevel={setSelectedAlcoholLevel}
             expandedSpirit={expandedSpirit}
             setExpandedSpirit={(v) => {
               setExpandedSpirit(v);
