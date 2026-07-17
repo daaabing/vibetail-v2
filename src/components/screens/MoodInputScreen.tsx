@@ -580,7 +580,7 @@ function StageOne({
           className="text-[22px] leading-tight"
           style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
         >
-          {lang === "zh" ? "把你现在的状态，倒进来。" : "Pour your state in."}
+          {lang === "zh" ? "把现在的心情，倒进杯里。" : "Pour your state in."}
         </h1>
         <p
           className="text-[11px] mt-0.5 italic"
@@ -590,7 +590,7 @@ function StageOne({
           }}
         >
           {lang === "zh"
-            ? "选一个最像的,或者随便写一句。"
+            ? "选一个最像你的，或者随手写一句。"
             : "Pick one that fits, or type your own."}
         </p>
       </div>
