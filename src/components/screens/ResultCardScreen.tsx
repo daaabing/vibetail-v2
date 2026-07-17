@@ -678,6 +678,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   const handleSave = async () => {
     if (!cocktail || !captureRef.current) return;
+    if (imageLoading && !captureRawImageSource) {
+      toast.info(lang === "zh" ? "酒图还在生成，请稍候" : "Illustration still brewing — one moment");
+      return;
+    }
     track("save_clicked", { cocktail_name: cocktail.cocktailName });
     setSaving(true);
     try {
@@ -1014,6 +1018,30 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           {/* Divider */}
           <div style={{ height: 1, background: "rgba(80,55,30,0.20)", margin: "28px 0 24px" }} />
 
+          {/* Order this — only for menu matches */}
+          {cocktail.matchedFromMenu && (
+            <div style={{ marginBottom: 20, padding: 14, borderRadius: 14, background: "rgba(80,55,30,0.08)", border: "1px solid rgba(80,55,30,0.18)" }}>
+              <div style={{ fontFamily: "var(--font-heading)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#2A2118", marginBottom: 8 }}>
+                {cocktail.lang === "zh" ? "点这杯" : "Order this"}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {cocktail.menuItemImageUrl && (
+                  <img
+                    src={cocktail.menuItemImageUrl}
+                    alt={cocktail.menuItemName ?? cocktail.cocktailName}
+                    crossOrigin="anonymous"
+                    style={{ width: 72, height: 72, borderRadius: 10, objectFit: "cover", border: "1px solid rgba(80,55,30,0.18)", flexShrink: 0 }}
+                  />
+                )}
+                <p style={{ fontFamily: "var(--font-heading)", fontSize: 14, lineHeight: 1.5, color: "#2A2118", margin: 0 }}>
+                  {cocktail.menuItemName || cocktail.cocktailName}
+                  {cocktail.menuPrice ? ` · ${cocktail.menuPrice}` : ""}
+                  {cocktail.restaurantName ? ` @ ${cocktail.restaurantName}` : ""}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Original vibe */}
           <div style={{ marginBottom: 20, padding: 14, borderRadius: 14, background: "rgba(80,55,30,0.05)", border: "1px solid rgba(80,55,30,0.15)" }}>
             <div style={{ fontFamily: "var(--font-heading)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#8A7A62", marginBottom: 6 }}>{cardLabels.originalVibe}</div>
@@ -1022,11 +1050,15 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             </p>
           </div>
 
-          {/* Tasting notes */}
+          {/* Tasting notes / Why this one */}
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontFamily: "var(--font-heading)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#8A7A62", marginBottom: 6 }}>{cardLabels.tastingNotes}</div>
+            <div style={{ fontFamily: "var(--font-heading)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#8A7A62", marginBottom: 6 }}>
+              {cocktail.matchedFromMenu
+                ? (cocktail.lang === "zh" ? "为什么是这杯" : "Why this one")
+                : cardLabels.tastingNotes}
+            </div>
             <p style={{ fontFamily: "var(--font-heading)", color: "#2A2118", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
-              {cocktail.tastesLike}
+              {cocktail.matchedFromMenu ? (cocktail.whyThisMatch || cocktail.tastesLike) : cocktail.tastesLike}
             </p>
           </div>
 
