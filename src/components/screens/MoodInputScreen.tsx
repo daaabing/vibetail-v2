@@ -1095,6 +1095,64 @@ function StageTwo(props: {
         </Accordion>
 
         <Accordion
+          open={expandedAlcohol}
+          onToggle={() => setExpandedAlcohol(!expandedAlcohol)}
+          label={(() => {
+            const opts = {
+              low: { zh: "低酒精 / 微醺", en: "Low / light buzz" },
+              standard: { zh: "标准酒精度", en: "Standard" },
+              strong: { zh: "偏烈一点", en: "Strong" },
+              zero: { zh: "无酒精也可以", en: "Zero-proof" },
+            } as const;
+            const chosen = opts[selectedAlcoholLevel];
+            const isDefault = selectedAlcoholLevel === "standard" && !expandedAlcohol;
+            if (isDefault) {
+              return zh ? "我想自己选酒精度" : "Pick alcohol level";
+            }
+            return zh
+              ? `酒精度：${chosen.zh}`
+              : `Alcohol: ${chosen.en}`;
+          })()}
+        >
+          <div className="pt-1 grid grid-cols-2 gap-2">
+            {([
+              { value: "low", zh: "低酒精 / 微醺", en: "Low / light buzz", descZh: "轻松一点，不想太上头", descEn: "Easy, not too heady" },
+              { value: "standard", zh: "标准酒精度", en: "Standard", descZh: "正常来一杯，平衡就好", descEn: "Normal, balanced" },
+              { value: "strong", zh: "偏烈一点", en: "Strong", descZh: "今天可以稍微有劲一点", descEn: "A little more punch" },
+              { value: "zero", zh: "无酒精也可以", en: "Zero-proof", descZh: "只要氛围，不要酒精", descEn: "Vibe only, no alcohol" },
+            ] as const).map((o) => {
+              const sel = selectedAlcoholLevel === o.value;
+              return (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => setSelectedAlcoholLevel(o.value)}
+                  className="flex flex-col gap-0.5 px-3 py-2 rounded-xl text-left text-xs"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    border: sel
+                      ? "1.4px solid var(--app-primary)"
+                      : "1px solid rgba(255,255,255,0.10)",
+                    background: sel
+                      ? "rgba(153,185,198,0.15)"
+                      : "rgba(255,255,255,0.045)",
+                    color: sel ? "var(--app-text)" : "var(--app-text-secondary)",
+                    backdropFilter: "blur(8px)",
+                  }}
+                >
+                  <span style={{ fontFamily: "var(--font-heading)", fontSize: 13 }}>
+                    {zh ? o.zh : o.en}
+                  </span>
+                  <span style={{ color: "var(--app-text-muted)", fontSize: 10.5 }}>
+                    {zh ? o.descZh : o.descEn}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </Accordion>
+
+        <Accordion
           open={expandedSpirit}
           onToggle={() => setExpandedSpirit(!expandedSpirit)}
           label={
@@ -1103,10 +1161,11 @@ function StageTwo(props: {
                 ? `基酒：${BASE_SPIRITS.find((s) => s.key === baseSpirit)?.zh ?? ""}`
                 : `Base spirit: ${BASE_SPIRITS.find((s) => s.key === baseSpirit)?.en ?? ""}`
               : zh
-                ? "基酒交给我们 · 我有偏好"
-                : "Base spirit — leave it / I have a preference"
+                ? "我有偏好基酒"
+                : "I have a base spirit preference"
           }
         >
+
           <div className="pt-1 grid grid-cols-2 gap-2">
             {BASE_SPIRITS.map((s) => {
               const sel = baseSpirit === s.key;
