@@ -99,6 +99,10 @@ export default function MoodInputScreen({
   const [expandedFlavors, setExpandedFlavors] = useState(false);
   const [manualFlavors, setManualFlavors] = useState<string[]>([]);
   const [expandedStrength, setExpandedStrength] = useState(false);
+  const [expandedAlcohol, setExpandedAlcohol] = useState(false);
+  const [selectedAlcoholLevel, setSelectedAlcoholLevel] = useState<
+    "low" | "standard" | "strong" | "zero"
+  >("standard");
   const [expandedSpirit, setExpandedSpirit] = useState(false);
   const [baseSpirit, setBaseSpirit] = useState<string>("");
   const [expandedRef, setExpandedRef] = useState(false);
@@ -254,7 +258,14 @@ export default function MoodInputScreen({
               : "Format: Short drink (small glass, spirit-forward, minimal mixer, concentrated). "
             : "";
       const summary = sensorySummary(lang, sensory);
-      const mergedPreference = (spiritNote + lengthNote + summary + " " + (referenceDrink || "")).trim();
+      const alcoholMap = {
+        low: { zh: "酒精度：低酒精 / 微醺（轻盈，不易上头）。", en: "Alcohol level: low / light buzz. " },
+        standard: { zh: "酒精度：标准（正常一杯，平衡）。", en: "Alcohol level: standard. " },
+        strong: { zh: "酒精度：偏烈一点（酒感更明显）。", en: "Alcohol level: strong / spirit-forward. " },
+        zero: { zh: "酒精度：无酒精（mocktail，只要氛围）。", en: "Alcohol level: zero-proof mocktail. " },
+      } as const;
+      const alcoholNote = alcoholMap[selectedAlcoholLevel][lang === "zh" ? "zh" : "en"];
+      const mergedPreference = (spiritNote + lengthNote + alcoholNote + summary + " " + (referenceDrink || "")).trim();
 
       const tashiPick =
         baseSpirit === "tashi"
@@ -478,6 +489,17 @@ export default function MoodInputScreen({
             toggleManualFlavor={toggleManualFlavor}
             expandedStrength={expandedStrength}
             setExpandedStrength={setExpandedStrength}
+            expandedAlcohol={expandedAlcohol}
+            setExpandedAlcohol={(v) => {
+              setExpandedAlcohol(v);
+              if (v)
+                track("alcohol_level_opened", {
+                  restaurant_id: restaurantParam ?? null,
+                  menu_id: effectiveMenuContext?.menuSlug ?? null,
+                });
+            }}
+            selectedAlcoholLevel={selectedAlcoholLevel}
+            setSelectedAlcoholLevel={setSelectedAlcoholLevel}
             expandedSpirit={expandedSpirit}
             setExpandedSpirit={(v) => {
               setExpandedSpirit(v);
@@ -873,6 +895,10 @@ function StageTwo(props: {
   toggleManualFlavor: (label: string) => void;
   expandedStrength: boolean;
   setExpandedStrength: (v: boolean) => void;
+  expandedAlcohol: boolean;
+  setExpandedAlcohol: (v: boolean) => void;
+  selectedAlcoholLevel: "low" | "standard" | "strong" | "zero";
+  setSelectedAlcoholLevel: (v: "low" | "standard" | "strong" | "zero") => void;
   expandedSpirit: boolean;
   setExpandedSpirit: (v: boolean) => void;
   baseSpirit: string;
@@ -899,6 +925,10 @@ function StageTwo(props: {
     toggleManualFlavor,
     expandedStrength,
     setExpandedStrength,
+    expandedAlcohol,
+    setExpandedAlcohol,
+    selectedAlcoholLevel,
+    setSelectedAlcoholLevel,
     expandedSpirit,
     setExpandedSpirit,
     baseSpirit,
@@ -1065,6 +1095,64 @@ function StageTwo(props: {
         </Accordion>
 
         <Accordion
+          open={expandedAlcohol}
+          onToggle={() => setExpandedAlcohol(!expandedAlcohol)}
+          label={(() => {
+            const opts = {
+              low: { zh: "低酒精 / 微醺", en: "Low / light buzz" },
+              standard: { zh: "标准酒精度", en: "Standard" },
+              strong: { zh: "偏烈一点", en: "Strong" },
+              zero: { zh: "无酒精也可以", en: "Zero-proof" },
+            } as const;
+            const chosen = opts[selectedAlcoholLevel];
+            const isDefault = selectedAlcoholLevel === "standard" && !expandedAlcohol;
+            if (isDefault) {
+              return zh ? "我想自己选酒精度" : "Pick alcohol level";
+            }
+            return zh
+              ? `酒精度：${chosen.zh}`
+              : `Alcohol: ${chosen.en}`;
+          })()}
+        >
+          <div className="pt-1 grid grid-cols-2 gap-2">
+            {([
+              { value: "low", zh: "低酒精 / 微醺", en: "Low / light buzz", descZh: "轻松一点，不想太上头", descEn: "Easy, not too heady" },
+              { value: "standard", zh: "标准酒精度", en: "Standard", descZh: "正常来一杯，平衡就好", descEn: "Normal, balanced" },
+              { value: "strong", zh: "偏烈一点", en: "Strong", descZh: "今天可以稍微有劲一点", descEn: "A little more punch" },
+              { value: "zero", zh: "无酒精也可以", en: "Zero-proof", descZh: "只要氛围，不要酒精", descEn: "Vibe only, no alcohol" },
+            ] as const).map((o) => {
+              const sel = selectedAlcoholLevel === o.value;
+              return (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => setSelectedAlcoholLevel(o.value)}
+                  className="flex flex-col gap-0.5 px-3 py-2 rounded-xl text-left text-xs"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    border: sel
+                      ? "1.4px solid var(--app-primary)"
+                      : "1px solid rgba(255,255,255,0.10)",
+                    background: sel
+                      ? "rgba(153,185,198,0.15)"
+                      : "rgba(255,255,255,0.045)",
+                    color: sel ? "var(--app-text)" : "var(--app-text-secondary)",
+                    backdropFilter: "blur(8px)",
+                  }}
+                >
+                  <span style={{ fontFamily: "var(--font-heading)", fontSize: 13 }}>
+                    {zh ? o.zh : o.en}
+                  </span>
+                  <span style={{ color: "var(--app-text-muted)", fontSize: 10.5 }}>
+                    {zh ? o.descZh : o.descEn}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </Accordion>
+
+        <Accordion
           open={expandedSpirit}
           onToggle={() => setExpandedSpirit(!expandedSpirit)}
           label={
@@ -1073,10 +1161,11 @@ function StageTwo(props: {
                 ? `基酒：${BASE_SPIRITS.find((s) => s.key === baseSpirit)?.zh ?? ""}`
                 : `Base spirit: ${BASE_SPIRITS.find((s) => s.key === baseSpirit)?.en ?? ""}`
               : zh
-                ? "基酒交给我们 · 我有偏好"
-                : "Base spirit — leave it / I have a preference"
+                ? "我有偏好基酒"
+                : "I have a base spirit preference"
           }
         >
+
           <div className="pt-1 grid grid-cols-2 gap-2">
             {BASE_SPIRITS.map((s) => {
               const sel = baseSpirit === s.key;
