@@ -258,7 +258,14 @@ export default function MoodInputScreen({
               : "Format: Short drink (small glass, spirit-forward, minimal mixer, concentrated). "
             : "";
       const summary = sensorySummary(lang, sensory);
-      const mergedPreference = (spiritNote + lengthNote + summary + " " + (referenceDrink || "")).trim();
+      const alcoholMap = {
+        low: { zh: "酒精度：低酒精 / 微醺（轻盈，不易上头）。", en: "Alcohol level: low / light buzz. " },
+        standard: { zh: "酒精度：标准（正常一杯，平衡）。", en: "Alcohol level: standard. " },
+        strong: { zh: "酒精度：偏烈一点（酒感更明显）。", en: "Alcohol level: strong / spirit-forward. " },
+        zero: { zh: "酒精度：无酒精（mocktail，只要氛围）。", en: "Alcohol level: zero-proof mocktail. " },
+      } as const;
+      const alcoholNote = alcoholMap[selectedAlcoholLevel][lang === "zh" ? "zh" : "en"];
+      const mergedPreference = (spiritNote + lengthNote + alcoholNote + summary + " " + (referenceDrink || "")).trim();
 
       const tashiPick =
         baseSpirit === "tashi"
