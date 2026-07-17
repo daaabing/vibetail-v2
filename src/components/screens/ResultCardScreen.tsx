@@ -678,6 +678,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   const handleSave = async () => {
     if (!cocktail || !captureRef.current) return;
+    if (imageLoading && !captureRawImageSource) {
+      toast.info(lang === "zh" ? "酒图还在生成，请稍候" : "Illustration still brewing — one moment");
+      return;
+    }
     track("save_clicked", { cocktail_name: cocktail.cocktailName });
     setSaving(true);
     try {
