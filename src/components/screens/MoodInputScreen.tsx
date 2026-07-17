@@ -141,20 +141,9 @@ export default function MoodInputScreen({
 
   // ── Flow control ──────────────────────────────────────────────────
   const goHome = () => {
-    if (isMenuFlow && effectiveMenuContext) {
-      navigate({
-        to: "/m/$merchantSlug/$menuSlug",
-        params: {
-          merchantSlug: effectiveMenuContext.merchantSlug,
-          menuSlug: effectiveMenuContext.menuSlug,
-        },
-      });
-      return;
-    }
-    if (restaurantParam === "double-chicken-please") {
-      navigate({ to: "/restaurants/double-chicken-please" });
-      return;
-    }
+    // Exit lab always returns to the app home so the user can leave the
+    // merchant / restaurant flow. Navigating to the same menu URL would be
+    // a no-op since MoodInputScreen is mounted by that route.
     navigate({ to: "/" });
   };
 
