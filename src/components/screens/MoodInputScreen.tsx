@@ -895,6 +895,10 @@ function StageTwo(props: {
   toggleManualFlavor: (label: string) => void;
   expandedStrength: boolean;
   setExpandedStrength: (v: boolean) => void;
+  expandedAlcohol: boolean;
+  setExpandedAlcohol: (v: boolean) => void;
+  selectedAlcoholLevel: "low" | "standard" | "strong" | "zero";
+  setSelectedAlcoholLevel: (v: "low" | "standard" | "strong" | "zero") => void;
   expandedSpirit: boolean;
   setExpandedSpirit: (v: boolean) => void;
   baseSpirit: string;
