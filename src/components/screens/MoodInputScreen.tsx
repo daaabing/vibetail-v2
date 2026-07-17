@@ -99,6 +99,10 @@ export default function MoodInputScreen({
   const [expandedFlavors, setExpandedFlavors] = useState(false);
   const [manualFlavors, setManualFlavors] = useState<string[]>([]);
   const [expandedStrength, setExpandedStrength] = useState(false);
+  const [expandedAlcohol, setExpandedAlcohol] = useState(false);
+  const [selectedAlcoholLevel, setSelectedAlcoholLevel] = useState<
+    "low" | "standard" | "strong" | "zero"
+  >("standard");
   const [expandedSpirit, setExpandedSpirit] = useState(false);
   const [baseSpirit, setBaseSpirit] = useState<string>("");
   const [expandedRef, setExpandedRef] = useState(false);
