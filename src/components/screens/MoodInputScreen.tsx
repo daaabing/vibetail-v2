@@ -1208,8 +1208,8 @@ function StageTwo(props: {
             referenceDrink
               ? `"${referenceDrink.length > 32 ? referenceDrink.slice(0, 32) + "…" : referenceDrink}"`
               : zh
-                ? "＋ 我脑子里已经有一杯酒"
-                : "＋ I already have a drink in mind"
+                ? "我脑子里已经有一杯酒"
+                : "I already have a drink in mind"
           }
         >
           <input
