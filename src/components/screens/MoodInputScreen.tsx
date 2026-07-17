@@ -580,7 +580,7 @@ function StageOne({
           className="text-[22px] leading-tight"
           style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
         >
-          {lang === "zh" ? "把现在的心情，倒进杯里。" : "Pour your state in."}
+          {lang === "zh" ? "把现在的心情，倒进杯里。" : "What’s your vibe right now?"}
         </h1>
         <p
           className="text-[11px] mt-0.5 italic"
