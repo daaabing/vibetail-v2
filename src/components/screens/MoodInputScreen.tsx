@@ -13,6 +13,7 @@ import { track } from "@/lib/analytics";
 import VibeBottle from "@/components/moodtail/VibeBottle";
 import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import FlowProgress from "@/components/moodtail/vibeflow/FlowProgress";
+import LangToggle from "@/components/moodtail/LangToggle";
 import FloatingVibes from "@/components/moodtail/vibeflow/FloatingVibes";
 import { MOOD_PLACEHOLDERS_EN, MOOD_PLACEHOLDERS_ZH } from "@/lib/moodtail-data";
 import { getMoodConfig } from "@/lib/mood-config";
