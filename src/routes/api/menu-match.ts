@@ -244,9 +244,19 @@ export const Route = createFileRoute("/api/menu-match")({
           return new Response("Bad JSON from model", { status: 502 });
         }
 
-        const menuItem =
-          loaded.items.find((c) => c.name.toLowerCase() === parsed.matchedName.toLowerCase()) ??
-          loaded.items[0];
+        const menuItem = loaded.items.find(
+          (c) => c.name.toLowerCase().trim() === parsed.matchedName.toLowerCase().trim(),
+        );
+        if (!menuItem) {
+          console.error("[menu-match] model returned unknown name", {
+            returned: parsed.matchedName,
+            validNames: loaded.items.map((i) => i.name),
+          });
+          return new Response(
+            JSON.stringify({ error: "Match failed. Please try again.", detail: `Unknown item: ${parsed.matchedName}` }),
+            { status: 502, headers: { "Content-Type": "application/json" } },
+          );
+        }
 
         // Persist analytics (best-effort; do not fail the response if this errors).
         try {
