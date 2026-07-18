@@ -86,8 +86,31 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
   const flavors = (input.selectedFlavors ?? []).join(", ") || "(no flavor tags)";
   const pref = input.customPreference?.trim() || "(no custom preference)";
   const isZh = input.lang === "zh";
+  const isLiterary = Math.random() < 0.5;
   const langRule = isZh
-    ? `OUTPUT LANGUAGE: Simplified Chinese for tastesLike / flavorProfile / whyThisMatch / roast. 'matchedName' MUST stay in the original menu name. 'category' stays English.`
+    ? [
+        `OUTPUT LANGUAGE: Simplified Chinese (简体中文) for vibeName / tastesLike / flavorProfile / whyThisMatch / roast. 'matchedName' MUST stay in the original menu name (不要翻译). 'category' stays English.`,
+        ``,
+        `=== 中文起名硬性要求 (vibeName) ===`,
+        `vibeName 是酒卡正面的"人话酒名"，只跟用户当下的 vibe 有关，绝对不要复用/影射 matchedName 或菜单里的酒名。参考中文手写小酒馆菜单的调性，要有个性、有情绪、有画面感。`,
+        isLiterary
+          ? [
+              `这一次走【文艺 / 诗意】路线：`,
+              `1. 推荐"名词+名词"或"意象+意象"的清新文艺命名，4–8 个字最佳（例如"星河晚祷""薄荷月光""雾中信使""琉璃夜色""晚风未眠"）。`,
+              `2. 用意象、自然物、时间、光影、感官词组合，要有画面感和留白。`,
+              `3. 避免口语吐槽、网络梗、感叹号；标点尽量克制。`,
+            ].join("\n")
+          : [
+              `这一次走【荒诞 / 口语】路线：`,
+              `1. 必须是一句完整的口语 / 内心独白 / 反问 / 吐槽 / 谐音梗，6–14 个字。不要用清新文艺命名。`,
+              `2. 越抽象越离谱越好。允许情绪化、自嘲、阴阳怪气、谐音、网络烂梗、生活吐槽。`,
+              `3. 名字是一句"人话"，不是一杯酒的描述。`,
+              `4. 标点可以用感叹号、问号、省略号、破折号、波浪号，营造手写感。`,
+              `5. 离谱起名示例（仅示范风格，禁止复用）："我真的栓Q了" / "妈我不想上班了" / "那没事了。" / "你先别急" / "笑死根本没人爱我"。`,
+            ].join("\n"),
+        `tastesLike 写成一句带画面的中文散文（最多 30 字）。roast 要够刺、够口语、12 字以内。`,
+        ``,
+      ].join("\n")
     : `OUTPUT LANGUAGE: English.`;
   const menuBlock = items
     .map((c) => {
