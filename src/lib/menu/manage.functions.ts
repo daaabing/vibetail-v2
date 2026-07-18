@@ -66,7 +66,7 @@ export const getMenuItemsForManage = createServerFn({ method: "POST" })
     const { data: items, error: itemsErr } = await supabaseAdmin
       .from("menu_items")
       .select(
-        "id, name, ingredients, alcoholic, base_spirit, section, availability_status, recommendation_priority, sort_order, image_url",
+        "id, name, ingredients, alcoholic, base_spirit, section, availability_status, recommendation_priority, sort_order, image_url, flavor_tags, mood_tags, description",
       )
       .eq("menu_id", data.menuId)
       .order("sort_order", { ascending: true });
