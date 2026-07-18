@@ -5,6 +5,8 @@ import VibetailLogo from "@/components/moodtail/VibetailLogo";
 import { getPublishedMenu } from "@/lib/menu/public.functions";
 import { setRestaurantCtx } from "@/lib/restaurant-ctx";
 import { resolveMenuGames } from "@/lib/games/registry";
+import { useLang } from "@/lib/i18n";
+
 
 const AGE_GATE_KEY = "vibetail.ageGate.v1";
 
