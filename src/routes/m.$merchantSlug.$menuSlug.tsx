@@ -5,6 +5,8 @@ import VibetailLogo from "@/components/moodtail/VibetailLogo";
 import { getPublishedMenu } from "@/lib/menu/public.functions";
 import { setRestaurantCtx } from "@/lib/restaurant-ctx";
 import { resolveMenuGames } from "@/lib/games/registry";
+import { useLang } from "@/lib/i18n";
+
 
 const AGE_GATE_KEY = "vibetail.ageGate.v1";
 
@@ -73,6 +75,7 @@ export const Route = createFileRoute("/m/$merchantSlug/$menuSlug")({
 
 function MenuLanding() {
   const { menu } = Route.useLoaderData();
+  const { t } = useLang();
   const [started, setStarted] = useState(false);
   const [ageOk, setAgeOk] = useState(!menu.hasAlcoholic);
 
@@ -111,10 +114,10 @@ function MenuLanding() {
           className="mt-6 text-3xl font-normal"
           style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
         >
-          Are you 21 or over?
+          {t("merchant.ageGate.title")}
         </h1>
         <p className="mt-3 text-sm" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
-          This menu contains alcoholic beverages. Please confirm before continuing.
+          {t("merchant.ageGate.desc")}
         </p>
         <div className="mt-8 flex gap-3">
           <button
@@ -129,14 +132,14 @@ function MenuLanding() {
               fontFamily: "var(--font-heading)",
             }}
           >
-            Yes, I'm 21+
+            {t("merchant.ageGate.yes")}
           </button>
           <a
             href="https://www.google.com"
             className="px-6 py-3 rounded-full text-sm"
             style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-heading)" }}
           >
-            No
+            {t("merchant.ageGate.no")}
           </a>
         </div>
       </div>
@@ -163,8 +166,7 @@ function MenuLanding() {
           className="mt-3 max-w-md text-base italic leading-relaxed"
           style={{ fontFamily: "var(--font-heading)", color: "var(--app-text-secondary)" }}
         >
-          {menu.shortIntro ??
-            "Tell us your vibe. We'll match you to one drink from tonight's menu — and tell you why."}
+          {menu.shortIntro ?? t("merchant.intro.fallback")}
         </p>
       )}
 
@@ -179,11 +181,11 @@ function MenuLanding() {
             fontFamily: "var(--font-heading)",
           }}
         >
-          Match my vibe →
+          {t("merchant.cta.match")}
         </button>
       ) : (
         <p className="mt-8 text-sm" style={{ color: "var(--app-text-muted)" }}>
-          No games enabled for this menu yet.
+          {t("merchant.noGames")}
         </p>
       )}
 
@@ -191,8 +193,9 @@ function MenuLanding() {
         className="mt-6 text-[11px]"
         style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}
       >
-        Menu curated by {menu.merchantName}
+        {t("merchant.curatedBy").replace("{name}", menu.merchantName)}
       </p>
     </div>
   );
 }
+
