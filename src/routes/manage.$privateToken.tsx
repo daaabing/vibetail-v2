@@ -292,70 +292,100 @@ function ManagePage() {
               {items.map((it) => (
                 <li
                   key={it.id}
-                  className="flex items-start justify-between gap-4 p-3 rounded-lg"
+                  className="p-3 rounded-lg"
                   style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
                 >
-                  <div>
-                    <div style={{ fontFamily: "var(--font-heading)", fontSize: 16 }}>
-                      {it.name}{" "}
-                      {it.section && (
-                        <span style={{ color: "var(--app-text-muted)", fontSize: 11, marginLeft: 6 }}>
-                          [{it.section}]
-                        </span>
-                      )}
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div style={{ fontFamily: "var(--font-heading)", fontSize: 16 }}>
+                        {it.name}{" "}
+                        {it.section && (
+                          <span style={{ color: "var(--app-text-muted)", fontSize: 11, marginLeft: 6 }}>
+                            [{it.section}]
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs mt-1" style={{ color: "var(--app-text-muted)" }}>
+                        {it.ingredients.join(", ")}
+                      </div>
                     </div>
-                    <div className="text-xs mt-1" style={{ color: "var(--app-text-muted)" }}>
-                      {it.ingredients.join(", ")}
-                    </div>
-                  </div>
-                  <div className="flex gap-2 shrink-0 flex-wrap justify-end">
-                    {(["active", "sold_out", "hidden"] as const).map((v) => (
+                    <div className="flex gap-2 shrink-0 flex-wrap justify-end">
+                      {(["active", "sold_out", "hidden"] as const).map((v) => (
+                        <button
+                          key={v}
+                          disabled={busy || it.availability_status === v}
+                          onClick={() =>
+                            runTogglable(
+                              `${it.name}: ${v}`,
+                              () =>
+                                toggleAvail({
+                                  data: { token: privateToken, menuItemId: it.id, availabilityStatus: v },
+                                }),
+                              reloadItems,
+                            )
+                          }
+                          className="px-2.5 py-1 rounded text-[11px]"
+                          style={{
+                            background:
+                              it.availability_status === v ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                            fontFamily: "var(--font-heading)",
+                            opacity: busy ? 0.5 : 1,
+                          }}
+                        >
+                          {v}
+                        </button>
+                      ))}
                       <button
-                        key={v}
-                        disabled={busy || it.availability_status === v}
-                        onClick={() =>
-                          runTogglable(
-                            `${it.name}: ${v}`,
-                            () =>
-                              toggleAvail({
-                                data: { token: privateToken, menuItemId: it.id, availabilityStatus: v },
-                              }),
-                            reloadItems,
-                          )
-                        }
+                        disabled={busy}
+                        onClick={() => setEditingId(editingId === it.id ? null : it.id)}
                         className="px-2.5 py-1 rounded text-[11px]"
                         style={{
-                          background:
-                            it.availability_status === v ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.04)",
-                          border: "1px solid rgba(255,255,255,0.1)",
+                          border: "1px solid rgba(255,255,255,0.2)",
                           fontFamily: "var(--font-heading)",
                           opacity: busy ? 0.5 : 1,
                         }}
                       >
-                        {v}
+                        {editingId === it.id ? "close" : "edit"}
                       </button>
-                    ))}
-                    <button
-                      disabled={busy}
-                      onClick={() => {
-                        if (!confirm(`Delete "${it.name}"?`)) return;
-                        runTogglable(
-                          `${it.name}: deleted`,
-                          () => removeItem({ data: { token: privateToken, menuItemId: it.id } }),
-                          reloadItems,
-                        );
-                      }}
-                      className="px-2.5 py-1 rounded text-[11px]"
-                      style={{
-                        border: "1px solid rgba(255,80,80,0.35)",
-                        color: "rgba(255,140,140,0.9)",
-                        fontFamily: "var(--font-heading)",
-                        opacity: busy ? 0.5 : 1,
-                      }}
-                    >
-                      delete
-                    </button>
+                      <button
+                        disabled={busy}
+                        onClick={() => {
+                          if (!confirm(`Delete "${it.name}"?`)) return;
+                          runTogglable(
+                            `${it.name}: deleted`,
+                            () => removeItem({ data: { token: privateToken, menuItemId: it.id } }),
+                            reloadItems,
+                          );
+                        }}
+                        className="px-2.5 py-1 rounded text-[11px]"
+                        style={{
+                          border: "1px solid rgba(255,80,80,0.35)",
+                          color: "rgba(255,140,140,0.9)",
+                          fontFamily: "var(--font-heading)",
+                          opacity: busy ? 0.5 : 1,
+                        }}
+                      >
+                        delete
+                      </button>
+                    </div>
                   </div>
+                  {editingId === it.id && (
+                    <EditItemForm
+                      item={it}
+                      busy={busy}
+                      onSave={async (payload) => {
+                        await runTogglable("Item saved", async () => {
+                          await editItem({
+                            data: { token: privateToken, menuItemId: it.id, ...payload },
+                          });
+                          await reloadItems();
+                          setEditingId(null);
+                        });
+                      }}
+                      onCancel={() => setEditingId(null)}
+                    />
+                  )}
                 </li>
               ))}
             </ul>
