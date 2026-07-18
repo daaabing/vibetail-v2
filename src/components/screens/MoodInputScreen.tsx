@@ -586,18 +586,18 @@ function StageOne({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
-      className="flex-1 min-h-0 flex flex-col px-5 overflow-hidden"
+      className="stage-one flex-1 min-h-0 flex flex-col px-5 overflow-hidden"
     >
       {/* Title (fixed) */}
       <div className="flex-none text-center">
         <h1
-          className="text-[22px] leading-tight"
+          className="stage-one-title text-[22px] leading-tight"
           style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
         >
           {lang === "zh" ? "把现在的心情，倒进杯里。" : "What’s your vibe right now?"}
         </h1>
         <p
-          className="text-[11px] mt-0.5 italic"
+          className="stage-one-sub text-[11px] mt-0.5 italic"
           style={{
             fontFamily: "var(--font-heading)",
             color: "var(--app-text-secondary)",
@@ -647,6 +647,7 @@ function StageOne({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.22 }}
+                className="mood-response-line"
                 style={{
                   fontFamily: "var(--font-heading)",
                   fontSize: 19,
@@ -677,9 +678,9 @@ function StageOne({
       </div>
 
       {/* Inline custom mood input (fixed) */}
-      <div className="flex-none mt-2">
+      <div className="stage-one-input flex-none mt-2">
         <label
-          className="block text-[11px] tracking-wider mb-1 px-1"
+          className="stage-one-input-label block text-[11px] tracking-wider mb-1 px-1"
           style={{
             fontFamily: "var(--font-body)",
             color: "var(--app-text-secondary)",
@@ -691,7 +692,7 @@ function StageOne({
             : "Describe your current headspace"}
         </label>
         <div
-          className="relative rounded-2xl"
+          className="stage-one-input-box relative rounded-2xl"
           style={{
             background: "rgba(255,255,255,0.04)",
             border: "1px solid rgba(255,255,255,0.10)",
@@ -708,7 +709,7 @@ function StageOne({
             onChange={(e) => onCustomChange(e.target.value)}
             placeholder={ph}
             rows={2}
-            className="w-full resize-none bg-transparent outline-none rounded-2xl px-4 pt-2.5 pb-7 text-sm leading-snug"
+            className="stage-one-textarea w-full resize-none bg-transparent outline-none rounded-2xl px-4 pt-2.5 pb-7 text-sm leading-snug"
             style={{
               height: 78,
               color: "var(--app-text)",
@@ -738,8 +739,11 @@ function StageOne({
         </div>
       </div>
 
-      {/* CTA — reserves fixed slot so layout never shifts */}
-      <div className="flex-none pt-2 pb-[calc(env(safe-area-inset-bottom)+12px)]">
+      {/* CTA — reserves fixed slot; safe-area aware on mobile */}
+      <div
+        className="stage-one-cta flex-none pt-2"
+        style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}
+      >
         <AnimatePresence>
           {hasVibe && (
             <motion.button
@@ -813,17 +817,76 @@ function StageOne({
             flex-basis: 145px !important;
           }
           .mood-tag {
-            height: 36px !important;
-            padding: 0 14px !important;
-            font-size: 17px !important;
+            height: 34px !important;
+            padding: 0 12px !important;
+            font-size: 13px !important;
           }
           .bottle-section {
-            flex-basis: 310px !important;
+            flex-basis: 280px !important;
           }
           .bottle-section svg,
           .bottle-section img {
-            max-height: 280px;
+            max-height: 250px;
           }
+        }
+
+        /* ─── Mobile (< 768px) — one cohesive composition ─── */
+        @media (max-width: 767px) {
+          .stage-one {
+            padding-left: 16px;
+            padding-right: 16px;
+          }
+          .stage-one-title { font-size: 20px !important; }
+          .stage-one-sub   { font-size: 11px !important; }
+
+          .bottle-section {
+            flex: 0 0 clamp(240px, 34dvh, 300px) !important;
+          }
+          .bottle-section svg,
+          .bottle-section img {
+            max-height: clamp(200px, 30dvh, 260px);
+            transform: scale(1);
+          }
+          .mood-response { margin-top: 6px !important; min-height: 22px !important; }
+          .mood-response-line { font-size: 16px !important; }
+
+          .mood-tags-section {
+            flex: 0 0 clamp(150px, 20dvh, 200px) !important;
+            margin-top: 2px !important;
+          }
+          .mood-tags-scroll {
+            gap: 6px 6px !important;
+            padding: 6px 10px 16px !important;
+          }
+          .mood-tag {
+            font-size: 12px !important;
+            padding: 5px 10px !important;
+            line-height: 1.1 !important;
+          }
+
+          .stage-one-input { margin-top: 6px !important; }
+          .stage-one-input-label { margin-bottom: 2px !important; font-size: 10px !important; }
+          .stage-one-textarea { height: 68px !important; padding-top: 8px !important; padding-bottom: 24px !important; font-size: 14px !important; }
+
+          .stage-one-cta {
+            padding-top: 6px !important;
+            padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+          }
+        }
+
+        /* Very short phones (iPhone SE etc.) */
+        @media (max-width: 767px) and (max-height: 700px) {
+          .bottle-section {
+            flex: 0 0 220px !important;
+          }
+          .bottle-section svg,
+          .bottle-section img {
+            max-height: 190px;
+          }
+          .mood-tags-section {
+            flex: 0 0 130px !important;
+          }
+          .stage-one-textarea { height: 60px !important; }
         }
       `}</style>
     </motion.div>
