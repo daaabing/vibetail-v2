@@ -9,6 +9,7 @@ import {
   setMenuStatus,
   createMenu,
   createMenuItem,
+  updateMenuItem,
   deleteMenuItem,
 } from "@/lib/menu/manage.functions";
 import { listActiveGames } from "@/lib/games/registry";
@@ -41,6 +42,10 @@ type Item = {
   base_spirit: string | null;
   section: string | null;
   availability_status: "active" | "sold_out" | "hidden";
+  image_url: string | null;
+  flavor_tags?: string[] | null;
+  mood_tags?: string[] | null;
+  description?: string | null;
 };
 
 function ManagePage() {
@@ -52,6 +57,7 @@ function ManagePage() {
   const setStatus = useServerFn(setMenuStatus);
   const addMenu = useServerFn(createMenu);
   const addItem = useServerFn(createMenuItem);
+  const editItem = useServerFn(updateMenuItem);
   const removeItem = useServerFn(deleteMenuItem);
   const activeGames = listActiveGames();
 
@@ -62,6 +68,7 @@ function ManagePage() {
   const [items, setItems] = useState<Item[]>([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -285,70 +292,100 @@ function ManagePage() {
               {items.map((it) => (
                 <li
                   key={it.id}
-                  className="flex items-start justify-between gap-4 p-3 rounded-lg"
+                  className="p-3 rounded-lg"
                   style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
                 >
-                  <div>
-                    <div style={{ fontFamily: "var(--font-heading)", fontSize: 16 }}>
-                      {it.name}{" "}
-                      {it.section && (
-                        <span style={{ color: "var(--app-text-muted)", fontSize: 11, marginLeft: 6 }}>
-                          [{it.section}]
-                        </span>
-                      )}
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div style={{ fontFamily: "var(--font-heading)", fontSize: 16 }}>
+                        {it.name}{" "}
+                        {it.section && (
+                          <span style={{ color: "var(--app-text-muted)", fontSize: 11, marginLeft: 6 }}>
+                            [{it.section}]
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs mt-1" style={{ color: "var(--app-text-muted)" }}>
+                        {it.ingredients.join(", ")}
+                      </div>
                     </div>
-                    <div className="text-xs mt-1" style={{ color: "var(--app-text-muted)" }}>
-                      {it.ingredients.join(", ")}
-                    </div>
-                  </div>
-                  <div className="flex gap-2 shrink-0 flex-wrap justify-end">
-                    {(["active", "sold_out", "hidden"] as const).map((v) => (
+                    <div className="flex gap-2 shrink-0 flex-wrap justify-end">
+                      {(["active", "sold_out", "hidden"] as const).map((v) => (
+                        <button
+                          key={v}
+                          disabled={busy || it.availability_status === v}
+                          onClick={() =>
+                            runTogglable(
+                              `${it.name}: ${v}`,
+                              () =>
+                                toggleAvail({
+                                  data: { token: privateToken, menuItemId: it.id, availabilityStatus: v },
+                                }),
+                              reloadItems,
+                            )
+                          }
+                          className="px-2.5 py-1 rounded text-[11px]"
+                          style={{
+                            background:
+                              it.availability_status === v ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                            fontFamily: "var(--font-heading)",
+                            opacity: busy ? 0.5 : 1,
+                          }}
+                        >
+                          {v}
+                        </button>
+                      ))}
                       <button
-                        key={v}
-                        disabled={busy || it.availability_status === v}
-                        onClick={() =>
-                          runTogglable(
-                            `${it.name}: ${v}`,
-                            () =>
-                              toggleAvail({
-                                data: { token: privateToken, menuItemId: it.id, availabilityStatus: v },
-                              }),
-                            reloadItems,
-                          )
-                        }
+                        disabled={busy}
+                        onClick={() => setEditingId(editingId === it.id ? null : it.id)}
                         className="px-2.5 py-1 rounded text-[11px]"
                         style={{
-                          background:
-                            it.availability_status === v ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.04)",
-                          border: "1px solid rgba(255,255,255,0.1)",
+                          border: "1px solid rgba(255,255,255,0.2)",
                           fontFamily: "var(--font-heading)",
                           opacity: busy ? 0.5 : 1,
                         }}
                       >
-                        {v}
+                        {editingId === it.id ? "close" : "edit"}
                       </button>
-                    ))}
-                    <button
-                      disabled={busy}
-                      onClick={() => {
-                        if (!confirm(`Delete "${it.name}"?`)) return;
-                        runTogglable(
-                          `${it.name}: deleted`,
-                          () => removeItem({ data: { token: privateToken, menuItemId: it.id } }),
-                          reloadItems,
-                        );
-                      }}
-                      className="px-2.5 py-1 rounded text-[11px]"
-                      style={{
-                        border: "1px solid rgba(255,80,80,0.35)",
-                        color: "rgba(255,140,140,0.9)",
-                        fontFamily: "var(--font-heading)",
-                        opacity: busy ? 0.5 : 1,
-                      }}
-                    >
-                      delete
-                    </button>
+                      <button
+                        disabled={busy}
+                        onClick={() => {
+                          if (!confirm(`Delete "${it.name}"?`)) return;
+                          runTogglable(
+                            `${it.name}: deleted`,
+                            () => removeItem({ data: { token: privateToken, menuItemId: it.id } }),
+                            reloadItems,
+                          );
+                        }}
+                        className="px-2.5 py-1 rounded text-[11px]"
+                        style={{
+                          border: "1px solid rgba(255,80,80,0.35)",
+                          color: "rgba(255,140,140,0.9)",
+                          fontFamily: "var(--font-heading)",
+                          opacity: busy ? 0.5 : 1,
+                        }}
+                      >
+                        delete
+                      </button>
+                    </div>
                   </div>
+                  {editingId === it.id && (
+                    <EditItemForm
+                      item={it}
+                      busy={busy}
+                      onSave={async (payload) => {
+                        await runTogglable("Item saved", async () => {
+                          await editItem({
+                            data: { token: privateToken, menuItemId: it.id, ...payload },
+                          });
+                          await reloadItems();
+                          setEditingId(null);
+                        });
+                      }}
+                      onCancel={() => setEditingId(null)}
+                    />
+                  )}
                 </li>
               ))}
             </ul>
@@ -666,5 +703,93 @@ function TextInput({
         fontFamily: "var(--font-body)",
       }}
     />
+  );
+}
+
+function EditItemForm({
+  item,
+  busy,
+  onSave,
+  onCancel,
+}: {
+  item: Item;
+  busy: boolean;
+  onSave: (payload: NewItemPayload) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState(item.name);
+  const [section, setSection] = useState(item.section ?? "");
+  const [ingredients, setIngredients] = useState((item.ingredients ?? []).join(", "));
+  const [baseSpirit, setBaseSpirit] = useState(item.base_spirit ?? "");
+  const [alcoholic, setAlcoholic] = useState(item.alcoholic);
+  const [imageUrl, setImageUrl] = useState(item.image_url ?? "");
+  const [flavorTags, setFlavorTags] = useState((item.flavor_tags ?? []).join(", "));
+  const [moodTags, setMoodTags] = useState((item.mood_tags ?? []).join(", "));
+
+  const splitCsv = (s: string): string[] =>
+    s.split(",").map((x) => x.trim()).filter(Boolean);
+
+  return (
+    <form
+      className="mt-3 p-4 rounded-lg space-y-3"
+      style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.1)" }}
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (!name.trim()) return;
+        await onSave({
+          name: name.trim(),
+          section: section.trim() || null,
+          ingredients: splitCsv(ingredients),
+          baseSpirit: baseSpirit.trim() || null,
+          alcoholic,
+          imageUrl: imageUrl.trim() || null,
+          flavorTags: splitCsv(flavorTags),
+          moodTags: splitCsv(moodTags),
+        });
+      }}
+    >
+      <FieldRow label="Name"><TextInput value={name} onChange={setName} /></FieldRow>
+      <FieldRow label="Section"><TextInput value={section} onChange={setSection} /></FieldRow>
+      <FieldRow label="Ingredients (comma separated)">
+        <TextInput value={ingredients} onChange={setIngredients} />
+      </FieldRow>
+      <FieldRow label="Base spirit"><TextInput value={baseSpirit} onChange={setBaseSpirit} /></FieldRow>
+      <FieldRow label="Flavor tags (comma separated)">
+        <TextInput value={flavorTags} onChange={setFlavorTags} />
+      </FieldRow>
+      <FieldRow label="Mood tags (comma separated)">
+        <TextInput value={moodTags} onChange={setMoodTags} />
+      </FieldRow>
+      <FieldRow label="Image URL"><TextInput value={imageUrl} onChange={setImageUrl} /></FieldRow>
+      <FieldRow label="Alcoholic?">
+        <label className="inline-flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={alcoholic} onChange={(e) => setAlcoholic(e.target.checked)} />
+          <span style={{ color: "var(--app-text-muted)" }}>Contains alcohol</span>
+        </label>
+      </FieldRow>
+      <div className="flex gap-2">
+        <button
+          disabled={busy}
+          type="submit"
+          className="px-4 py-2 rounded-full text-sm"
+          style={{
+            background: "rgba(255,255,255,0.14)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            fontFamily: "var(--font-heading)",
+            opacity: busy ? 0.5 : 1,
+          }}
+        >
+          Save changes
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 rounded-full text-sm"
+          style={{ border: "1px solid rgba(255,255,255,0.14)", fontFamily: "var(--font-heading)" }}
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }

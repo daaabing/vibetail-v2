@@ -66,7 +66,7 @@ export const getMenuItemsForManage = createServerFn({ method: "POST" })
     const { data: items, error: itemsErr } = await supabaseAdmin
       .from("menu_items")
       .select(
-        "id, name, ingredients, alcoholic, base_spirit, section, availability_status, recommendation_priority, sort_order, image_url",
+        "id, name, ingredients, alcoholic, base_spirit, section, availability_status, recommendation_priority, sort_order, image_url, flavor_tags, mood_tags, description",
       )
       .eq("menu_id", data.menuId)
       .order("sort_order", { ascending: true });
@@ -287,6 +287,40 @@ export const createMenuItem = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
     return { ok: true, itemId: row.id };
+  });
+
+const UpdateItemInput = TokenInput.extend({ menuItemId: z.string().uuid() }).merge(ItemCoreInput);
+
+export const updateMenuItem = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => UpdateItemInput.parse(input))
+  .handler(async ({ data }) => {
+    const merchantId = await verifyAndGetMerchantId(data.token);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error: rowErr } = await supabaseAdmin
+      .from("menu_items")
+      .select("id, menus:menu_id(merchant_id)")
+      .eq("id", data.menuItemId)
+      .single();
+    if (rowErr) throw new Error(rowErr.message);
+    const owner = (row.menus as unknown as { merchant_id: string } | null)?.merchant_id;
+    if (owner !== merchantId) throw new Error("Forbidden");
+
+    const { error } = await supabaseAdmin
+      .from("menu_items")
+      .update({
+        name: data.name,
+        section: data.section ?? null,
+        ingredients: data.ingredients,
+        base_spirit: data.baseSpirit ?? null,
+        alcoholic: data.alcoholic,
+        description: data.description ?? "",
+        image_url: data.imageUrl ? data.imageUrl : null,
+        flavor_tags: data.flavorTags,
+        mood_tags: data.moodTags,
+      })
+      .eq("id", data.menuItemId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 const DeleteItemInput = TokenInput.extend({ menuItemId: z.string().uuid() });
