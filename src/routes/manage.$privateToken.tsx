@@ -42,6 +42,10 @@ type Item = {
   base_spirit: string | null;
   section: string | null;
   availability_status: "active" | "sold_out" | "hidden";
+  image_url: string | null;
+  flavor_tags?: string[] | null;
+  mood_tags?: string[] | null;
+  description?: string | null;
 };
 
 function ManagePage() {
