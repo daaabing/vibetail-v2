@@ -85,8 +85,18 @@ export const translations: Record<Lang, Record<string, string>> = {
     "gallery.prev": "← 上一页",
     "gallery.next": "下一页 →",
     "gallery.ago": "之前",
+    // Merchant landing
+    "merchant.ageGate.title": "你满 21 岁了吗？",
+    "merchant.ageGate.desc": "这份菜单包含酒精饮品，进入前请确认一下。",
+    "merchant.ageGate.yes": "是的，我已满 21 岁",
+    "merchant.ageGate.no": "还没有",
+    "merchant.intro.fallback": "说说你现在的心情，我们从今晚的菜单里，帮你挑一杯最对味的，并告诉你为什么是它。",
+    "merchant.cta.match": "帮我配一杯 →",
+    "merchant.noGames": "这份菜单还没开启任何玩法。",
+    "merchant.curatedBy": "菜单由 {name} 精选",
 
   },
+
   en: {
     // Landing
     "landing.tagline": "Every mood deserves the perfect pour.",
