@@ -436,7 +436,8 @@ export default function MoodInputScreen({
 
         <FlowProgress stage={stage === "sensory" ? 2 : 1} />
 
-        <span className="w-10" />
+        <LangToggle />
+
       </div>
 
 
