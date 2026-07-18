@@ -148,8 +148,12 @@ function MenuLanding() {
   }
 
   return (
-    <div className="w-full md:max-w-2xl lg:max-w-3xl md:mx-auto min-h-svh flex flex-col items-center justify-center px-6 py-10 text-center">
+    <div className="w-full md:max-w-2xl lg:max-w-3xl md:mx-auto min-h-svh flex flex-col items-center justify-center px-6 py-10 text-center relative">
+      <div className="absolute top-[max(12px,env(safe-area-inset-top))] right-5">
+        <LangToggle />
+      </div>
       <VibetailLogo size={140} />
+
       <div
         className="mt-4 text-[10px] uppercase tracking-[0.3em]"
         style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}
