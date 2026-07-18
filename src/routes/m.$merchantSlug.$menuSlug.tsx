@@ -6,6 +6,7 @@ import { getPublishedMenu } from "@/lib/menu/public.functions";
 import { setRestaurantCtx } from "@/lib/restaurant-ctx";
 import { resolveMenuGames } from "@/lib/games/registry";
 import { useLang } from "@/lib/i18n";
+import LangToggle from "@/components/moodtail/LangToggle";
 
 
 const AGE_GATE_KEY = "vibetail.ageGate.v1";
@@ -108,8 +109,12 @@ function MenuLanding() {
 
   if (!ageOk) {
     return (
-      <div className="w-full md:max-w-md md:mx-auto min-h-svh flex flex-col items-center justify-center px-6 text-center">
+      <div className="w-full md:max-w-md md:mx-auto min-h-svh flex flex-col items-center justify-center px-6 text-center relative">
+        <div className="absolute top-[max(12px,env(safe-area-inset-top))] right-5">
+          <LangToggle />
+        </div>
         <VibetailLogo size={110} />
+
         <h1
           className="mt-6 text-3xl font-normal"
           style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
@@ -147,8 +152,12 @@ function MenuLanding() {
   }
 
   return (
-    <div className="w-full md:max-w-2xl lg:max-w-3xl md:mx-auto min-h-svh flex flex-col items-center justify-center px-6 py-10 text-center">
+    <div className="w-full md:max-w-2xl lg:max-w-3xl md:mx-auto min-h-svh flex flex-col items-center justify-center px-6 py-10 text-center relative">
+      <div className="absolute top-[max(12px,env(safe-area-inset-top))] right-5">
+        <LangToggle />
+      </div>
       <VibetailLogo size={140} />
+
       <div
         className="mt-4 text-[10px] uppercase tracking-[0.3em]"
         style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}
