@@ -9,6 +9,7 @@ import {
   setMenuStatus,
   createMenu,
   createMenuItem,
+  updateMenuItem,
   deleteMenuItem,
 } from "@/lib/menu/manage.functions";
 import { listActiveGames } from "@/lib/games/registry";
