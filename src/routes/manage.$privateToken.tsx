@@ -57,6 +57,7 @@ function ManagePage() {
   const setStatus = useServerFn(setMenuStatus);
   const addMenu = useServerFn(createMenu);
   const addItem = useServerFn(createMenuItem);
+  const editItem = useServerFn(updateMenuItem);
   const removeItem = useServerFn(deleteMenuItem);
   const activeGames = listActiveGames();
 
@@ -67,6 +68,7 @@ function ManagePage() {
   const [items, setItems] = useState<Item[]>([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
