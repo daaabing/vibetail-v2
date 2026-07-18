@@ -109,8 +109,12 @@ function MenuLanding() {
 
   if (!ageOk) {
     return (
-      <div className="w-full md:max-w-md md:mx-auto min-h-svh flex flex-col items-center justify-center px-6 text-center">
+      <div className="w-full md:max-w-md md:mx-auto min-h-svh flex flex-col items-center justify-center px-6 text-center relative">
+        <div className="absolute top-[max(12px,env(safe-area-inset-top))] right-5">
+          <LangToggle />
+        </div>
         <VibetailLogo size={110} />
+
         <h1
           className="mt-6 text-3xl font-normal"
           style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
