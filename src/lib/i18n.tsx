@@ -165,7 +165,17 @@ export const translations: Record<Lang, Record<string, string>> = {
     "gallery.prev": "← Prev",
     "gallery.next": "Next →",
     "gallery.ago": "ago",
+    // Merchant landing
+    "merchant.ageGate.title": "Are you 21 or over?",
+    "merchant.ageGate.desc": "This menu contains alcoholic beverages. Please confirm before continuing.",
+    "merchant.ageGate.yes": "Yes, I'm 21+",
+    "merchant.ageGate.no": "No",
+    "merchant.intro.fallback": "Tell us your vibe. We'll match you to one drink from tonight's menu — and tell you why.",
+    "merchant.cta.match": "Match my vibe →",
+    "merchant.noGames": "No games enabled for this menu yet.",
+    "merchant.curatedBy": "Menu curated by {name}",
   },
+
 };
 
 export function LangProvider({ children }: { children: ReactNode }) {
