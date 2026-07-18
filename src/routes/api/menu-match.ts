@@ -90,7 +90,24 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
     ? `OUTPUT LANGUAGE: Simplified Chinese for tastesLike / flavorProfile / whyThisMatch / roast. 'matchedName' MUST stay in the original menu name. 'category' stays English.`
     : `OUTPUT LANGUAGE: English.`;
   const menuBlock = items
-    .map((c) => `- [${c.section ?? "menu"}] "${c.name}" — ${c.ingredients.join(", ")}`)
+    .map((c) => {
+      const lines = [`- "${c.name}"`];
+      if (c.section) lines.push(`    section: ${c.section}`);
+      if (c.baseSpirit) lines.push(`    base spirit: ${c.baseSpirit}`);
+      lines.push(`    alcoholic: ${c.alcoholic ? "yes" : "no"}`);
+      if (c.ingredients.length) lines.push(`    ingredients: ${c.ingredients.join(", ")}`);
+      if (c.description) lines.push(`    description: ${c.description}`);
+      if (c.flavorTags.length) lines.push(`    flavor tags: ${c.flavorTags.join(", ")}`);
+      if (c.moodTags.length) lines.push(`    mood tags: ${c.moodTags.join(", ")}`);
+      const dims = Object.entries(c.dimensions ?? {})
+        .filter(([, v]) => typeof v === "number")
+        .map(([k, v]) => `${k}=${v}`)
+        .join(", ");
+      if (dims) lines.push(`    dimensions (0-1): ${dims}`);
+      if (c.allergens.length) lines.push(`    allergens: ${c.allergens.join(", ")}`);
+      if (c.recommendationPriority) lines.push(`    priority: ${c.recommendationPriority}`);
+      return lines.join("\n");
+    })
     .join("\n");
   const names = items.map((i) => i.name);
   return {
@@ -110,10 +127,17 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
       `=== MENU (choose ONE) ===`,
       menuBlock,
       ``,
-      `Rules:`,
+      `Matching rules — USE EVERY SIGNAL, do not default to the first item:`,
+      `- Score each menu item against the user's vibe using ALL provided metadata: flavor tags, mood tags, dimensions (sweetness/acidity/bitterness/body/strength on 0-1), base spirit, ingredients, description, section.`,
+      `- Weigh mood-tag overlap and flavor-tag overlap heavily; use dimensions as tie-breakers.`,
+      `- Respect the user's custom preference literally (e.g. "no whiskey", "light and citrusy", "non-alcoholic") — items that violate it are disqualified.`,
+      `- Prefer alcoholic items unless the user's vibe/preference clearly asks for non-alcoholic.`,
+      `- Ignore obviously placeholder or test items (e.g. an item literally named "test") unless nothing else fits.`,
+      `- Use 'priority' only as a tie-breaker when two items score equally well; it is NOT a default.`,
+      ``,
+      `Output rules:`,
       `- 'matchedName' MUST be one of the menu names above, spelled EXACTLY.`,
       `- 'vibeName' is a creative, vibe-driven title for the card front — a poetic 2-4 word phrase inspired ONLY by the user's mood/flavor/preference. It MUST NOT contain, echo, or riff on any word from 'matchedName' or the menu item's name. Think evocative imagery (e.g. "Velvet Midnight", "Paper Moon"), not the drink's label.`,
-      `- Weigh both flavor compatibility AND emotional fit.`,
       `- 'tastesLike' is a warm, evocative 1-2 sentence tasting note tied to the user's vibe (like a sommelier's poetic description). Reference REAL ingredients of the matched drink. Do NOT name the menu item.`,
       `- 'whyThisMatch' is a PLAYFUL, cheeky 1-2 sentence explanation of why this specific drink fits this specific vibe — witty and fun, like a bartender teasing a regular. Reference the drink's ingredients, character, or emotional through-line. NEVER mention menu size, availability, lack of alternatives, or that it was the "only option" — always frame the pick as an intentional, inspired match, even if the menu is short.`,
       `- 'roast' is one sharp witty one-liner about the user's vibe, 12 words or fewer.`,
@@ -121,6 +145,7 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
     ].join("\n"),
   };
 }
+
 
 export const Route = createFileRoute("/api/menu-match")({
   server: {
