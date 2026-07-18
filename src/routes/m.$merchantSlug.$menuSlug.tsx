@@ -6,6 +6,7 @@ import { getPublishedMenu } from "@/lib/menu/public.functions";
 import { setRestaurantCtx } from "@/lib/restaurant-ctx";
 import { resolveMenuGames } from "@/lib/games/registry";
 import { useLang } from "@/lib/i18n";
+import LangToggle from "@/components/moodtail/LangToggle";
 
 
 const AGE_GATE_KEY = "vibetail.ageGate.v1";
