@@ -458,7 +458,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [showAuth, setShowAuth] = useState(false);
   const [pendingAction, setPendingAction] = useState<null | "save" | "share" | "bar">(null);
   const [mixingVisible, setMixingVisible] = useState(true);
-  const [savePreview, setSavePreview] = useState<{ dataUrl: string; filename: string } | null>(null);
+  const [savePreview, setSavePreview] = useState<{ dataUrl: string; filename: string; file: File } | null>(null);
   const mixingStartedAtRef = useRef(Date.now());
   const wasMixingRef = useRef(false);
   const captureRef = useRef<HTMLDivElement>(null);
@@ -700,9 +700,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
   };
 
-  const shareDataUrl = async (dataUrl: string, filename: string) => {
-    const blob = await (await fetch(dataUrl)).blob();
-    const file = new File([blob], filename, { type: "image/png" });
+  const sharePreparedFile = async (file: File, dataUrl: string, filename: string) => {
     const nav = navigator as Navigator & {
       canShare?: (data: { files: File[] }) => boolean;
       share?: (data: { files: File[]; title?: string }) => Promise<void>;
@@ -738,7 +736,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         (window.innerWidth <= 768 || window.matchMedia?.("(hover: none) and (pointer: coarse)").matches);
 
       if (isCompactViewport) {
-        setSavePreview({ dataUrl, filename });
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], filename, { type: "image/png" });
+        setSavePreview({ dataUrl, filename, file });
         return;
       }
 
@@ -1506,7 +1506,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => {
-                  void shareDataUrl(savePreview.dataUrl, savePreview.filename).catch((err) => {
+                  void sharePreparedFile(savePreview.file, savePreview.dataUrl, savePreview.filename).catch((err) => {
                     if ((err as Error)?.name !== "AbortError") toast.error(lang === "zh" ? "分享失败，请长按图片保存" : "Share failed — long-press the image to save");
                   });
                 }}
