@@ -772,7 +772,14 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       canShare?: (data: { files: File[] }) => boolean;
       share?: (data: { files: File[]; title?: string }) => Promise<void>;
     };
-    if (nav.canShare && nav.share && nav.canShare({ files: [file] })) {
+    // Only use the Web Share sheet on touch devices (phones/tablets). On
+    // desktop browsers the share sheet is either missing or a poor UX —
+    // always trigger a direct download instead.
+    const isTouch =
+      typeof window !== "undefined" &&
+      (window.matchMedia?.("(pointer: coarse)").matches ||
+        /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
+    if (isTouch && nav.canShare && nav.share && nav.canShare({ files: [file] })) {
       await nav.share({ files: [file], title: cocktail?.cocktailName ?? "Vibetail" });
       return;
     }
