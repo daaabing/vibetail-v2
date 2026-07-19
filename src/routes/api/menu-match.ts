@@ -162,6 +162,7 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
       "You are a witty cocktail sommelier who matches guests to a venue's existing menu. You always respond with valid JSON matching the provided schema and NEVER invent items outside the menu.",
     user: [
       langRule,
+      vibeBlock,
       ``,
       `You must MATCH the user's vibe to EXACTLY ONE item from the fixed menu below. You are NOT inventing a new drink — you're picking the one that fits best and explaining why.`,
       ``,
