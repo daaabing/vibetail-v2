@@ -6,7 +6,9 @@ import {
   renderSharePosterToCanvas,
   POSTER_LAYOUTS,
   DEFAULT_POSTER_LAYOUT,
+  TYPE_DEFAULTS,
   type PosterLayoutId,
+  type TypeSizes,
 } from "@/lib/share-poster";
 
 export const Route = createFileRoute("/dev/poster")({
@@ -50,7 +52,7 @@ const SYNTHETIC_DRINK =
   <circle cx="600" cy="360" r="46" fill="none" stroke="#5A2A18" stroke-width="5" opacity="0.5"/>
 </svg>`);
 
-type ScenarioKey = "normal-short" | "normal-long" | "menu-match" | "overflow-stress";
+type ScenarioKey = "normal-short" | "plum-earl-grey" | "menu-match" | "overflow-stress";
 
 function baseMock(): Cocktail {
   return {
@@ -90,16 +92,31 @@ function makeScenario(key: ScenarioKey): Cocktail {
       c.originalMood = "今天心情很好。";
       c.roast = "Suspiciously optimistic for a Tuesday.";
       return c;
-    case "normal-long":
-      return c; // the base mock already has generous copy
-    case "menu-match":
+    case "plum-earl-grey":
+      // Real production example (Plum Earl Grey Whiskey Cola) — Friday vibe.
+      // Truncated fields from the screenshot are completed in the same voice;
+      // edit freely in the lab.
+      c.cocktailName = "哎哟,这周终于过去了~";
+      c.originalMood = "周五下午!阳光真好,终于要放假了,好开心!";
       c.matchedFromMenu = true;
-      c.menuItemName = "The Cartographer";
-      c.restaurantName = "Double Chicken Please";
-      c.menuPrice = "$21";
+      c.menuItemName = "Plum Earl Grey Whiskey Cola";
       c.whyThisMatch =
-        "这杯用了同样的烟熏基底,但多了一层柑橘的明亮,正好接住你那种『想躲起来又想被看见』的矛盾。它不吵,但会陪你坐很久。";
-      c.tastesLike = "烟熏、柑橘、微苦回甘。";
+        "你这周五的阳光,就差一杯威士忌啦!这杯有你'交完周报'的如释重负,梅子的清甜配上伯爵茶的温柔,正好接住你难得的好心情。";
+      c.tastesLike =
+        "当李子的清甜遇上伯爵茶的芬芳,威士忌的醇厚被可乐气泡轻轻托起,像下班路上迎面吹来的那阵晚风,整个人都松了下来。";
+      return c;
+    case "menu-match":
+      // Real production example (The Yak @ Tashi) — the case that exposed the
+      // truncated quote/why at 1.45× global scale.
+      c.cocktailName = "笔误太多不如不写!";
+      c.originalMood = "光标闪了二十分钟,一个字没打。";
+      c.matchedFromMenu = true;
+      c.menuItemName = "The Yak";
+      c.restaurantName = "Tashi";
+      c.whyThisMatch =
+        "谁说灵感不能被唤醒?Tashi 青稞酒的独特风味,加上姜汁啤酒的活力,是打破僵局的最佳灵感催化剂。";
+      c.tastesLike =
+        "入口是青稞酒的醇厚与姜汁啤酒的辛辣,尾调带着一丝清新的青柠,让味蕾瞬间被唤醒,像是在茫茫草原上燃起了一团野性之火。";
       return c;
     case "overflow-stress":
       c.cocktailName = "The Extraordinarily Long Cocktail Name That Wraps Many Lines";
@@ -108,19 +125,25 @@ function makeScenario(key: ScenarioKey): Cocktail {
       c.originalMood =
         "一段同样很长的用户心情输入,测试 YOUR VIBE 那一块加上前面所有内容之后总高度会不会失控。";
       return c;
+    default:
+      // Stale key (e.g. HMR-preserved state after a scenario rename) — never
+      // crash the lab, just fall back to the base mock.
+      return c;
   }
 }
 
 const BRAND_QR_TARGET = "https://vibetail.com/";
 
 function DevPosterLab() {
-  const [scenario, setScenario] = useState<ScenarioKey>("normal-long");
+  const [scenario, setScenario] = useState<ScenarioKey>("plum-earl-grey");
   const [layout, setLayout] = useState<PosterLayoutId>(DEFAULT_POSTER_LAYOUT);
   const [lang, setLang] = useState<"zh" | "en">("zh");
   const [useIllustration, setUseIllustration] = useState(true);
   const [useQr, setUseQr] = useState(true);
   // Matches DEFAULT_FONT_SCALE in src/lib/share-poster/shared.ts.
   const [fontScale, setFontScale] = useState(1.45);
+  // Per-role base sizes (px, pre-fontScale). Defaults from TYPE_DEFAULTS.
+  const [typeSizes, setTypeSizes] = useState<Required<TypeSizes>>({ ...TYPE_DEFAULTS });
   // Force the "为你匹配 / MATCHED" block onto any scenario.
   const [forceMatch, setForceMatch] = useState(true);
 
@@ -185,6 +208,7 @@ function DevPosterLab() {
         qrDataUrl: useQr ? qrDataUrl : null,
         lang,
         fontScale,
+        typeSizes,
         layout,
       });
       if (seq !== seqRef.current) return; // stale
@@ -197,7 +221,7 @@ function DevPosterLab() {
       setError((e as Error)?.message ?? "render failed");
       setStatus("error");
     }
-  }, [cocktail, useIllustration, useQr, qrDataUrl, lang, fontScale, layout]);
+  }, [cocktail, useIllustration, useQr, qrDataUrl, lang, fontScale, typeSizes, layout]);
 
   // Auto re-render (debounced) on any input change.
   useEffect(() => {
@@ -250,8 +274,8 @@ function DevPosterLab() {
                 {(
                   [
                     ["normal-short", "Short"],
-                    ["normal-long", "Long"],
-                    ["menu-match", "Menu match"],
+                    ["plum-earl-grey", "周五 Plum"],
+                    ["menu-match", "Yak (Tashi)"],
                     ["overflow-stress", "Overflow stress"],
                   ] as [ScenarioKey, string][]
                 ).map(([key, label]) => (
@@ -298,6 +322,50 @@ function DevPosterLab() {
                 onChange={(e) => setFontScale(Number(e.target.value))}
                 className="w-full accent-amber-500"
               />
+            </div>
+
+            <div>
+              <span className={labelCls}>Type sizes (px, × font size)</span>
+              <div className="space-y-2">
+                {(
+                  [
+                    ["name", "标题 Name", 40, 100],
+                    ["quote", "品鉴 Quote", 16, 48],
+                    ["vibe", "心情 Vibe", 14, 40],
+                    ["why", "推荐 Why", 12, 32],
+                  ] as [keyof TypeSizes, string, number, number][]
+                ).map(([key, label, min, max]) => (
+                  <div key={key} className="flex items-center gap-3">
+                    <span className="w-24 text-xs text-neutral-400 shrink-0">
+                      {label}
+                    </span>
+                    <input
+                      type="range"
+                      min={min}
+                      max={max}
+                      step={1}
+                      value={typeSizes[key]}
+                      onChange={(e) =>
+                        setTypeSizes((s) => ({ ...s, [key]: Number(e.target.value) }))
+                      }
+                      className="flex-1 accent-amber-500"
+                    />
+                    <span className="w-14 text-right text-xs text-neutral-300 tabular-nums shrink-0">
+                      {typeSizes[key]}px
+                      <span className="text-neutral-500">
+                        {" "}
+                        →{Math.round(typeSizes[key] * fontScale)}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => setTypeSizes({ ...TYPE_DEFAULTS })}
+                className="mt-2 rounded px-2.5 py-1 text-xs border bg-neutral-800 border-neutral-700 text-neutral-300"
+              >
+                Reset defaults
+              </button>
             </div>
 
             <div className="flex gap-4">

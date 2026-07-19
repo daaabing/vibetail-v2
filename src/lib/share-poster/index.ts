@@ -3,8 +3,8 @@ import { render2x2, W_2X2, H_2X2 } from "./layout-2x2";
 import { render2x3, W_2X3, H_2X3 } from "./layout-2x3";
 import { render3x2, W_3X2, H_3X2 } from "./layout-3x2";
 
-export type { RenderOpts, RenderResult } from "./shared";
-export { DEFAULT_FONT_SCALE } from "./shared";
+export type { RenderOpts, RenderResult, TypeSizes } from "./shared";
+export { DEFAULT_FONT_SCALE, TYPE_DEFAULTS } from "./shared";
 
 /* ────────────────────────────────────────────────────────────────────────
    Share-poster layout strategies, named by aspect ratio:

@@ -6,6 +6,30 @@ import type { Cocktail } from "@/lib/cocktails-store";
    primitives; they own only geometry decisions.
    ──────────────────────────────────────────────────────────────────────── */
 
+/** Per-role base font sizes in px (pre-fontScale). Dev-tunable via /dev/poster. */
+export interface TypeSizes {
+  /** Cocktail name hero size (shrink-to-fit starts here). */
+  name?: number;
+  /** Tasting-notes quote. */
+  quote?: number;
+  /** User vibe line. */
+  vibe?: number;
+  /** Why-this-drink body paragraph. */
+  why?: number;
+}
+
+/**
+ * Defaults hand-tuned on 2026-07-19 against real (long, CJK) content: the
+ * headline stays a hero but leaves enough vertical budget for the tasting
+ * quote and why-paragraph to render in full instead of degrading to "…".
+ */
+export const TYPE_DEFAULTS: Required<TypeSizes> = {
+  name: 64,
+  quote: 28,
+  vibe: 24,
+  why: 19,
+};
+
 export interface RenderOpts {
   cocktail: Cocktail;
   illustrationSource: string;
@@ -16,6 +40,8 @@ export interface RenderOpts {
    * Default 1.45 — hand-tuned against real content on 2026-07-19.
    */
   fontScale?: number;
+  /** Per-role base sizes; anything omitted falls back to TYPE_DEFAULTS. */
+  typeSizes?: TypeSizes;
 }
 
 export interface RenderResult {
@@ -376,9 +402,11 @@ export interface TextStackConfig {
   bottomLimit: number;
   /** Max lines for the cocktail name before shrink stops (default 3). */
   nameMaxLines?: number;
-  /** Name font size range, unscaled (defaults 78 → 52). */
+  /** Name font size range, unscaled (defaults TYPE_DEFAULTS.name → 48). */
   nameBase?: number;
   nameFloor?: number;
+  /** Per-role base sizes (px, pre-fontScale); omitted → TYPE_DEFAULTS. */
+  typeSizes?: TypeSizes;
 }
 
 /**
@@ -400,9 +428,18 @@ export function buildTextBlocks(
   const { quote, userVibe, hasMatch, menuItemName, why } = derivePosterCopy(cocktail);
   const availH = bottomLimit - topLimit;
 
+  // Per-role sizes: explicit typeSizes (lab tuning) → layout override → defaults.
+  const type = { ...TYPE_DEFAULTS, ...cfg.typeSizes };
+  const quoteSize = S(type.quote);
+  const quoteLH = Math.round(quoteSize * 1.4);
+  const vibeSize = S(type.vibe);
+  const vibeLH = Math.round(vibeSize * 1.4);
+  const whySize = S(type.why);
+  const whyLH = Math.round(whySize * 1.5);
+
   // Name — shrink-to-fit so long names keep their full text instead of "…".
-  let nameSize = S(cfg.nameBase ?? 78);
-  const nameFloor = S(cfg.nameFloor ?? 52);
+  let nameSize = S(cfg.typeSizes?.name ?? cfg.nameBase ?? TYPE_DEFAULTS.name);
+  const nameFloor = Math.min(nameSize, S(cfg.nameFloor ?? 48));
   for (; nameSize > nameFloor; nameSize -= 4) {
     ctx.font = `600 ${nameSize}px ${SERIF}`;
     if (measureWrappedLines(ctx, cocktail.cocktailName, colW, nameMaxLines + 1) <= nameMaxLines)
@@ -440,14 +477,14 @@ export function buildTextBlocks(
 
     // Vibe quote
     if (quote && quoteMax >= 1) {
-      ctx.font = `italic 400 ${S(33)}px ${SERIF}`;
+      ctx.font = `italic 400 ${quoteSize}px ${SERIF}`;
       const qLines = Math.min(quoteMax, measureWrappedLines(ctx, `"${quote}"`, colW, quoteMax));
       blocks.push({
-        h: qLines * S(46) + S(48),
+        h: qLines * quoteLH + S(44),
         draw: (atY) => {
           ctx.fillStyle = "#4A3A28";
-          ctx.font = `italic 400 ${S(33)}px ${SERIF}`;
-          drawWrapped(ctx, `"${quote}"`, colX, atY, colW, S(46), quoteMax);
+          ctx.font = `italic 400 ${quoteSize}px ${SERIF}`;
+          drawWrapped(ctx, `"${quote}"`, colX, atY, colW, quoteLH, quoteMax);
         },
       });
     }
@@ -471,17 +508,17 @@ export function buildTextBlocks(
 
     // User vibe (small eyebrow + quoted text)
     if (userVibe && vibeMax >= 1) {
-      ctx.font = `italic 400 ${S(26)}px ${SERIF}`;
+      ctx.font = `italic 400 ${vibeSize}px ${SERIF}`;
       const uLines = Math.min(vibeMax, measureWrappedLines(ctx, userVibe, colW, vibeMax));
       blocks.push({
-        h: S(24) + uLines * S(36) + S(34),
+        h: S(24) + uLines * vibeLH + S(34),
         draw: (atY) => {
           ctx.fillStyle = "#8A7A62";
           ctx.font = `500 ${S(13)}px ${SANS}`;
           drawTracked(ctx, lang === "zh" ? "你的心情" : "YOUR VIBE", colX, atY, 5);
           ctx.fillStyle = "#5A4A38";
-          ctx.font = `italic 400 ${S(26)}px ${SERIF}`;
-          drawWrapped(ctx, userVibe, colX, atY + S(24), colW, S(36), vibeMax);
+          ctx.font = `italic 400 ${vibeSize}px ${SERIF}`;
+          drawWrapped(ctx, userVibe, colX, atY + S(24), colW, vibeLH, vibeMax);
         },
       });
     }
@@ -510,21 +547,20 @@ export function buildTextBlocks(
 
   // Why this drink — cap lines to whatever space is left so the stack can
   // never exceed the available height (and thus never touches the footer).
-  const whyLH = S(33);
   if (why) {
-    ctx.font = `400 ${S(22)}px ${SANS}`;
+    ctx.font = `400 ${whySize}px ${SANS}`;
     const fixedH = blocks.reduce((s, b) => s + b.h, 0);
     const roomH = availH - fixedH;
     const whyLines = Math.max(
       0,
-      Math.min(measureWrappedLines(ctx, why, colW, 10), 10, Math.floor(roomH / whyLH)),
+      Math.min(measureWrappedLines(ctx, why, colW, 12), 12, Math.floor(roomH / whyLH)),
     );
     if (whyLines >= 1) {
       blocks.push({
         h: whyLines * whyLH,
         draw: (atY) => {
           ctx.fillStyle = "#3A2E20";
-          ctx.font = `400 ${S(22)}px ${SANS}`;
+          ctx.font = `400 ${whySize}px ${SANS}`;
           drawWrapped(ctx, why, colX, atY, colW, whyLH, whyLines);
         },
       });
