@@ -672,11 +672,11 @@ function StageOne({
 
       {/* Tag cloud — fills remaining space between bottle and input */}
       <div
-        className="mood-tags-section relative w-full mx-auto"
+        className="mood-tags-section relative mx-auto"
         style={{
           flex: "1 1 0",
           minHeight: 0,
-          maxWidth: 600,
+          width: "min(100%, 320px)",
           marginTop: 2,
           overflow: "hidden",
         }}
@@ -718,7 +718,7 @@ function StageOne({
             rows={2}
             className="stage-one-textarea w-full resize-none bg-transparent outline-none rounded-2xl px-4 pt-2.5 pb-7 text-sm leading-snug"
             style={{
-              height: 78,
+              height: 88,
               color: "var(--app-text)",
               fontFamily: "var(--font-heading)",
               fontStyle: customMood ? "normal" : "italic",
@@ -795,6 +795,7 @@ function StageOne({
           align-items: center;
           justify-content: center;
           height: 300px;
+          overflow: hidden;
         }
         .bottle-visual > * {
           position: relative;
@@ -802,15 +803,15 @@ function StageOne({
         }
         .bottle-aura {
           position: absolute;
-          width: 200%;
-          height: 200%;
-          left: -50%;
-          top: -50%;
+          width: 120%;
+          height: 120%;
+          left: -10%;
+          top: 0%;
           z-index: 0;
-          filter: blur(44px);
-          opacity: 0.28;
+          filter: blur(32px);
+          opacity: 0.18;
           pointer-events: none;
-          transform: scale(1.2);
+          transform: scale(1);
         }
 
 
@@ -868,7 +869,7 @@ function StageOne({
 
           .stage-one-input { margin-top: 4px !important; }
           .stage-one-input-label { margin-bottom: 2px !important; font-size: 10px !important; }
-          .stage-one-textarea { height: 60px !important; padding-top: 8px !important; padding-bottom: 22px !important; font-size: 14px !important; }
+          .stage-one-textarea { height: 72px !important; padding-top: 8px !important; padding-bottom: 24px !important; font-size: 14px !important; }
 
           .stage-one-cta {
             padding-top: 4px !important;
@@ -883,7 +884,7 @@ function StageOne({
           .bottle-section img {
             max-height: 170px;
           }
-          .stage-one-textarea { height: 54px !important; }
+          .stage-one-textarea { height: 62px !important; }
 
         }
       `}</style>
