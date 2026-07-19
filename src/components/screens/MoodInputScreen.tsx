@@ -869,7 +869,7 @@ function StageOne({
 
           .stage-one-input { margin-top: 4px !important; }
           .stage-one-input-label { margin-bottom: 2px !important; font-size: 10px !important; }
-          .stage-one-textarea { height: 60px !important; padding-top: 8px !important; padding-bottom: 22px !important; font-size: 14px !important; }
+          .stage-one-textarea { height: 72px !important; padding-top: 8px !important; padding-bottom: 24px !important; font-size: 14px !important; }
 
           .stage-one-cta {
             padding-top: 4px !important;
