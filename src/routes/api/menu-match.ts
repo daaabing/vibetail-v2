@@ -135,7 +135,9 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
         ``,
       ].join("\n")
     : `OUTPUT LANGUAGE: English.`;
-  const menuBlock = items
+  // Shuffle so ordering / "first plausible pick" bias doesn't dominate across sessions.
+  const shuffled = [...items].sort(() => Math.random() - 0.5);
+  const menuBlock = shuffled
     .map((c) => {
       const lines = [`- "${c.name}"`];
       if (c.section) lines.push(`    section: ${c.section}`);
@@ -155,7 +157,8 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
       return lines.join("\n");
     })
     .join("\n");
-  const names = items.map((i) => i.name);
+  const names = shuffled.map((i) => i.name);
+
   return {
     names,
     system:
@@ -181,7 +184,8 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
       `- Prefer alcoholic items unless the user's vibe/preference clearly asks for non-alcoholic.`,
       `- Ignore obviously placeholder or test items (e.g. an item literally named "test") unless nothing else fits.`,
       `- Use 'priority' only as a tie-breaker when two items score equally well; it is NOT a default.`,
-      ``,
+      `- CRITICAL variety rule: do NOT default to the item with the richest / most evocative metadata just because it "reads" cocktail-like. Score against the ACTUAL user vibe. A crisp/light/refreshing vibe should land on a crisp/light/refreshing item even when a richer, more nostalgic item exists on the menu. When two items are close, prefer the one whose flavor + mood tags most literally echo the user's words.`,
+
       `Output rules:`,
       `- 'matchedName' MUST be one of the menu names above, spelled EXACTLY.`,
       `- 'vibeName' is a creative, vibe-driven title for the card front — a poetic 2-4 word phrase inspired ONLY by the user's mood/flavor/preference. It MUST NOT contain, echo, or riff on any word from 'matchedName' or the menu item's name. Think evocative imagery (e.g. "Velvet Midnight", "Paper Moon"), not the drink's label.`,
