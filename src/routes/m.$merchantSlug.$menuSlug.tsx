@@ -89,13 +89,17 @@ function MenuLanding() {
         // ignore
       }
     }
-    // Default to Chinese for this menu if the user hasn't chosen a language.
+    // Force Chinese as the default language for the World Cup Final event menu.
     try {
-      if (!localStorage.getItem("vibetail-lang")) setLang("zh");
+      if (menu.menuSlug === "world-cup-final") {
+        setLang("zh");
+      } else if (!localStorage.getItem("vibetail-lang")) {
+        setLang("zh");
+      }
     } catch {
       // ignore
     }
-  }, [menu.merchantSlug, menu.hasAlcoholic, setLang]);
+  }, [menu.merchantSlug, menu.menuSlug, menu.hasAlcoholic, setLang]);
 
   const games = resolveMenuGames(menu.enabledGameIds, menu.gameDisplayOrder);
   const primaryGame = games[0];
