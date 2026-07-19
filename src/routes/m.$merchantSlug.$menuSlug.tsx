@@ -103,6 +103,7 @@ function MenuLanding() {
           gameId: primaryGame.id,
           restaurantName: menu.merchantName,
         }}
+        menuItems={menu.items}
       />
     );
   }
