@@ -114,50 +114,6 @@ function MenuLanding() {
     );
   }
 
-  if (!ageOk) {
-    return (
-      <div className="w-full md:max-w-md md:mx-auto min-h-svh flex flex-col items-center justify-center px-6 text-center relative">
-        <div className="absolute top-[max(12px,env(safe-area-inset-top))] right-5">
-          <LangToggle />
-        </div>
-        <VibetailLogo size={110} />
-
-        <h1
-          className="mt-6 text-3xl font-normal"
-          style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
-        >
-          {t("merchant.ageGate.title")}
-        </h1>
-        <p className="mt-3 text-sm" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
-          {t("merchant.ageGate.desc")}
-        </p>
-        <div className="mt-8 flex gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              try { sessionStorage.setItem(AGE_GATE_KEY, "ok"); } catch { /* ignore */ }
-              setAgeOk(true);
-            }}
-            className="px-6 py-3 rounded-full text-sm font-medium text-white cursor-pointer relative z-10"
-            style={{
-              background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
-              border: "1px solid rgba(255,255,255,0.14)",
-              fontFamily: "var(--font-heading)",
-            }}
-          >
-            {t("merchant.ageGate.yes")}
-          </button>
-          <a
-            href="https://www.google.com"
-            className="px-6 py-3 rounded-full text-sm"
-            style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-heading)" }}
-          >
-            {t("merchant.ageGate.no")}
-          </a>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full md:max-w-2xl lg:max-w-3xl md:mx-auto min-h-svh flex flex-col items-center justify-center px-6 py-10 text-center relative">
