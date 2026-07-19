@@ -633,21 +633,34 @@ function StageOne({
           marginTop: 4,
         }}
       >
-        <div className="bottle-visual">
+        <div className="bottle-visual" style={{ height: bottleSize }}>
           <div
-            className="bottle-aura"
+            className="bottle-aura-wrap"
+            aria-hidden
             style={{
-              background: `radial-gradient(ellipse at 50% 45%, ${liveBottleColor}22 0%, ${liveBottleColor}08 35%, transparent 70%)`,
+              position: "absolute",
+              inset: 0,
+              overflow: "hidden",
+              pointerEvents: "none",
+              zIndex: 0,
             }}
-          />
+          >
+            <div
+              className="bottle-aura"
+              style={{
+                background: `radial-gradient(ellipse at 50% 45%, ${liveBottleColor}22 0%, ${liveBottleColor}08 35%, transparent 70%)`,
+              }}
+            />
+          </div>
           <VibeBottle
             color={liveBottleColor}
-            size={300}
+            size={bottleSize}
             mode="idle"
             sliderVal={liveFill}
             glow={false}
           />
         </div>
+
 
         {/* Reply line sticks directly under the bottle */}
         <div className="mood-response" style={{ marginTop: 6, minHeight: 24 }}>
