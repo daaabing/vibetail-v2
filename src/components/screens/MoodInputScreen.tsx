@@ -620,11 +620,12 @@ function StageOne({
         </p>
       </div>
 
-      {/* Bottle (visual center — natural height, tight to reply line) */}
+      {/* Bottle (visual center — grows to absorb slack so layout stays balanced) */}
       <div
         className="bottle-section flex items-center justify-center"
         style={{
-          flex: "none",
+          flex: "1 1 auto",
+          minHeight: 0,
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -633,6 +634,7 @@ function StageOne({
           marginTop: 4,
         }}
       >
+
         <div className="bottle-visual" style={{ height: bottleSize }}>
           <div
             className="bottle-aura-wrap"
