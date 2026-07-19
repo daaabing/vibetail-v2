@@ -383,6 +383,8 @@ export default function MoodInputScreen({
         whyThisMatch: generated.whyThisMatch ?? null,
         menuItemName: generated.menuItemName ?? null,
         menuItemImageUrl: generated.matchedFromMenu ? (generated.imageUrl ?? null) : null,
+        menuItemDescription: generated.menuItemDescription ?? null,
+        menuItemIngredients: generated.menuItemIngredients ?? null,
       };
 
       const encoded = encodeCocktailToHash(cocktail);
