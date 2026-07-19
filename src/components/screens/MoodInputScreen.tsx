@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 import { encodeCocktailToHash, type Cocktail } from "@/lib/cocktails-store";
+import type { PublicMenuItem } from "@/lib/matching/types";
 import { FLAVOR_CHIPS } from "@/lib/moodtail-data";
 import { pickTashiRecipe } from "@/lib/tashi-recipes";
 import { pickVibeExample } from "@/lib/vibe-examples";
@@ -66,17 +67,74 @@ const BASE_SPIRITS: { key: string; en: string; zh: string; color: string }[] = [
   { key: "nonalcoholic", en: "No alcohol", zh: "无酒精", color: "#d4a5c4" },
 ];
 
+// Free-text aliases (EN + ZH) that map a menu item's `base_spirit` string onto
+// one of the BASE_SPIRITS keys above. Matched as case-insensitive substrings.
+const SPIRIT_ALIASES: Record<string, string[]> = {
+  gin: ["gin", "金酒", "琴酒"],
+  vodka: ["vodka", "伏特加"],
+  rum: ["rum", "朗姆"],
+  tequila: ["tequila", "龙舌兰"],
+  whiskey: ["whiskey", "whisky", "威士忌", "bourbon", "波本", "scotch"],
+  mezcal: ["mezcal", "mescal", "梅斯卡尔", "梅斯卡"],
+  brandy: ["brandy", "cognac", "白兰地", "干邑"],
+  sake: ["sake", "清酒", "日本酒"],
+  tashi: ["tashi", "青稞"],
+  nonalcoholic: [
+    "nonalcoholic",
+    "non-alcoholic",
+    "non alcoholic",
+    "no alcohol",
+    "mocktail",
+    "zero-proof",
+    "zero proof",
+    "无酒精",
+    "无酒精饮品",
+  ],
+};
+
+// Derive the set of BASE_SPIRITS keys that actually appear on a restaurant's
+// menu. An item counts toward a spirit if its free-text base_spirit matches an
+// alias; any non-alcoholic item also enables the "无酒精" option. Only active
+// items are considered (mirrors PublicMenu.hasAlcoholic). Returns keys ordered
+// to match BASE_SPIRITS.
+function deriveMenuBaseSpiritKeys(
+  items: Pick<PublicMenuItem, "baseSpirit" | "alcoholic" | "availabilityStatus">[],
+): string[] {
+  const found = new Set<string>();
+  for (const item of items) {
+    if (item.availabilityStatus !== "active") continue;
+    if (!item.alcoholic) found.add("nonalcoholic");
+    const raw = (item.baseSpirit ?? "").toLowerCase().trim();
+    if (!raw) continue;
+    for (const [key, aliases] of Object.entries(SPIRIT_ALIASES)) {
+      if (aliases.some((a) => raw.includes(a))) found.add(key);
+    }
+  }
+  return BASE_SPIRITS.filter((s) => found.has(s.key)).map((s) => s.key);
+}
+
 export default function MoodInputScreen({
   restaurantId,
   menuSlug,
   menuContext,
+  menuItems,
 }: {
   restaurantId?: string;
   menuSlug?: "dcp";
   menuContext?: MenuContext;
+  menuItems?: PublicMenuItem[];
 } = {}) {
   const navigate = useNavigate();
   const { t, lang } = useLang();
+
+  // In a real restaurant menu flow, only offer the base spirits that actually
+  // appear on the published menu. Undefined when menu items aren't available
+  // (e.g. the demo `dcp` flow or the standalone mood-input route) — in that
+  // case we fall back to showing the full BASE_SPIRITS list.
+  const availableSpiritKeys = useMemo(
+    () => (menuItems ? deriveMenuBaseSpiritKeys(menuItems) : undefined),
+    [menuItems],
+  );
 
   const effectiveMenuContext: MenuContext | undefined =
     menuContext ??
@@ -556,6 +614,7 @@ export default function MoodInputScreen({
             }}
             baseSpirit={baseSpirit}
             setBaseSpirit={setBaseSpirit}
+            availableSpiritKeys={availableSpiritKeys}
             expandedRef={expandedRef}
             setExpandedRef={(v) => {
               setExpandedRef(v);
@@ -1001,6 +1060,7 @@ function StageTwo(props: {
   setExpandedSpirit: (v: boolean) => void;
   baseSpirit: string;
   setBaseSpirit: (v: string) => void;
+  availableSpiritKeys: string[] | undefined;
   expandedRef: boolean;
   setExpandedRef: (v: boolean) => void;
   referenceDrink: string;
@@ -1031,6 +1091,7 @@ function StageTwo(props: {
     setExpandedSpirit,
     baseSpirit,
     setBaseSpirit,
+    availableSpiritKeys,
     expandedRef,
     setExpandedRef,
     referenceDrink,
@@ -1041,6 +1102,11 @@ function StageTwo(props: {
   } = props;
 
   const zh = lang === "zh";
+  // When we know the menu's spirits, only offer those; otherwise show them all.
+  const spiritOptions =
+    availableSpiritKeys === undefined
+      ? BASE_SPIRITS
+      : BASE_SPIRITS.filter((s) => availableSpiritKeys.includes(s.key));
   const ctaLabel = isGenerating
     ? zh
       ? "正在调制…"
@@ -1250,54 +1316,55 @@ function StageTwo(props: {
           </div>
         </Accordion>
 
-        <Accordion
-          open={expandedSpirit}
-          onToggle={() => setExpandedSpirit(!expandedSpirit)}
-          label={
-            baseSpirit
-              ? zh
-                ? `基酒：${BASE_SPIRITS.find((s) => s.key === baseSpirit)?.zh ?? ""}`
-                : `Base spirit: ${BASE_SPIRITS.find((s) => s.key === baseSpirit)?.en ?? ""}`
-              : zh
-                ? "我有偏好基酒"
-                : "I have a base spirit preference"
-          }
-        >
-
-          <div className="pt-1 grid grid-cols-2 gap-2">
-            {BASE_SPIRITS.map((s) => {
-              const sel = baseSpirit === s.key;
-              return (
-                <button
-                  key={s.key}
-                  type="button"
-                  onClick={() => setBaseSpirit(sel ? "" : s.key)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-left text-xs"
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    border: sel
-                      ? `1.4px solid ${s.color}`
-                      : "1px solid rgba(255,255,255,0.10)",
-                    background: sel ? `${s.color}22` : "rgba(255,255,255,0.045)",
-                    color: sel ? "var(--app-text)" : "var(--app-text-secondary)",
-                    backdropFilter: "blur(8px)",
-                  }}
-                >
-                  <span
+        {spiritOptions.length > 0 && (
+          <Accordion
+            open={expandedSpirit}
+            onToggle={() => setExpandedSpirit(!expandedSpirit)}
+            label={
+              baseSpirit
+                ? zh
+                  ? `基酒：${BASE_SPIRITS.find((s) => s.key === baseSpirit)?.zh ?? ""}`
+                  : `Base spirit: ${BASE_SPIRITS.find((s) => s.key === baseSpirit)?.en ?? ""}`
+                : zh
+                  ? "我有偏好基酒"
+                  : "I have a base spirit preference"
+            }
+          >
+            <div className="pt-1 grid grid-cols-2 gap-2">
+              {spiritOptions.map((s) => {
+                const sel = baseSpirit === s.key;
+                return (
+                  <button
+                    key={s.key}
+                    type="button"
+                    onClick={() => setBaseSpirit(sel ? "" : s.key)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-left text-xs"
                     style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 999,
-                      background: s.color,
-                      boxShadow: sel ? `0 0 6px ${s.color}` : "none",
+                      fontFamily: "var(--font-body)",
+                      border: sel
+                        ? `1.4px solid ${s.color}`
+                        : "1px solid rgba(255,255,255,0.10)",
+                      background: sel ? `${s.color}22` : "rgba(255,255,255,0.045)",
+                      color: sel ? "var(--app-text)" : "var(--app-text-secondary)",
+                      backdropFilter: "blur(8px)",
                     }}
-                  />
-                  {zh ? s.zh : s.en}
-                </button>
-              );
-            })}
-          </div>
-        </Accordion>
+                  >
+                    <span
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: 999,
+                        background: s.color,
+                        boxShadow: sel ? `0 0 6px ${s.color}` : "none",
+                      }}
+                    />
+                    {zh ? s.zh : s.en}
+                  </button>
+                );
+              })}
+            </div>
+          </Accordion>
+        )}
 
         <Accordion
           open={expandedRef}
