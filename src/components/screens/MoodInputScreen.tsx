@@ -404,6 +404,8 @@ export default function MoodInputScreen({
         menuItemImageUrl: generated.matchedFromMenu ? (generated.imageUrl ?? null) : null,
         menuItemDescription: generated.menuItemDescription ?? null,
         menuItemIngredients: generated.menuItemIngredients ?? null,
+        fullMenuUrl: generated.fullMenuUrl ?? null,
+        fullMenuType: generated.fullMenuType ?? null,
       };
 
       const encoded = encodeCocktailToHash(cocktail);

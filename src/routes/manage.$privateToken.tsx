@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getMerchantForToken,
@@ -11,6 +11,8 @@ import {
   createMenuItem,
   updateMenuItem,
   deleteMenuItem,
+  uploadMenuFile,
+  clearMenuFile,
 } from "@/lib/menu/manage.functions";
 import { listActiveGames } from "@/lib/games/registry";
 
@@ -33,6 +35,8 @@ type Menu = {
   short_intro: string | null;
   enabled_game_ids: string[];
   published_version_id: string | null;
+  menu_file_url: string | null;
+  menu_file_type: string | null;
 };
 type Item = {
   id: string;
@@ -59,6 +63,8 @@ function ManagePage() {
   const addItem = useServerFn(createMenuItem);
   const editItem = useServerFn(updateMenuItem);
   const removeItem = useServerFn(deleteMenuItem);
+  const uploadFullMenu = useServerFn(uploadMenuFile);
+  const clearFullMenu = useServerFn(clearMenuFile);
   const activeGames = listActiveGames();
 
   const [status, setStatusMsg] = useState<"loading" | "ok" | "unauth" | "error">("loading");
@@ -283,6 +289,37 @@ function ManagePage() {
             )}
             {msg && <span className="text-xs" style={{ color: "var(--app-text-muted)" }}>{msg}</span>}
           </section>
+
+          <FullMenuFileSection
+            menu={activeMenu}
+            busy={busy}
+            onUpload={async (file) => {
+              const dataBase64 = await fileToBase64(file);
+              await runTogglable(
+                "Full menu uploaded",
+                () =>
+                  uploadFullMenu({
+                    data: {
+                      token: privateToken,
+                      menuId: activeMenu.id,
+                      filename: file.name,
+                      contentType: file.type,
+                      dataBase64,
+                    },
+                  }),
+                reloadMenus,
+              );
+            }}
+            onClear={async () => {
+              if (!confirm("Remove the uploaded full menu?")) return;
+              await runTogglable(
+                "Full menu removed",
+                () => clearFullMenu({ data: { token: privateToken, menuId: activeMenu.id } }),
+                reloadMenus,
+              );
+            }}
+          />
+
 
           <section>
             <div className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--app-text-muted)" }}>
@@ -793,3 +830,112 @@ function EditItemForm({
     </form>
   );
 }
+
+async function fileToBase64(file: File): Promise<string> {
+  const buf = await file.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
+function FullMenuFileSection({
+  menu,
+  busy,
+  onUpload,
+  onClear,
+}: {
+  menu: Menu;
+  busy: boolean;
+  onUpload: (file: File) => void | Promise<void>;
+  onClear: () => void | Promise<void>;
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  return (
+    <section>
+      <div className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--app-text-muted)" }}>
+        Full menu file (shown as "View full menu" on the cocktail card)
+      </div>
+      <div
+        className="p-4 rounded-2xl flex flex-col gap-3"
+        style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.10)",
+        }}
+      >
+        {menu.menu_file_url ? (
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs uppercase tracking-widest px-2 py-1 rounded-full"
+              style={{ background: "rgba(153,185,198,0.18)", color: "#99B9C6" }}>
+              {menu.menu_file_type === "pdf" ? "PDF" : "Image"} uploaded
+            </span>
+            <a
+              href={menu.menu_file_url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm underline"
+              style={{ color: "var(--app-text)" }}
+            >
+              Open current menu
+            </a>
+          </div>
+        ) : (
+          <div className="text-sm" style={{ color: "var(--app-text-muted)" }}>
+            No file uploaded yet.
+          </div>
+        )}
+        <div className="flex items-center gap-3 flex-wrap">
+          <input
+            ref={inputRef}
+            type="file"
+            accept="application/pdf,image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) onUpload(f);
+              e.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => inputRef.current?.click()}
+            className="px-4 py-2 rounded-full text-sm"
+            style={{
+              background: "rgba(153,185,198,0.16)",
+              border: "1px solid rgba(153,185,198,0.36)",
+              color: "#E7EEF1",
+              fontFamily: "var(--font-heading)",
+              opacity: busy ? 0.5 : 1,
+            }}
+          >
+            {menu.menu_file_url ? "Replace file" : "Upload PDF or image"}
+          </button>
+          {menu.menu_file_url && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => onClear()}
+              className="px-4 py-2 rounded-full text-sm"
+              style={{
+                border: "1px solid rgba(255,120,120,0.36)",
+                color: "#F8C6C6",
+                fontFamily: "var(--font-heading)",
+                opacity: busy ? 0.5 : 1,
+              }}
+            >
+              Remove
+            </button>
+          )}
+          <span className="text-xs" style={{ color: "var(--app-text-muted)" }}>
+            PDF, PNG, JPG, or WEBP — up to 15 MB.
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}
+

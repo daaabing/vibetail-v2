@@ -407,6 +407,30 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
           </div>
         )}
 
+        {cocktail.matchedFromMenu && cocktail.fullMenuUrl && (
+          <div className="mt-2 mb-2 flex justify-center">
+            <a
+              href={cocktail.fullMenuUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full"
+              style={{
+                background: "rgba(80,55,30,0.10)",
+                border: "1px solid rgba(80,55,30,0.28)",
+                color: "#2A2118",
+                fontFamily: "var(--font-heading)",
+                letterSpacing: "0.06em",
+              }}
+            >
+              {cocktail.lang === "zh" ? "查看完整菜单" : "View full menu"}
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M7 17L17 7M17 7H8M17 7V16" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </a>
+          </div>
+        )}
+
       </div>
 
       {/* Tap hint */}

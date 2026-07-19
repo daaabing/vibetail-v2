@@ -55,7 +55,7 @@ async function loadPublishedMenu(merchantSlug: string, menuSlug: string) {
   if (!merchant) return null;
   const { data: menu } = await supabase
     .from("menus")
-    .select("id, slug, name, status, enabled_game_ids, published_version_id")
+    .select("id, slug, name, status, enabled_game_ids, published_version_id, menu_file_url, menu_file_type")
     .eq("merchant_id", merchant.id)
     .eq("slug", menuSlug)
     .eq("status", "published")
@@ -379,6 +379,8 @@ export const Route = createFileRoute("/api/menu-match")({
           menuPrice: null,
           whyThisMatch: parsed.whyThisMatch,
           imageUrl: menuItem.imageUrl ?? null,
+          fullMenuUrl: (loaded.menu as { menu_file_url?: string | null }).menu_file_url ?? null,
+          fullMenuType: ((loaded.menu as { menu_file_type?: string | null }).menu_file_type ?? null) as "pdf" | "image" | null,
         };
 
         return new Response(JSON.stringify(shaped), {

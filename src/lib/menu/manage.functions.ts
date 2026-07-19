@@ -38,7 +38,7 @@ export const getMerchantForToken = createServerFn({ method: "POST" })
     const { data: menus, error: menusErr } = await supabaseAdmin
       .from("menus")
       .select(
-        "id, slug, name, status, short_intro, enabled_game_ids, game_display_order, published_version_id, updated_at",
+        "id, slug, name, status, short_intro, enabled_game_ids, game_display_order, published_version_id, updated_at, menu_file_url, menu_file_type",
       )
       .eq("merchant_id", merchantId)
       .order("updated_at", { ascending: false });
@@ -345,3 +345,81 @@ export const deleteMenuItem = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ---------- Full menu file (image or PDF) ----------
+
+const UploadMenuFileInput = TokenInput.extend({
+  menuId: z.string().uuid(),
+  filename: z.string().min(1).max(200),
+  contentType: z.string().min(3).max(120),
+  // base64-encoded file bytes (no data: prefix).
+  dataBase64: z.string().min(4).max(20_000_000), // ~15 MB decoded upper bound
+});
+
+export const uploadMenuFile = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => UploadMenuFileInput.parse(input))
+  .handler(async ({ data }) => {
+    const allowed = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
+    if (!allowed.includes(data.contentType)) {
+      throw new Error("Only PDF, PNG, JPG, or WEBP menus are supported.");
+    }
+    const merchantId = await verifyAndGetMerchantId(data.token);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: menu, error: mErr } = await supabaseAdmin
+      .from("menus")
+      .select("id, merchant_id")
+      .eq("id", data.menuId)
+      .single();
+    if (mErr) throw new Error(mErr.message);
+    if (menu.merchant_id !== merchantId) throw new Error("Forbidden");
+
+    const bytes = Uint8Array.from(atob(data.dataBase64), (c) => c.charCodeAt(0));
+    if (bytes.byteLength > 15 * 1024 * 1024) {
+      throw new Error("File is larger than 15 MB.");
+    }
+    const safeName = data.filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-80);
+    const path = `${merchantId}/${data.menuId}/${Date.now()}-${safeName}`;
+
+    const { error: upErr } = await supabaseAdmin.storage
+      .from("merchant-menus")
+      .upload(path, bytes, { contentType: data.contentType, upsert: false });
+    if (upErr) throw new Error(upErr.message);
+
+    // Private bucket — create a very long-lived signed URL (10 years).
+    const { data: signed, error: signErr } = await supabaseAdmin.storage
+      .from("merchant-menus")
+      .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+    if (signErr || !signed) throw new Error(signErr?.message ?? "Failed to sign URL");
+
+    const fileType = data.contentType === "application/pdf" ? "pdf" : "image";
+    const { error: updErr } = await supabaseAdmin
+      .from("menus")
+      .update({ menu_file_url: signed.signedUrl, menu_file_type: fileType })
+      .eq("id", data.menuId);
+    if (updErr) throw new Error(updErr.message);
+
+    return { ok: true, url: signed.signedUrl, fileType };
+  });
+
+const ClearMenuFileInput = TokenInput.extend({ menuId: z.string().uuid() });
+
+export const clearMenuFile = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => ClearMenuFileInput.parse(input))
+  .handler(async ({ data }) => {
+    const merchantId = await verifyAndGetMerchantId(data.token);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: menu, error: mErr } = await supabaseAdmin
+      .from("menus")
+      .select("id, merchant_id")
+      .eq("id", data.menuId)
+      .single();
+    if (mErr) throw new Error(mErr.message);
+    if (menu.merchant_id !== merchantId) throw new Error("Forbidden");
+    const { error } = await supabaseAdmin
+      .from("menus")
+      .update({ menu_file_url: null, menu_file_type: null })
+      .eq("id", data.menuId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
