@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Cocktail } from "@/lib/cocktails-store";
-import { renderSharePosterToCanvas } from "@/lib/share-poster-canvas";
+import { renderSharePosterToCanvas } from "@/lib/share-poster";
 
 type Status = "idle" | "preparing" | "ready" | "error";
 

@@ -19,6 +19,7 @@ import { Route as RestaurantIdRouteImport } from './routes/restaurant.$id'
 import { Route as ManagePrivateTokenRouteImport } from './routes/manage.$privateToken'
 import { Route as GuidesMoodCocktailRecipesRouteImport } from './routes/guides.mood-cocktail-recipes'
 import { Route as DrinksIdRouteImport } from './routes/drinks.$id'
+import { Route as DevPosterRouteImport } from './routes/dev/poster'
 import { Route as ApiMenuMatchRouteImport } from './routes/api/menu-match'
 import { Route as ApiGenerateCocktailImageRouteImport } from './routes/api/generate-cocktail-image'
 import { Route as ApiGenerateCocktailRouteImport } from './routes/api/generate-cocktail'
@@ -76,6 +77,11 @@ const DrinksIdRoute = DrinksIdRouteImport.update({
   path: '/drinks/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevPosterRoute = DevPosterRouteImport.update({
+  id: '/dev/poster',
+  path: '/dev/poster',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMenuMatchRoute = ApiMenuMatchRouteImport.update({
   id: '/api/menu-match',
   path: '/api/menu-match',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/api/generate-cocktail': typeof ApiGenerateCocktailRoute
   '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
   '/api/menu-match': typeof ApiMenuMatchRoute
+  '/dev/poster': typeof DevPosterRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
   '/manage/$privateToken': typeof ManagePrivateTokenRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/api/generate-cocktail': typeof ApiGenerateCocktailRoute
   '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
   '/api/menu-match': typeof ApiMenuMatchRoute
+  '/dev/poster': typeof DevPosterRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
   '/manage/$privateToken': typeof ManagePrivateTokenRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/api/generate-cocktail': typeof ApiGenerateCocktailRoute
   '/api/generate-cocktail-image': typeof ApiGenerateCocktailImageRoute
   '/api/menu-match': typeof ApiMenuMatchRoute
+  '/dev/poster': typeof DevPosterRoute
   '/drinks/$id': typeof DrinksIdRoute
   '/guides/mood-cocktail-recipes': typeof GuidesMoodCocktailRecipesRoute
   '/manage/$privateToken': typeof ManagePrivateTokenRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
     | '/api/generate-cocktail'
     | '/api/generate-cocktail-image'
     | '/api/menu-match'
+    | '/dev/poster'
     | '/drinks/$id'
     | '/guides/mood-cocktail-recipes'
     | '/manage/$privateToken'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/api/generate-cocktail'
     | '/api/generate-cocktail-image'
     | '/api/menu-match'
+    | '/dev/poster'
     | '/drinks/$id'
     | '/guides/mood-cocktail-recipes'
     | '/manage/$privateToken'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/api/generate-cocktail'
     | '/api/generate-cocktail-image'
     | '/api/menu-match'
+    | '/dev/poster'
     | '/drinks/$id'
     | '/guides/mood-cocktail-recipes'
     | '/manage/$privateToken'
@@ -207,6 +219,7 @@ export interface RootRouteChildren {
   ApiGenerateCocktailRoute: typeof ApiGenerateCocktailRoute
   ApiGenerateCocktailImageRoute: typeof ApiGenerateCocktailImageRoute
   ApiMenuMatchRoute: typeof ApiMenuMatchRoute
+  DevPosterRoute: typeof DevPosterRoute
   DrinksIdRoute: typeof DrinksIdRoute
   GuidesMoodCocktailRecipesRoute: typeof GuidesMoodCocktailRecipesRoute
   ManagePrivateTokenRoute: typeof ManagePrivateTokenRoute
@@ -287,6 +300,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DrinksIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/poster': {
+      id: '/dev/poster'
+      path: '/dev/poster'
+      fullPath: '/dev/poster'
+      preLoaderRoute: typeof DevPosterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/menu-match': {
       id: '/api/menu-match'
       path: '/api/menu-match'
@@ -327,6 +347,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGenerateCocktailRoute: ApiGenerateCocktailRoute,
   ApiGenerateCocktailImageRoute: ApiGenerateCocktailImageRoute,
   ApiMenuMatchRoute: ApiMenuMatchRoute,
+  DevPosterRoute: DevPosterRoute,
   DrinksIdRoute: DrinksIdRoute,
   GuidesMoodCocktailRecipesRoute: GuidesMoodCocktailRecipesRoute,
   ManagePrivateTokenRoute: ManagePrivateTokenRoute,
