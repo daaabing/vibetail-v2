@@ -177,9 +177,9 @@ export default function MoodInputScreen({
     }
     setPickedLabel(label);
     setPickedColor(color);
-    // Overwrite textarea with a description tied to the picked vibe.
+    // Overwrite textarea with a user-voice prefill tied to the picked vibe.
     const cfg = getMoodConfig(label, color, lang);
-    setCustomMood(cfg.response);
+    setCustomMood(cfg.prefill);
     setUserTouchedMood(false);
     track("vibe_quick_selected", {
       selected_vibe: label,
