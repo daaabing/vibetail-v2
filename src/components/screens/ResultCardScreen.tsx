@@ -780,32 +780,42 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   };
 
 
+
+  // Background pre-generation of the dedicated 2:3 share poster.
+  const shareFilename = cocktail
+    ? `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`
+    : "vibetail.png";
+  const sharePoster = useSharePosterPreparation({
+    ref: shareCardRef,
+    cocktailId: cocktail?.id ?? cocktail?.publicId ?? null,
+    illustrationSource,
+    qrDataUrl,
+    filename: shareFilename,
+    enabled: !!cocktail && !!illustrationSource,
+  });
+
   const handleSave = async () => {
-    if (!cocktail || !captureRef.current) return;
+    if (!cocktail) return;
     if (!illustrationSource) {
       toast.info(lang === "zh" ? "酒图还在生成，请稍候" : "Illustration still brewing — one moment");
+      return;
+    }
+    if (sharePoster.status === "error") {
+      sharePoster.retry();
+      return;
+    }
+    if (sharePoster.status !== "ready" || !sharePoster.file || !sharePoster.dataUrl) {
+      toast.info(lang === "zh" ? "卡片还在准备中…" : "Preparing your card…");
       return;
     }
     track("save_clicked", { cocktail_name: cocktail.cocktailName });
     setSaving(true);
     try {
-      await waitForCaptureImages(captureRef.current);
-      const raw = await htmlToImage.toPng(captureRef.current, {
-        pixelRatio: 2,
-        cacheBust: true,
-        backgroundColor: "#F3E8D6",
-        skipFonts: true,
-      });
-      const dataUrl = await compositeQr(raw, qrDataUrl);
-      const filename = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
-
-      const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], filename, { type: "image/png" });
       try {
-        await sharePreparedFile(file, dataUrl, filename);
+        await sharePreparedFile(sharePoster.file, sharePoster.dataUrl, shareFilename);
       } catch (err) {
         if ((err as Error)?.name !== "AbortError") {
-          await downloadDataUrl(dataUrl, filename);
+          await downloadDataUrl(sharePoster.dataUrl, shareFilename);
         }
       }
     } catch (e) {
@@ -815,6 +825,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       setSaving(false);
     }
   };
+
 
   const handlePrint = async (frameId: string = "none") => {
     if (!cocktail || !captureRef.current) return;
