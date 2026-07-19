@@ -13,6 +13,8 @@ import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
+import ShareCard from "@/components/screens/ShareCard";
+import { useSharePosterPreparation } from "@/hooks/use-share-poster";
 
 /** Strip quantity / measurement prefixes from AI-generated ingredient strings. */
 function simplifyIngredient(name: string): string {
@@ -486,6 +488,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const mixingStartedAtRef = useRef(Date.now());
   const wasMixingRef = useRef(false);
   const captureRef = useRef<HTMLDivElement>(null);
+  const shareCardRef = useRef<HTMLDivElement>(null);
   const illustrationSource = imageData
     ? `data:image/png;base64,${imageData}`
     : cocktail?.matchedFromMenu
@@ -777,32 +780,42 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   };
 
 
+
+  // Background pre-generation of the dedicated 2:3 share poster.
+  const shareFilename = cocktail
+    ? `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`
+    : "vibetail.png";
+  const sharePoster = useSharePosterPreparation({
+    ref: shareCardRef,
+    cocktailId: cocktail?.id ?? cocktail?.publicId ?? null,
+    illustrationSource,
+    qrDataUrl,
+    filename: shareFilename,
+    enabled: !!cocktail && !!illustrationSource,
+  });
+
   const handleSave = async () => {
-    if (!cocktail || !captureRef.current) return;
+    if (!cocktail) return;
     if (!illustrationSource) {
       toast.info(lang === "zh" ? "酒图还在生成，请稍候" : "Illustration still brewing — one moment");
+      return;
+    }
+    if (sharePoster.status === "error") {
+      sharePoster.retry();
+      return;
+    }
+    if (sharePoster.status !== "ready" || !sharePoster.file || !sharePoster.dataUrl) {
+      toast.info(lang === "zh" ? "卡片还在准备中…" : "Preparing your card…");
       return;
     }
     track("save_clicked", { cocktail_name: cocktail.cocktailName });
     setSaving(true);
     try {
-      await waitForCaptureImages(captureRef.current);
-      const raw = await htmlToImage.toPng(captureRef.current, {
-        pixelRatio: 2,
-        cacheBust: true,
-        backgroundColor: "#F3E8D6",
-        skipFonts: true,
-      });
-      const dataUrl = await compositeQr(raw, qrDataUrl);
-      const filename = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
-
-      const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], filename, { type: "image/png" });
       try {
-        await sharePreparedFile(file, dataUrl, filename);
+        await sharePreparedFile(sharePoster.file, sharePoster.dataUrl, shareFilename);
       } catch (err) {
         if ((err as Error)?.name !== "AbortError") {
-          await downloadDataUrl(dataUrl, filename);
+          await downloadDataUrl(sharePoster.dataUrl, shareFilename);
         }
       }
     } catch (e) {
@@ -812,6 +825,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       setSaving(false);
     }
   };
+
 
   const handlePrint = async (frameId: string = "none") => {
     if (!cocktail || !captureRef.current) return;
@@ -1171,6 +1185,34 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         </div>
       </div>
 
+      {/* Offscreen dedicated 2:3 share poster — separate from the on-screen card.
+          Used exclusively by useSharePosterPreparation to pre-render the export. */}
+      <div
+        aria-hidden
+        style={{
+          position: "fixed",
+          top: 0,
+          left: -99999,
+          width: 1200,
+          height: 1800,
+          pointerEvents: "none",
+          opacity: 1,
+          zIndex: -1,
+        }}
+      >
+        {illustrationSource && (
+          <ShareCard
+            ref={shareCardRef}
+            cocktail={cocktail}
+            illustrationSource={illustrationSource}
+            qrDataUrl={qrDataUrl}
+            lang={lang}
+          />
+        )}
+      </div>
+
+
+
 
       {/* Top bar */}
       <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
@@ -1224,7 +1266,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             <motion.button
               whileTap={{ scale: 0.96 }}
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || sharePoster.status === "preparing"}
               className="py-2 px-3 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
               style={{
                 borderRadius: "4px",
@@ -1236,7 +1278,15 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span className="relative z-10" style={{ fontFamily: "var(--font-heading)" }}>{saving ? t("result.saving") : t("result.save")}</span>
+              <span className="relative z-10" style={{ fontFamily: "var(--font-heading)" }}>
+                {saving
+                  ? t("result.saving")
+                  : sharePoster.status === "preparing"
+                    ? (lang === "zh" ? "准备中…" : "Preparing…")
+                    : sharePoster.status === "error"
+                      ? (lang === "zh" ? "重试" : "Retry")
+                      : t("result.save")}
+              </span>
             </motion.button>
 
             {/* Share — copy link */}
