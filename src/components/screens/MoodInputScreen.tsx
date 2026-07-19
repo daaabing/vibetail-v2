@@ -775,25 +775,18 @@ function StageOne({
           <textarea
             value={customMood}
             onChange={(e) => onCustomChange(e.target.value)}
-            placeholder={ph}
             rows={2}
             className="stage-one-textarea w-full resize-none bg-transparent outline-none rounded-2xl px-4 pt-2.5 pb-7 text-sm leading-snug"
             style={{
               height: 88,
               color: "var(--app-text)",
               fontFamily: "var(--font-heading)",
-              fontStyle: customMood ? "normal" : "italic",
+              fontStyle: "normal",
             }}
           />
           <button
             type="button"
-            onClick={() =>
-              setPhIdx((i) => {
-                let next = Math.floor(Math.random() * placeholders.length);
-                if (next === i % placeholders.length) next = (next + 1) % placeholders.length;
-                return next;
-              })
-            }
+            onClick={() => onPrefill(pickRandom())}
             className="absolute bottom-1.5 right-2 text-[10px] tracking-wider px-2 py-1 rounded-full"
             style={{
               fontFamily: "var(--font-body)",
@@ -802,8 +795,9 @@ function StageOne({
               border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            {lang === "zh" ? "随机来一句" : "Random line"}
+            {lang === "zh" ? "换一句" : "Shuffle"}
           </button>
+
         </div>
       </div>
 
