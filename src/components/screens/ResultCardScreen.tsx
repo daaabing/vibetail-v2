@@ -761,6 +761,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         pixelRatio: 2,
         cacheBust: true,
         backgroundColor: "#F3E8D6",
+        skipFonts: true,
       });
       const dataUrl = await compositeQr(raw, qrDataUrl);
       const frame = FRAME_STYLES.find((f) => f.id === frameId) ?? FRAME_STYLES[0];
