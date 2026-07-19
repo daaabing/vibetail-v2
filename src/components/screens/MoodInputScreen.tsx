@@ -481,6 +481,8 @@ export default function MoodInputScreen({
             hasVibe={hasVibe}
             onPickVibe={pickVibe}
             onCustomChange={submitCustom}
+            onPrefill={setPrefillMood}
+            userTouched={userTouchedMood}
             onClearCustom={() => setCustomMood("")}
             onNext={enterSensory}
           />
@@ -494,6 +496,7 @@ export default function MoodInputScreen({
             lang={lang}
           />
         )}
+
 
         {stage === "sensory" && (
           <StageTwo
