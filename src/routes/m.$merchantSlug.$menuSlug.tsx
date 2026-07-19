@@ -133,11 +133,12 @@ function MenuLanding() {
         </p>
         <div className="mt-8 flex gap-3">
           <button
+            type="button"
             onClick={() => {
               try { sessionStorage.setItem(AGE_GATE_KEY, "ok"); } catch { /* ignore */ }
               setAgeOk(true);
             }}
-            className="px-6 py-3 rounded-full text-sm font-medium text-white"
+            className="px-6 py-3 rounded-full text-sm font-medium text-white cursor-pointer relative z-10"
             style={{
               background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
               border: "1px solid rgba(255,255,255,0.14)",
