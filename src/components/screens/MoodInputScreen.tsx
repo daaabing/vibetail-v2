@@ -718,7 +718,7 @@ function StageOne({
             rows={2}
             className="stage-one-textarea w-full resize-none bg-transparent outline-none rounded-2xl px-4 pt-2.5 pb-7 text-sm leading-snug"
             style={{
-              height: 78,
+              height: 88,
               color: "var(--app-text)",
               fontFamily: "var(--font-heading)",
               fontStyle: customMood ? "normal" : "italic",
