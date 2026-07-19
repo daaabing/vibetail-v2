@@ -99,7 +99,9 @@ function buildUserPrompt(input: GenInput): string {
       ].join("\n")
     : "";
   const vibe = input.vibeReference;
-  const isLiterary = vibe?.nameStyle === "literary";
+  // Chinese output should almost always be the fun/roast/colloquial style — that's the brand voice.
+  // Only allow the literary tone in English, or in Chinese when the picked reference is explicitly literary AND we roll a low chance.
+  const isLiterary = vibe?.nameStyle === "literary" && (!isZh || Math.random() < 0.15);
   const vibeBlock = vibe
     ? [
         ``,
