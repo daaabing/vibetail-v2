@@ -135,7 +135,9 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
         ``,
       ].join("\n")
     : `OUTPUT LANGUAGE: English.`;
-  const menuBlock = items
+  // Shuffle so ordering / "first plausible pick" bias doesn't dominate across sessions.
+  const shuffled = [...items].sort(() => Math.random() - 0.5);
+  const menuBlock = shuffled
     .map((c) => {
       const lines = [`- "${c.name}"`];
       if (c.section) lines.push(`    section: ${c.section}`);
@@ -155,7 +157,8 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
       return lines.join("\n");
     })
     .join("\n");
-  const names = items.map((i) => i.name);
+  const names = shuffled.map((i) => i.name);
+
   return {
     names,
     system:
