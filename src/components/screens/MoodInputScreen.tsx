@@ -591,7 +591,7 @@ function StageOne({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
-      className="stage-one flex-1 min-h-0 flex flex-col px-5 overflow-y-auto"
+      className="stage-one flex-1 min-h-0 flex flex-col px-5 overflow-hidden"
     >
       {/* Title (fixed) */}
       <div className="flex-none text-center">
