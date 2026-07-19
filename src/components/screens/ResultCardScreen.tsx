@@ -1463,6 +1463,71 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         );
       })()}
 
+      {savePreview && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.68)", backdropFilter: "blur(6px)" }}
+          onClick={() => setSavePreview(null)}
+        >
+          <motion.div
+            initial={{ y: 28, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-2xl p-4 space-y-4"
+            style={{ background: "#F3E8D6", border: "1px solid rgba(80,55,30,0.18)" }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold" style={{ color: "#2A2118", fontFamily: "var(--font-heading)" }}>
+                  {lang === "zh" ? "酒卡已生成" : "Card is ready"}
+                </h3>
+                <p className="text-xs mt-0.5" style={{ color: "#8A7A62", fontFamily: "var(--font-heading)" }}>
+                  {lang === "zh" ? "可分享，或长按图片保存。" : "Share it, or long-press the image to save."}
+                </p>
+              </div>
+              <button
+                onClick={() => setSavePreview(null)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
+                style={{ color: "#2A2118", background: "rgba(80,55,30,0.08)" }}
+                aria-label={lang === "zh" ? "关闭" : "Close"}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="max-h-[58vh] overflow-auto rounded-xl" style={{ background: "#E9DBC4", border: "1px solid rgba(80,55,30,0.16)" }}>
+              <img
+                src={savePreview.dataUrl}
+                alt={lang === "zh" ? "可保存的 Vibetail 酒卡" : "Saveable Vibetail cocktail card"}
+                className="w-full h-auto block"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  void shareDataUrl(savePreview.dataUrl, savePreview.filename).catch((err) => {
+                    if ((err as Error)?.name !== "AbortError") toast.error(lang === "zh" ? "分享失败，请长按图片保存" : "Share failed — long-press the image to save");
+                  });
+                }}
+                className="py-3 text-xs font-semibold tracking-wider rounded-md"
+                style={{ color: "#F3E8D6", background: "#2A2118", fontFamily: "var(--font-heading)" }}
+              >
+                {lang === "zh" ? "分享 / 保存" : "Share / Save"}
+              </button>
+              <a
+                href={savePreview.dataUrl}
+                download={savePreview.filename}
+                className="py-3 text-xs font-semibold tracking-wider rounded-md text-center"
+                style={{ color: "#2A2118", background: "rgba(80,55,30,0.08)", fontFamily: "var(--font-heading)" }}
+              >
+                {lang === "zh" ? "下载 PNG" : "Download PNG"}
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
 
       <MixingOverlay
