@@ -55,7 +55,7 @@ async function loadPublishedMenu(merchantSlug: string, menuSlug: string) {
   if (!merchant) return null;
   const { data: menu } = await supabase
     .from("menus")
-    .select("id, slug, name, status, enabled_game_ids, published_version_id")
+    .select("id, slug, name, status, enabled_game_ids, published_version_id, menu_file_url, menu_file_type")
     .eq("merchant_id", merchant.id)
     .eq("slug", menuSlug)
     .eq("status", "published")
