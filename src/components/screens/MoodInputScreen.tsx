@@ -795,6 +795,7 @@ function StageOne({
           align-items: center;
           justify-content: center;
           height: 300px;
+          overflow: hidden;
         }
         .bottle-visual > * {
           position: relative;
@@ -802,15 +803,15 @@ function StageOne({
         }
         .bottle-aura {
           position: absolute;
-          width: 200%;
-          height: 200%;
-          left: -50%;
-          top: -50%;
+          width: 140%;
+          height: 140%;
+          left: -20%;
+          top: -20%;
           z-index: 0;
-          filter: blur(44px);
-          opacity: 0.28;
+          filter: blur(36px);
+          opacity: 0.22;
           pointer-events: none;
-          transform: scale(1.2);
+          transform: scale(1);
         }
 
 
