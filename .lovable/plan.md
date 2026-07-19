@@ -1,49 +1,85 @@
-# Why "layoff" ends up as "接盘"-style relationship names
+# Why the saved card is missing the illustration + QR — and a clean fix
 
-## Root cause
+## What's actually wrong
 
-Three compounding issues in the Chinese vibe-reference pipeline:
+Both bugs come from the same root cause: we're rendering the saved card with `html-to-image` (`toPng`) against the offscreen `ShareCard` React tree at `src/components/screens/ShareCard.tsx`, driven by `useSharePosterPreparation` in `src/hooks/use-share-poster.ts`. That pipeline has three fragile spots that add up to "the two `<img>` tags in the card don't make it into the PNG":
 
-1. **`pickVibeExample` can't see "layoff".** The prefill string in `src/lib/moodtail-data.ts:214` is `"公司马上要 layoff 了，在刷一亩三分地"` — the only work-related token is the English word `layoff`. Every `moodTag` / `sceneTag` in `src/lib/vibe-examples.ts` is Chinese (`上班`, `打工`, `加班`, `牛马`, …). No tag matches, so scoring for the work example `"上班如上坟"` is ~0. Then the random jitter (`Math.random() * 0.6` per example, line 309) decides the winner — often an `EMOTIONAL_EXAMPLES` entry like `"还以为是被爱了"` or `"所以我们现在是什么关系"`. That's exactly where the relationship / 接盘 tone leaks in from.
+1. **`html-to-image` renders via SVG `<foreignObject>` + `mix-blend-mode`.** The cocktail illustration in `ShareCard.tsx` uses `mixBlendMode: "multiply"` on the `<img>`. Chromium's `<foreignObject>` rasterizer and iOS Safari both routinely drop the image (render as blank) when blend modes sit on the image element itself. That's the AI illustration disappearing.
+2. **`crossOrigin="anonymous"` on data URLs / same-origin URLs.** Both the illustration and the QR set `crossOrigin="anonymous"`. For `data:` URLs and same-origin URLs iOS Safari sometimes marks the resulting canvas tainted or skips the image during serialization, producing the empty box.
+3. **`skipFonts: true` + `pixelRatio: 1` + fixed `canvasWidth/Height` mismatch.** The offscreen container is at `left: -99999` at 1200×1800 CSS px, but `pixelRatio: 1` combined with `skipFonts: true` means html-to-image inlines images through `fetch` → data URL, and in the merchant path the illustration may be a remote `cocktail.imageUrl` without CORS headers, which fails silently and gets dropped from the poster.
 
-2. **`isEmotionalVibe` doesn't fire either**, so there's no emotional bonus to steer toward — but crucially there's also no *penalty* against emotional examples for a work vibe. The current rule (line 304) only penalizes generic examples when the mood is emotional; the reverse case isn't guarded.
+Net effect: the two `<img>` tags in the poster (illustration + QR) are the exact elements that fail to serialize, which matches what the user is seeing.
 
-3. **The prompt says "don't reuse strings" but not "don't reuse subject matter".** In `src/routes/api/generate-cocktail.ts` the vibe block tells Gemini to mimic tone/cadence and forbids copying strings, but doesn't forbid inheriting the *theme* (relationship, 接盘, 暧昧). With a mismatched reference forced in, Gemini happily writes a relationship-themed name for a layoff mood.
+Making html-to-image work reliably across iOS Safari + blend modes + remote images is a losing battle. The saved poster is a fixed 2:3 layout with a small number of well-defined boxes — it's a perfect canvas-drawing job. Doing it on a real `<canvas>` eliminates every failure mode above and removes html-to-image from the save path entirely.
 
-The same pipeline is used by `src/routes/api/menu-match.ts`, so the merchant side has the same bug.
+## Fix — render the saved card on a real `<canvas>`
 
-## Fix
+Replace the `htmlToImage.toPng(shareCardRef.current, …)` call inside `useSharePosterPreparation` with a `renderSharePosterToCanvas(cocktail, illustrationSource, qrDataUrl, lang)` function that draws the exact same layout to an offscreen 1200×1800 `<canvas>`, then exports it via `canvas.toBlob("image/png")`. `ShareCard.tsx` stays for the on-screen preview only (or is deleted — nothing else consumes it).
 
-### 1. Teach the matcher about layoff / 裁员 / 失业 vocabulary
-In `src/lib/vibe-examples.ts`:
-- Expand the `"上班如上坟"` example's `moodTags` and `sceneTags` with: `layoff`, `裁员`, `被裁`, `失业`, `找工作`, `求职`, `跳槽`, `一亩三分地`, `刷题`, `简历`, `n+1`, `毕业`(职场语境), `optimize`, `优化`(裁员委婉说法), `毕业典礼`.
-- Add the same tokens to `EMOTION_KEYWORDS` is *not* right — layoff isn't romantic. Instead add a small `WORK_KEYWORDS` list and a `isWorkVibe(mood)` helper.
+### New file: `src/lib/share-poster-canvas.ts`
 
-### 2. Add a work-vs-emotional guard in `pickVibeExample`
-- If `isWorkVibe(mood)` is true and the example is `emotional`, subtract 3 (hard steer away from relationship examples).
-- If `isWorkVibe(mood)` is true and the example is `"上班如上坟"` (or any future work-tagged example), add 3.
+Pure function, no React. Signature:
 
-### 3. Add a confidence floor
-After the loop, if `bestScore < 2` (i.e. no example genuinely matched), return `null` instead of the least-bad example. Update `MoodInputScreen.tsx` to only send `vibeReference` when `pickVibeExample` returns a real hit — otherwise let the model free-write in the base Chinese style rules. This prevents forcing an unrelated tone reference in edge cases.
-
-Signature change:
 ```ts
-export function pickVibeExample(mood, ctx): VibeExample | null
+export async function renderSharePosterToCanvas(opts: {
+  cocktail: Cocktail;
+  illustrationSource: string;   // data: URL or https URL
+  qrDataUrl: string | null;
+  lang: "zh" | "en";
+}): Promise<{ blob: Blob; dataUrl: string }>;
 ```
 
-### 4. Harden the prompt against theme-leak
-In both `src/routes/api/generate-cocktail.ts` and `src/routes/api/menu-match.ts`, in the `vibeBlock`:
-- Add an explicit line: *"参考条目只用来学语气和节奏。绝对不要沿用参考条目的主题 / 场景 / 关系对象（例如参考是恋爱/暧昧/接盘/前任类，但用户当下的 vibe 是失业/裁员/搬家/独处，那名字必须写用户当下的主题，不能出现恋爱、接盘、前任、暧昧等词）。"*
-- Add layoff-specific negative examples to the existing "禁忌" block so the model doesn't wander into relationship territory when the user vibe is about work loss.
+Internals — all synchronous canvas draws after images load:
 
-### 5. (Optional but cheap) Normalize the mood string before matching
-In `MoodInputScreen.tsx` where `moodText` is passed to `pickVibeExample`, lowercase-normalize and expand a small alias map (`layoff → 裁员 失业`, `n+1 → 裁员补偿`, `一亩三分地 → 找工作`) purely for the matcher — the original user text still goes to Gemini untouched.
+1. Create a 1200×1800 canvas (`OffscreenCanvas` when available, else a detached `<canvas>`).
+2. **Parchment background** — paint the same radial gradient the current ShareCard uses (`#F5EAD3 → #EFE3C8 → #E4D2AF → #D9C69E`) using `ctx.createRadialGradient`. Then paint three faint watercolor blooms using additional `createRadialGradient` calls with low alpha (`rgba(155,120,90,0.16)` etc.) — with `ctx.globalCompositeOperation = "multiply"` for those bloom layers. `multiply` on 2D canvas is broadly supported and reliable, unlike CSS `mix-blend-mode` in foreignObject.
+3. **Illustration** — `loadImage(illustrationSource)` (helper below). Draw at `x = -40, y = 120, w = 720, h = 1320` with `object-fit: contain` math (compute scale to fit inside the box, center inside, `drawImage` once). Draw with `ctx.globalCompositeOperation = "multiply"` so the parchment shows through, then reset to `"source-over"`.
+4. **Right column text stack** at `left: 620, top: 160, width: 500`, drawn via `ctx.fillText` with wrapping helper:
+   - Cocktail name — Cormorant Garamond 88px, `#1E1710`, wrapped, line-height 1.02
+   - 1px divider — `fillRect(620, y, 220, 1)` in `rgba(40,25,10,0.35)`
+   - Vibe quote — italic Cormorant 30px, `#4A3A28`, clamped ~56 chars
+   - Merchant match (if `matchedFromMenu`) — 13px letter-spaced eyebrow "MATCHED" + Cormorant 34px matched name
+   - User vibe — italic Cormorant 24px, `#5A4A38`, prefixed `— `
+   - Why — Inter 19px, `#3A2E20`, wrapped, clamped ~160 chars
+5. **Footer band** at `y = 1660..1800`, height 140, painted with a top-to-bottom gradient `linear-gradient(rgba(60,40,20,0.06), transparent)` reversed for footer.
+6. **QR** — if `qrDataUrl` provided, `loadImage(qrDataUrl)`, paint a `#FBF3E1` rounded rect 120×120 at (`70, 1690`) then `drawImage(qr, 78, 1698, 104, 104)`.
+7. **Wordmark** — right of QR: "Vibetail" 34px serif + tagline 13px letter-spaced sans.
+8. `canvas.convertToBlob({ type: "image/png" })` (OffscreenCanvas) or `canvas.toBlob(..., "image/png")` (fallback wrapped in a Promise). Also produce a `dataUrl` for the `sharePreparedFile` fallback via `URL.createObjectURL(blob)` or `blob → dataUrl`.
+
+### Helpers in the same file
+
+- `loadImage(src)` — wraps `new Image()`, returns a promise, does NOT set `crossOrigin` for `data:` URLs, sets `crossOrigin = "anonymous"` only for `http(s):` URLs. Rejects on error so the caller shows a real error instead of an empty box.
+- `wrapText(ctx, text, maxWidth, lineHeight)` — canonical canvas word-wrap.
+- `clampChars(text, max)` — truncate with ellipsis.
+- Font stack strings pre-registered via a `document.fonts.ready` await before drawing so Cormorant renders instead of falling back to Georgia.
+
+### Rewire `src/hooks/use-share-poster.ts`
+
+- Drop the `ref` / `waitForImages` / `htmlToImage.toPng` chain. Keep the same public API (`SharePosterState`, `retry`, `dataUrl`, `blob`, `file`, `status`, `error`) so `ResultCardScreen.tsx` needs no changes to its `handleSave` logic.
+- Effect deps stay the same (`cocktailId`, `illustrationSource`, `qrDataUrl`, `filename`, `attempt`). On each key change: `renderSharePosterToCanvas(...)` → `File([blob], filename, {type:"image/png"})` → `setBlob/setFile/setDataUrl/setStatus("ready")`.
+- Remove the `ref` prop from the hook's options.
+
+### Trim `ResultCardScreen.tsx`
+
+- Delete the offscreen `<ShareCard>` mount block (lines ~1188–1212) and the `shareCardRef` (`captureRef` for the flip card stays untouched).
+- Delete the `ref` prop passed to `useSharePosterPreparation`.
+- Keep `illustrationSource`, `qrDataUrl`, `handleSave` exactly as-is.
+
+### `ShareCard.tsx`
+
+Delete the file. Nothing else imports it after the rewire. (Confirmed by grep in this exploration — the only reference is the offscreen mount and the `SHARE_CARD_W`/`H` constants, which move into `share-poster-canvas.ts`.)
+
+## Why this fixes both bugs at once
+
+- **AI illustration** — drawn with `ctx.drawImage`, no `<foreignObject>`, no CSS blend mode on the image element. `multiply` runs through `globalCompositeOperation` which is fully supported. Remote merchant illustrations without CORS still work because we're drawing a plain image, not exporting a canvas that requires clean image data — but if we ever *do* need the exported PNG data and the source is cross-origin without CORS, `loadImage` will throw with a specific message instead of silently dropping.
+- **QR** — same story: `drawImage` of a data URL always works; no serialization gap.
+- Bonus: file size drops (no html-to-image, no font inlining), Save becomes noticeably faster, and the poster is pixel-identical across Safari/Chrome/Firefox.
 
 ## Files touched
 
-- `src/lib/vibe-examples.ts` — add work keywords, work-vibe guard, confidence floor, nullable return type, work moodTags on the existing office example.
-- `src/components/screens/MoodInputScreen.tsx` — handle `null` from `pickVibeExample`; small mood-text normalization before matching.
-- `src/routes/api/generate-cocktail.ts` — theme-leak guard in `vibeBlock`; layoff-aware negative examples.
-- `src/routes/api/menu-match.ts` — same theme-leak guard for parity with the main app.
+- `src/lib/share-poster-canvas.ts` — new, ~200 lines, all canvas draw code.
+- `src/hooks/use-share-poster.ts` — replace html-to-image call with `renderSharePosterToCanvas`; drop `ref` from options.
+- `src/components/screens/ResultCardScreen.tsx` — remove offscreen `<ShareCard>` block, `shareCardRef`, and `ref` arg.
+- `src/components/screens/ShareCard.tsx` — delete.
 
-No schema changes, no new dependencies, no UI-visible changes beyond the improved output.
+No schema, no API, no UI-visible changes beyond the save output actually containing the illustration and QR.
