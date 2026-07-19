@@ -846,11 +846,13 @@ function StageOne({
           .stage-one-title { font-size: 20px !important; }
           .stage-one-sub   { font-size: 11px !important; }
 
+          .bottle-visual { height: clamp(180px, 26dvh, 240px); }
           .bottle-section svg,
           .bottle-section img {
             max-height: clamp(180px, 26dvh, 240px);
             transform: scale(1);
           }
+
           .mood-response { margin-top: 4px !important; min-height: 20px !important; }
           .mood-response-line { font-size: 16px !important; }
 
