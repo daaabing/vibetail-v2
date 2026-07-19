@@ -1,11 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+interface MerchantCtx {
+  actualDrinkName?: string;
+  actualDrinkDescription?: string;
+  actualDrinkIngredients?: string[];
+  vibeDrinkName?: string;
+  vibeDescription?: string;
+  whyThisMatch?: string;
+  toneKeywords?: string;
+}
+
 interface GenBody {
   name?: string;
   ingredients?: string[];
   flavorProfile?: string;
   tastesLike?: string;
   recipe?: string;
+  merchant?: MerchantCtx;
 }
 
 function buildPrompt(b: GenBody): string {
