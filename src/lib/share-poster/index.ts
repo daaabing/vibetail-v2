@@ -31,7 +31,7 @@ export const POSTER_LAYOUTS: Record<PosterLayoutId, PosterLayoutDef> = {
 };
 
 /** Production default — the layout the Save button ships. */
-export const DEFAULT_POSTER_LAYOUT: PosterLayoutId = "2:2";
+export const DEFAULT_POSTER_LAYOUT: PosterLayoutId = "3:2";
 
 export async function renderSharePosterToCanvas(
   opts: RenderOpts & { layout?: PosterLayoutId },
