@@ -33,6 +33,8 @@ type Menu = {
   short_intro: string | null;
   enabled_game_ids: string[];
   published_version_id: string | null;
+  menu_file_url: string | null;
+  menu_file_type: string | null;
 };
 type Item = {
   id: string;
