@@ -76,7 +76,7 @@ export const Route = createFileRoute("/m/$merchantSlug/$menuSlug")({
 
 function MenuLanding() {
   const { menu } = Route.useLoaderData();
-  const { t } = useLang();
+  const { t, setLang } = useLang();
   const [started, setStarted] = useState(false);
   const [ageOk, setAgeOk] = useState(!menu.hasAlcoholic);
 
@@ -89,7 +89,13 @@ function MenuLanding() {
         // ignore
       }
     }
-  }, [menu.merchantSlug, menu.hasAlcoholic]);
+    // Default to Chinese for this menu if the user hasn't chosen a language.
+    try {
+      if (!localStorage.getItem("vibetail-lang")) setLang("zh");
+    } catch {
+      // ignore
+    }
+  }, [menu.merchantSlug, menu.hasAlcoholic, setLang]);
 
   const games = resolveMenuGames(menu.enabledGameIds, menu.gameDisplayOrder);
   const primaryGame = games[0];
