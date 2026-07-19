@@ -458,6 +458,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [showAuth, setShowAuth] = useState(false);
   const [pendingAction, setPendingAction] = useState<null | "save" | "share" | "bar">(null);
   const [mixingVisible, setMixingVisible] = useState(true);
+  const [savePreview, setSavePreview] = useState<{ dataUrl: string; filename: string; file: File } | null>(null);
   const mixingStartedAtRef = useRef(Date.now());
   const wasMixingRef = useRef(false);
   const captureRef = useRef<HTMLDivElement>(null);
@@ -686,6 +687,31 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     if (line) ctx.fillText(line, x, yy);
   }
 
+  const downloadDataUrl = async (dataUrl: string, filename: string) => {
+    const blob = await (await fetch(dataUrl)).blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.download = filename;
+    link.href = blobUrl;
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+  };
+
+  const sharePreparedFile = async (file: File, dataUrl: string, filename: string) => {
+    const nav = navigator as Navigator & {
+      canShare?: (data: { files: File[] }) => boolean;
+      share?: (data: { files: File[]; title?: string }) => Promise<void>;
+    };
+    if (nav.canShare && nav.share && nav.canShare({ files: [file] })) {
+      await nav.share({ files: [file], title: cocktail?.cocktailName ?? "Vibetail" });
+      return;
+    }
+    await downloadDataUrl(dataUrl, filename);
+  };
+
 
   const handleSave = async () => {
     if (!cocktail || !captureRef.current) return;
@@ -705,48 +731,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       const dataUrl = await compositeQr(raw, qrDataUrl);
       const filename = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
 
-      // Convert to blob
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], filename, { type: "image/png" });
-
-      const nav = navigator as Navigator & {
-        canShare?: (data: { files: File[] }) => boolean;
-        share?: (data: { files: File[]; title?: string }) => Promise<void>;
-      };
-      // On mobile (touch-only, no hover), prefer Web Share so users can save
-      // directly to Photos/Files. On desktop, always download the file directly
-      // — desktop Safari/Chrome would otherwise pop the macOS share sheet.
-      const isMobile =
-        typeof window !== "undefined" &&
-        window.matchMedia?.("(hover: none) and (pointer: coarse)").matches;
-      if (isMobile && nav.canShare && nav.share && nav.canShare({ files: [file] })) {
-        try {
-          await nav.share({ files: [file], title: cocktail.cocktailName });
-          return;
-        } catch (err) {
-          if ((err as Error)?.name === "AbortError") return;
-          // fall through to download fallback
-        }
-      }
-
-      // Try classic download link (works on desktop and most Android)
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.download = filename;
-      link.href = blobUrl;
-      link.rel = "noopener";
-      link.target = "_blank";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // iOS Safari fallback: open image in new tab so user can long-press save
-      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-      if (isIOS) {
-        window.open(blobUrl, "_blank");
-      }
-
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+      setSavePreview({ dataUrl, filename, file });
     } catch (e) {
       console.error("save error", e);
       toast.error(lang === "zh" ? "保存失败，请重试" : "Save failed, please retry");
@@ -1465,6 +1452,71 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           </div>
         );
       })()}
+
+      {savePreview && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.68)", backdropFilter: "blur(6px)" }}
+          onClick={() => setSavePreview(null)}
+        >
+          <motion.div
+            initial={{ y: 28, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-2xl p-4 space-y-4"
+            style={{ background: "#F3E8D6", border: "1px solid rgba(80,55,30,0.18)" }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold" style={{ color: "#2A2118", fontFamily: "var(--font-heading)" }}>
+                  {lang === "zh" ? "酒卡已生成" : "Card is ready"}
+                </h3>
+                <p className="text-xs mt-0.5" style={{ color: "#8A7A62", fontFamily: "var(--font-heading)" }}>
+                  {lang === "zh" ? "可分享，或长按图片保存。" : "Share it, or long-press the image to save."}
+                </p>
+              </div>
+              <button
+                onClick={() => setSavePreview(null)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
+                style={{ color: "#2A2118", background: "rgba(80,55,30,0.08)" }}
+                aria-label={lang === "zh" ? "关闭" : "Close"}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="max-h-[58vh] overflow-auto rounded-xl" style={{ background: "#E9DBC4", border: "1px solid rgba(80,55,30,0.16)" }}>
+              <img
+                src={savePreview.dataUrl}
+                alt={lang === "zh" ? "可保存的 Vibetail 酒卡" : "Saveable Vibetail cocktail card"}
+                className="w-full h-auto block"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  void sharePreparedFile(savePreview.file, savePreview.dataUrl, savePreview.filename).catch((err) => {
+                    if ((err as Error)?.name !== "AbortError") toast.error(lang === "zh" ? "分享失败，请长按图片保存" : "Share failed — long-press the image to save");
+                  });
+                }}
+                className="py-3 text-xs font-semibold tracking-wider rounded-md"
+                style={{ color: "#F3E8D6", background: "#2A2118", fontFamily: "var(--font-heading)" }}
+              >
+                {lang === "zh" ? "分享 / 保存" : "Share / Save"}
+              </button>
+              <a
+                href={savePreview.dataUrl}
+                download={savePreview.filename}
+                className="py-3 text-xs font-semibold tracking-wider rounded-md text-center"
+                style={{ color: "#2A2118", background: "rgba(80,55,30,0.08)", fontFamily: "var(--font-heading)" }}
+              >
+                {lang === "zh" ? "下载 PNG" : "Download PNG"}
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
 
