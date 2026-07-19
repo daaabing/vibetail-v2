@@ -614,16 +614,17 @@ function StageOne({
         </p>
       </div>
 
-      {/* Bottle (visual center — fixed, natural proportion) */}
+      {/* Bottle (visual center — natural height, tight to reply line) */}
       <div
         className="bottle-section flex items-center justify-center"
         style={{
-          flex: "0 0 330px",
+          flex: "none",
           width: "100%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+          marginTop: 4,
         }}
       >
         <div className="bottle-visual">
@@ -643,7 +644,7 @@ function StageOne({
         </div>
 
         {/* Reply line sticks directly under the bottle */}
-        <div className="mood-response" style={{ marginTop: 10, minHeight: 26 }}>
+        <div className="mood-response" style={{ marginTop: 6, minHeight: 24 }}>
           <AnimatePresence mode="wait">
             {hasVibe && (
               <motion.span
@@ -669,13 +670,13 @@ function StageOne({
         </div>
       </div>
 
-      {/* Tag cloud — compact, fixed height, internal infinite scroll */}
+      {/* Tag cloud — natural height, internal infinite scroll */}
       <div
         className="mood-tags-section relative w-full mx-auto"
         style={{
-          flex: "0 0 190px",
+          flex: "none",
           maxWidth: 600,
-          marginTop: 4,
+          marginTop: 2,
           overflow: "hidden",
         }}
       >
