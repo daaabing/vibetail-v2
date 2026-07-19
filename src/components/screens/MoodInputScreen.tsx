@@ -884,7 +884,7 @@ function StageOne({
           .bottle-section img {
             max-height: 170px;
           }
-          .stage-one-textarea { height: 54px !important; }
+          .stage-one-textarea { height: 62px !important; }
 
         }
       `}</style>
