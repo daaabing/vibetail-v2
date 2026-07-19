@@ -14,7 +14,7 @@ import VibeBottle from "@/components/moodtail/VibeBottle";
 import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import FlowProgress from "@/components/moodtail/vibeflow/FlowProgress";
 import LangToggle from "@/components/moodtail/LangToggle";
-import FloatingVibes from "@/components/moodtail/vibeflow/FloatingVibes";
+import { VIBE_ROWS_EN, VIBE_ROWS_ZH } from "@/lib/vibe-cloud";
 import { MOOD_PLACEHOLDERS_EN, MOOD_PLACEHOLDERS_ZH } from "@/lib/moodtail-data";
 import { getMoodConfig } from "@/lib/mood-config";
 import SensoryControl from "@/components/moodtail/vibeflow/SensoryControl";
@@ -591,15 +591,15 @@ function StageOne({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
-      className="stage-one flex-1 min-h-0 flex flex-col px-5 overflow-hidden"
+      className="stage-one flex-1 min-h-0 flex flex-col overflow-hidden"
     >
       {/* Title (fixed) */}
-      <div className="flex-none text-center">
+      <div className="stage-one-header flex-none text-center px-5 pt-1">
         <h1
           className="stage-one-title text-[22px] leading-tight"
           style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
         >
-          {lang === "zh" ? "把现在的心情，倒进杯里。" : "What’s your vibe right now?"}
+          {lang === "zh" ? "把现在的心情，倒进杯里。" : "What's your vibe right now?"}
         </h1>
         <p
           className="stage-one-sub text-[11px] mt-0.5 italic"
@@ -614,186 +614,183 @@ function StageOne({
         </p>
       </div>
 
-      {/* Bottle (visual center — fixed, natural proportion) */}
+      {/* Scrollable middle region */}
       <div
-        className="bottle-section flex items-center justify-center"
+        className="stage-one-scroll flex-1 min-h-0 overflow-y-auto no-scrollbar px-5"
         style={{
-          flex: "0 0 330px",
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "contain",
         }}
       >
-        <div className="bottle-visual">
-          <div
-            className="bottle-aura"
-            style={{
-              background: `radial-gradient(ellipse at 50% 45%, ${liveBottleColor}22 0%, ${liveBottleColor}08 35%, transparent 70%)`,
-            }}
-          />
-          <VibeBottle
-            color={liveBottleColor}
-            size={300}
-            mode="idle"
-            sliderVal={liveFill}
-            glow={false}
-          />
+        {/* Bottle */}
+        <div className="bottle-section flex items-center justify-center flex-col" style={{ width: "100%" }}>
+          <div className="bottle-visual">
+            <div
+              className="bottle-aura"
+              style={{
+                background: `radial-gradient(ellipse at 50% 45%, ${liveBottleColor}22 0%, ${liveBottleColor}08 35%, transparent 70%)`,
+              }}
+            />
+            <VibeBottle
+              color={liveBottleColor}
+              size={300}
+              mode="idle"
+              sliderVal={liveFill}
+              glow={false}
+            />
+          </div>
+
+          <div className="mood-response" style={{ marginTop: 8, minHeight: 24 }}>
+            <AnimatePresence mode="wait">
+              {hasVibe && (
+                <motion.span
+                  key={replyLine + customMood + pickedLabel}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.22 }}
+                  className="mood-response-line"
+                  style={{
+                    fontFamily: "var(--font-heading)",
+                    fontSize: 18,
+                    lineHeight: 1.35,
+                    color: "var(--app-primary)",
+                    fontStyle: "italic",
+                    textAlign: "center",
+                  }}
+                >
+                  {replyLine}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
-        {/* Reply line sticks directly under the bottle */}
-        <div className="mood-response" style={{ marginTop: 10, minHeight: 26 }}>
-          <AnimatePresence mode="wait">
-            {hasVibe && (
-              <motion.span
-                key={replyLine + customMood + pickedLabel}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.22 }}
-                className="mood-response-line"
-                style={{
-                  fontFamily: "var(--font-heading)",
-                  fontSize: 19,
-                  lineHeight: 1.35,
-                  color: "var(--app-primary)",
-                  fontStyle: "italic",
-                  textAlign: "center",
-                }}
-              >
-                {replyLine}
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* Tag cloud — compact, fixed height, internal infinite scroll */}
-      <div
-        className="mood-tags-section relative w-full mx-auto"
-        style={{
-          flex: "0 0 190px",
-          maxWidth: 600,
-          marginTop: 4,
-          overflow: "hidden",
-        }}
-      >
-        <FloatingVibes lang={lang} selected={pickedLabel} onPick={onPickVibe} />
-      </div>
-
-      {/* Inline custom mood input (fixed) */}
-      <div className="stage-one-input flex-none mt-2">
-        <label
-          className="stage-one-input-label block text-[11px] tracking-wider mb-1 px-1"
-          style={{
-            fontFamily: "var(--font-body)",
-            color: "var(--app-text-secondary)",
-            letterSpacing: "0.08em",
-          }}
-        >
-          {lang === "zh"
-            ? "描述一下现在的精神状态"
-            : "Describe your current headspace"}
-        </label>
+        {/* Tag cloud */}
         <div
-          className="stage-one-input-box relative rounded-2xl"
-          style={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.10)",
-            backdropFilter: "blur(10px)",
-            WebkitBackdropFilter: "blur(10px)",
-            transition: "border-color 200ms, box-shadow 200ms",
-            boxShadow: customMood
-              ? "0 0 0 1px rgba(153,185,198,0.35), 0 0 16px rgba(153,185,198,0.18)"
-              : "none",
-          }}
+          className="mood-tags-section relative w-full mx-auto"
+          style={{ maxWidth: 600, marginTop: 6 }}
         >
-          <textarea
-            value={customMood}
-            onChange={(e) => onCustomChange(e.target.value)}
-            placeholder={ph}
-            rows={2}
-            className="stage-one-textarea w-full resize-none bg-transparent outline-none rounded-2xl px-4 pt-2.5 pb-7 text-sm leading-snug"
-            style={{
-              height: 78,
-              color: "var(--app-text)",
-              fontFamily: "var(--font-heading)",
-              fontStyle: customMood ? "normal" : "italic",
-            }}
+          <FloatingVibesInline
+            lang={lang}
+            selected={pickedLabel}
+            onPick={onPickVibe}
           />
-          <button
-            type="button"
-            onClick={() =>
-              setPhIdx((i) => {
-                let next = Math.floor(Math.random() * placeholders.length);
-                if (next === i % placeholders.length) next = (next + 1) % placeholders.length;
-                return next;
-              })
-            }
-            className="absolute bottom-1.5 right-2 text-[10px] tracking-wider px-2 py-1 rounded-full"
+        </div>
+
+        {/* Inline custom mood input */}
+        <div className="stage-one-input mt-3 pb-2">
+          <label
+            className="stage-one-input-label block text-[11px] tracking-wider mb-1 px-1"
             style={{
               fontFamily: "var(--font-body)",
-              color: "var(--app-text-muted)",
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              color: "var(--app-text-secondary)",
+              letterSpacing: "0.08em",
             }}
           >
-            {lang === "zh" ? "随机来一句" : "Random line"}
-          </button>
+            {lang === "zh" ? "描述一下现在的精神状态" : "Describe your current headspace"}
+          </label>
+          <div
+            className="stage-one-input-box relative rounded-2xl"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.10)",
+              backdropFilter: "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)",
+              transition: "border-color 200ms, box-shadow 200ms",
+              boxShadow: customMood
+                ? "0 0 0 1px rgba(153,185,198,0.35), 0 0 16px rgba(153,185,198,0.18)"
+                : "none",
+            }}
+          >
+            <textarea
+              value={customMood}
+              onChange={(e) => onCustomChange(e.target.value)}
+              onFocus={(e) => {
+                const el = e.currentTarget;
+                setTimeout(() => {
+                  el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 280);
+              }}
+              placeholder={ph}
+              rows={2}
+              className="stage-one-textarea w-full resize-none bg-transparent outline-none rounded-2xl px-4 pt-2.5 pb-7 text-sm leading-snug"
+              style={{
+                minHeight: 82,
+                maxHeight: 110,
+                color: "var(--app-text)",
+                fontFamily: "var(--font-heading)",
+                fontStyle: customMood ? "normal" : "italic",
+                scrollMarginBottom: 140,
+              }}
+            />
+            <button
+              type="button"
+              onClick={() =>
+                setPhIdx((i) => {
+                  let next = Math.floor(Math.random() * placeholders.length);
+                  if (next === i % placeholders.length) next = (next + 1) % placeholders.length;
+                  return next;
+                })
+              }
+              className="absolute bottom-1.5 right-2 text-[10px] tracking-wider px-2 py-1 rounded-full"
+              style={{
+                fontFamily: "var(--font-body)",
+                color: "var(--app-text-muted)",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              {lang === "zh" ? "随机来一句" : "Random line"}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* CTA — reserves fixed slot; safe-area aware on mobile */}
+      {/* Sticky footer CTA — always visible in viewport */}
       <div
-        className="stage-one-cta flex-none pt-2"
-        style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}
+        className="stage-one-cta flex-none px-5"
+        style={{
+          paddingTop: 10,
+          paddingBottom: "calc(12px + env(safe-area-inset-bottom))",
+          background:
+            "linear-gradient(to top, rgba(24,25,28,0.96) 55%, rgba(24,25,28,0))",
+          position: "relative",
+          zIndex: 20,
+        }}
       >
-        <AnimatePresence>
-          {hasVibe && (
-            <motion.button
-              key="cta1"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 12 }}
-              transition={{ duration: 0.24 }}
-              onClick={onNext}
-              whileTap={{ scale: 0.97 }}
-              className="w-full rounded-full py-3.5 text-sm font-semibold tracking-wider"
-              style={{
-                fontFamily: "var(--font-heading)",
-                color: "white",
-                background:
-                  "linear-gradient(135deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.16) 100%)",
-                border: "1px solid rgba(255,255,255,0.18)",
-                boxShadow:
-                  "0 12px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.14)",
-              }}
-            >
-              {lang === "zh" ? "继续调味" : "Continue → season it"}
-            </motion.button>
-          )}
-        </AnimatePresence>
+        <motion.button
+          onClick={onNext}
+          disabled={!hasVibe}
+          whileTap={hasVibe ? { scale: 0.97 } : undefined}
+          className="continue-button w-full rounded-2xl text-sm font-semibold tracking-wider"
+          style={{
+            fontFamily: "var(--font-heading)",
+            color: "white",
+            minHeight: 52,
+            opacity: hasVibe ? 1 : 0.45,
+            background: hasVibe
+              ? "linear-gradient(135deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.16) 100%)"
+              : "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.18)",
+            boxShadow: hasVibe
+              ? "0 12px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.14)"
+              : "none",
+            transition: "opacity 220ms, background 220ms",
+          }}
+        >
+          {lang === "zh" ? "继续调味" : "Continue → season it"}
+        </motion.button>
       </div>
 
       <style>{`
-        .bottle-section svg,
-        .bottle-section img {
-          max-height: 300px;
-          width: auto;
-          transform: scale(1);
-          transform-origin: center;
-        }
         .bottle-visual {
           position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
         }
-        .bottle-visual > * {
-          position: relative;
-          z-index: 1;
-        }
+        .bottle-visual > * { position: relative; z-index: 1; }
         .bottle-aura {
           position: absolute;
           width: 200%;
@@ -807,96 +804,138 @@ function StageOne({
           transform: scale(1.2);
         }
 
-        @media (max-height: 780px) {
-          .bottle-section {
-            flex-basis: 300px !important;
-          }
+        /* Desktop / tablet — keep prior sizing */
+        @media (min-width: 768px) {
           .bottle-section svg,
           .bottle-section img {
-            max-height: 270px;
-            transform: scale(0.9);
+            height: 300px;
+            width: auto;
           }
         }
-        @media (max-height: 720px) {
-          .mood-tags-section {
-            flex-basis: 145px !important;
+
+        /* ─── Mobile (< 768px) ─── */
+        @media (max-width: 767px) {
+          .stage-one-title { font-size: clamp(22px, 6vw, 28px) !important; }
+          .stage-one-sub   { font-size: 12px !important; }
+
+          .bottle-section { padding-top: 4px; }
+          .bottle-section svg,
+          .bottle-section img {
+            height: clamp(170px, 24dvh, 230px) !important;
+            width: auto !important;
+          }
+          .mood-response { margin-top: 4px !important; min-height: 20px !important; }
+          .mood-response-line { font-size: 15px !important; }
+
+          .mood-tag {
+            min-height: 34px !important;
+            padding: 6px 12px !important;
+            font-size: 14px !important;
+            line-height: 20px !important;
+            border-radius: 999px !important;
+          }
+
+          .stage-one-textarea {
+            min-height: 82px !important;
+            font-size: 15px !important;
+          }
+        }
+
+        /* Short phones (iPhone SE / mini) */
+        @media (max-width: 767px) and (max-height: 720px) {
+          .stage-one-title { font-size: 22px !important; }
+          .bottle-section svg,
+          .bottle-section img {
+            height: 170px !important;
           }
           .mood-tag {
-            height: 34px !important;
-            padding: 0 12px !important;
+            min-height: 32px !important;
+            padding: 5px 11px !important;
             font-size: 13px !important;
           }
-          .bottle-section {
-            flex-basis: 280px !important;
-          }
-          .bottle-section svg,
-          .bottle-section img {
-            max-height: 250px;
-          }
-        }
-
-        /* ─── Mobile (< 768px) — one cohesive composition ─── */
-        @media (max-width: 767px) {
-          .stage-one {
-            padding-left: 16px;
-            padding-right: 16px;
-          }
-          .stage-one-title { font-size: 20px !important; }
-          .stage-one-sub   { font-size: 11px !important; }
-
-          .bottle-section {
-            flex: 0 0 clamp(240px, 34dvh, 300px) !important;
-          }
-          .bottle-section svg,
-          .bottle-section img {
-            max-height: clamp(200px, 30dvh, 260px);
-            transform: scale(1);
-          }
-          .mood-response { margin-top: 6px !important; min-height: 22px !important; }
-          .mood-response-line { font-size: 16px !important; }
-
-          .mood-tags-section {
-            flex: 0 0 clamp(150px, 20dvh, 200px) !important;
-            margin-top: 2px !important;
-          }
-          .mood-tags-scroll {
-            gap: 6px 6px !important;
-            padding: 6px 10px 16px !important;
-          }
-          .mood-tag {
-            font-size: 12px !important;
-            padding: 5px 10px !important;
-            line-height: 1.1 !important;
-          }
-
-          .stage-one-input { margin-top: 6px !important; }
-          .stage-one-input-label { margin-bottom: 2px !important; font-size: 10px !important; }
-          .stage-one-textarea { height: 68px !important; padding-top: 8px !important; padding-bottom: 24px !important; font-size: 14px !important; }
-
-          .stage-one-cta {
-            padding-top: 6px !important;
-            padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
-          }
-        }
-
-        /* Very short phones (iPhone SE etc.) */
-        @media (max-width: 767px) and (max-height: 700px) {
-          .bottle-section {
-            flex: 0 0 220px !important;
-          }
-          .bottle-section svg,
-          .bottle-section img {
-            max-height: 190px;
-          }
-          .mood-tags-section {
-            flex: 0 0 130px !important;
-          }
-          .stage-one-textarea { height: 60px !important; }
+          .stage-one-textarea { min-height: 72px !important; }
         }
       `}</style>
     </motion.div>
   );
 }
+
+// Inline vibe cloud that participates in normal document flow (no nested
+// scroll). Overrides the internal scroll container from FloatingVibes so the
+// mobile page has a single, natural scroll instead of a scroll trap.
+function FloatingVibesInline({
+  lang,
+  selected,
+  onPick,
+}: {
+  lang: "zh" | "en";
+  selected: string | null;
+  onPick: (label: string, color: string) => void;
+}) {
+  const rows = lang === "zh" ? VIBE_ROWS_ZH : VIBE_ROWS_EN;
+  const items = rows.flatMap((r) =>
+    r.labels.map((label) => ({ label, color: r.color })),
+  );
+  const anyPicked = !!selected;
+  return (
+    <div
+      className="vibe-chip-container"
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        gap: "8px 7px",
+        padding: "4px 6px 8px",
+      }}
+    >
+      {items.map((it, i) => {
+        const isSel = selected === it.label;
+        return (
+          <button
+            key={`${it.label}-${i}`}
+            type="button"
+            onClick={() => onPick(it.label, it.color)}
+            className="mood-tag shrink-0 rounded-full active:scale-95"
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: 13,
+              padding: "6px 12px",
+              lineHeight: 1.15,
+              whiteSpace: "nowrap",
+              border: isSel
+                ? `1.4px solid ${it.color}`
+                : "1px solid rgba(255,255,255,0.10)",
+              background: isSel ? `${it.color}2E` : "rgba(255,255,255,0.045)",
+              color: isSel ? "var(--app-text)" : "var(--app-text-secondary)",
+              opacity: anyPicked && !isSel ? 0.5 : 1,
+              boxShadow: isSel ? `0 0 18px ${it.color}55` : "none",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+              transition:
+                "background 200ms, border-color 200ms, opacity 200ms, transform 120ms",
+            }}
+          >
+            <span
+              style={{
+                display: "inline-block",
+                width: 5,
+                height: 5,
+                borderRadius: 999,
+                background: isSel ? "currentColor" : it.color,
+                marginRight: 6,
+                verticalAlign: "middle",
+                opacity: isSel ? 1 : 0.7,
+              }}
+            />
+            {it.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+
 
 
 
