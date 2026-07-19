@@ -52,7 +52,7 @@ const SYNTHETIC_DRINK =
   <circle cx="600" cy="360" r="46" fill="none" stroke="#5A2A18" stroke-width="5" opacity="0.5"/>
 </svg>`);
 
-type ScenarioKey = "normal-short" | "normal-long" | "menu-match" | "overflow-stress";
+type ScenarioKey = "normal-short" | "plum-earl-grey" | "menu-match" | "overflow-stress";
 
 function baseMock(): Cocktail {
   return {
@@ -92,8 +92,19 @@ function makeScenario(key: ScenarioKey): Cocktail {
       c.originalMood = "今天心情很好。";
       c.roast = "Suspiciously optimistic for a Tuesday.";
       return c;
-    case "normal-long":
-      return c; // the base mock already has generous copy
+    case "plum-earl-grey":
+      // Real production example (Plum Earl Grey Whiskey Cola) — Friday vibe.
+      // Truncated fields from the screenshot are completed in the same voice;
+      // edit freely in the lab.
+      c.cocktailName = "哎哟,这周终于过去了~";
+      c.originalMood = "周五下午!阳光真好,终于要放假了,好开心!";
+      c.matchedFromMenu = true;
+      c.menuItemName = "Plum Earl Grey Whiskey Cola";
+      c.whyThisMatch =
+        "你这周五的阳光,就差一杯威士忌啦!这杯有你'交完周报'的如释重负,梅子的清甜配上伯爵茶的温柔,正好接住你难得的好心情。";
+      c.tastesLike =
+        "当李子的清甜遇上伯爵茶的芬芳,威士忌的醇厚被可乐气泡轻轻托起,像下班路上迎面吹来的那阵晚风,整个人都松了下来。";
+      return c;
     case "menu-match":
       // Real production example (The Yak @ Tashi) — the case that exposed the
       // truncated quote/why at 1.45× global scale.
@@ -120,7 +131,7 @@ function makeScenario(key: ScenarioKey): Cocktail {
 const BRAND_QR_TARGET = "https://vibetail.com/";
 
 function DevPosterLab() {
-  const [scenario, setScenario] = useState<ScenarioKey>("normal-long");
+  const [scenario, setScenario] = useState<ScenarioKey>("plum-earl-grey");
   const [layout, setLayout] = useState<PosterLayoutId>(DEFAULT_POSTER_LAYOUT);
   const [lang, setLang] = useState<"zh" | "en">("zh");
   const [useIllustration, setUseIllustration] = useState(true);
@@ -259,8 +270,8 @@ function DevPosterLab() {
                 {(
                   [
                     ["normal-short", "Short"],
-                    ["normal-long", "Long"],
-                    ["menu-match", "Menu match"],
+                    ["plum-earl-grey", "周五 Plum"],
+                    ["menu-match", "Yak (Tashi)"],
                     ["overflow-stress", "Overflow stress"],
                   ] as [ScenarioKey, string][]
                 ).map(([key, label]) => (
