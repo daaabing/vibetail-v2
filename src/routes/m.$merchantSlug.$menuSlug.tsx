@@ -78,7 +78,7 @@ function MenuLanding() {
   const { menu } = Route.useLoaderData();
   const { t, setLang } = useLang();
   const [started, setStarted] = useState(false);
-  const [ageOk, setAgeOk] = useState(!menu.hasAlcoholic);
+  const [ageOk, setAgeOk] = useState(true);
 
   useEffect(() => {
     setRestaurantCtx(menu.merchantSlug);
