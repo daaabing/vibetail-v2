@@ -312,6 +312,7 @@ export default function MoodInputScreen({
             selectedFlavors: finalFlavors,
             customPreference: mergedPreference,
             lang,
+            vibeReference,
           })
         : JSON.stringify({
             mood: moodText,
