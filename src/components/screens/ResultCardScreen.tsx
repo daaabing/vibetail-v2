@@ -458,7 +458,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [showAuth, setShowAuth] = useState(false);
   const [pendingAction, setPendingAction] = useState<null | "save" | "share" | "bar">(null);
   const [mixingVisible, setMixingVisible] = useState(true);
-  const [savePreview, setSavePreview] = useState<{ dataUrl: string; filename: string; file: File } | null>(null);
+  
   const mixingStartedAtRef = useRef(Date.now());
   const wasMixingRef = useRef(false);
   const captureRef = useRef<HTMLDivElement>(null);
