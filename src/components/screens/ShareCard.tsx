@@ -12,39 +12,39 @@ interface ShareCardProps {
 }
 
 /**
- * Offscreen 2:3 editorial poster used exclusively for save/share export.
- * NOT the on-screen result card. Rendered at fixed 1200×1800 CSS px and
- * captured with html-to-image, so it must NOT depend on the viewport.
+ * Offscreen 2:3 editorial cover used exclusively for save/share export.
+ * The cocktail illustration is the exact same asset shown in-app — never
+ * re-generated. Layout is one relatively-positioned root with the
+ * illustration absolutely positioned so it can bleed into the text column.
  */
 const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(function ShareCard(
   { cocktail, illustrationSource, qrDataUrl, lang },
   ref,
 ) {
-  const zh = lang === "zh";
   const matched = cocktail.matchedFromMenu;
-  const matchedDrinkName = cocktail.menuItemName ?? cocktail.cocktailName;
+  const matchedDrinkName = cocktail.menuItemName ?? null;
 
-  // Short vibe (truncate to keep layout tight)
+  // Split tastesLike into first-line quote + rest for "why"
+  const tastes = (cocktail.tastesLike ?? "").trim();
+  const sentences = tastes.split(/(?<=[。.!?！？])\s*/).filter(Boolean);
+  const quote = (sentences[0] ?? tastes).replace(/^["“”'']|["“”'']$/g, "").trim();
+  const shortQuote = quote.length > 56 ? quote.slice(0, 54) + "…" : quote;
+
+  const whyRaw = matched
+    ? (cocktail.whyThisMatch ?? sentences.slice(1).join(" "))
+    : sentences.slice(1).join(" ");
+  const why = (whyRaw ?? "").trim();
+  const whyClamped = why.length > 160 ? why.slice(0, 158) + "…" : why;
+
   const rawVibe = (cocktail.originalMood ?? "").trim();
-  const userVibe = rawVibe.length > 60 ? rawVibe.slice(0, 58) + "…" : rawVibe;
+  const userVibe = rawVibe.length > 54 ? rawVibe.slice(0, 52) + "…" : rawVibe;
 
-  // Why-this-drink: merchant uses whyThisMatch; solo falls back to tastesLike.
-  const whyRaw = (matched ? cocktail.whyThisMatch : cocktail.tastesLike) ?? cocktail.tastesLike ?? "";
-  const why = whyRaw.length > 180 ? whyRaw.slice(0, 178) + "…" : whyRaw;
+  const serif = '"Cormorant Garamond", "Songti SC", Georgia, serif';
+  const sans = '"Inter", "PingFang SC", "Hiragino Sans GB", sans-serif';
 
-  // Short quote under the title
-  const quote = (cocktail.tastesLike ?? "").split(/[\n.。]/)[0]?.trim() ?? "";
-  const shortQuote = quote.length > 60 ? quote.slice(0, 58) + "…" : quote;
-
-  const labels = {
-    eyebrow: "YOUR VIBETAIL",
-    matched: zh ? "MATCHED DRINK" : "MATCHED DRINK",
-    vibe: zh ? "YOUR VIBE" : "YOUR VIBE",
-    why: zh ? "WHY THIS DRINK" : "WHY THIS DRINK",
-    scan: zh ? "扫码调你的专属\nVibetail →" : "Scan to mix\nyour own →",
-    slogan: "Every mood deserves the perfect pour.",
-    handle: "@vibe.tail  ·  vibetail.com",
-  };
+  const tagline = lang === "zh"
+    ? "每一种心情，都值得一杯专属"
+    : "Every mood deserves the perfect pour.";
 
   return (
     <div
@@ -55,116 +55,114 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(function ShareCard(
         position: "relative",
         overflow: "hidden",
         background:
-          "radial-gradient(120% 90% at 30% 20%, #F3E8D6 0%, #EFE4CE 45%, #E4D3B4 100%)",
-        fontFamily: '"Inter", "PingFang SC", "Hiragino Sans GB", sans-serif',
+          "radial-gradient(140% 100% at 20% 15%, #F5EAD3 0%, #EFE3C8 40%, #E4D2AF 85%, #D9C69E 100%)",
+        fontFamily: sans,
         color: "#2A2118",
-        display: "flex",
-        flexDirection: "column",
         boxSizing: "border-box",
       }}
     >
-      {/* Watercolor accents (subtle, purely decorative) */}
+      {/* Watercolor accents — very subtle, painted onto parchment */}
       <div
         aria-hidden
         style={{
           position: "absolute",
           inset: 0,
           background:
-            "radial-gradient(40% 30% at 12% 18%, rgba(155,120,90,0.18) 0%, transparent 60%), radial-gradient(35% 25% at 88% 82%, rgba(120,90,70,0.16) 0%, transparent 65%), radial-gradient(30% 22% at 8% 78%, rgba(140,110,150,0.14) 0%, transparent 60%)",
+            "radial-gradient(45% 35% at 18% 22%, rgba(155,120,90,0.16) 0%, transparent 65%), radial-gradient(35% 28% at 82% 78%, rgba(120,90,70,0.14) 0%, transparent 70%), radial-gradient(30% 22% at 8% 82%, rgba(140,110,150,0.10) 0%, transparent 60%)",
           mixBlendMode: "multiply",
           pointerEvents: "none",
         }}
       />
 
-      {/* Main split: left cocktail / right content */}
-      <div style={{ display: "flex", flex: 1, minHeight: 0, position: "relative", zIndex: 1 }}>
-        {/* LEFT — cocktail illustration */}
+      {/* COCKTAIL ILLUSTRATION — absolute, bleeds, no frame */}
+      <div
+        style={{
+          position: "absolute",
+          left: -40,
+          top: 120,
+          width: 720,
+          height: 1320,
+          pointerEvents: "none",
+        }}
+      >
+        <img
+          src={illustrationSource}
+          alt=""
+          crossOrigin="anonymous"
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            objectPosition: "center bottom",
+            mixBlendMode: "multiply",
+          }}
+        />
+      </div>
+
+      {/* RIGHT COLUMN — text stack */}
+      <div
+        style={{
+          position: "absolute",
+          left: 620,
+          top: 160,
+          width: 500,
+          display: "flex",
+          flexDirection: "column",
+          gap: 28,
+          zIndex: 2,
+        }}
+      >
+        {/* Cocktail name */}
         <div
           style={{
-            width: "54%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "80px 24px 60px 60px",
-            position: "relative",
+            fontFamily: serif,
+            fontWeight: 600,
+            fontSize: 88,
+            lineHeight: 1.02,
+            letterSpacing: "-0.02em",
+            color: "#1E1710",
           }}
         >
-          <img
-            src={illustrationSource}
-            alt=""
-            crossOrigin="anonymous"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-              mixBlendMode: "multiply",
-            }}
-          />
+          {cocktail.cocktailName}
         </div>
 
-        {/* RIGHT — text content */}
-        <div
-          style={{
-            width: "46%",
-            display: "flex",
-            flexDirection: "column",
-            padding: "90px 70px 40px 20px",
-            gap: 22,
-          }}
-        >
-          {/* Eyebrow */}
+        {/* Thin divider */}
+        <div style={{ height: 1, width: 220, background: "rgba(40,25,10,0.35)" }} />
+
+        {/* Vibe quote */}
+        {shortQuote && (
           <div
             style={{
-              fontSize: 20,
-              letterSpacing: 6,
-              fontWeight: 500,
-              color: "#8A7A62",
+              fontFamily: serif,
+              fontStyle: "italic",
+              fontSize: 30,
+              lineHeight: 1.35,
+              color: "#4A3A28",
             }}
           >
-            {labels.eyebrow}
+            “{shortQuote}”
           </div>
+        )}
 
-          {/* Vibetail title */}
-          <div
-            style={{
-              fontFamily: '"Cormorant Garamond", "Songti SC", Georgia, serif',
-              fontWeight: 600,
-              fontSize: 72,
-              lineHeight: 1.05,
-              color: "#1E1710",
-              letterSpacing: zh ? "-0.02em" : "-0.01em",
-            }}
-          >
-            {cocktail.cocktailName}
-          </div>
-
-          {/* Short quote */}
-          {shortQuote && (
+        {/* Matched drink (merchant only) */}
+        {matched && matchedDrinkName && (
+          <div style={{ marginTop: 12 }}>
             <div
               style={{
-                fontFamily: '"Cormorant Garamond", "Songti SC", Georgia, serif',
-                fontStyle: "italic",
-                fontSize: 26,
-                lineHeight: 1.35,
-                color: "#5A4A38",
+                fontSize: 13,
+                letterSpacing: 5,
+                color: "#8A7A62",
+                textTransform: "uppercase",
+                marginBottom: 8,
               }}
             >
-              "{shortQuote}"
-            </div>
-          )}
-
-          <div style={{ height: 1, background: "rgba(80,55,30,0.22)", margin: "6px 0" }} />
-
-          {/* Matched drink */}
-          <div>
-            <div style={{ fontSize: 16, letterSpacing: 4, color: "#8A7A62", marginBottom: 10 }}>
-              {labels.matched}
+              Matched
             </div>
             <div
               style={{
-                fontFamily: '"Cormorant Garamond", "Songti SC", Georgia, serif',
+                fontFamily: serif,
                 fontWeight: 600,
-                fontSize: 40,
+                fontSize: 34,
                 lineHeight: 1.15,
                 color: "#2A2118",
               }}
@@ -172,115 +170,95 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(function ShareCard(
               {matchedDrinkName}
             </div>
           </div>
+        )}
 
-          {/* Your vibe */}
-          {userVibe && (
-            <div>
-              <div style={{ fontSize: 16, letterSpacing: 4, color: "#8A7A62", marginBottom: 10 }}>
-                {labels.vibe}
-              </div>
-              <div
-                style={{
-                  display: "inline-block",
-                  background: "rgba(154,120,86,0.14)",
-                  borderRadius: 24,
-                  padding: "14px 22px",
-                  fontFamily: '"Cormorant Garamond", "Songti SC", Georgia, serif',
-                  fontStyle: "italic",
-                  fontSize: 24,
-                  lineHeight: 1.4,
-                  color: "#3A2E20",
-                  maxWidth: "100%",
-                }}
-              >
-                "{userVibe}"
-              </div>
-            </div>
-          )}
+        {/* User vibe */}
+        {userVibe && (
+          <div
+            style={{
+              fontFamily: serif,
+              fontStyle: "italic",
+              fontSize: 24,
+              lineHeight: 1.45,
+              color: "#5A4A38",
+              marginTop: 4,
+            }}
+          >
+            — {userVibe}
+          </div>
+        )}
 
-          {/* Why this drink */}
-          {why && (
-            <div>
-              <div style={{ fontSize: 16, letterSpacing: 4, color: "#8A7A62", marginBottom: 10 }}>
-                {labels.why}
-              </div>
-              <div
-                style={{
-                  fontSize: 20,
-                  lineHeight: 1.55,
-                  color: "#3A2E20",
-                }}
-              >
-                {why}
-              </div>
-            </div>
-          )}
-
-          <div style={{ flex: 1 }} />
-
-          {/* QR block */}
-          {qrDataUrl && (
-            <div style={{ display: "flex", alignItems: "center", gap: 20, marginTop: 10 }}>
-              <div
-                style={{
-                  background: "#FBF3E1",
-                  padding: 10,
-                  borderRadius: 10,
-                  boxShadow: "0 2px 10px rgba(60,40,20,0.10)",
-                }}
-              >
-                <img
-                  src={qrDataUrl}
-                  alt=""
-                  crossOrigin="anonymous"
-                  style={{ width: 150, height: 150, display: "block" }}
-                />
-              </div>
-              <div
-                style={{
-                  fontFamily: '"Cormorant Garamond", "Songti SC", Georgia, serif',
-                  fontStyle: "italic",
-                  fontSize: 22,
-                  color: "#6B5A40",
-                  whiteSpace: "pre-line",
-                  lineHeight: 1.35,
-                }}
-              >
-                {labels.scan}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Why */}
+        {whyClamped && (
+          <div
+            style={{
+              fontSize: 19,
+              lineHeight: 1.6,
+              color: "#3A2E20",
+              maxWidth: 480,
+            }}
+          >
+            {whyClamped}
+          </div>
+        )}
       </div>
 
-      {/* Footer */}
+      {/* FOOTER STRIP — QR + wordmark + slogan */}
       <div
         style={{
-          position: "relative",
-          zIndex: 1,
-          textAlign: "center",
-          padding: "20px 40px 40px",
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 140,
+          background: "linear-gradient(to top, rgba(60,40,20,0.06), transparent)",
+          display: "flex",
+          alignItems: "center",
+          padding: "0 70px",
+          gap: 24,
+          zIndex: 3,
         }}
       >
-        <div
-          style={{
-            fontFamily: '"Cormorant Garamond", Georgia, serif',
-            fontStyle: "italic",
-            fontSize: 26,
-            color: "#2A2118",
-          }}
-        >
-          {labels.slogan}
-        </div>
-        <div
-          style={{
-            marginTop: 10,
-            fontSize: 16,
-            letterSpacing: 3,
-            color: "#8A7A62",
-          }}
-        >
-          {labels.handle}
+        {qrDataUrl && (
+          <div
+            style={{
+              background: "#FBF3E1",
+              padding: 8,
+              borderRadius: 8,
+              flexShrink: 0,
+            }}
+          >
+            <img
+              src={qrDataUrl}
+              alt=""
+              crossOrigin="anonymous"
+              style={{ width: 104, height: 104, display: "block" }}
+            />
+          </div>
+        )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <div
+            style={{
+              fontFamily: serif,
+              fontSize: 34,
+              fontWeight: 600,
+              color: "#1E1710",
+              letterSpacing: "-0.01em",
+              lineHeight: 1,
+            }}
+          >
+            Vibetail
+          </div>
+          <div
+            style={{
+              fontSize: 13,
+              letterSpacing: 3,
+              color: "#8A7A62",
+              textTransform: "uppercase",
+            }}
+          >
+            {tagline}
+          </div>
         </div>
       </div>
     </div>

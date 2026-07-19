@@ -1,63 +1,61 @@
-# Redesigned Save/Share Card
+# Redesign 2:3 Share Card — Editorial Cover Layout
 
-Build a dedicated 2:3 portrait share-card pipeline that is separate from the on-screen result page, reuses the exact AI cocktail image the user sees, and is pre-rendered in the background so tapping Save is instant.
+## Problem
+The current `ShareCard` renders empty on the left (no illustration visible in many cases), squeezes all text into the top-right, and treats the poster like a two-column web page with too many labeled sections. It also risks looking like a template because the AI cocktail from the app is not being reused as the visual anchor.
 
-## What changes
+## Non-negotiable rules
+1. **Reuse the exact same illustration** the user sees on the on-screen result card — no re-generation, no different asset. Source: the same `imageData` / `illustrationSource` string already resolved in `ResultCardScreen`. This is the only cocktail image that can appear on the poster.
+2. Never render the ShareCard if `illustrationSource` is null — the poster only prepares once the AI illustration has actually loaded (`img.decode()` resolved). This is why the current left side sometimes appears empty.
+3. Do not add any label or section not listed below. No `YOUR VIBETAIL` eyebrow, no separate `MATCHED DRINK`/`YOUR VIBE`/`WHY THIS DRINK` label stack, no `@vibe.tail · vibetail.com` handle line.
 
-### 1. New offscreen share-card component
-Create `src/components/screens/ShareCard.tsx` — a fixed-size (1200×1800) React node rendered offscreen (absolutely positioned at `left: -99999px`, `pointer-events: none`) inside `ResultCardScreen`, not visible to the user and not affected by the mobile viewport.
+## New layout (1200 × 1800)
 
-Layout (matches the reference image):
-- Warm cream background (`#EFE6D4`) with subtle watercolor splash accents behind the cocktail (reuse existing parchment tones from `compositeQr`).
-- **Left column (~55% width)**: the AI cocktail illustration (`illustrationSource`) rendered full-bleed with `object-contain` + `mix-blend-multiply` — the *same image asset* the user already sees. No re-generation.
-- **Right column (~45%)**: editorial text stack with generous padding:
-  - Eyebrow: `YOUR VIBETAIL`
-  - Display title: Chinese `cocktailName` in Cormorant Garamond, large
-  - Italic quote: `tastesLike` (max 2 lines)
-  - Divider
-  - `MATCHED DRINK` label + `menuItemName || cocktailName` (merchant vs solo)
-  - `YOUR VIBE` label + pill containing `originalMood` (short, truncated)
-  - `WHY THIS DRINK` label + short explanation (`whyThisMatch` for merchant, else first 2–3 lines of `tastesLike`/`roast`), 3–4 lines max
-  - QR block bottom-left of column with "Scan to mix your own ↙" handwritten-style caption
-- **Footer strip**: `Every mood deserves the perfect pour.` + `@vibe.tail · vibetail.com`
+```
++--------------------------------------------------+
+|                                                  |
+|                                                  |
+|                                                  |
+|   [ COCKTAIL ILLUSTRATION ]     Cocktail Name    |
+|      full-bleed, ~55% width     (display serif)  |
+|      slightly overflows into    ── divider ──    |
+|      right column & bleeds      one-line vibe    |
+|      past top for magazine      quote (italic)   |
+|      cover feel                                  |
+|                                 Matched: {name}  |
+|                                 {price if any}   |
+|                                                  |
+|                                 "your vibe" —    |
+|                                 short user line  |
+|                                                  |
+|                                 why (3 lines max)|
+|                                                  |
++--------------------------------------------------+
+|  [QR 120px]   Vibetail · every mood, one pour    |
++--------------------------------------------------+
+```
 
-All typography uses tokens already loaded (Cormorant Garamond + Inter). Dark espresso ink `#2A2118`, muted `#8A7A62`.
-
-### 2. Background pre-generation pipeline
-New hook `useSharePosterPreparation(cocktail, illustrationSource, qrDataUrl)`:
-- Runs a `useEffect` that fires as soon as `cocktail` + `illustrationSource` + `qrDataUrl` are all ready.
-- Waits for the offscreen ShareCard's `<img>` tags to `decode()` (reuse `waitForCaptureImages`).
-- Calls `htmlToImage.toPng(shareCardRef.current, { pixelRatio: 1.5, canvasWidth: 1200, canvasHeight: 1800, backgroundColor: "#EFE6D4", skipFonts: true })` — output is already 2:3, no compositeQr band needed.
-- Stores result in state: `{ status: "idle" | "preparing" | "ready" | "error", dataUrl, blob, file }`.
-- Cached per `cocktail.id`; re-runs only when cocktail identity or illustration changes.
-- On error, exposes a `retry()` fn.
-
-### 3. Rewire Save button
-Replace the current `handleSave` logic:
-- If `status === "preparing"`: button shows `Preparing your card…` / `正在准备卡片…`, disabled or tappable-with-spinner.
-- If `status === "ready"`: tap immediately calls `sharePreparedFile(file, dataUrl, filename)` — no capture step, no waiting.
-- If `status === "error"`: button shows `Retry preparing card` / `重新准备卡片`, calls `retry()`.
-- Guardrail: never export if `illustrationSource` is missing — surface an explanatory toast.
-
-Remove the current on-the-fly `htmlToImage.toPng(captureRef.current, ...)` + `compositeQr` path from Save. Keep `compositeQr`/`handlePrint` intact for the existing Print flow (it prints the on-screen card, a different use case).
-
-### 4. Merchant vs solo parity
-The ShareCard reads the same `cocktail` object already in scope, so merchant flow (`matchedFromMenu`, `menuItemName`, `whyThisMatch`, `menuItemImageUrl`) and solo flow share one renderer. Merchant matches keep using the AI illustration (`imageUrl`) as the hero, matching current on-screen behavior; menu item photo is not shown on the share card (out-of-scope per the "one hero image" spec).
-
-## Acceptance checks
-- Exported PNG is exactly 1200×1800.
-- Cocktail visual on the share card is byte-identical to `illustrationSource` (same URL fed into the same `<img>`).
-- Result page shows → within ~1–2s the ShareCard is ready → tapping Save triggers native share/download instantly.
-- No screenshot of the mobile page is used.
-- Failure path shows retry, never exports a broken card.
-
-## Technical notes
-- Offscreen container must have explicit `width: 1200px; height: 1800px` and `transform: none` so `html-to-image` measures correctly regardless of viewport.
-- Use `canvasWidth`/`canvasHeight` options to guarantee 2:3 output independent of `pixelRatio`.
-- Pre-generation is client-only — no new server function, no additional AI call, no cost.
-- The QR (`qrDataUrl`) is already generated upstream; reuse as-is.
+Concrete rules:
+- Background: soft parchment gradient that **extends behind the cocktail** — no square/card boundary around the illustration. Illustration uses `mix-blend-multiply` on transparent-ish parchment so it feels painted onto the poster, not pasted.
+- Illustration container: absolutely positioned, ~52% width, height ~78% of poster, bottom-anchored so the glass sits low and the top of the glass optionally bleeds slightly into the right column's whitespace. `object-fit: contain`, no border, no shadow box.
+- Right column: starts at ~48% from left, top padding ~180px, right padding ~90px, width ~46%. Vertical rhythm handled with generous gaps, not with labeled section headers.
+- Text stack (top → bottom, no eyebrow labels):
+  1. **Cocktail name** — Cormorant Garamond 88px, `#1E1710`, tight leading.
+  2. Thin divider rule (1px, 40% opacity ink).
+  3. **Vibe quote** — italic Cormorant 30px, 2 lines max (from `tastesLike`).
+  4. Small caps micro-label `MATCHED` 14px + drink name 34px (merchant only; solo mode omits this whole block).
+  5. **User vibe** — italic 24px, prefixed with a hairline em-dash, e.g. `— {originalMood}`.
+  6. **Why** — 20px sans, 3 lines max (`whyThisMatch` for merchant, otherwise the second sentence of `tastesLike`).
+- Footer strip: 120px tall band at bottom, parchment darkened ~4%. Left: 120px QR on cream tile, no shadow. Right of QR: single line `Vibetail` (Cormorant 34px) + tagline `Every mood deserves the perfect pour.` (14px letter-spaced). No `@vibe.tail`, no URL text (the QR is the URL).
 
 ## Files touched
-- `src/components/screens/ShareCard.tsx` (new)
-- `src/hooks/use-share-poster.ts` (new)
-- `src/components/screens/ResultCardScreen.tsx` (mount ShareCard offscreen, replace `handleSave`, update button label states; leave `compositeQr` + `handlePrint` untouched)
+
+- `src/components/screens/ShareCard.tsx` — rewrite the JSX per layout above. Keep the exported `SHARE_CARD_W` / `SHARE_CARD_H` constants and the `forwardRef` signature so the hook and offscreen mount don't have to change. Remove the strict two-column flex split; use one relatively positioned root with the illustration absolutely positioned so it can bleed. Delete the eyebrow, the `YOUR VIBE` pill, the `WHY THIS DRINK` label, and the `@vibe.tail · vibetail.com` handle.
+- `src/hooks/use-share-poster.ts` — no shape change. Confirm `enabled` is only true when `illustrationSource` is non-null (already the case). Add a small guard: also skip when the source `<img>` inside the ShareCard reports `naturalWidth === 0` after `waitForImages`, treating that as `error` so the button surfaces retry instead of exporting a blank left side.
+- `src/components/screens/ResultCardScreen.tsx` — no layout change to on-screen card. Only tweak: pass `illustrationSource` unchanged (already same variable used by the on-screen `<img>`), so the poster is guaranteed byte-identical to the app's cocktail. Confirm the offscreen mount is inside a wrapper with fixed 1200×1800 sizing at `left: -99999px` so `html-to-image` measures correctly.
+
+## Acceptance
+- Poster left side always shows the same cocktail the user sees on-screen (same data URL / URL string).
+- No visible rectangular frame or hard edge around the illustration — it reads as painted onto the parchment.
+- Right column has only: name, quote, (optional) matched drink, user vibe line, why. No labeled sections.
+- Bottom strip is a single compact row: QR + Vibetail wordmark + slogan.
+- If the illustration is not yet ready, Save shows `Preparing…`, never exports a card with an empty left half.
