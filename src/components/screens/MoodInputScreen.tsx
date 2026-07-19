@@ -794,6 +794,7 @@ function StageOne({
           display: flex;
           align-items: center;
           justify-content: center;
+          height: 300px;
         }
         .bottle-visual > * {
           position: relative;
@@ -811,6 +812,7 @@ function StageOne({
           pointer-events: none;
           transform: scale(1.2);
         }
+
 
         @media (max-height: 780px) {
           .bottle-section svg,
