@@ -63,11 +63,11 @@ export function useSharePosterPreparation(opts: {
 
   useEffect(() => {
     if (!enabled) return;
-    if (!cocktailId || !illustrationSource) return;
+    if (!illustrationSource) return;
     const node = ref.current;
     if (!node) return;
 
-    const key = `${cocktailId}::${illustrationSource}::${qrDataUrl ?? ""}::${attempt}`;
+    const key = `${cocktailId ?? "preview"}::${illustrationSource}::${qrDataUrl ?? ""}::${attempt}`;
     if (inflightKeyRef.current === key) return;
     inflightKeyRef.current = key;
 
