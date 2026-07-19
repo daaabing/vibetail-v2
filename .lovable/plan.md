@@ -1,61 +1,49 @@
-# Redesign 2:3 Share Card — Editorial Cover Layout
+# Why "layoff" ends up as "接盘"-style relationship names
 
-## Problem
-The current `ShareCard` renders empty on the left (no illustration visible in many cases), squeezes all text into the top-right, and treats the poster like a two-column web page with too many labeled sections. It also risks looking like a template because the AI cocktail from the app is not being reused as the visual anchor.
+## Root cause
 
-## Non-negotiable rules
-1. **Reuse the exact same illustration** the user sees on the on-screen result card — no re-generation, no different asset. Source: the same `imageData` / `illustrationSource` string already resolved in `ResultCardScreen`. This is the only cocktail image that can appear on the poster.
-2. Never render the ShareCard if `illustrationSource` is null — the poster only prepares once the AI illustration has actually loaded (`img.decode()` resolved). This is why the current left side sometimes appears empty.
-3. Do not add any label or section not listed below. No `YOUR VIBETAIL` eyebrow, no separate `MATCHED DRINK`/`YOUR VIBE`/`WHY THIS DRINK` label stack, no `@vibe.tail · vibetail.com` handle line.
+Three compounding issues in the Chinese vibe-reference pipeline:
 
-## New layout (1200 × 1800)
+1. **`pickVibeExample` can't see "layoff".** The prefill string in `src/lib/moodtail-data.ts:214` is `"公司马上要 layoff 了，在刷一亩三分地"` — the only work-related token is the English word `layoff`. Every `moodTag` / `sceneTag` in `src/lib/vibe-examples.ts` is Chinese (`上班`, `打工`, `加班`, `牛马`, …). No tag matches, so scoring for the work example `"上班如上坟"` is ~0. Then the random jitter (`Math.random() * 0.6` per example, line 309) decides the winner — often an `EMOTIONAL_EXAMPLES` entry like `"还以为是被爱了"` or `"所以我们现在是什么关系"`. That's exactly where the relationship / 接盘 tone leaks in from.
 
-```
-+--------------------------------------------------+
-|                                                  |
-|                                                  |
-|                                                  |
-|   [ COCKTAIL ILLUSTRATION ]     Cocktail Name    |
-|      full-bleed, ~55% width     (display serif)  |
-|      slightly overflows into    ── divider ──    |
-|      right column & bleeds      one-line vibe    |
-|      past top for magazine      quote (italic)   |
-|      cover feel                                  |
-|                                 Matched: {name}  |
-|                                 {price if any}   |
-|                                                  |
-|                                 "your vibe" —    |
-|                                 short user line  |
-|                                                  |
-|                                 why (3 lines max)|
-|                                                  |
-+--------------------------------------------------+
-|  [QR 120px]   Vibetail · every mood, one pour    |
-+--------------------------------------------------+
+2. **`isEmotionalVibe` doesn't fire either**, so there's no emotional bonus to steer toward — but crucially there's also no *penalty* against emotional examples for a work vibe. The current rule (line 304) only penalizes generic examples when the mood is emotional; the reverse case isn't guarded.
+
+3. **The prompt says "don't reuse strings" but not "don't reuse subject matter".** In `src/routes/api/generate-cocktail.ts` the vibe block tells Gemini to mimic tone/cadence and forbids copying strings, but doesn't forbid inheriting the *theme* (relationship, 接盘, 暧昧). With a mismatched reference forced in, Gemini happily writes a relationship-themed name for a layoff mood.
+
+The same pipeline is used by `src/routes/api/menu-match.ts`, so the merchant side has the same bug.
+
+## Fix
+
+### 1. Teach the matcher about layoff / 裁员 / 失业 vocabulary
+In `src/lib/vibe-examples.ts`:
+- Expand the `"上班如上坟"` example's `moodTags` and `sceneTags` with: `layoff`, `裁员`, `被裁`, `失业`, `找工作`, `求职`, `跳槽`, `一亩三分地`, `刷题`, `简历`, `n+1`, `毕业`(职场语境), `optimize`, `优化`(裁员委婉说法), `毕业典礼`.
+- Add the same tokens to `EMOTION_KEYWORDS` is *not* right — layoff isn't romantic. Instead add a small `WORK_KEYWORDS` list and a `isWorkVibe(mood)` helper.
+
+### 2. Add a work-vs-emotional guard in `pickVibeExample`
+- If `isWorkVibe(mood)` is true and the example is `emotional`, subtract 3 (hard steer away from relationship examples).
+- If `isWorkVibe(mood)` is true and the example is `"上班如上坟"` (or any future work-tagged example), add 3.
+
+### 3. Add a confidence floor
+After the loop, if `bestScore < 2` (i.e. no example genuinely matched), return `null` instead of the least-bad example. Update `MoodInputScreen.tsx` to only send `vibeReference` when `pickVibeExample` returns a real hit — otherwise let the model free-write in the base Chinese style rules. This prevents forcing an unrelated tone reference in edge cases.
+
+Signature change:
+```ts
+export function pickVibeExample(mood, ctx): VibeExample | null
 ```
 
-Concrete rules:
-- Background: soft parchment gradient that **extends behind the cocktail** — no square/card boundary around the illustration. Illustration uses `mix-blend-multiply` on transparent-ish parchment so it feels painted onto the poster, not pasted.
-- Illustration container: absolutely positioned, ~52% width, height ~78% of poster, bottom-anchored so the glass sits low and the top of the glass optionally bleeds slightly into the right column's whitespace. `object-fit: contain`, no border, no shadow box.
-- Right column: starts at ~48% from left, top padding ~180px, right padding ~90px, width ~46%. Vertical rhythm handled with generous gaps, not with labeled section headers.
-- Text stack (top → bottom, no eyebrow labels):
-  1. **Cocktail name** — Cormorant Garamond 88px, `#1E1710`, tight leading.
-  2. Thin divider rule (1px, 40% opacity ink).
-  3. **Vibe quote** — italic Cormorant 30px, 2 lines max (from `tastesLike`).
-  4. Small caps micro-label `MATCHED` 14px + drink name 34px (merchant only; solo mode omits this whole block).
-  5. **User vibe** — italic 24px, prefixed with a hairline em-dash, e.g. `— {originalMood}`.
-  6. **Why** — 20px sans, 3 lines max (`whyThisMatch` for merchant, otherwise the second sentence of `tastesLike`).
-- Footer strip: 120px tall band at bottom, parchment darkened ~4%. Left: 120px QR on cream tile, no shadow. Right of QR: single line `Vibetail` (Cormorant 34px) + tagline `Every mood deserves the perfect pour.` (14px letter-spaced). No `@vibe.tail`, no URL text (the QR is the URL).
+### 4. Harden the prompt against theme-leak
+In both `src/routes/api/generate-cocktail.ts` and `src/routes/api/menu-match.ts`, in the `vibeBlock`:
+- Add an explicit line: *"参考条目只用来学语气和节奏。绝对不要沿用参考条目的主题 / 场景 / 关系对象（例如参考是恋爱/暧昧/接盘/前任类，但用户当下的 vibe 是失业/裁员/搬家/独处，那名字必须写用户当下的主题，不能出现恋爱、接盘、前任、暧昧等词）。"*
+- Add layoff-specific negative examples to the existing "禁忌" block so the model doesn't wander into relationship territory when the user vibe is about work loss.
+
+### 5. (Optional but cheap) Normalize the mood string before matching
+In `MoodInputScreen.tsx` where `moodText` is passed to `pickVibeExample`, lowercase-normalize and expand a small alias map (`layoff → 裁员 失业`, `n+1 → 裁员补偿`, `一亩三分地 → 找工作`) purely for the matcher — the original user text still goes to Gemini untouched.
 
 ## Files touched
 
-- `src/components/screens/ShareCard.tsx` — rewrite the JSX per layout above. Keep the exported `SHARE_CARD_W` / `SHARE_CARD_H` constants and the `forwardRef` signature so the hook and offscreen mount don't have to change. Remove the strict two-column flex split; use one relatively positioned root with the illustration absolutely positioned so it can bleed. Delete the eyebrow, the `YOUR VIBE` pill, the `WHY THIS DRINK` label, and the `@vibe.tail · vibetail.com` handle.
-- `src/hooks/use-share-poster.ts` — no shape change. Confirm `enabled` is only true when `illustrationSource` is non-null (already the case). Add a small guard: also skip when the source `<img>` inside the ShareCard reports `naturalWidth === 0` after `waitForImages`, treating that as `error` so the button surfaces retry instead of exporting a blank left side.
-- `src/components/screens/ResultCardScreen.tsx` — no layout change to on-screen card. Only tweak: pass `illustrationSource` unchanged (already same variable used by the on-screen `<img>`), so the poster is guaranteed byte-identical to the app's cocktail. Confirm the offscreen mount is inside a wrapper with fixed 1200×1800 sizing at `left: -99999px` so `html-to-image` measures correctly.
+- `src/lib/vibe-examples.ts` — add work keywords, work-vibe guard, confidence floor, nullable return type, work moodTags on the existing office example.
+- `src/components/screens/MoodInputScreen.tsx` — handle `null` from `pickVibeExample`; small mood-text normalization before matching.
+- `src/routes/api/generate-cocktail.ts` — theme-leak guard in `vibeBlock`; layoff-aware negative examples.
+- `src/routes/api/menu-match.ts` — same theme-leak guard for parity with the main app.
 
-## Acceptance
-- Poster left side always shows the same cocktail the user sees on-screen (same data URL / URL string).
-- No visible rectangular frame or hard edge around the illustration — it reads as painted onto the parchment.
-- Right column has only: name, quote, (optional) matched drink, user vibe line, why. No labeled sections.
-- Bottom strip is a single compact row: QR + Vibetail wordmark + slogan.
-- If the illustration is not yet ready, Save shows `Preparing…`, never exports a card with an empty left half.
+No schema changes, no new dependencies, no UI-visible changes beyond the improved output.
