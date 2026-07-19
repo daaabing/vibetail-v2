@@ -99,7 +99,7 @@ function MenuLanding() {
     } catch {
       // ignore
     }
-  }, [menu.merchantSlug, menu.hasAlcoholic, setLang]);
+  }, [menu.merchantSlug, menu.menuSlug, menu.hasAlcoholic, setLang]);
 
   const games = resolveMenuGames(menu.enabledGameIds, menu.gameDisplayOrder);
   const primaryGame = games[0];
