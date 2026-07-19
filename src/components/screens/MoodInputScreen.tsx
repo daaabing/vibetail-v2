@@ -586,6 +586,8 @@ function StageOne({
   hasVibe,
   onPickVibe,
   onCustomChange,
+  onPrefill,
+  userTouched,
   onClearCustom: _onClearCustom,
   onNext,
 }: {
@@ -599,14 +601,33 @@ function StageOne({
   hasVibe: boolean;
   onPickVibe: (label: string, color: string) => void;
   onCustomChange: (text: string) => void;
+  onPrefill: (text: string) => void;
+  userTouched: boolean;
   onClearCustom: () => void;
   onNext: () => void;
 }) {
   const placeholders = lang === "zh" ? MOOD_PLACEHOLDERS_ZH : MOOD_PLACEHOLDERS_EN;
-  const [phIdx, setPhIdx] = useState(() =>
-    Math.floor(Math.random() * placeholders.length),
-  );
-  const ph = placeholders[phIdx % placeholders.length];
+
+  const pickRandom = () =>
+    placeholders[Math.floor(Math.random() * placeholders.length)];
+
+  // Initial prefill on mount if the textarea is empty and no vibe picked.
+  useEffect(() => {
+    if (!customMood && !pickedLabel) onPrefill(pickRandom());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Rotate the prefilled line every ~4s, but only while the user has
+  // neither typed nor picked a vibe.
+  useEffect(() => {
+    if (userTouched || pickedLabel) return;
+    const id = window.setInterval(() => {
+      onPrefill(pickRandom());
+    }, 4000);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userTouched, pickedLabel, lang]);
+
   const shrunkBottle = Math.round(bottleSize * 0.85);
 
   return (
