@@ -614,16 +614,17 @@ function StageOne({
         </p>
       </div>
 
-      {/* Bottle (visual center — fixed, natural proportion) */}
+      {/* Bottle (visual center — natural height, tight to reply line) */}
       <div
         className="bottle-section flex items-center justify-center"
         style={{
-          flex: "0 0 330px",
+          flex: "none",
           width: "100%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+          marginTop: 4,
         }}
       >
         <div className="bottle-visual">
@@ -643,7 +644,7 @@ function StageOne({
         </div>
 
         {/* Reply line sticks directly under the bottle */}
-        <div className="mood-response" style={{ marginTop: 10, minHeight: 26 }}>
+        <div className="mood-response" style={{ marginTop: 6, minHeight: 24 }}>
           <AnimatePresence mode="wait">
             {hasVibe && (
               <motion.span
@@ -669,13 +670,14 @@ function StageOne({
         </div>
       </div>
 
-      {/* Tag cloud — compact, fixed height, internal infinite scroll */}
+      {/* Tag cloud — fills remaining space between bottle and input */}
       <div
         className="mood-tags-section relative w-full mx-auto"
         style={{
-          flex: "0 0 190px",
+          flex: "1 1 0",
+          minHeight: 0,
           maxWidth: 600,
-          marginTop: 4,
+          marginTop: 2,
           overflow: "hidden",
         }}
       >
@@ -808,30 +810,22 @@ function StageOne({
         }
 
         @media (max-height: 780px) {
-          .bottle-section {
-            flex-basis: 300px !important;
-          }
           .bottle-section svg,
           .bottle-section img {
-            max-height: 270px;
+            max-height: 260px;
             transform: scale(0.9);
           }
         }
         @media (max-height: 720px) {
-          .mood-tags-section {
-            flex-basis: 145px !important;
-          }
           .mood-tag {
             height: 34px !important;
             padding: 0 12px !important;
             font-size: 13px !important;
           }
-          .bottle-section {
-            flex-basis: 280px !important;
-          }
           .bottle-section svg,
           .bottle-section img {
-            max-height: 250px;
+            max-height: 230px;
+            transform: scale(0.85);
           }
         }
 
@@ -844,21 +838,14 @@ function StageOne({
           .stage-one-title { font-size: 20px !important; }
           .stage-one-sub   { font-size: 11px !important; }
 
-          .bottle-section {
-            flex: 0 0 clamp(240px, 34dvh, 300px) !important;
-          }
           .bottle-section svg,
           .bottle-section img {
-            max-height: clamp(200px, 30dvh, 260px);
+            max-height: clamp(180px, 26dvh, 240px);
             transform: scale(1);
           }
-          .mood-response { margin-top: 6px !important; min-height: 22px !important; }
+          .mood-response { margin-top: 4px !important; min-height: 20px !important; }
           .mood-response-line { font-size: 16px !important; }
 
-          .mood-tags-section {
-            flex: 0 0 clamp(150px, 20dvh, 200px) !important;
-            margin-top: 2px !important;
-          }
           .mood-tags-scroll {
             gap: 6px 6px !important;
             padding: 6px 10px 16px !important;
@@ -869,29 +856,23 @@ function StageOne({
             line-height: 1.1 !important;
           }
 
-          .stage-one-input { margin-top: 6px !important; }
+          .stage-one-input { margin-top: 4px !important; }
           .stage-one-input-label { margin-bottom: 2px !important; font-size: 10px !important; }
-          .stage-one-textarea { height: 68px !important; padding-top: 8px !important; padding-bottom: 24px !important; font-size: 14px !important; }
+          .stage-one-textarea { height: 60px !important; padding-top: 8px !important; padding-bottom: 22px !important; font-size: 14px !important; }
 
           .stage-one-cta {
-            padding-top: 6px !important;
-            padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+            padding-top: 4px !important;
+            padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
           }
         }
 
         /* Very short phones (iPhone SE etc.) */
         @media (max-width: 767px) and (max-height: 700px) {
-          .bottle-section {
-            flex: 0 0 220px !important;
-          }
           .bottle-section svg,
           .bottle-section img {
-            max-height: 190px;
+            max-height: 170px;
           }
-          .mood-tags-section {
-            flex: 0 0 130px !important;
-          }
-          .stage-one-textarea { height: 60px !important; }
+          .stage-one-textarea { height: 54px !important; }
         }
       `}</style>
     </motion.div>
