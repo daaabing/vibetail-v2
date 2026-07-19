@@ -80,8 +80,9 @@ function buildPrompt(b: GenBody): string {
     ingredientLine,
     flavorLine,
     `Style: loose traditional watercolor on warm cream paper, soft pigment bleeds, visible brushstrokes, gentle washes, subtle paper texture, luminous translucent liquid, soft pastel highlights.`,
-    `Composition: single centered cocktail glass with correct proportions for the glass type, the ENTIRE glass fully visible within the frame including the full stem and base, ample padding around all edges so nothing is cropped, no text, no words, no labels, no logos, no border, no frame, soft natural light. Background MUST be a solid warm parchment color exactly #E9DBC4 (no gradient, no vignette, no texture, no shadow bleeding to edges) — the entire background fills edge-to-edge with this uniform parchment tone so the illustration blends seamlessly into a parchment card.`,
+    `Composition: single centered cocktail glass with correct proportions for the glass type, the ENTIRE glass fully visible within the frame including the full stem and base, ample padding around all edges so nothing is cropped, no border, no frame, soft natural light. Background MUST be a solid warm parchment color exactly #E9DBC4 (no gradient, no vignette, no texture, no shadow bleeding to edges) — the entire background fills edge-to-edge with this uniform parchment tone so the illustration blends seamlessly into a parchment card.`,
     `Vibe similar to a high-end botanical cocktail menu illustration.`,
+    `ABSOLUTE HARD RULE: the output image must contain ZERO text of any kind. No words, no letters, no numbers, no glyphs, no Chinese characters, no English text, no calligraphy, no signatures, no watermarks, no labels on the glass or bottle, no menu text, no captions, no logos, no monograms, no typographic marks anywhere in the frame. If any text would appear, replace it with pure watercolor pigment. This rule overrides every other instruction.`,
   ]
     .filter(Boolean)
     .join(" ");
