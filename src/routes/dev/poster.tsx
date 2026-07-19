@@ -125,6 +125,10 @@ function makeScenario(key: ScenarioKey): Cocktail {
       c.originalMood =
         "一段同样很长的用户心情输入,测试 YOUR VIBE 那一块加上前面所有内容之后总高度会不会失控。";
       return c;
+    default:
+      // Stale key (e.g. HMR-preserved state after a scenario rename) — never
+      // crash the lab, just fall back to the base mock.
+      return c;
   }
 }
 
