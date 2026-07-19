@@ -458,6 +458,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [showAuth, setShowAuth] = useState(false);
   const [pendingAction, setPendingAction] = useState<null | "save" | "share" | "bar">(null);
   const [mixingVisible, setMixingVisible] = useState(true);
+  const [savePreview, setSavePreview] = useState<{ dataUrl: string; filename: string } | null>(null);
   const mixingStartedAtRef = useRef(Date.now());
   const wasMixingRef = useRef(false);
   const captureRef = useRef<HTMLDivElement>(null);
@@ -686,6 +687,33 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     if (line) ctx.fillText(line, x, yy);
   }
 
+  const downloadDataUrl = async (dataUrl: string, filename: string) => {
+    const blob = await (await fetch(dataUrl)).blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.download = filename;
+    link.href = blobUrl;
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+  };
+
+  const shareDataUrl = async (dataUrl: string, filename: string) => {
+    const blob = await (await fetch(dataUrl)).blob();
+    const file = new File([blob], filename, { type: "image/png" });
+    const nav = navigator as Navigator & {
+      canShare?: (data: { files: File[] }) => boolean;
+      share?: (data: { files: File[]; title?: string }) => Promise<void>;
+    };
+    if (nav.canShare && nav.share && nav.canShare({ files: [file] })) {
+      await nav.share({ files: [file], title: cocktail?.cocktailName ?? "Vibetail" });
+      return;
+    }
+    await downloadDataUrl(dataUrl, filename);
+  };
+
 
   const handleSave = async () => {
     if (!cocktail || !captureRef.current) return;
@@ -705,48 +733,17 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       const dataUrl = await compositeQr(raw, qrDataUrl);
       const filename = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
 
-      // Convert to blob
-      const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], filename, { type: "image/png" });
-
-      const nav = navigator as Navigator & {
-        canShare?: (data: { files: File[] }) => boolean;
-        share?: (data: { files: File[]; title?: string }) => Promise<void>;
-      };
-      // On mobile (touch-only, no hover), prefer Web Share so users can save
-      // directly to Photos/Files. On desktop, always download the file directly
-      // — desktop Safari/Chrome would otherwise pop the macOS share sheet.
-      const isMobile =
+      const isCompactViewport =
         typeof window !== "undefined" &&
-        window.matchMedia?.("(hover: none) and (pointer: coarse)").matches;
-      if (isMobile && nav.canShare && nav.share && nav.canShare({ files: [file] })) {
-        try {
-          await nav.share({ files: [file], title: cocktail.cocktailName });
-          return;
-        } catch (err) {
-          if ((err as Error)?.name === "AbortError") return;
-          // fall through to download fallback
-        }
+        (window.innerWidth <= 768 || window.matchMedia?.("(hover: none) and (pointer: coarse)").matches);
+
+      if (isCompactViewport) {
+        setSavePreview({ dataUrl, filename });
+        return;
       }
 
-      // Try classic download link (works on desktop and most Android)
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.download = filename;
-      link.href = blobUrl;
-      link.rel = "noopener";
-      link.target = "_blank";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // iOS Safari fallback: open image in new tab so user can long-press save
-      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-      if (isIOS) {
-        window.open(blobUrl, "_blank");
-      }
-
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+      await downloadDataUrl(dataUrl, filename);
+      toast.success(lang === "zh" ? "卡片已生成" : "Card generated");
     } catch (e) {
       console.error("save error", e);
       toast.error(lang === "zh" ? "保存失败，请重试" : "Save failed, please retry");
