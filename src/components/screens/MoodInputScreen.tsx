@@ -878,11 +878,13 @@ function StageOne({
 
         /* Very short phones (iPhone SE etc.) */
         @media (max-width: 767px) and (max-height: 700px) {
+          .bottle-visual { height: 170px; }
           .bottle-section svg,
           .bottle-section img {
             max-height: 170px;
           }
           .stage-one-textarea { height: 54px !important; }
+
         }
       `}</style>
     </motion.div>
