@@ -103,8 +103,13 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
         `参考 tasting note（仅作语气参考）: ${vibe.tastesLike}`,
         `参考 flavor 描述（仅作语气参考）: ${vibe.flavorProfile}`,
         ``,
+        `【极其重要 - 主题隔离】参考条目只用来学"语气 / 节奏 / 句式"，绝对不要沿用参考条目的"主题 / 场景 / 关系对象 / 情绪对象"。`,
+        `例如：参考条目是恋爱 / 暧昧 / 前任 / 接盘 / 表白 / 分手类，但用户当下的 vibe 是失业 / 裁员 / 被优化 / 搬家 / 独处 / 学业 / 疲惫，那 vibeName 必须完全围绕用户当下的主题，绝对不能出现"恋爱 / 接盘 / 前任 / 暧昧 / 表白 / 分手 / 男友 / 女友 / 对象"这些参考条目里才有的词。反之亦然。`,
+        `vibeName 里出现的名词 / 场景 / 对象，必须来自"用户当下的 mood / flavor / preference"，不能来自"参考条目"。`,
+        ``,
       ].join("\n")
     : "";
+
   const langRule = isZh
     ? [
         `OUTPUT LANGUAGE: Simplified Chinese (简体中文) for vibeName / tastesLike / flavorProfile / whyThisMatch / roast. 'matchedName' MUST stay in the original menu name (不要翻译). 'category' stays English.`,
