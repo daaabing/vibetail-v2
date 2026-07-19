@@ -731,19 +731,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       const dataUrl = await compositeQr(raw, qrDataUrl);
       const filename = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
 
-      const isCompactViewport =
-        typeof window !== "undefined" &&
-        (window.innerWidth <= 768 || window.matchMedia?.("(hover: none) and (pointer: coarse)").matches);
-
-      if (isCompactViewport) {
-        const blob = await (await fetch(dataUrl)).blob();
-        const file = new File([blob], filename, { type: "image/png" });
-        setSavePreview({ dataUrl, filename, file });
-        return;
-      }
-
-      await downloadDataUrl(dataUrl, filename);
-      toast.success(lang === "zh" ? "卡片已生成" : "Card generated");
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], filename, { type: "image/png" });
+      setSavePreview({ dataUrl, filename, file });
     } catch (e) {
       console.error("save error", e);
       toast.error(lang === "zh" ? "保存失败，请重试" : "Save failed, please retry");
