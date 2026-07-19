@@ -689,11 +689,10 @@ function StageOne({
         </div>
       </div>
 
-      {/* Tag cloud — fills remaining space between bottle and input */}
+      {/* Tag cloud — capped window on mobile, fills remaining space on desktop */}
       <div
         className="mood-tags-section relative mx-auto"
         style={{
-          flex: "1 1 0",
           minHeight: 0,
           width: "min(100%, 320px)",
           marginTop: 2,
@@ -702,6 +701,7 @@ function StageOne({
       >
         <FloatingVibes lang={lang} selected={pickedLabel} onPick={onPickVibe} />
       </div>
+
 
       {/* Inline custom mood input (fixed) */}
       <div className="stage-one-input flex-none mt-2">
