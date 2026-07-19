@@ -33,6 +33,9 @@ export interface Cocktail {
   menuItemDescription?: string | null;
   // The actual menu item's ingredient list (used to preserve real drink identity in the illustration).
   menuItemIngredients?: string[] | null;
+  // A link to the merchant's full menu (image or PDF) shown as "View full menu".
+  fullMenuUrl?: string | null;
+  fullMenuType?: "pdf" | "image" | null;
 
 }
 
