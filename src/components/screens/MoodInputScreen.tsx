@@ -676,7 +676,7 @@ function StageOne({
         style={{
           flex: "1 1 0",
           minHeight: 0,
-          width: "min(100%, 340px)",
+          width: "min(100%, 320px)",
           marginTop: 2,
           overflow: "hidden",
         }}
