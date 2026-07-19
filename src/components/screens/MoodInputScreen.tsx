@@ -114,6 +114,11 @@ export default function MoodInputScreen({
   const [isGenerating, setIsGenerating] = useState(false);
 
   // ── Derived vibe ──────────────────────────────────────────────────
+  // The textarea is always prefilled (either random line, vibe description,
+  // or user text), so the "has vibe" gate is effectively always true — the
+  // Continue button stays visible and a no-op user still moves forward with
+  // whatever line is currently shown.
+  const [userTouchedMood, setUserTouchedMood] = useState(false);
   const hasVibe = !!pickedLabel || customMood.trim().length > 0;
 
   const moodText = useMemo(() => {
@@ -128,16 +133,12 @@ export default function MoodInputScreen({
   );
 
   const replyLine = useMemo(() => {
-    if (!hasVibe) return "";
-    if (customMood.trim()) {
-      return lang === "zh"
-        ? "收到，这个状态很适合调一杯。"
-        : "Got it. That's a good state to mix from.";
-    }
-    return moodCfg.response;
-  }, [hasVibe, customMood, moodCfg, lang]);
+    // The prefilled/vibe description now lives directly in the textarea,
+    // so we no longer echo a bartender reply above the bottle.
+    return "";
+  }, []);
 
-  const baseColor = customMood.trim() ? "#B7A9B3" : moodCfg.color;
+  const baseColor = customMood.trim() && !pickedLabel ? "#B7A9B3" : moodCfg.color;
   const liveBottleColor = computeBottleColor(baseColor, sensory);
   const liveFill = computeFill(hasVibe, sensory);
 
@@ -165,12 +166,20 @@ export default function MoodInputScreen({
 
   const pickVibe = (label: string, color: string) => {
     if (pickedLabel === label) {
+      // Toggling off — restore a fresh random prefill so the textarea
+      // never goes empty and the CTA stays live.
       setPickedLabel(null);
+      const pool = lang === "zh" ? MOOD_PLACEHOLDERS_ZH : MOOD_PLACEHOLDERS_EN;
+      setCustomMood(pool[Math.floor(Math.random() * pool.length)]);
+      setUserTouchedMood(false);
       return;
     }
     setPickedLabel(label);
     setPickedColor(color);
-    setCustomMood("");
+    // Overwrite textarea with a description tied to the picked vibe.
+    const cfg = getMoodConfig(label, color, lang);
+    setCustomMood(cfg.response);
+    setUserTouchedMood(false);
     track("vibe_quick_selected", {
       selected_vibe: label,
       source: "quick",
@@ -183,9 +192,15 @@ export default function MoodInputScreen({
   };
 
 
+  // Setter used only for auto-prefill / rotation — bypasses tracking and
+  // does NOT clear a picked vibe.
+  const setPrefillMood = (text: string) => {
+    setCustomMood(text);
+  };
 
   const submitCustom = (text: string) => {
     setCustomMood(text);
+    setUserTouchedMood(true);
     if (text.trim()) {
       setPickedLabel(null);
       track("vibe_custom_submitted", {
@@ -196,6 +211,7 @@ export default function MoodInputScreen({
       });
     }
   };
+
 
   const enterSensory = () => {
     if (!hasVibe) return;
