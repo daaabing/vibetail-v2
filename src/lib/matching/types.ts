@@ -65,6 +65,8 @@ export interface PublicMenu {
   menuVersionNumber: number;
   shortIntro: string | null;
   coverImageUrl: string | null;
+  fullMenuUrl: string | null;
+  fullMenuType: "pdf" | "image" | null;
   enabledGameIds: string[];
   gameDisplayOrder: string[];
   hasAlcoholic: boolean;
