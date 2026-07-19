@@ -783,6 +783,9 @@ function StageOne({
         .bottle-section img {
           max-height: 300px;
           width: auto;
+          display: block;
+          margin-left: auto;
+          margin-right: auto;
           transform: scale(1);
           transform-origin: center;
         }
