@@ -800,64 +800,35 @@ function StageOne({
       <style>{`
         .bottle-section svg,
         .bottle-section img {
-          max-height: 300px;
           width: auto;
           display: block;
           margin-left: auto;
           margin-right: auto;
-          transform: scale(1);
-          transform-origin: center;
         }
         .bottle-visual {
           position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
-          height: 300px;
-          overflow: hidden;
         }
-        .bottle-visual > * {
+        .bottle-visual > *:not(.bottle-aura-wrap) {
           position: relative;
           z-index: 1;
         }
         .bottle-aura {
           position: absolute;
-          width: 120%;
-          height: 120%;
-          left: -10%;
-          top: 0%;
-          z-index: 0;
+          inset: 5% -10%;
           filter: blur(32px);
           opacity: 0.18;
           pointer-events: none;
-          transform: scale(1);
         }
 
-
-        @media (max-height: 780px) {
-          .bottle-visual { height: 260px; }
-          .bottle-section svg,
-          .bottle-section img {
-            max-height: 260px;
-            transform: scale(0.9);
-          }
-        }
-        @media (max-height: 720px) {
-          .bottle-visual { height: 230px; }
-          .mood-tag {
-            height: 34px !important;
-            padding: 0 12px !important;
-            font-size: 13px !important;
-          }
-          .bottle-section svg,
-          .bottle-section img {
-            max-height: 230px;
-            transform: scale(0.85);
-          }
+        /* Desktop tag cloud fills remaining vertical space */
+        @media (min-width: 768px) {
+          .mood-tags-section { flex: 1 1 0; }
         }
 
-
-        /* ─── Mobile (< 768px) — one cohesive composition ─── */
+        /* ─── Mobile (< 768px) — capped slots, no cropping ─── */
         @media (max-width: 767px) {
           .stage-one {
             padding-left: 16px;
@@ -866,16 +837,13 @@ function StageOne({
           .stage-one-title { font-size: 20px !important; }
           .stage-one-sub   { font-size: 11px !important; }
 
-          .bottle-visual { height: clamp(180px, 26dvh, 240px); }
-          .bottle-section svg,
-          .bottle-section img {
-            max-height: clamp(180px, 26dvh, 240px);
-            transform: scale(1);
-          }
-
           .mood-response { margin-top: 4px !important; min-height: 20px !important; }
           .mood-response-line { font-size: 16px !important; }
 
+          .mood-tags-section {
+            flex: 0 0 auto;
+            height: clamp(150px, 24dvh, 210px) !important;
+          }
           .mood-tags-scroll {
             gap: 6px 6px !important;
             padding: 6px 10px 16px !important;
@@ -888,9 +856,10 @@ function StageOne({
 
           .stage-one-input { margin-top: 4px !important; }
           .stage-one-input-label { margin-bottom: 2px !important; font-size: 10px !important; }
-          .stage-one-textarea { height: 72px !important; padding-top: 8px !important; padding-bottom: 24px !important; font-size: 14px !important; }
+          .stage-one-textarea { height: 68px !important; padding-top: 8px !important; padding-bottom: 24px !important; font-size: 14px !important; }
 
           .stage-one-cta {
+            min-height: 62px;
             padding-top: 4px !important;
             padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
           }
@@ -898,16 +867,12 @@ function StageOne({
 
         /* Very short phones (iPhone SE etc.) */
         @media (max-width: 767px) and (max-height: 700px) {
-          .bottle-visual { height: 170px; }
-          .bottle-section svg,
-          .bottle-section img {
-            max-height: 170px;
-          }
-          .stage-one-textarea { height: 62px !important; }
-
+          .mood-tags-section { height: clamp(120px, 20dvh, 170px) !important; }
+          .stage-one-textarea { height: 58px !important; }
         }
       `}</style>
     </motion.div>
+
   );
 }
 
