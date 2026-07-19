@@ -872,23 +872,69 @@ function FloatingVibesInline({
   selected: string | null;
   onPick: (label: string, color: string) => void;
 }) {
+  const rows = lang === "zh" ? VIBE_ROWS_ZH : VIBE_ROWS_EN;
+  const items = rows.flatMap((r) =>
+    r.labels.map((label) => ({ label, color: r.color })),
+  );
+  const anyPicked = !!selected;
   return (
-    <div className="vibe-chip-container">
-      <FloatingVibes lang={lang} selected={selected} onPick={onPick} />
-      <style>{`
-        .vibe-chip-container .mood-tags-scroll {
-          max-height: none !important;
-          overflow: visible !important;
-          height: auto !important;
-          mask-image: none !important;
-          -webkit-mask-image: none !important;
-          padding: 4px 6px 8px !important;
-          gap: 8px 7px !important;
-        }
-      `}</style>
+    <div
+      className="vibe-chip-container"
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        gap: "8px 7px",
+        padding: "4px 6px 8px",
+      }}
+    >
+      {items.map((it, i) => {
+        const isSel = selected === it.label;
+        return (
+          <button
+            key={`${it.label}-${i}`}
+            type="button"
+            onClick={() => onPick(it.label, it.color)}
+            className="mood-tag shrink-0 rounded-full active:scale-95"
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: 13,
+              padding: "6px 12px",
+              lineHeight: 1.15,
+              whiteSpace: "nowrap",
+              border: isSel
+                ? `1.4px solid ${it.color}`
+                : "1px solid rgba(255,255,255,0.10)",
+              background: isSel ? `${it.color}2E` : "rgba(255,255,255,0.045)",
+              color: isSel ? "var(--app-text)" : "var(--app-text-secondary)",
+              opacity: anyPicked && !isSel ? 0.5 : 1,
+              boxShadow: isSel ? `0 0 18px ${it.color}55` : "none",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+              transition:
+                "background 200ms, border-color 200ms, opacity 200ms, transform 120ms",
+            }}
+          >
+            <span
+              style={{
+                display: "inline-block",
+                width: 5,
+                height: 5,
+                borderRadius: 999,
+                background: isSel ? "currentColor" : it.color,
+                marginRight: 6,
+                verticalAlign: "middle",
+                opacity: isSel ? 1 : 0.7,
+              }}
+            />
+            {it.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
+
 
 
 
