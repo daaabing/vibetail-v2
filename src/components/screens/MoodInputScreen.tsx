@@ -803,13 +803,13 @@ function StageOne({
         }
         .bottle-aura {
           position: absolute;
-          width: 140%;
-          height: 140%;
-          left: -20%;
-          top: -20%;
+          width: 120%;
+          height: 120%;
+          left: -10%;
+          top: 0%;
           z-index: 0;
-          filter: blur(36px);
-          opacity: 0.22;
+          filter: blur(32px);
+          opacity: 0.18;
           pointer-events: none;
           transform: scale(1);
         }
