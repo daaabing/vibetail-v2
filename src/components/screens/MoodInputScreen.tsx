@@ -807,7 +807,8 @@ function StageOne({
         style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}
       >
         <AnimatePresence>
-          {hasVibe && (
+          {(hasVibe || !hasVibe) && (
+
             <motion.button
               key="cta1"
               initial={{ opacity: 0, y: 12 }}
