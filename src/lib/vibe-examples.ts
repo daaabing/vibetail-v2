@@ -145,12 +145,18 @@ const GENERIC_EXAMPLES: VibeExample[] = [
     name: "上班如上坟",
     tastesLike: "周一早上的咖啡也救不了我，老板再说一句我就拌了这杯下去。",
     flavorProfile: "浓缩咖啡 + 威士忌 + 一丝绝望的焦糖。",
-    moodTags: ["上班", "打工", "周一", "加班", "老板", "崩溃", "疲惫", "打工人", "牛马", "想离职", "辞职"],
-    sceneTags: ["工作", "办公室", "周一", "加班", "通勤"],
+    moodTags: [
+      "上班", "打工", "周一", "加班", "老板", "崩溃", "疲惫", "打工人", "牛马", "想离职", "辞职",
+      "layoff", "裁员", "被裁", "失业", "找工作", "求职", "跳槽", "一亩三分地", "刷题", "简历",
+      "n+1", "毕业", "optimize", "优化", "毕业典礼", "被优化", "毕业了", "gap", "空窗",
+      "面试", "onsite", "hr", "offer", "内推", "leetcode",
+    ],
+    sceneTags: ["工作", "办公室", "周一", "加班", "通勤", "求职", "裁员", "找工作"],
     flavorTags: ["bitter", "苦", "strong", "烈", "coffee", "咖啡", "smoky", "烟熏"],
     spiritTags: ["whiskey", "威士忌", "mezcal", "梅斯卡尔"],
     lengthTags: ["short"],
   },
+
   {
     name: "想吃辣的想喝凉的",
     tastesLike: "嘴上说要清淡，手已经点了一份火锅。",
@@ -246,6 +252,20 @@ export function isLiteraryVibe(mood: string, pref = ""): boolean {
   return LITERARY_KEYWORDS.some((k) => text.includes(k.toLowerCase()));
 }
 
+const WORK_KEYWORDS = [
+  "上班", "打工", "加班", "老板", "kpi", "okr", "下班", "打工人", "牛马", "班味",
+  "离职", "辞职", "跳槽", "裁员", "被裁", "失业", "layoff", "optimize", "优化",
+  "找工作", "求职", "面试", "hr", "offer", "简历", "内推", "onsite", "leetcode",
+  "一亩三分地", "刷题", "n+1", "毕业典礼", "被优化",
+  "工作", "办公室", "工位", "同事", "汇报", "开会", "周会", "deadline", "ddl",
+];
+
+export function isWorkVibe(mood: string, pref = ""): boolean {
+  const text = `${mood || ""} ${pref || ""}`.toLowerCase();
+  if (!text.trim()) return false;
+  return WORK_KEYWORDS.some((k) => text.includes(k.toLowerCase()));
+}
+
 
 export interface VibeMatchContext {
   selectedFlavors?: string[];
@@ -255,19 +275,11 @@ export interface VibeMatchContext {
 }
 
 /**
- * Weighted matcher.
- * Scoring (per example):
- *   +3 per mood-tag substring hit in mood
- *   +2 per scene-tag substring hit in mood / customPreference
- *   +2 per flavor-tag overlap with selectedFlavors (case-insensitive)
- *   +1 per flavor-tag substring hit in mood / customPreference
- *   +3 if baseSpirit matches a spiritTag
- *   +1 if drinkLength matches lengthTags
- *   +1.5 emotional bonus if mood reads emotional and example.emotional
- *   -1.5 if mood reads emotional and example is generic (slight, not exclusive)
- *   +random*0.6 jitter
+ * Weighted matcher — returns null when no example is a confident match,
+ * so callers can skip the vibe reference entirely instead of forcing an
+ * unrelated tone onto Gemini.
  */
-export function pickVibeExample(mood: string, ctx: VibeMatchContext = {}): VibeExample {
+export function pickVibeExample(mood: string, ctx: VibeMatchContext = {}): VibeExample | null {
   const m = (mood || "").toLowerCase();
   const pref = (ctx.customPreference || "").toLowerCase();
   const text = `${m} ${pref}`;
@@ -276,18 +288,23 @@ export function pickVibeExample(mood: string, ctx: VibeMatchContext = {}): VibeE
   const length = ctx.drinkLength || "";
   const emotional = isEmotionalVibe(mood);
   const literary = isLiteraryVibe(mood, ctx.customPreference);
+  const work = isWorkVibe(mood, ctx.customPreference);
 
-  let best = VIBE_EXAMPLES[0];
+  let best: VibeExample | null = null;
   let bestScore = -Infinity;
+  // Track the highest tag-based score (no jitter, no length/spirit tiebreakers)
+  // so we can gate on real semantic match strength, not lucky randomness.
+  let bestSemantic = 0;
 
   for (const ex of VIBE_EXAMPLES) {
     let score = 0;
+    let semantic = 0;
 
     for (const tag of ex.moodTags) {
-      if (m.includes(tag.toLowerCase())) score += 3;
+      if (m.includes(tag.toLowerCase())) { score += 3; semantic += 3; }
     }
     for (const tag of ex.sceneTags || []) {
-      if (text.includes(tag.toLowerCase())) score += 2;
+      if (text.includes(tag.toLowerCase())) { score += 2; semantic += 2; }
     }
     for (const tag of ex.flavorTags || []) {
       const t = tag.toLowerCase();
@@ -305,13 +322,25 @@ export function pickVibeExample(mood: string, ctx: VibeMatchContext = {}): VibeE
     if (literary && ex.nameStyle === "literary") score += 2.5;
     if (literary && ex.nameStyle !== "literary") score -= 1;
 
+    // Work vibe: hard steer away from relationship examples, toward the
+    // office example (or any future work-tagged one).
+    if (work && ex.emotional) score -= 4;
+    if (work && ex.name === "上班如上坟") score += 4;
+
 
     score += Math.random() * 0.6;
 
     if (score > bestScore) {
       bestScore = score;
       best = ex;
+      bestSemantic = semantic;
     }
   }
+
+  // Confidence floor: require at least one real tag hit worth 3 points
+  // (a moodTag substring match) — otherwise return null and let the
+  // model free-write in the base Chinese style rules.
+  if (bestSemantic < 3) return null;
   return best;
 }
+

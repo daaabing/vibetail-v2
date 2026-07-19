@@ -302,15 +302,24 @@ export default function MoodInputScreen({
           }
         : null;
 
+      // Normalize a few English/slang tokens so the Chinese tag matcher
+      // can see them (original moodText still goes to Gemini untouched).
+      const matcherMood = (moodText || "")
+        .toLowerCase()
+        .replace(/\blayoff(s|ed)?\b/g, "layoff 裁员 失业 被裁")
+        .replace(/\boptimize(d)?\b/g, "optimize 优化 被优化 裁员")
+        .replace(/一亩三分地/g, "一亩三分地 找工作 求职")
+        .replace(/\bn\+1\b/g, "n+1 裁员补偿 被裁");
       const vibePick =
         lang === "zh"
-          ? pickVibeExample(moodText, {
+          ? pickVibeExample(matcherMood, {
               selectedFlavors: finalFlavors,
               customPreference: mergedPreference,
               baseSpirit,
               drinkLength,
             })
           : null;
+
       const vibeReference = vibePick
         ? {
             name: vibePick.name,
