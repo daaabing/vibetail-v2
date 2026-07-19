@@ -1,188 +1,73 @@
-# Vibetail 两幕调酒流程重构方案
+# Mobile fix — bottle clipping + oversized vibe cloud
 
-把当前 `MoodInputScreen.tsx` 里"问卷式"的一大页拆成两幕沉浸式体验，酒瓶成为全程视觉与反馈中心。**后端 API、结果卡、餐厅菜单匹配、analytics 事件封装全部沿用**，只重写前端交互层。
+## What's actually happening (verified on 390×844)
 
----
+Probed `/mood-input` on mobile with Playwright. Measured elements:
+- Viewport: 844px tall
+- `.bottle-visual` container: `y=94, h=219` (from `clamp(180, 26dvh, 240)` = 219)
+- Bottle SVG bounding box: `y=52, h=219, w=115` — sits **42px above** its container
+- `.mood-tags-section`: `y=339, h=391` — **~46% of the screen**
+- `.stage-one-input`: `y=735, h=97`
+- `.stage-one-cta`: `y=832, h=12` — CTA slot exists but is only 12px (below fold when button appears)
 
-## 一、范围界定
+### Root cause 1 — bottle "cap missing / floating"
 
-**会改动的文件**
-- `src/components/screens/MoodInputScreen.tsx` — 拆成两幕 + 过场
-- `src/components/moodtail/GlassVessel.tsx` — 扩展 props：`fillLevel / hue / bubbles / density / edgeSoftness`，并暴露"原料落入"动画方法
-- `src/components/moodtail/BottomNav.tsx` — 在此流程内隐藏（通过路由判断或 prop）
-- `src/lib/i18n.tsx` — 新增两幕文案 key（中/英）
-- `src/lib/analytics.ts` — 新增 8 个事件（vibe_quick_selected 等）
-- 新增 `src/components/moodtail/vibeflow/` 目录，拆出小组件（见下）
+`VibeBottle` receives `size={300}` and `GlassVessel` renders an inner wrapper that is **300px tall** (aspect 220:420). Mobile CSS then applies:
 
-**不会改动**
-- `src/routes/api/generate-cocktail.ts`、`src/routes/api/menu-match.ts`
-- `src/components/screens/ResultCardScreen.tsx` 与翻卡逻辑
-- `src/lib/dcp-menu.ts`、`src/lib/menu/*`、`restaurant-ctx.ts`
-- Supabase schema、`cocktails-store.ts` 输出结构
-- Landing / Gallery / Auth / 结果卡分享逻辑
-
----
-
-## 二、组件拆分
-
-新增到 `src/components/moodtail/vibeflow/`：
-
-| 组件 | 职责 |
-|---|---|
-| `FlowProgress.tsx` | 两个液滴形进度点，无 "Step 01/02" 文案 |
-| `InteractiveBottle.tsx` | 包装 `GlassVessel`，接收当前 vibe/sensory state 并映射成液位、颜色、气泡、粘度、边缘柔度 |
-| `FloatingVibeOptions.tsx` | 5–7 个漂浮 vibe pill，围绕瓶身，选中后向瓶口飞入 |
-| `CustomVibeSheet.tsx` | 底部展开输入区（radix Dialog + `vaul` 风格；若无 vaul 就用现有 Sheet） |
-| `SensoryControl.tsx` | 单条双向 slider（清爽↔浓郁 等），带端点点击 |
-| `DrinkStrengthControl.tsx` | 慢慢喝 ↔ 来点狠的 单轴（映射 long/short） |
-| `BaseSpiritPreferenceSheet.tsx` | 折叠入口 + 展开列表（受菜单约束） |
-| `ReferenceDrinkInput.tsx` | "+ 我脑子里已经有一杯酒" 折叠输入 |
-| `GenerationTransition.tsx` | 过场：瓶塞盖下 + 摇晃 + 混合 |
-| `vibeFlowMapping.ts` | 三向感官值 → 现有 flavor tags / long-short 的纯函数 |
-
----
-
-## 三、状态与后端映射
-
-新增前端 state（不上库）：
-```ts
-sensoryFreshRich: number       // 0–100，默认 50
-sensorySoftBold: number        // 0–100，默认 50
-sensoryFamiliarUnexpected: number
-hasCustomizedFlavor: boolean
-interactionStage: "vibe" | "transition" | "sensory" | "generating"
+```css
+.bottle-visual { height: clamp(180px, 26dvh, 240px); overflow: hidden; }
+.bottle-section svg { max-height: clamp(180px, 26dvh, 240px); }
 ```
 
-提交前 `vibeFlowMapping.ts` 把它们折叠回**现有** payload：
-- 三向 slider → 2–4 个 flavor tags（既有中文枚举），例：
-  - fresh<40 → 加 `酸/气泡/柑橘/干型` 中 2 个
-  - rich>60 → 加 `酒感/泥土/烟熏/苦` 中 2 个
-  - soft>60 → `甜/奶感/果香/花香`；bold<40 → `辣/苦/烟熏`
-  - familiar>60 → `甜/果香/柑橘`；unexpected<40 → `草本/花香/泥土`
-- 若 `hasCustomizedFlavor` 为 true，用户手选 flavors 覆盖上面
-- 强度轴 → `drinkLength: "long" | "short"`
-- 基酒空 → 不传（后端已支持"自动")
+Two problems compound:
+1. `max-height` only clamps the inner `<svg>` element, **not** the outer wrapper `<div>` that GlassVessel uses for size. The wrapper stays 300px tall, gets flex-centered inside a 219px container, and `overflow: hidden` clips **~40px off both the cap and the base**. That's the "bottle displays wrong".
+2. The `overflow: hidden` was added earlier only to contain the aura glow — it is what's now hiding the cap.
 
-**API schema 不变**，`generate-cocktail` / `menu-match` 收到的 JSON 结构一致。
+### Root cause 2 — vibe cloud eats half the screen
 
----
+- `.mood-tags-section` uses `flex: 1 1 0` with no cap, so it grabs everything left over between bottle (bottom ~313) and input (top ~735) → **~391px, roughly half the viewport**.
+- The scroll content is intentionally tripled for infinite loop (`scrollHeight ≈ 6503`), which is fine, but the visible viewport is what feels overwhelming.
+- Because bottle-visual is clamped small and the "reply line" slot below it is only 24px, all the slack falls into the cloud.
 
-## 四、第一幕：Vibe
+### Root cause 3 — CTA slot squeezed
 
-进入即隐藏 `BottomNav`（通过 `MoodInputScreen` 挂 `data-flow="vibe"` + BottomNav 内路由判断跳过，或直接在两个路由不渲染）。
+When a vibe is picked, the "继续调味" button appears in `.stage-one-cta` which currently reserves only ~12px. On short viewports the button pushes into safe-area / gets partially hidden. Need a real reserved height.
 
-结构：
-```
-[← 返回]     [◉ ○]  FlowProgress
-       "把你现在的状态，倒进来。"
-        选一个最像的，或者随便写一句。
+## Fix plan (frontend/CSS only in `MoodInputScreen.tsx`, plus one prop change)
 
-        ┌───────────────┐
-        │  Interactive  │  瓶身占屏高 34%
-        │    Bottle     │  初始几乎空、微光呼吸
-        └───────────────┘
+All edits are in `src/components/screens/MoodInputScreen.tsx`. No API, no data, no other files.
 
-     ⌜ 暧昧局 ⌟   ⌜ 拼酒局 ⌟
-   ⌜ 成年人的崩溃 ⌟   ⌜ 出来见世面 ⌟
-     ⌜ 今天全靠氛围感 ⌟  ⌜ 人间清醒 ⌟
-              ⌜ 随机来一个 ⌟
+### 1. Make the bottle actually fit its slot
+- Pass a mobile-appropriate `size` to `<VibeBottle>` instead of hard-coding 300. Compute from viewport: `size = Math.min(bottleSize, window height-based value)`. Simplest: use the existing `bottleSize` prop path — set it to `220` for vibe stage on mobile (respect `useIsMobile`).
+- Remove `overflow: hidden` from `.bottle-visual`. Instead, contain the aura by:
+  - shrinking `.bottle-aura` to `width:100%; height:70%; top:15%` and clipping only the aura via its own `mask-image` (no clipping of siblings), OR
+  - wrapping just the aura in an `overflow:hidden` inner div that sits behind the SVG (z-index 0), leaving the SVG free to render at natural size.
+- Drop the CSS `max-height` override on `.bottle-section svg` (no longer needed once the JS `size` is correct); keep only a `width:auto; display:block` centering rule.
 
-   还是你自己说：今天到底怎么了？ ›
+### 2. Give the vibe cloud a sensible cap on mobile
+- Change `.mood-tags-section` from `flex: 1 1 0` to `flex: 0 1 auto` with an explicit `height: clamp(160px, 26dvh, 220px)` on mobile (`max-width: 767px`). Desktop keeps `flex: 1 1 0`.
+- This makes the cloud a fixed "window" (~26% of viewport) rather than "everything left over", which is what the user is complaining about.
+- Keep the infinite-loop scroll behavior in `FloatingVibes.tsx` unchanged.
 
-                       [ 继续调味 ]  ← 选后出现
-```
+### 3. Rebalance vertical space so the CTA is always visible
+- Change the outer stage container from `flex-1` with everything relying on `flex-1-1-0` middle, to an explicit column with reserved slots on mobile:
+  - title: auto
+  - bottle+reply: auto (natural, driven by JS bottle size)
+  - tags: `clamp(160, 26dvh, 220)` (capped, see #2)
+  - input: auto (existing 72px textarea)
+  - CTA: **`min-height: 60px`** reserved even when the button is hidden, so layout doesn't jump when a vibe is picked
+- Tighten paddings around bottle/reply/tags so the whole column fits inside 100dvh minus safe areas on 390×844, 375×667, and 430×932.
 
-交互：
-- 点 pill → pill 缩小飞向瓶口 → 瓶内液位 +18%，色调由 vibe → hue LUT，气泡涌一次
-- 已选 pill 保持高亮，其他 opacity 0.45，可再点切换
-- 副标题变成本地预设反馈句（`vibe → response` 映射，无 AI 调用）
-- 自定义入口点击 → bottom sheet；提交后播放"文字落入"动画，跳过 pill 高亮
-- 未选/未输入前隐藏底部 CTA；选定后 CTA `继续调味` fade-in
+### 4. Verify
 
----
+After edits, re-run the Playwright probe on 390×844 and 375×667 to confirm:
+- SVG bounding box top ≥ container top (no cap clipping)
+- `.mood-tags-section` height ≤ 240 on mobile
+- `.stage-one-cta` bottom ≤ viewport height and slot height ≥ 56
+- Screenshot both viewports before/after.
 
-## 五、过场（0.9s）
+## Out of scope
 
-- pill/文本余像收进瓶口
-- 瓶身左右晃 1 次（±4°）
-- 液面重新聚色形成第一层
-- 中央短暂显示 `收到。现在给它一点味道。`
-- 第二幕控件从底部滑入
-
----
-
-## 六、第二幕：Sensory
-
-结构（默认一屏内可见）：
-```
-[← 返回]    [○ ◉]
-       "想把它调成什么感觉？"
-         凭直觉选，不用懂酒。
-
-        ┌───────────────┐
-        │  Bottle 保留   │  瓶高降到 24%
-        │  已有颜色      │
-        └───────────────┘
-
-  清爽 ●━━━━━━━━━━ 浓郁
-  柔和 ━━━●━━━━━━ 刺激
-  熟悉 ━━━━━●━━━━ 意外
-
-   现在的感觉：清爽、柔和，带一点意外。
-
-   › 我想自己选具体味道
-   › 今晚想慢慢喝，还是来点狠的？
-   › 基酒交给我们 · 我有偏好
-   › ＋ 我脑子里已经有一杯酒
-
-   ────────────────────────
-   [   这杯交给你了   ]  sticky
-```
-
-滑动时 `InteractiveBottle` 实时响应：
-- fresh↔rich：色相 & 液体粘度
-- soft↔bold：边缘柔度 / 加入细颗粒
-- familiar↔unexpected：单色 vs 分层渐变
-
-摘要句由 sensory state 拼合本地词汇生成。
-
-三个 accordion（可选精细口味 / 强度 / 基酒 / 参考酒）默认全部收起。基酒展开时若 `restaurantCtx` 存在，则只列菜单允许 spirits；只剩 1 种时整块隐藏。
-
----
-
-## 七、CTA 与生成
-
-- 未动过 sensory：`这杯交给你了`；动过：`按这个感觉调一杯`
-- 点击 → 禁用 → `GenerationTransition`（瓶塞落下、晃动 700ms）→ 调用现有 `generateCocktail` / `matchMenu`
-- Loading 文案轮换（i18n）：`正在读懂你的状态… / 正在挑选合适的风味… / 正在把崩溃调得顺口一点…`，仅当有 `menuId` 时插入 `正在匹配今晚的菜单…`
-
----
-
-## 八、Analytics
-
-复用现有 `track()`。新增事件（payload 都带 `restaurant_id? menu_id? session_id`）：
-`vibe_quick_selected`, `vibe_custom_submitted`(不带原文，只 length), `vibe_ingredient_animation_completed`, `sensory_control_changed`(control_name/value), `detailed_flavors_expanded`, `base_spirit_preference_opened`, `reference_drink_expanded`, `drink_generation_started`.
-
----
-
-## 九、可访问与响应式
-
-- 375 / 390 / 430 全部一屏检查
-- `prefers-reduced-motion`：所有位移动画退化成 opacity + 微 scale，过场缩到 200ms
-- CTA 使用 `pb-[calc(env(safe-area-inset-bottom)+16px)]`
-- Sheet 打开时 body 锁滚，键盘弹起用 `visualViewport` 抬升
-- 桌面：`max-w-[520px] mx-auto`
-
----
-
-## 十、实施顺序
-
-1. 抽 `vibeFlowMapping.ts` + 扩 `GlassVessel` props（不破坏现调用）
-2. 建 `vibeflow/` 组件骨架
-3. 用新组件在 `MoodInputScreen` 内替换第一幕，跑通选 vibe → 瓶反馈
-4. 加过场 + 第二幕
-5. 接回现有 submit 路径 + analytics
-6. 隐藏 `BottomNav` in-flow
-7. 逐宽度、reduced-motion、餐厅菜单三种场景回归
-
-完成后向你展示新的 `/mood-input` 两幕效果，`ResultCardScreen` 与后端契约完全不动。
+- No changes to `GlassVessel.tsx` internals, animation, or vibe library.
+- No changes to Stage Two, transition stage, backend, or analytics.
+- Desktop layout stays as-is (the media queries only alter mobile).
