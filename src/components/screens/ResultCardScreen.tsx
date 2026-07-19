@@ -636,32 +636,46 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         const W = base.naturalWidth;
         const H = base.naturalHeight;
         const bandH = Math.round(W * 0.22);
+        const contentH = H + bandH;
+        // Square 1:1 output ("2x2"). Side = max(W, contentH); pad the shorter axis with parchment.
+        const S = Math.max(W, contentH);
+        const offsetX = Math.round((S - W) / 2);
+        const offsetY = Math.round((S - contentH) / 2);
         const canvas = document.createElement("canvas");
-        canvas.width = W;
-        canvas.height = H + bandH;
+        canvas.width = S;
+        canvas.height = S;
         const ctx = canvas.getContext("2d");
         if (!ctx) return reject(new Error("no ctx"));
+
+        // Fill full square with parchment gradient background
+        const bgGrad = ctx.createRadialGradient(S / 2, S * 0.4, S * 0.1, S / 2, S / 2, S * 0.75);
+        bgGrad.addColorStop(0, "#F3E8D6");
+        bgGrad.addColorStop(0.6, "#E9DBC4");
+        bgGrad.addColorStop(1, "#C9B79A");
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, S, S);
+
         // paint the card
-        ctx.drawImage(base, 0, 0, W, H);
+        ctx.drawImage(base, offsetX, offsetY, W, H);
         // footer band — same parchment tones as the card face
-        const grad = ctx.createLinearGradient(0, H, 0, H + bandH);
+        const grad = ctx.createLinearGradient(0, offsetY + H, 0, offsetY + H + bandH);
         grad.addColorStop(0, "#F3E8D6");
         grad.addColorStop(0.55, "#E9DBC4");
         grad.addColorStop(1, "#DCC9AC");
         ctx.fillStyle = grad;
-        ctx.fillRect(0, H, W, bandH);
+        ctx.fillRect(offsetX, offsetY + H, W, bandH);
         // divider
         ctx.fillStyle = "rgba(80,55,30,0.20)";
-        ctx.fillRect(Math.round(W * 0.08), H, Math.round(W * 0.84), 1);
+        ctx.fillRect(offsetX + Math.round(W * 0.08), offsetY + H, Math.round(W * 0.84), 1);
 
         const drawText = () => {
           const pad = Math.round(W * 0.05);
           const qrSize = Math.round(bandH * 0.72);
-          const qrX = pad;
-          const qrY = H + Math.round((bandH - qrSize) / 2);
+          const qrX = offsetX + pad;
+          const qrY = offsetY + H + Math.round((bandH - qrSize) / 2);
           // text block
           const textX = qrX + qrSize + Math.round(W * 0.04);
-          const textW = W - textX - pad;
+          const textW = W - pad - (textX - offsetX);
           const slogan = "Every mood deserves the perfect pour.";
           const scanLine = "Scan to mix your own → vibetail.com";
           const igLine = "Follow @vibe.tail for more cocktails";
@@ -669,26 +683,24 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           ctx.fillStyle = "#2A2118";
           ctx.textBaseline = "top";
           ctx.font = `600 ${Math.round(bandH * 0.16)}px "Cormorant Garamond", Georgia, serif`;
-          const sloganY = H + Math.round(bandH * 0.18);
+          const sloganY = offsetY + H + Math.round(bandH * 0.18);
           wrapText(ctx, slogan, textX, sloganY, textW, Math.round(bandH * 0.20));
 
           ctx.fillStyle = "#8A7A62";
           ctx.font = `600 ${Math.round(bandH * 0.11)}px "Cormorant Garamond", Georgia, serif`;
-          ctx.fillText(scanLine, textX, H + Math.round(bandH * 0.58));
+          ctx.fillText(scanLine, textX, offsetY + H + Math.round(bandH * 0.58));
 
           ctx.fillStyle = "#8A7A62";
           ctx.font = `500 ${Math.round(bandH * 0.10)}px "Cormorant Garamond", Georgia, serif`;
-          ctx.fillText(igLine, textX, H + Math.round(bandH * 0.80));
+          ctx.fillText(igLine, textX, offsetY + H + Math.round(bandH * 0.80));
+
+          return { qrX, qrY, qrSize };
         };
 
         if (!qr) { drawText(); return resolve(canvas.toDataURL("image/png")); }
         const qrImg = new Image();
         qrImg.onload = () => {
-          const pad = Math.round(W * 0.05);
-          const qrSize = Math.round(bandH * 0.72);
-          const qrX = pad;
-          const qrY = H + Math.round((bandH - qrSize) / 2);
-          drawText();
+          const { qrX, qrY, qrSize } = drawText();
           ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
           resolve(canvas.toDataURL("image/png"));
         };
@@ -698,6 +710,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       base.onerror = reject;
       base.src = baseDataUrl;
     });
+
 
   function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number) {
     const words = text.split(" ");
