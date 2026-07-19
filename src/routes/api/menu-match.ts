@@ -339,6 +339,8 @@ export const Route = createFileRoute("/api/menu-match")({
         const shaped = {
           cocktailName: parsed.vibeName,
           menuItemName: menuItem.name,
+          menuItemDescription: menuItem.description ?? "",
+          menuItemIngredients: menuItem.ingredients,
           tastesLike: parsed.tastesLike,
           flavorProfile: parsed.flavorProfile,
           ingredients: menuItem.ingredients,
