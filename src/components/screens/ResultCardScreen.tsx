@@ -786,13 +786,15 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     ? `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`
     : "vibetail.png";
   const sharePoster = useSharePosterPreparation({
-    ref: shareCardRef,
+    cocktail,
     cocktailId: cocktail?.id ?? cocktail?.publicId ?? null,
     illustrationSource,
     qrDataUrl,
     filename: shareFilename,
+    lang,
     enabled: !!cocktail && !!illustrationSource,
   });
+
 
   const handleSave = async () => {
     if (!cocktail) return;
