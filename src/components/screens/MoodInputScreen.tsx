@@ -794,6 +794,7 @@ function StageOne({
           display: flex;
           align-items: center;
           justify-content: center;
+          height: 300px;
         }
         .bottle-visual > * {
           position: relative;
@@ -812,7 +813,9 @@ function StageOne({
           transform: scale(1.2);
         }
 
+
         @media (max-height: 780px) {
+          .bottle-visual { height: 260px; }
           .bottle-section svg,
           .bottle-section img {
             max-height: 260px;
@@ -820,6 +823,7 @@ function StageOne({
           }
         }
         @media (max-height: 720px) {
+          .bottle-visual { height: 230px; }
           .mood-tag {
             height: 34px !important;
             padding: 0 12px !important;
@@ -832,6 +836,7 @@ function StageOne({
           }
         }
 
+
         /* ─── Mobile (< 768px) — one cohesive composition ─── */
         @media (max-width: 767px) {
           .stage-one {
@@ -841,11 +846,13 @@ function StageOne({
           .stage-one-title { font-size: 20px !important; }
           .stage-one-sub   { font-size: 11px !important; }
 
+          .bottle-visual { height: clamp(180px, 26dvh, 240px); }
           .bottle-section svg,
           .bottle-section img {
             max-height: clamp(180px, 26dvh, 240px);
             transform: scale(1);
           }
+
           .mood-response { margin-top: 4px !important; min-height: 20px !important; }
           .mood-response-line { font-size: 16px !important; }
 
@@ -871,11 +878,13 @@ function StageOne({
 
         /* Very short phones (iPhone SE etc.) */
         @media (max-width: 767px) and (max-height: 700px) {
+          .bottle-visual { height: 170px; }
           .bottle-section svg,
           .bottle-section img {
             max-height: 170px;
           }
           .stage-one-textarea { height: 54px !important; }
+
         }
       `}</style>
     </motion.div>
