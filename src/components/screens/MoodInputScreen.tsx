@@ -132,11 +132,12 @@ export default function MoodInputScreen({
     [pickedLabel, pickedColor, lang],
   );
 
+  // Bartender-style reply, shown under the bottle only after a quick vibe
+  // is picked. The textarea itself holds the user-voice prefill.
   const replyLine = useMemo(() => {
-    // The prefilled/vibe description now lives directly in the textarea,
-    // so we no longer echo a bartender reply above the bottle.
-    return "";
-  }, []);
+    if (!pickedLabel) return "";
+    return moodCfg.response;
+  }, [pickedLabel, moodCfg.response]);
 
   const baseColor = customMood.trim() && !pickedLabel ? "#B7A9B3" : moodCfg.color;
   const liveBottleColor = computeBottleColor(baseColor, sensory);
@@ -176,9 +177,9 @@ export default function MoodInputScreen({
     }
     setPickedLabel(label);
     setPickedColor(color);
-    // Overwrite textarea with a description tied to the picked vibe.
+    // Overwrite textarea with a user-voice prefill tied to the picked vibe.
     const cfg = getMoodConfig(label, color, lang);
-    setCustomMood(cfg.response);
+    setCustomMood(cfg.prefill);
     setUserTouchedMood(false);
     track("vibe_quick_selected", {
       selected_vibe: label,
@@ -707,7 +708,7 @@ function StageOne({
         {/* Reply line sticks directly under the bottle */}
         <div className="mood-response" style={{ marginTop: 6, minHeight: 24 }}>
           <AnimatePresence mode="wait">
-            {hasVibe && (
+            {!!replyLine && (
               <motion.span
                 key={replyLine + customMood + pickedLabel}
                 initial={{ opacity: 0, y: 4 }}
