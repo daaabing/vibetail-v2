@@ -488,6 +488,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const mixingStartedAtRef = useRef(Date.now());
   const wasMixingRef = useRef(false);
   const captureRef = useRef<HTMLDivElement>(null);
+  const shareCardRef = useRef<HTMLDivElement>(null);
   const illustrationSource = imageData
     ? `data:image/png;base64,${imageData}`
     : cocktail?.matchedFromMenu
