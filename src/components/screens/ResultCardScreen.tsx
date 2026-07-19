@@ -1185,6 +1185,34 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         </div>
       </div>
 
+      {/* Offscreen dedicated 2:3 share poster — separate from the on-screen card.
+          Used exclusively by useSharePosterPreparation to pre-render the export. */}
+      <div
+        aria-hidden
+        style={{
+          position: "fixed",
+          top: 0,
+          left: -99999,
+          width: 1200,
+          height: 1800,
+          pointerEvents: "none",
+          opacity: 1,
+          zIndex: -1,
+        }}
+      >
+        {illustrationSource && (
+          <ShareCard
+            ref={shareCardRef}
+            cocktail={cocktail}
+            illustrationSource={illustrationSource}
+            qrDataUrl={qrDataUrl}
+            lang={lang}
+          />
+        )}
+      </div>
+
+
+
 
       {/* Top bar */}
       <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
