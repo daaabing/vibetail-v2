@@ -13,7 +13,7 @@ import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
-import ShareCard from "@/components/screens/ShareCard";
+
 import { useSharePosterPreparation } from "@/hooks/use-share-poster";
 
 /** Strip quantity / measurement prefixes from AI-generated ingredient strings. */
@@ -488,7 +488,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const mixingStartedAtRef = useRef(Date.now());
   const wasMixingRef = useRef(false);
   const captureRef = useRef<HTMLDivElement>(null);
-  const shareCardRef = useRef<HTMLDivElement>(null);
+  
   const illustrationSource = imageData
     ? `data:image/png;base64,${imageData}`
     : cocktail?.matchedFromMenu
@@ -786,13 +786,15 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     ? `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`
     : "vibetail.png";
   const sharePoster = useSharePosterPreparation({
-    ref: shareCardRef,
+    cocktail,
     cocktailId: cocktail?.id ?? cocktail?.publicId ?? null,
     illustrationSource,
     qrDataUrl,
     filename: shareFilename,
+    lang,
     enabled: !!cocktail && !!illustrationSource,
   });
+
 
   const handleSave = async () => {
     if (!cocktail) return;
@@ -1185,31 +1187,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         </div>
       </div>
 
-      {/* Offscreen dedicated 2:3 share poster — separate from the on-screen card.
-          Used exclusively by useSharePosterPreparation to pre-render the export. */}
-      <div
-        aria-hidden
-        style={{
-          position: "fixed",
-          top: 0,
-          left: -99999,
-          width: 1200,
-          height: 1800,
-          pointerEvents: "none",
-          opacity: 1,
-          zIndex: -1,
-        }}
-      >
-        {illustrationSource && (
-          <ShareCard
-            ref={shareCardRef}
-            cocktail={cocktail}
-            illustrationSource={illustrationSource}
-            qrDataUrl={qrDataUrl}
-            lang={lang}
-          />
-        )}
-      </div>
+      {/* Saved 2:3 poster is rendered entirely on canvas via
+          useSharePosterPreparation — no offscreen React node needed. */}
+
 
 
 
