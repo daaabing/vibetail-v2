@@ -92,7 +92,24 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
   const flavors = (input.selectedFlavors ?? []).join(", ") || "(no flavor tags)";
   const pref = input.customPreference?.trim() || "(no custom preference)";
   const isZh = input.lang === "zh";
-  const isLiterary = isZh ? Math.random() < 0.15 : Math.random() < 0.5;
+  const vibe = input.vibeReference ?? null;
+  // Honor the picked example's style if we have one; otherwise strongly bias to absurd in Chinese.
+  const isLiterary = vibe
+    ? vibe.nameStyle === "literary" && (!isZh || Math.random() < 0.15)
+    : isZh
+    ? Math.random() < 0.15
+    : Math.random() < 0.5;
+  const vibeBlock = isZh && vibe
+    ? [
+        ``,
+        `=== 中文起名语气参考（真实手写小酒馆菜单示例） ===`,
+        `这一条示例展示的是【${vibe.nameStyle === "literary" ? "文艺 / 诗意" : "荒诞 / 口语 / 内心OS / 吐槽"}】风格。请模仿它的"语气、节奏、意象密度、标点习惯"来写 vibeName / tastesLike / roast，但绝对不要复用任何字。`,
+        `参考名（仅作语气参考，禁止复用）: ${vibe.name}`,
+        `参考 tasting note（仅作语气参考）: ${vibe.tastesLike}`,
+        `参考 flavor 描述（仅作语气参考）: ${vibe.flavorProfile}`,
+        ``,
+      ].join("\n")
+    : "";
   const langRule = isZh
     ? [
         `OUTPUT LANGUAGE: Simplified Chinese (简体中文) for vibeName / tastesLike / flavorProfile / whyThisMatch / roast. 'matchedName' MUST stay in the original menu name (不要翻译). 'category' stays English.`,
