@@ -290,6 +290,37 @@ function ManagePage() {
             {msg && <span className="text-xs" style={{ color: "var(--app-text-muted)" }}>{msg}</span>}
           </section>
 
+          <FullMenuFileSection
+            menu={activeMenu}
+            busy={busy}
+            onUpload={async (file) => {
+              const dataBase64 = await fileToBase64(file);
+              await runTogglable(
+                "Full menu uploaded",
+                () =>
+                  uploadFullMenu({
+                    data: {
+                      token: privateToken,
+                      menuId: activeMenu.id,
+                      filename: file.name,
+                      contentType: file.type,
+                      dataBase64,
+                    },
+                  }),
+                reloadMenus,
+              );
+            }}
+            onClear={async () => {
+              if (!confirm("Remove the uploaded full menu?")) return;
+              await runTogglable(
+                "Full menu removed",
+                () => clearFullMenu({ data: { token: privateToken, menuId: activeMenu.id } }),
+                reloadMenus,
+              );
+            }}
+          />
+
+
           <section>
             <div className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--app-text-muted)" }}>
               Items ({items.length}) — sold-out changes take effect immediately
