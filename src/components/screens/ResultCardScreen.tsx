@@ -700,6 +700,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         pixelRatio: 2,
         cacheBust: true,
         backgroundColor: "#F3E8D6",
+        skipFonts: true,
       });
       const dataUrl = await compositeQr(raw, qrDataUrl);
       const filename = `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`;
