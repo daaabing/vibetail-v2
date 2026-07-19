@@ -151,7 +151,7 @@ export const Route = createFileRoute("/api/generate-cocktail-image")({
           return new Response("Invalid JSON", { status: 400 });
         }
 
-        const prompt = buildPrompt(body);
+        const prompt = body.merchant ? buildMerchantPrompt(body) : buildPrompt(body);
 
         let upstream: Response;
         try {
