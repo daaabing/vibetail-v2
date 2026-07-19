@@ -55,6 +55,7 @@ export async function render2x2(opts: RenderOpts): Promise<RenderResult> {
     colW,
     topLimit: textTopLimit,
     bottomLimit: textBottomLimit,
+    typeSizes: opts.typeSizes,
   });
   drawBlockStack(blocks, textTopLimit, textBottomLimit);
 

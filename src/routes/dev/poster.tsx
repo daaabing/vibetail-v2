@@ -6,7 +6,9 @@ import {
   renderSharePosterToCanvas,
   POSTER_LAYOUTS,
   DEFAULT_POSTER_LAYOUT,
+  TYPE_DEFAULTS,
   type PosterLayoutId,
+  type TypeSizes,
 } from "@/lib/share-poster";
 
 export const Route = createFileRoute("/dev/poster")({
@@ -93,13 +95,17 @@ function makeScenario(key: ScenarioKey): Cocktail {
     case "normal-long":
       return c; // the base mock already has generous copy
     case "menu-match":
+      // Real production example (The Yak @ Tashi) — the case that exposed the
+      // truncated quote/why at 1.45× global scale.
+      c.cocktailName = "笔误太多不如不写!";
+      c.originalMood = "光标闪了二十分钟,一个字没打。";
       c.matchedFromMenu = true;
-      c.menuItemName = "The Cartographer";
-      c.restaurantName = "Double Chicken Please";
-      c.menuPrice = "$21";
+      c.menuItemName = "The Yak";
+      c.restaurantName = "Tashi";
       c.whyThisMatch =
-        "这杯用了同样的烟熏基底,但多了一层柑橘的明亮,正好接住你那种『想躲起来又想被看见』的矛盾。它不吵,但会陪你坐很久。";
-      c.tastesLike = "烟熏、柑橘、微苦回甘。";
+        "谁说灵感不能被唤醒?Tashi 青稞酒的独特风味,加上姜汁啤酒的活力,是打破僵局的最佳灵感催化剂。";
+      c.tastesLike =
+        "入口是青稞酒的醇厚与姜汁啤酒的辛辣,尾调带着一丝清新的青柠,让味蕾瞬间被唤醒,像是在茫茫草原上燃起了一团野性之火。";
       return c;
     case "overflow-stress":
       c.cocktailName = "The Extraordinarily Long Cocktail Name That Wraps Many Lines";
@@ -121,6 +127,8 @@ function DevPosterLab() {
   const [useQr, setUseQr] = useState(true);
   // Matches DEFAULT_FONT_SCALE in src/lib/share-poster/shared.ts.
   const [fontScale, setFontScale] = useState(1.45);
+  // Per-role base sizes (px, pre-fontScale). Defaults from TYPE_DEFAULTS.
+  const [typeSizes, setTypeSizes] = useState<Required<TypeSizes>>({ ...TYPE_DEFAULTS });
   // Force the "为你匹配 / MATCHED" block onto any scenario.
   const [forceMatch, setForceMatch] = useState(true);
 
@@ -185,6 +193,7 @@ function DevPosterLab() {
         qrDataUrl: useQr ? qrDataUrl : null,
         lang,
         fontScale,
+        typeSizes,
         layout,
       });
       if (seq !== seqRef.current) return; // stale
@@ -197,7 +206,7 @@ function DevPosterLab() {
       setError((e as Error)?.message ?? "render failed");
       setStatus("error");
     }
-  }, [cocktail, useIllustration, useQr, qrDataUrl, lang, fontScale, layout]);
+  }, [cocktail, useIllustration, useQr, qrDataUrl, lang, fontScale, typeSizes, layout]);
 
   // Auto re-render (debounced) on any input change.
   useEffect(() => {
@@ -298,6 +307,50 @@ function DevPosterLab() {
                 onChange={(e) => setFontScale(Number(e.target.value))}
                 className="w-full accent-amber-500"
               />
+            </div>
+
+            <div>
+              <span className={labelCls}>Type sizes (px, × font size)</span>
+              <div className="space-y-2">
+                {(
+                  [
+                    ["name", "标题 Name", 40, 100],
+                    ["quote", "品鉴 Quote", 16, 48],
+                    ["vibe", "心情 Vibe", 14, 40],
+                    ["why", "推荐 Why", 12, 32],
+                  ] as [keyof TypeSizes, string, number, number][]
+                ).map(([key, label, min, max]) => (
+                  <div key={key} className="flex items-center gap-3">
+                    <span className="w-24 text-xs text-neutral-400 shrink-0">
+                      {label}
+                    </span>
+                    <input
+                      type="range"
+                      min={min}
+                      max={max}
+                      step={1}
+                      value={typeSizes[key]}
+                      onChange={(e) =>
+                        setTypeSizes((s) => ({ ...s, [key]: Number(e.target.value) }))
+                      }
+                      className="flex-1 accent-amber-500"
+                    />
+                    <span className="w-14 text-right text-xs text-neutral-300 tabular-nums shrink-0">
+                      {typeSizes[key]}px
+                      <span className="text-neutral-500">
+                        {" "}
+                        →{Math.round(typeSizes[key] * fontScale)}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => setTypeSizes({ ...TYPE_DEFAULTS })}
+                className="mt-2 rounded px-2.5 py-1 text-xs border bg-neutral-800 border-neutral-700 text-neutral-300"
+              >
+                Reset defaults
+              </button>
             </div>
 
             <div className="flex gap-4">
