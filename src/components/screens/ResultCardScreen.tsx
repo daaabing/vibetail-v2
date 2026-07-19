@@ -486,7 +486,11 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const mixingStartedAtRef = useRef(Date.now());
   const wasMixingRef = useRef(false);
   const captureRef = useRef<HTMLDivElement>(null);
-  const captureRawImageSource = cocktail?.imageUrl ?? (imageData ? `data:image/png;base64,${imageData}` : null);
+  const illustrationSource = imageData
+    ? `data:image/png;base64,${imageData}`
+    : cocktail?.matchedFromMenu
+      ? null
+      : (cocktail?.imageUrl ?? null);
   
   const isPreview = !id || id === "preview";
   const isPersisted = !isPreview || persistedId !== null;
@@ -547,9 +551,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     return () => { cancelled = true; };
   }, [id, search.d]);
 
-  // Generate watercolor illustration if missing (skip when a brand image URL is supplied)
+  // Generate watercolor illustration if missing. In restaurant mode, menu photos
+  // live in menuItemImageUrl only; the front/save illustration must still be AI watercolor.
   useEffect(() => {
-    if (!cocktail || imageData || cocktail.imageUrl) return;
+    if (!cocktail || imageData || (!cocktail.matchedFromMenu && cocktail.imageUrl)) return;
     let cancelled = false;
     setImageLoading(true);
     (async () => {
@@ -724,6 +729,28 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
   };
 
+  const waitForCaptureImages = async (root: HTMLElement) => {
+    const imgs = Array.from(root.querySelectorAll("img"));
+    await Promise.all(
+      imgs.map(async (img) => {
+        if (img.complete && img.naturalWidth > 0) return;
+        if (typeof img.decode === "function") {
+          try {
+            await img.decode();
+            if (img.naturalWidth > 0) return;
+          } catch {
+            // fall through to onload wait
+          }
+        }
+        await new Promise<void>((resolve) => {
+          const timeout = window.setTimeout(resolve, 2500);
+          img.onload = () => { window.clearTimeout(timeout); resolve(); };
+          img.onerror = () => { window.clearTimeout(timeout); resolve(); };
+        });
+      }),
+    );
+  };
+
   const sharePreparedFile = async (file: File, dataUrl: string, filename: string) => {
     const nav = navigator as Navigator & {
       canShare?: (data: { files: File[] }) => boolean;
@@ -739,13 +766,14 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   const handleSave = async () => {
     if (!cocktail || !captureRef.current) return;
-    if (imageLoading && !captureRawImageSource) {
+    if (!illustrationSource) {
       toast.info(lang === "zh" ? "酒图还在生成，请稍候" : "Illustration still brewing — one moment");
       return;
     }
     track("save_clicked", { cocktail_name: cocktail.cocktailName });
     setSaving(true);
     try {
+      await waitForCaptureImages(captureRef.current);
       const raw = await htmlToImage.toPng(captureRef.current, {
         pixelRatio: 2,
         cacheBust: true,
@@ -775,6 +803,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const handlePrint = async (frameId: string = "none") => {
     if (!cocktail || !captureRef.current) return;
     try {
+      await waitForCaptureImages(captureRef.current);
       const raw = await htmlToImage.toPng(captureRef.current, {
         pixelRatio: 2,
         cacheBust: true,
@@ -926,7 +955,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           "Pouring the last drop of your vibe…",
         ];
 
-  const wantsMixingOverlay = loading || (!!cocktail && imageLoading && !cocktail.imageUrl);
+  const wantsMixingOverlay = loading || (!!cocktail && imageLoading && !illustrationSource);
 
   useEffect(() => {
     if (wantsMixingOverlay) {
@@ -1003,9 +1032,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         >
           {/* Hero image — printed directly onto parchment */}
           <div style={{ width: "100%", height: 480, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
-            {captureRawImageSource ? (
+            {illustrationSource ? (
               <img
-                src={captureRawImageSource}
+                src={illustrationSource}
                 alt={cocktail.cocktailName}
                 crossOrigin="anonymous"
                 style={{
@@ -1167,7 +1196,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             animate={{ rotateY: flipped ? 180 : 0 }}
             transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
           >
-            <CardFront cocktail={cocktail} imageData={imageData} imageUrl={cocktail.imageUrl ?? null} imageLoading={imageLoading} tapHint={tapHint} distillingText={distillingText} />
+            <CardFront cocktail={cocktail} imageData={imageData} imageUrl={cocktail.matchedFromMenu ? null : (cocktail.imageUrl ?? null)} imageLoading={imageLoading} tapHint={tapHint} distillingText={distillingText} />
             <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} hideRecipe={isRestaurant} />
 
           </motion.div>
@@ -1394,9 +1423,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                   }}>
                     {/* cocktail thumbnail */}
                     <div style={{ width: "100%", flex: "1 1 auto", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                      {(cocktail?.imageUrl || imageData) ? (
+                      {illustrationSource ? (
                         <img
-                          src={cocktail?.imageUrl ?? `data:image/png;base64,${imageData}`}
+                          src={illustrationSource}
                           alt=""
                           style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
                         />

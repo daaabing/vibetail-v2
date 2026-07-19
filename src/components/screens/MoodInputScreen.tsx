@@ -401,7 +401,7 @@ export default function MoodInputScreen({
         menuPrice: generated.menuPrice ?? null,
         whyThisMatch: generated.whyThisMatch ?? null,
         menuItemName: generated.menuItemName ?? null,
-        menuItemImageUrl: generated.matchedFromMenu ? (generated.imageUrl ?? null) : null,
+        menuItemImageUrl: generated.matchedFromMenu ? (generated.menuItemImageUrl ?? generated.imageUrl ?? null) : null,
         menuItemDescription: generated.menuItemDescription ?? null,
         menuItemIngredients: generated.menuItemIngredients ?? null,
         fullMenuUrl: generated.fullMenuUrl ?? null,
