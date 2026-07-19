@@ -749,6 +749,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
     } catch (e) {
       console.error("save error", e);
+      toast.error(lang === "zh" ? "保存失败，请重试" : "Save failed, please retry");
     } finally {
       setSaving(false);
     }
