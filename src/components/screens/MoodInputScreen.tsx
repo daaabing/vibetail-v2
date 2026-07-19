@@ -132,11 +132,12 @@ export default function MoodInputScreen({
     [pickedLabel, pickedColor, lang],
   );
 
+  // Bartender-style reply, shown under the bottle only after a quick vibe
+  // is picked. The textarea itself holds the user-voice prefill.
   const replyLine = useMemo(() => {
-    // The prefilled/vibe description now lives directly in the textarea,
-    // so we no longer echo a bartender reply above the bottle.
-    return "";
-  }, []);
+    if (!pickedLabel) return "";
+    return moodCfg.response;
+  }, [pickedLabel, moodCfg.response]);
 
   const baseColor = customMood.trim() && !pickedLabel ? "#B7A9B3" : moodCfg.color;
   const liveBottleColor = computeBottleColor(baseColor, sensory);
