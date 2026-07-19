@@ -56,7 +56,7 @@ export default function FloatingVibes({ lang, selected, onPick }: Props) {
       onScroll={handleScroll}
       className="mood-tags-scroll relative w-full h-full no-scrollbar"
       style={{
-        maxWidth: 340,
+        maxWidth: 320,
         margin: "0 auto",
         overflowY: "auto",
         overflowX: "hidden",
