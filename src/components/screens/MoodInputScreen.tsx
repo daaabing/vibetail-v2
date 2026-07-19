@@ -670,11 +670,12 @@ function StageOne({
         </div>
       </div>
 
-      {/* Tag cloud — natural height, internal infinite scroll */}
+      {/* Tag cloud — fills remaining space between bottle and input */}
       <div
         className="mood-tags-section relative w-full mx-auto"
         style={{
-          flex: "none",
+          flex: "1 1 0",
+          minHeight: 0,
           maxWidth: 600,
           marginTop: 2,
           overflow: "hidden",
