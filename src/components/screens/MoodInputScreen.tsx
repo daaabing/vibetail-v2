@@ -815,6 +815,7 @@ function StageOne({
 
 
         @media (max-height: 780px) {
+          .bottle-visual { height: 260px; }
           .bottle-section svg,
           .bottle-section img {
             max-height: 260px;
@@ -822,6 +823,7 @@ function StageOne({
           }
         }
         @media (max-height: 720px) {
+          .bottle-visual { height: 230px; }
           .mood-tag {
             height: 34px !important;
             padding: 0 12px !important;
@@ -833,6 +835,7 @@ function StageOne({
             transform: scale(0.85);
           }
         }
+
 
         /* ─── Mobile (< 768px) — one cohesive composition ─── */
         @media (max-width: 767px) {
