@@ -283,6 +283,8 @@ export type Database = {
           enabled_game_ids: string[]
           game_display_order: string[]
           id: string
+          menu_file_type: string | null
+          menu_file_url: string | null
           menu_theme: string | null
           merchant_id: string
           name: string
@@ -298,6 +300,8 @@ export type Database = {
           enabled_game_ids?: string[]
           game_display_order?: string[]
           id?: string
+          menu_file_type?: string | null
+          menu_file_url?: string | null
           menu_theme?: string | null
           merchant_id: string
           name: string
@@ -313,6 +317,8 @@ export type Database = {
           enabled_game_ids?: string[]
           game_display_order?: string[]
           id?: string
+          menu_file_type?: string | null
+          menu_file_url?: string | null
           menu_theme?: string | null
           merchant_id?: string
           name?: string
