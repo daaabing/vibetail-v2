@@ -18,6 +18,12 @@ interface MatchBody {
   customPreference?: string;
   lang?: "zh" | "en";
   anonymousSessionId?: string;
+  vibeReference?: {
+    name: string;
+    tastesLike: string;
+    flavorProfile: string;
+    nameStyle?: "absurd" | "literary";
+  } | null;
 }
 
 function serverClient() {
