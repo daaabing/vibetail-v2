@@ -414,8 +414,13 @@ export default function MoodInputScreen({
     }
   };
 
+  const isMobile = useIsMobile();
   const bottleSize =
-    stage === "vibe" ? 300 : stage === "transition" ? 220 : 180;
+    stage === "vibe"
+      ? isMobile ? 200 : 300
+      : stage === "transition"
+        ? isMobile ? 180 : 220
+        : isMobile ? 150 : 180;
 
   return (
     <div
