@@ -379,6 +379,8 @@ export const Route = createFileRoute("/api/menu-match")({
           menuPrice: null,
           whyThisMatch: parsed.whyThisMatch,
           imageUrl: menuItem.imageUrl ?? null,
+          fullMenuUrl: (loaded.menu as { menu_file_url?: string | null }).menu_file_url ?? null,
+          fullMenuType: ((loaded.menu as { menu_file_type?: string | null }).menu_file_type ?? null) as "pdf" | "image" | null,
         };
 
         return new Response(JSON.stringify(shaped), {
