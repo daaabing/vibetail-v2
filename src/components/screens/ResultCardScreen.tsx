@@ -13,7 +13,7 @@ import MixingOverlay from "@/components/moodtail/MixingOverlay";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
-import ShareCard from "@/components/screens/ShareCard";
+
 import { useSharePosterPreparation } from "@/hooks/use-share-poster";
 
 /** Strip quantity / measurement prefixes from AI-generated ingredient strings. */
