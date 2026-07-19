@@ -93,17 +93,12 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
   const pref = input.customPreference?.trim() || "(no custom preference)";
   const isZh = input.lang === "zh";
   const vibe = input.vibeReference ?? null;
-  // Honor the picked example's style if we have one; otherwise strongly bias to absurd in Chinese.
-  const isLiterary = vibe
-    ? vibe.nameStyle === "literary" && (!isZh || Math.random() < 0.15)
-    : isZh
-    ? Math.random() < 0.15
-    : Math.random() < 0.5;
+  // Chinese output is ALWAYS the 吐槽/口语/内心OS style — that's the brand voice.
+  const isLiterary = !isZh && vibe?.nameStyle === "literary" && Math.random() < 0.5;
   const vibeBlock = isZh && vibe
     ? [
         ``,
         `=== 中文起名语气参考（真实手写小酒馆菜单示例） ===`,
-        `这一条示例展示的是【${vibe.nameStyle === "literary" ? "文艺 / 诗意" : "荒诞 / 口语 / 内心OS / 吐槽"}】风格。请模仿它的"语气、节奏、意象密度、标点习惯"来写 vibeName / tastesLike / roast，但绝对不要复用任何字。`,
         `参考名（仅作语气参考，禁止复用）: ${vibe.name}`,
         `参考 tasting note（仅作语气参考）: ${vibe.tastesLike}`,
         `参考 flavor 描述（仅作语气参考）: ${vibe.flavorProfile}`,
@@ -124,12 +119,16 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
               `3. 避免口语吐槽、网络梗、感叹号；标点尽量克制。`,
             ].join("\n")
           : [
-              `这一次走【荒诞 / 口语】路线：`,
-              `1. 必须是一句完整的口语 / 内心独白 / 反问 / 吐槽 / 谐音梗，6–14 个字。不要用清新文艺命名。`,
-              `2. 越抽象越离谱越好。允许情绪化、自嘲、阴阳怪气、谐音、网络烂梗、生活吐槽。`,
-              `3. 名字是一句"人话"，不是一杯酒的描述。`,
+              `这一次走【荒诞 / 口语 / 内心OS / 吐槽 / 谐音】路线。中文的 vibeName 必须是这种风格，绝对不要"名词+名词"的清新文艺命名，也不要意象堆砌。`,
+              `1. vibeName 必须是一句完整的口语 / 内心独白 / 反问 / 吐槽 / 谐音梗 / 生活感慨，6–14 个字。`,
+              `2. 越抽象越离谱越好。允许情绪化、自嘲、阴阳怪气、谐音、错别字梗、网络烂梗、生活吐槽、突然发疯、莫名其妙的转折。`,
+              `3. 不要解释酒，名字是一句"人话"，不是一杯酒的描述。禁止出现"月光/星河/夜色/晚风/薄荷/信使/银河/祷"这类清新文艺词。`,
               `4. 标点可以用感叹号、问号、省略号、破折号、波浪号，营造手写感。`,
-              `5. 离谱起名示例（仅示范风格，禁止复用）："我真的栓Q了" / "妈我不想上班了" / "那没事了。" / "你先别急" / "笑死根本没人爱我"。`,
+              `5. 参考真实小酒馆手写菜单风格（示例仅示范风格，禁止复用任何一个）：`,
+              `   - "你要这样想我也没办法" / "绝望的直女" / "还以为是被爱了"`,
+              `   - "所以我们现在是什么关系" / "莫非是瞧上小生了？" / "听老婆的话会发达"`,
+              `   - "你听听我的心慌不慌" / "今天也没有班上" / "上班如上坟" / "想吃辣的想喝凉的"`,
+              `   - "我真的栓Q了" / "妈我不想上班了" / "那没事了。" / "你先别急" / "笑死根本没人爱我"`,
             ].join("\n"),
         `tastesLike 写成一句带画面的中文散文（最多 30 字）。roast 要够刺、够口语、12 字以内。`,
         ``,

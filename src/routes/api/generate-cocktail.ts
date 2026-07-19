@@ -99,9 +99,9 @@ function buildUserPrompt(input: GenInput): string {
       ].join("\n")
     : "";
   const vibe = input.vibeReference;
-  // Chinese output should almost always be the fun/roast/colloquial style — that's the brand voice.
-  // Only allow the literary tone in English, or in Chinese when the picked reference is explicitly literary AND we roll a low chance.
-  const isLiterary = vibe?.nameStyle === "literary" && (!isZh || Math.random() < 0.15);
+  // Chinese output is ALWAYS the 吐槽/口语/内心OS style — that's the brand voice.
+  // Literary tone is English-only (or when the picked example is explicitly literary in English).
+  const isLiterary = !isZh && vibe?.nameStyle === "literary";
   const vibeBlock = vibe
     ? [
         ``,
@@ -121,21 +121,28 @@ function buildUserPrompt(input: GenInput): string {
               `4. tastesLike 写成一句带画面的散文（最多 30 字），flavorProfile 用感官细节描述，roast 收敛一点、带一丝苦涩或自嘲也可以。`,
             ].join("\n")
           : [
-              `这一次走【荒诞 / 口语】路线：`,
-              `1. 必须是一句完整的口语 / 内心独白 / 反问 / 吐槽 / 谐音梗，6–14 个字。这种场景下不要用"名词+名词"的清新文艺命名。`,
+              `这一次走【荒诞 / 口语 / 内心OS / 吐槽 / 谐音】路线。中文的 cocktailName 必须是这种风格，绝对不要"名词+名词"的清新文艺命名，也不要意象堆砌。`,
+              `1. cocktailName 必须是一句完整的口语 / 内心独白 / 反问 / 吐槽 / 谐音梗 / 生活感慨，6–14 个字。`,
               `2. 越抽象越离谱越好。允许情绪化、自嘲、阴阳怪气、谐音、错别字梗、网络烂梗、生活吐槽、突然发疯、莫名其妙的转折。`,
-              `3. 不要解释酒，名字是一句"人话"，不是一杯酒的描述。`,
+              `3. 不要解释酒，名字是一句"人话"，不是一杯酒的描述。禁止出现"月光/星河/夜色/晚风/薄荷/信使/银河/祷"这类清新文艺词。`,
               `4. 标点可以用感叹号、问号、省略号、破折号、波浪号，营造手写感。`,
-              `5. 离谱起名示例（仅示范风格，禁止复用）：`,
+              `5. 参考真实小酒馆手写菜单风格（示例仅示范风格，禁止复用任何一个）：`,
+              `   - "你要这样想我也没办法"`,
+              `   - "绝望的直女"`,
+              `   - "还以为是被爱了"`,
+              `   - "所以我们现在是什么关系"`,
+              `   - "莫非是瞧上小生了？"`,
+              `   - "听老婆的话会发达"`,
+              `   - "你听听我的心慌不慌"`,
+              `   - "今天也没有班上"`,
+              `   - "上班如上坟"`,
+              `   - "想吃辣的想喝凉的"`,
               `   - "我真的栓Q了"`,
-              `   - "再说一句我就走了啊"`,
               `   - "妈我不想上班了"`,
-              `   - "你礼貌吗？"`,
               `   - "那没事了。"`,
               `   - "你先别急"`,
-              `   - "再等等说不定他回消息了呢"`,
               `   - "笑死根本没人爱我"`,
-              `tastesLike 写成一句日记体内心 OS（最多 30 字），flavorProfile 可以带俏皮的谐音 / 解释。roast 要够刺、够口语。`,
+              `tastesLike 写成一句日记体内心 OS 或一句吐槽（最多 30 字），flavorProfile 可以带俏皮的谐音 / 解释。roast 要够刺、够口语、够贱、12 字以内。`,
             ].join("\n"),
         ``,
       ].join("\n")
