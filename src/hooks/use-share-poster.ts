@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import * as htmlToImage from "html-to-image";
-import { SHARE_CARD_H, SHARE_CARD_W } from "@/components/screens/ShareCard";
+import type { Cocktail } from "@/lib/cocktails-store";
+import { renderSharePosterToCanvas } from "@/lib/share-poster-canvas";
 
 type Status = "idle" | "preparing" | "ready" | "error";
 
@@ -13,42 +13,22 @@ export interface SharePosterState {
   retry: () => void;
 }
 
-async function waitForImages(root: HTMLElement) {
-  const imgs = Array.from(root.querySelectorAll("img"));
-  await Promise.all(
-    imgs.map(async (img) => {
-      if (img.complete && img.naturalWidth > 0) return;
-      try {
-        if (typeof img.decode === "function") {
-          await img.decode();
-          if (img.naturalWidth > 0) return;
-        }
-      } catch {
-        /* fall through */
-      }
-      await new Promise<void>((resolve) => {
-        const to = window.setTimeout(resolve, 3000);
-        img.onload = () => { window.clearTimeout(to); resolve(); };
-        img.onerror = () => { window.clearTimeout(to); resolve(); };
-      });
-    }),
-  );
-}
-
 /**
- * Prepares the export PNG for the offscreen ShareCard in the background,
- * caching it so the Save button becomes instant. Re-runs when identity of
- * the cocktail / illustration / QR changes.
+ * Prepares the export PNG for the 2:3 share poster in the background so the
+ * Save button becomes instant. Rendered with pure canvas draws — no
+ * html-to-image, no foreignObject, no CSS blend modes — so the illustration
+ * and QR always land in the exported file.
  */
 export function useSharePosterPreparation(opts: {
-  ref: React.RefObject<HTMLDivElement | null>;
+  cocktail: Cocktail | null | undefined;
   cocktailId: string | number | null | undefined;
   illustrationSource: string | null;
   qrDataUrl: string | null;
   filename: string;
+  lang: "zh" | "en";
   enabled: boolean;
 }): SharePosterState {
-  const { ref, cocktailId, illustrationSource, qrDataUrl, filename, enabled } = opts;
+  const { cocktail, cocktailId, illustrationSource, qrDataUrl, filename, lang, enabled } = opts;
   const [status, setStatus] = useState<Status>("idle");
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [blob, setBlob] = useState<Blob | null>(null);
@@ -64,10 +44,9 @@ export function useSharePosterPreparation(opts: {
   useEffect(() => {
     if (!enabled) return;
     if (!illustrationSource) return;
-    const node = ref.current;
-    if (!node) return;
+    if (!cocktail) return;
 
-    const key = `${cocktailId ?? "preview"}::${illustrationSource}::${qrDataUrl ?? ""}::${attempt}`;
+    const key = `${cocktailId ?? "preview"}::${illustrationSource}::${qrDataUrl ?? ""}::${lang}::${attempt}`;
     if (inflightKeyRef.current === key) return;
     inflightKeyRef.current = key;
 
@@ -77,23 +56,15 @@ export function useSharePosterPreparation(opts: {
 
     (async () => {
       try {
-        // give layout a tick
-        await new Promise((r) => setTimeout(r, 30));
-        await waitForImages(node);
-        const png = await htmlToImage.toPng(node, {
-          pixelRatio: 1,
-          cacheBust: true,
-          canvasWidth: SHARE_CARD_W,
-          canvasHeight: SHARE_CARD_H,
-          width: SHARE_CARD_W,
-          height: SHARE_CARD_H,
-          backgroundColor: "#EFE4CE",
-          skipFonts: true,
+        const { blob: b, dataUrl: url } = await renderSharePosterToCanvas({
+          cocktail,
+          illustrationSource,
+          qrDataUrl,
+          lang,
         });
         if (cancelled) return;
-        const b = await (await fetch(png)).blob();
         const f = new File([b], filename, { type: "image/png" });
-        setDataUrl(png);
+        setDataUrl(url);
         setBlob(b);
         setFile(f);
         setStatus("ready");
@@ -110,7 +81,7 @@ export function useSharePosterPreparation(opts: {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, cocktailId, illustrationSource, qrDataUrl, filename, attempt]);
+  }, [enabled, cocktailId, illustrationSource, qrDataUrl, filename, lang, attempt]);
 
   return { status, dataUrl, blob, file, error, retry };
 }
