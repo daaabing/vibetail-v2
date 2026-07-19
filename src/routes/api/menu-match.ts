@@ -86,7 +86,7 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
   const flavors = (input.selectedFlavors ?? []).join(", ") || "(no flavor tags)";
   const pref = input.customPreference?.trim() || "(no custom preference)";
   const isZh = input.lang === "zh";
-  const isLiterary = Math.random() < 0.5;
+  const isLiterary = isZh ? Math.random() < 0.15 : Math.random() < 0.5;
   const langRule = isZh
     ? [
         `OUTPUT LANGUAGE: Simplified Chinese (简体中文) for vibeName / tastesLike / flavorProfile / whyThisMatch / roast. 'matchedName' MUST stay in the original menu name (不要翻译). 'category' stays English.`,
