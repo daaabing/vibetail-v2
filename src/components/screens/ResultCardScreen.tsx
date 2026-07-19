@@ -733,7 +733,13 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], filename, { type: "image/png" });
-      setSavePreview({ dataUrl, filename, file });
+      try {
+        await sharePreparedFile(file, dataUrl, filename);
+      } catch (err) {
+        if ((err as Error)?.name !== "AbortError") {
+          await downloadDataUrl(dataUrl, filename);
+        }
+      }
     } catch (e) {
       console.error("save error", e);
       toast.error(lang === "zh" ? "保存失败，请重试" : "Save failed, please retry");
