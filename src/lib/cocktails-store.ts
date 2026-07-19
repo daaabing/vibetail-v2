@@ -29,6 +29,10 @@ export interface Cocktail {
   menuItemName?: string | null;
   // The uploaded photo of the actual menu item (shown on the back with "Order this").
   menuItemImageUrl?: string | null;
+  // The actual menu item's own description (used to inform watercolor generation).
+  menuItemDescription?: string | null;
+  // The actual menu item's ingredient list (used to preserve real drink identity in the illustration).
+  menuItemIngredients?: string[] | null;
 
 }
 
