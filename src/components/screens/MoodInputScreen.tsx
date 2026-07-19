@@ -708,7 +708,7 @@ function StageOne({
         {/* Reply line sticks directly under the bottle */}
         <div className="mood-response" style={{ marginTop: 6, minHeight: 24 }}>
           <AnimatePresence mode="wait">
-            {hasVibe && (
+            {!!replyLine && (
               <motion.span
                 key={replyLine + customMood + pickedLabel}
                 initial={{ opacity: 0, y: 4 }}
