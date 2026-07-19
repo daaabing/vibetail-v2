@@ -538,6 +538,17 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             flavorProfile: cocktail.flavorProfile,
             tastesLike: cocktail.tastesLike,
             recipe: cocktail.recipe,
+            merchant: cocktail.matchedFromMenu
+              ? {
+                  actualDrinkName: cocktail.menuItemName ?? "",
+                  actualDrinkDescription: cocktail.menuItemDescription ?? "",
+                  actualDrinkIngredients: cocktail.menuItemIngredients ?? cocktail.ingredients ?? [],
+                  vibeDrinkName: cocktail.cocktailName,
+                  vibeDescription: cocktail.tastesLike,
+                  whyThisMatch: cocktail.whyThisMatch ?? "",
+                  toneKeywords: cocktail.flavorProfile,
+                }
+              : undefined,
           }),
         });
         if (!res.ok) throw new Error(String(res.status));
