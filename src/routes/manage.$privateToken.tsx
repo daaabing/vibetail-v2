@@ -11,6 +11,8 @@ import {
   createMenuItem,
   updateMenuItem,
   deleteMenuItem,
+  uploadMenuFile,
+  clearMenuFile,
 } from "@/lib/menu/manage.functions";
 import { listActiveGames } from "@/lib/games/registry";
 
