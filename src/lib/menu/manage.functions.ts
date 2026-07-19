@@ -38,7 +38,7 @@ export const getMerchantForToken = createServerFn({ method: "POST" })
     const { data: menus, error: menusErr } = await supabaseAdmin
       .from("menus")
       .select(
-        "id, slug, name, status, short_intro, enabled_game_ids, game_display_order, published_version_id, updated_at",
+        "id, slug, name, status, short_intro, enabled_game_ids, game_display_order, published_version_id, updated_at, menu_file_url, menu_file_type",
       )
       .eq("merchant_id", merchantId)
       .order("updated_at", { ascending: false });
