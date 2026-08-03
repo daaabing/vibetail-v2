@@ -150,14 +150,18 @@ function MenuLanding() {
 
       {primaryGame ? (
         <button
+          type="button"
           onClick={() => setStarted(true)}
-          className="mt-10 px-8 py-3.5 rounded-full text-sm font-medium tracking-wider text-white relative overflow-hidden"
+          onPointerUp={() => setStarted(true)}
+          className="mt-10 px-8 py-3.5 rounded-full text-sm font-medium tracking-wider text-white relative z-10 overflow-hidden cursor-pointer select-none"
           style={{
             background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
             boxShadow: "0 12px 30px -6px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
             border: "1px solid rgba(255,255,255,0.14)",
             fontFamily: "var(--font-heading)",
+            touchAction: "manipulation",
           }}
+        
         >
           {t("merchant.cta.match")}
         </button>
