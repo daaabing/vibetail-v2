@@ -13,27 +13,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function UserMenu() {
+export default function UserMenu({ onDark = false }: { onDark?: boolean } = {}) {
   const navigate = useNavigate();
   const { lang } = useLang();
   const { user } = useAuth();
-  const isZh = lang === "zh";
 
   if (!user) {
     return (
       <button
         onClick={() => navigate({ to: "/auth" })}
-        className="text-[11px] font-semibold tracking-wider px-3 py-1 rounded-full transition-colors hover:bg-white/10"
+        className="mono-sm px-3 py-1.5 transition-colors"
         style={{
-          border: "1px solid rgba(255,255,255,0.14)",
-          background: "rgba(255,255,255,0.05)",
-          backdropFilter: "blur(14px)",
-          color: "var(--app-text-secondary)",
+          border: `1.5px solid ${onDark ? "rgba(242,237,225,0.5)" : "var(--line-strong)"}`,
+          borderRadius: "10px 7px 11px 8px / 8px 10px 7px 10px",
+          color: onDark ? "var(--paper)" : "var(--ink-soft)",
+          fontFamily: "var(--font-note)",
+          fontSize: 15,
+          letterSpacing: 0,
+          textTransform: "none",
         }}
       >
-        {isZh ? "登录" : "Sign in"}
+        {"Sign in"}
       </button>
-
     );
   }
 
@@ -51,24 +52,29 @@ export default function UserMenu() {
 
   async function handleSignOut() {
     await supabase.auth.signOut();
-    toast.success(isZh ? "已退出" : "Signed out");
+    toast.success("Signed out");
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          aria-label={isZh ? "用户菜单" : "User menu"}
+          aria-label={"User menu"}
           className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-offset-1 transition-transform active:scale-95"
           style={{
             boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
           }}
         >
-          <Avatar className="h-8 w-8 border border-[rgba(74,62,61,0.2)]">
-            {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} referrerPolicy="no-referrer" />}
+          <Avatar
+            className="h-8 w-8 rounded-none border"
+            style={{ borderColor: "var(--line-strong)" }}
+          >
+            {avatarUrl && (
+              <AvatarImage src={avatarUrl} alt={displayName} referrerPolicy="no-referrer" />
+            )}
             <AvatarFallback
               className="text-[11px] font-semibold"
-              style={{ background: "var(--app-primary)", color: "white" }}
+              style={{ background: "var(--ink)", color: "var(--paper)" }}
             >
               {initial}
             </AvatarFallback>
@@ -80,20 +86,20 @@ export default function UserMenu() {
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-semibold leading-none truncate">{displayName}</p>
             {user.email && (
-              <p className="text-[11px] leading-none text-muted-foreground truncate">{user.email}</p>
+              <p className="text-[11px] leading-none text-muted-foreground truncate">
+                {user.email}
+              </p>
             )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate({ to: "/gallery" })}>
-          {isZh ? "我的酒柜" : "My Bar"}
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate({ to: "/gallery" })}>{"My Bar"}</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleSignOut}
           className="text-destructive focus:text-destructive"
         >
-          {isZh ? "退出登录" : "Sign out"}
+          {"Sign out"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -4,7 +4,6 @@ import MoodInputScreen from "@/components/screens/MoodInputScreen";
 import LandingScreen from "@/components/screens/LandingScreen";
 import { setRestaurantCtx } from "@/lib/restaurant-ctx";
 
-
 export const Route = createFileRoute("/restaurant/$id")({
   beforeLoad: ({ params }) => {
     if (params.id !== "0") {
@@ -51,7 +50,9 @@ export const Route = createFileRoute("/restaurant/$id")({
 function RestaurantRoute() {
   const { id } = Route.useParams();
   const [started, setStarted] = useState(false);
-  useEffect(() => { setRestaurantCtx(id); }, [id]);
+  useEffect(() => {
+    setRestaurantCtx(id);
+  }, [id]);
   if (!started) {
     return <LandingScreen onMix={() => setStarted(true)} />;
   }

@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 
-export type Lang = "zh" | "en";
+export type Lang = "en";
 
 interface LangContextType {
   lang: Lang;
@@ -17,86 +17,6 @@ const LangContext = createContext<LangContextType>({
 });
 
 export const translations: Record<Lang, Record<string, string>> = {
-  zh: {
-    // Landing
-    "landing.tagline": "人不一定清醒，酒一定要对味",
-    "landing.subtitle": "把此刻的心情，调成难忘体验",
-    "landing.cta.mix": "测一下我的 Vibe",
-    "landing.cta.bar": "去 Vibe Bar 看看",
-    "lang.toggle": "EN",
-    // Nav
-    "nav.vibeCheck": "Vibe Check",
-    "nav.vibeBar": "Vibe Bar",
-    // Step 3 — Ingredients photo
-    "ingredients.title": "你冰箱里有什么？",
-    "ingredients.subtitle": "拍张食材照片，我们就用你现有的材料调一杯。不想拍也可以直接跳过。",
-    "ingredients.upload": "上传照片",
-    "ingredients.skip": "跳过这步",
-    "ingredients.analyzing": "正在识别食材…",
-    "ingredients.detected": "识别到的食材",
-    "ingredients.detected.continue": "就用这些来调酒",
-    "ingredients.retry": "换一张照片",
-    "ingredients.invalid": "这张照片里没找到能调酒的材料 🍸 换一张带饮品材料的照片试试，比如酒、果汁、苏打水、咖啡、茶、牛奶或水。",
-    "ingredients.step": "第 03 步 / 共 03 步",
-    // Mood Input
-    "mood.title": "你现在是什么状态？",
-    "mood.subtitle": "选一个，或者自己写几句。",
-    "mood.chips.label": "快速选 Vibe",
-    "mood.divider": "或者自己写",
-    "mood.surprise": "随机来一个",
-    "mood.next": "下一步 — 选口味",
-    "mood.exit": "退出",
-    "mood.back": "返回",
-    "mood.step1": "第 01 步 / 共 02 步",
-    "mood.step2": "第 02 步 / 共 02 步",
-    // Flavor
-    "flavor.title": "你希望它喝起来是什么感觉？",
-    "flavor.subtitle": "不想选也没关系，我们帮你搭。",
-    "flavor.chips.label": "口味偏好（可选）",
-    "flavor.custom.label": "有想参考的酒或口味吗？（可选）",
-    "flavor.run": "开始调酒",
-    "flavor.loading": "正在读取你的 Vibe...",
-    // Result
-    "result.home": "首页",
-    "result.checked": "Vibe 已读懂 ✓",
-    "result.distilling": "正在调制这份心情…",
-    "result.tap": "点击翻面",
-    "result.tap.menu": "点击查看推荐酒单",
-    "result.original": "你的 Vibe",
-    "result.tasting": "品鉴笔记",
-    "result.ingredients": "配料",
-    "result.ingredients.ref": "仅供参考",
-    "result.ingredients.bar": "最终调制以酒吧为准",
-    "result.howToMake": "调制方法",
-    "result.diagnosis": "Vibe 诊断",
-
-    "result.save": "保存卡片",
-    "result.saving": "保存中…",
-    "result.share": "分享",
-    "result.print": "打印",
-    "result.copied": "链接已复制 ✓",
-    "result.another": "再测一次",
-    // Gallery
-    "gallery.home": "首页",
-    "gallery.title": "Vibe Bar",
-    "gallery.addVibe": "+ Vibe",
-    "gallery.empty": "还没有任何 Vibe，去调第一杯吧。",
-    "gallery.emptyBtn": "测一下我的 Vibe",
-    "gallery.prev": "← 上一页",
-    "gallery.next": "下一页 →",
-    "gallery.ago": "之前",
-    // Merchant landing
-    "merchant.ageGate.title": "你满 21 岁了吗？",
-    "merchant.ageGate.desc": "这份菜单包含酒精饮品，进入前请确认一下。",
-    "merchant.ageGate.yes": "是的，我已满 21 岁",
-    "merchant.ageGate.no": "还没有",
-    "merchant.intro.fallback": "说说你现在的心情，我们从今晚的菜单里，帮你挑一杯最对味的，并告诉你为什么是它。",
-    "merchant.cta.match": "帮我配一杯 →",
-    "merchant.noGames": "这份菜单还没开启任何玩法。",
-    "merchant.curatedBy": "菜单由 {name} 精选",
-
-  },
-
   en: {
     // Landing
     "landing.tagline": "Every mood deserves the perfect pour.",
@@ -109,14 +29,16 @@ export const translations: Record<Lang, Record<string, string>> = {
     "nav.vibeBar": "Vibe Bar",
     // Step 3 — Ingredients photo
     "ingredients.title": "What's in your fridge?",
-    "ingredients.subtitle": "Upload your ingredients, and we'll mix something using only what you have. Or skip this step.",
+    "ingredients.subtitle":
+      "Upload your ingredients, and we'll mix something using only what you have. Or skip this step.",
     "ingredients.upload": "Upload Photo",
     "ingredients.skip": "Skip",
     "ingredients.analyzing": "Analyzing ingredients…",
     "ingredients.detected": "Detected ingredients",
     "ingredients.detected.continue": "Mix with these ingredients",
     "ingredients.retry": "Try another photo",
-    "ingredients.invalid": "We couldn't mix a drink from this photo yet 🍸 Please upload a photo with at least one drinkable liquid, like alcohol, juice, soda, coffee, tea, milk, sparkling water, or water.",
+    "ingredients.invalid":
+      "We couldn't mix a drink from this photo yet 🍸 Please upload a photo with at least one drinkable liquid, like alcohol, juice, soda, coffee, tea, milk, sparkling water, or water.",
     "ingredients.step": "STEP 03 / 03",
     // Mood Input
     "mood.title": "What's your current vibe?",
@@ -167,38 +89,30 @@ export const translations: Record<Lang, Record<string, string>> = {
     "gallery.ago": "ago",
     // Merchant landing
     "merchant.ageGate.title": "Are you 21 or over?",
-    "merchant.ageGate.desc": "This menu contains alcoholic beverages. Please confirm before continuing.",
+    "merchant.ageGate.desc":
+      "This menu contains alcoholic beverages. Please confirm before continuing.",
     "merchant.ageGate.yes": "Yes, I'm 21+",
     "merchant.ageGate.no": "No",
-    "merchant.intro.fallback": "Tell us your vibe. We'll match you to one drink from tonight's menu — and tell you why.",
+    "merchant.intro.fallback":
+      "Tell us your vibe. We'll match you to one drink from tonight's menu — and tell you why.",
     "merchant.cta.match": "Match my vibe →",
     "merchant.noGames": "No games enabled for this menu yet.",
     "merchant.curatedBy": "Menu curated by {name}",
   },
-
 };
 
+/**
+ * The app ships in English. The provider is kept so components can go on
+ * asking for copy through `t()` and so the API's `lang` field still has a
+ * value, but there is no longer anything to switch between.
+ */
 export function LangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("en");
-
-  useEffect(() => {
-    const saved = localStorage.getItem("vibetail-lang") as Lang | null;
-    if (saved === "en" || saved === "zh") setLangState(saved);
-  }, []);
-
-  const setLang = (l: Lang) => {
-    setLangState(l);
-    localStorage.setItem("vibetail-lang", l);
+  const value: LangContextType = {
+    lang: "en",
+    setLang: () => {},
+    t: (key: string) => translations.en[key] ?? key,
   };
-
-  const t = (key: string) =>
-    translations[lang][key] ?? translations["en"][key] ?? key;
-
-  return (
-    <LangContext.Provider value={{ lang, setLang, t }}>
-      {children}
-    </LangContext.Provider>
-  );
+  return <LangContext.Provider value={value}>{children}</LangContext.Provider>;
 }
 
 export function useLang() {

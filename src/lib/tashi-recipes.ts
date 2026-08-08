@@ -16,20 +16,19 @@ import theYak from "@/assets/tashi/the-yak.png.asset.json";
 
 export interface TashiRecipe {
   key: string;
-  name: string;            // brand-given name (reference only — AI may rename)
-  vibe: string;            // brand-given short story (reference only)
-  ingredients: string[];   // reference recipe — AI may adapt
-  recipe: string;          // reference steps — AI may adapt
-  imageUrl: string;        // brand-provided illustration shown on the card
-  flavorTags: string[];    // rough flavor profile to help matching
+  name: string; // brand-given name (reference only — AI may rename)
+  vibe: string; // brand-given short story (reference only)
+  ingredients: string[]; // reference recipe — AI may adapt
+  recipe: string; // reference steps — AI may adapt
+  imageUrl: string; // brand-provided illustration shown on the card
+  flavorTags: string[]; // rough flavor profile to help matching
 }
 
 export const TASHI_RECIPES: TashiRecipe[] = [
   {
     key: "red-tibet",
     name: "Red Tibet",
-    vibe:
-      "Born beneath prayer flags dancing in crimson wind — saffron, goji and pomegranate weave warmth and reverence into every sip. Bold, rebellious, ancient.",
+    vibe: "Born beneath prayer flags dancing in crimson wind — saffron, goji and pomegranate weave warmth and reverence into every sip. Bold, rebellious, ancient.",
     ingredients: [
       "1 oz Tashi Baijiu",
       "2 oz Red Bull",
@@ -44,8 +43,7 @@ export const TASHI_RECIPES: TashiRecipe[] = [
   {
     key: "tashi-sunset",
     name: "Tashi Sunset",
-    vibe:
-      "Sunset behind the Himalayas in a glass — blush-hued and golden, the warmth of farewell and the hope of reunion.",
+    vibe: "Sunset behind the Himalayas in a glass — blush-hued and golden, the warmth of farewell and the hope of reunion.",
     ingredients: [
       "1 oz Tashi Baijiu",
       "0.5 oz grenadine syrup",
@@ -60,8 +58,7 @@ export const TASHI_RECIPES: TashiRecipe[] = [
   {
     key: "lhasa-twilight",
     name: "Lhasa Twilight",
-    vibe:
-      "When Lhasa folds into twilight, the sky blushes like it remembers something sweet. Smoky, serene, laced with mystery.",
+    vibe: "When Lhasa folds into twilight, the sky blushes like it remembers something sweet. Smoky, serene, laced with mystery.",
     ingredients: [
       "2 oz Tashi Baijiu",
       "1.5 oz cream of coconut",
@@ -77,8 +74,7 @@ export const TASHI_RECIPES: TashiRecipe[] = [
   {
     key: "tashirita",
     name: "Tashirita",
-    vibe:
-      "East meets fiesta. Bright, bold, and not afraid to dance on the table — said to cure altitude sickness AND heartbreak.",
+    vibe: "East meets fiesta. Bright, bold, and not afraid to dance on the table — said to cure altitude sickness AND heartbreak.",
     ingredients: [
       "2 oz Tashi Baijiu",
       "0.5 oz orange liqueur",
@@ -94,8 +90,7 @@ export const TASHI_RECIPES: TashiRecipe[] = [
   {
     key: "everest-mist",
     name: "Everest Mist",
-    vibe:
-      "A pilgrimage in a glass — crowned with shaved ice like snow on a sacred peak. Cool, clear, and slow as an ascent.",
+    vibe: "A pilgrimage in a glass — crowned with shaved ice like snow on a sacred peak. Cool, clear, and slow as an ascent.",
     ingredients: [
       "1 oz Tashi Baijiu",
       "0.5 oz elderflower syrup",
@@ -111,8 +106,7 @@ export const TASHI_RECIPES: TashiRecipe[] = [
   {
     key: "potala-breeze",
     name: "Potala Breeze",
-    vibe:
-      "Wind whispering through palace corridors — smooth, layered, ancient charm. Light on the lips, heavy on the mystique.",
+    vibe: "Wind whispering through palace corridors — smooth, layered, ancient charm. Light on the lips, heavy on the mystique.",
     ingredients: [
       "1 oz Tashi Baijiu",
       "2 oz blue curaçao",
@@ -129,8 +123,7 @@ export const TASHI_RECIPES: TashiRecipe[] = [
   {
     key: "himalayan-horizon",
     name: "Himalayan Horizon",
-    vibe:
-      "Sunrise on the rooftop of the world — a golden gradient of awakening. The promise of a thousand new beginnings.",
+    vibe: "Sunrise on the rooftop of the world — a golden gradient of awakening. The promise of a thousand new beginnings.",
     ingredients: [
       "1 oz Tashi Baijiu",
       "0.5 oz butterfly pea flower syrup",
@@ -146,8 +139,7 @@ export const TASHI_RECIPES: TashiRecipe[] = [
   {
     key: "tibetan-dreamin",
     name: "Tibetan Dreamin",
-    vibe:
-      "A whispered wish, a half-remembered dream — pink-hued escape from the weight of the world. A lullaby in liquid form.",
+    vibe: "A whispered wish, a half-remembered dream — pink-hued escape from the weight of the world. A lullaby in liquid form.",
     ingredients: [
       "1 oz Tashi Baijiu",
       "1.5 oz Martini & Rossi Rosato vermouth",
@@ -164,8 +156,7 @@ export const TASHI_RECIPES: TashiRecipe[] = [
   {
     key: "the-yak",
     name: "The Yak",
-    vibe:
-      "Stubborn, bold, unexpectedly smooth — an ode to the unglamorous hero of the Himalayas. Kicks like a mountain gale.",
+    vibe: "Stubborn, bold, unexpectedly smooth — an ode to the unglamorous hero of the Himalayas. Kicks like a mountain gale.",
     ingredients: [
       "1 oz Tashi Baijiu",
       "4 oz ginger beer",
@@ -180,10 +171,7 @@ export const TASHI_RECIPES: TashiRecipe[] = [
 ];
 
 /** Pick a Tashi reference recipe loosely matched to user's flavor tags + mood. */
-export function pickTashiRecipe(opts: {
-  selectedFlavors?: string[];
-  mood?: string;
-}): TashiRecipe {
+export function pickTashiRecipe(opts: { selectedFlavors?: string[]; mood?: string }): TashiRecipe {
   const flavors = (opts.selectedFlavors ?? []).map((f) => f.toLowerCase());
   const moodText = (opts.mood ?? "").toLowerCase();
 

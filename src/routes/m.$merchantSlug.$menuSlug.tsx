@@ -1,13 +1,11 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import MoodInputScreen from "@/components/screens/MoodInputScreen";
-import VibetailLogo from "@/components/moodtail/VibetailLogo";
+import Draw from "@/components/draw/art";
 import { getPublishedMenu } from "@/lib/menu/public.functions";
 import { setRestaurantCtx } from "@/lib/restaurant-ctx";
 import { resolveMenuGames } from "@/lib/games/registry";
 import { useLang } from "@/lib/i18n";
-import LangToggle from "@/components/moodtail/LangToggle";
-
 
 const AGE_GATE_KEY = "vibetail.ageGate.v1";
 
@@ -22,10 +20,7 @@ export const Route = createFileRoute("/m/$merchantSlug/$menuSlug")({
   head: ({ loaderData }) => {
     if (!loaderData) {
       return {
-        meta: [
-          { title: "Menu not found — Vibetail" },
-          { name: "robots", content: "noindex" },
-        ],
+        meta: [{ title: "Menu not found — Vibetail" }, { name: "robots", content: "noindex" }],
       };
     }
     const { menu } = loaderData;
@@ -57,7 +52,9 @@ export const Route = createFileRoute("/m/$merchantSlug/$menuSlug")({
   notFoundComponent: () => (
     <div className="flex min-h-svh items-center justify-center text-center px-6">
       <div>
-        <h1 className="text-4xl font-normal mb-3" style={{ fontFamily: "var(--font-heading)" }}>Menu unavailable</h1>
+        <h1 className="text-4xl font-normal mb-3" style={{ fontFamily: "var(--font-heading)" }}>
+          Menu unavailable
+        </h1>
         <p style={{ color: "var(--app-text-muted)" }}>
           This menu isn't published yet. Check back soon.
         </p>
@@ -67,7 +64,9 @@ export const Route = createFileRoute("/m/$merchantSlug/$menuSlug")({
   errorComponent: () => (
     <div className="flex min-h-svh items-center justify-center text-center px-6">
       <div>
-        <h1 className="text-4xl font-normal mb-3" style={{ fontFamily: "var(--font-heading)" }}>Something went wrong</h1>
+        <h1 className="text-4xl font-normal mb-3" style={{ fontFamily: "var(--font-heading)" }}>
+          Something went wrong
+        </h1>
         <p style={{ color: "var(--app-text-muted)" }}>Please refresh in a moment.</p>
       </div>
     </div>
@@ -76,7 +75,7 @@ export const Route = createFileRoute("/m/$merchantSlug/$menuSlug")({
 
 function MenuLanding() {
   const { menu } = Route.useLoaderData();
-  const { t, setLang } = useLang();
+  const { t } = useLang();
   const [started, setStarted] = useState(false);
   const [ageOk, setAgeOk] = useState(true);
 
@@ -89,18 +88,7 @@ function MenuLanding() {
         // ignore
       }
     }
-    // Default the World Cup Final event menu to English.
-    try {
-      if (menu.menuSlug === "world-cup-final") {
-        setLang("en");
-      } else if (!localStorage.getItem("vibetail-lang")) {
-        setLang("zh");
-      }
-    } catch {
-      // ignore
-    }
-
-  }, [menu.merchantSlug, menu.menuSlug, menu.hasAlcoholic, setLang]);
+  }, [menu.merchantSlug, menu.hasAlcoholic]);
 
   const games = resolveMenuGames(menu.enabledGameIds, menu.gameDisplayOrder);
   const primaryGame = games[0];
@@ -119,65 +107,61 @@ function MenuLanding() {
     );
   }
 
-
   return (
-    <div className="w-full md:max-w-2xl lg:max-w-3xl md:mx-auto min-h-svh flex flex-col items-center justify-center px-6 py-10 text-center relative">
-      <div className="absolute top-[max(12px,env(safe-area-inset-top))] right-5">
-        <LangToggle />
-      </div>
-      <VibetailLogo size={140} />
-
+    <div className="flex min-h-svh flex-col" style={{ background: "var(--paper)" }}>
       <div
-        className="mt-4 text-[10px] uppercase tracking-[0.3em]"
-        style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}
+        className="shell flex items-center justify-between py-4"
+        style={{ borderBottom: "1px solid var(--line)" }}
       >
-        Vibetail × {menu.merchantName}
+        <span className="display-fat text-xl leading-none">Vibetail</span>
       </div>
-      <h1
-        className="mt-3 text-4xl font-normal leading-tight"
-        style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)", letterSpacing: "-0.01em" }}
-      >
-        {menu.merchantName}
-      </h1>
-      {(menu.shortIntro || primaryGame) && (
-        <p
-          className="mt-3 max-w-md text-base italic leading-relaxed"
-          style={{ fontFamily: "var(--font-heading)", color: "var(--app-text-secondary)" }}
-        >
-          {menu.shortIntro ?? t("merchant.intro.fallback")}
-        </p>
-      )}
 
-      {primaryGame ? (
-        <button
-          type="button"
-          onClick={() => setStarted(true)}
-          onPointerUp={() => setStarted(true)}
-          className="mt-10 px-8 py-3.5 rounded-full text-sm font-medium tracking-wider text-white relative z-10 overflow-hidden cursor-pointer select-none"
-          style={{
-            background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
-            boxShadow: "0 12px 30px -6px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
-            border: "1px solid rgba(255,255,255,0.14)",
-            fontFamily: "var(--font-heading)",
-            touchAction: "manipulation",
-          }}
-        
-        >
-          {t("merchant.cta.match")}
-        </button>
-      ) : (
-        <p className="mt-8 text-sm" style={{ color: "var(--app-text-muted)" }}>
-          {t("merchant.noGames")}
-        </p>
-      )}
+      <div className="shell-narrow flex flex-1 flex-col justify-center py-14 text-center">
+        <div className="mono mb-8">Vibetail × {menu.merchantName}</div>
 
-      <p
-        className="mt-6 text-[11px]"
-        style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}
-      >
-        {t("merchant.curatedBy").replace("{name}", menu.merchantName)}
-      </p>
+        <div className="mx-auto grid w-full max-w-xs grid-cols-4 gap-x-3">
+          {["party", "moon", "fire", "lemon"].map((n, i) => (
+            <span key={n} style={{ color: "var(--ink)" }}>
+              <Draw
+                name={n}
+                wash={["#b5361f", "#6f93a6", "#dda02a", "#8b9068"][i]}
+                strokeWidth={2.6}
+              />
+            </span>
+          ))}
+        </div>
+
+        <h1 className="display-fat mt-9 text-[clamp(36px,9vw,64px)]">{menu.merchantName}</h1>
+
+        {(menu.shortIntro || primaryGame) && (
+          <p
+            className="serif-italic mx-auto mt-5 max-w-md text-[18px] leading-relaxed"
+            style={{ color: "var(--ink-soft)" }}
+          >
+            {menu.shortIntro ?? t("merchant.intro.fallback")}
+          </p>
+        )}
+
+        {primaryGame ? (
+          <div className="mt-10">
+            <button
+              type="button"
+              onClick={() => setStarted(true)}
+              onPointerUp={() => setStarted(true)}
+              className="btn btn-accent w-full sm:w-auto"
+              style={{ touchAction: "manipulation" }}
+            >
+              {t("merchant.cta.match")}
+            </button>
+          </div>
+        ) : (
+          <p className="mono mt-10">{t("merchant.noGames")}</p>
+        )}
+
+        <p className="mono-sm mt-8">
+          {t("merchant.curatedBy").replace("{name}", menu.merchantName)}
+        </p>
+      </div>
     </div>
   );
 }
-

@@ -239,10 +239,9 @@ function DevPosterLab() {
         <header className="mb-6">
           <h1 className="text-xl font-semibold">Share Poster Lab</h1>
           <p className="text-sm text-neutral-400">
-            Live harness for{" "}
-            <code className="text-neutral-300">renderSharePosterToCanvas</code> (
-            {POSTER_LAYOUTS[layout].width}×{POSTER_LAYOUTS[layout].height}). Edit fields →
-            auto re-renders. Dev only.
+            Live harness for <code className="text-neutral-300">renderSharePosterToCanvas</code> (
+            {POSTER_LAYOUTS[layout].width}×{POSTER_LAYOUTS[layout].height}). Edit fields → auto
+            re-renders. Dev only.
           </p>
         </header>
 
@@ -295,9 +294,7 @@ function DevPosterLab() {
             </div>
 
             <div>
-              <span className={labelCls}>
-                Font size — {Math.round(fontScale * 100)}%
-              </span>
+              <span className={labelCls}>Font size — {Math.round(fontScale * 100)}%</span>
               <div className="flex items-center gap-2 mb-2">
                 {[1.0, 1.2, 1.4, 1.6, 1.8].map((v) => (
                   <button
@@ -336,9 +333,7 @@ function DevPosterLab() {
                   ] as [keyof TypeSizes, string, number, number][]
                 ).map(([key, label, min, max]) => (
                   <div key={key} className="flex items-center gap-3">
-                    <span className="w-24 text-xs text-neutral-400 shrink-0">
-                      {label}
-                    </span>
+                    <span className="w-24 text-xs text-neutral-400 shrink-0">{label}</span>
                     <input
                       type="range"
                       min={min}

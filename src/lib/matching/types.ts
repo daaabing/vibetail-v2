@@ -4,11 +4,11 @@
 export type AlcoholPreference = "alcoholic" | "non_alcoholic" | "either";
 
 export interface MatchDimensions {
-  sweetness?: number;   // 0..1
-  acidity?: number;     // 0..1
-  bitterness?: number;  // 0..1
-  body?: number;        // 0..1
-  strength?: number;    // 0..1
+  sweetness?: number; // 0..1
+  acidity?: number; // 0..1
+  bitterness?: number; // 0..1
+  body?: number; // 0..1
+  strength?: number; // 0..1
 }
 
 export interface MatchExclusions {

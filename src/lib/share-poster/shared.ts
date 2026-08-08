@@ -53,10 +53,8 @@ export type Scaler = (n: number) => number;
 
 export const DEFAULT_FONT_SCALE = 1.45;
 
-export const SERIF =
-  '"Cormorant Garamond","Cormorant","Songti SC","STSong","Georgia",serif';
-export const SANS =
-  '"Inter","PingFang SC","Hiragino Sans GB","Helvetica Neue",sans-serif';
+export const SERIF = '"Cormorant Garamond","Cormorant","Songti SC","STSong","Georgia",serif';
+export const SANS = '"Inter","PingFang SC","Hiragino Sans GB","Helvetica Neue",sans-serif';
 
 export function makeScaler(fontScale?: number): Scaler {
   const fs = fontScale ?? DEFAULT_FONT_SCALE;
@@ -128,10 +126,7 @@ async function blobToDataUrl(blob: Blob): Promise<string> {
 
 export async function exportCanvas(canvas: HTMLCanvasElement): Promise<RenderResult> {
   const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error("toBlob returned null"))),
-      "image/png",
-    );
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob returned null"))), "image/png");
   });
   const dataUrl = await blobToDataUrl(blob);
   return { blob, dataUrl };
@@ -275,12 +270,7 @@ export function paintParchment(ctx: CanvasRenderingContext2D, W: number, H: numb
 export type Bloom = [cx: number, cy: number, r: number, color: string];
 
 /** Watercolor blooms composited with multiply. Positions are layout-specific. */
-export function paintBlooms(
-  ctx: CanvasRenderingContext2D,
-  W: number,
-  H: number,
-  blooms: Bloom[],
-) {
+export function paintBlooms(ctx: CanvasRenderingContext2D, W: number, H: number, blooms: Bloom[]) {
   ctx.save();
   ctx.globalCompositeOperation = "multiply";
   for (const [cx, cy, r, color] of blooms) {
@@ -419,10 +409,7 @@ export interface TextStackConfig {
  *
  * Returns measured blocks; draw them with `drawBlockStack`.
  */
-export function buildTextBlocks(
-  ctx: CanvasRenderingContext2D,
-  cfg: TextStackConfig,
-): TextBlock[] {
+export function buildTextBlocks(ctx: CanvasRenderingContext2D, cfg: TextStackConfig): TextBlock[] {
   const { cocktail, lang, S, colX, colW, topLimit, bottomLimit } = cfg;
   const nameMaxLines = cfg.nameMaxLines ?? 3;
   const { quote, userVibe, hasMatch, menuItemName, why } = derivePosterCopy(cocktail);

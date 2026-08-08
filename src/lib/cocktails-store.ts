@@ -36,7 +36,6 @@ export interface Cocktail {
   // A link to the merchant's full menu (image or PDF) shown as "View full menu".
   fullMenuUrl?: string | null;
   fullMenuType?: "pdf" | "image" | null;
-
 }
 
 export interface GeneratedCocktailFields {
@@ -86,7 +85,7 @@ function fromRow(r: Row): Cocktail {
     category: r.category,
     imageData: r.image_data,
     imageUrl: r.image_url,
-    lang: (r.lang === "zh" || r.lang === "en") ? r.lang : "en",
+    lang: r.lang === "zh" || r.lang === "en" ? r.lang : "en",
     createdAt: r.created_at,
     userId: r.user_id,
   };
@@ -141,7 +140,10 @@ export async function getCocktail(id: string | number): Promise<Cocktail | null>
 }
 
 /** Persist an already-generated cocktail preview to the signed-in user's bar. */
-export async function saveCocktailFromPreview(c: Cocktail, imageData?: string | null): Promise<Cocktail> {
+export async function saveCocktailFromPreview(
+  c: Cocktail,
+  imageData?: string | null,
+): Promise<Cocktail> {
   const { data: sess } = await supabase.auth.getSession();
   const uid = sess.session?.user.id;
   if (!uid) throw new Error("NOT_SIGNED_IN");
@@ -161,20 +163,13 @@ export async function saveCocktailFromPreview(c: Cocktail, imageData?: string | 
     image_data: imageData ?? c.imageData ?? null,
     lang: c.lang ?? "en",
   };
-  const { data, error } = await supabase
-    .from("cocktails")
-    .insert(payload)
-    .select("*")
-    .single();
+  const { data, error } = await supabase.from("cocktails").insert(payload).select("*").single();
   if (error || !data) throw error ?? new Error("insert failed");
   return fromRow(data as Row);
 }
 
 export async function updateCocktailImage(id: number, imageData: string): Promise<void> {
-  const { error } = await supabase
-    .from("cocktails")
-    .update({ image_data: imageData })
-    .eq("id", id);
+  const { error } = await supabase.from("cocktails").update({ image_data: imageData }).eq("id", id);
   if (error) console.error("updateCocktailImage", error);
 }
 
@@ -199,7 +194,7 @@ export async function createCocktail(input: {
     original_mood: input.mood ?? "",
     selected_flavors: input.selectedFlavors ?? [],
     custom_preference: input.customPreference ?? "",
-    flavor_profile: g?.flavorProfile ?? (input.selectedFlavors?.join(", ") ?? ""),
+    flavor_profile: g?.flavorProfile ?? input.selectedFlavors?.join(", ") ?? "",
     tastes_like: g?.tastesLike ?? "",
     ingredients: g?.ingredients ?? [],
     recipe: g?.recipe ?? "",
@@ -208,11 +203,7 @@ export async function createCocktail(input: {
     image_url: input.imageUrl ?? null,
     lang: input.lang ?? "en",
   };
-  const { data, error } = await supabase
-    .from("cocktails")
-    .insert(payload)
-    .select("*")
-    .single();
+  const { data, error } = await supabase.from("cocktails").insert(payload).select("*").single();
   if (error || !data) throw error ?? new Error("insert failed");
   return fromRow(data as Row);
 }

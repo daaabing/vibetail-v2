@@ -2,10 +2,13 @@
 
 > Turn your current vibe into a personalized cocktail. AI-powered cocktail generator that translates moods, feelings, and flavors into bespoke drink recipes.
 
-Vibetail is a playful web app where users describe their mood, pick flavor preferences, optionally snap a photo of available ingredients, and receive an AI-generated cocktail with a name, recipe, tasting notes, and a roast.
+Vibetail asks how your night is actually going, then mixes one drink for it. The flow is five short steps — vibe, texture, strength, base spirit, notes — one question per screen, with a running "order" panel you can jump around. The result is a printable specimen card: name, recipe, tasting notes, and a diagnosis you didn't ask for. Partner bars can run the same flow against their own published menu so guests are matched to a drink that's actually pourable tonight.
 
 ## Pages
 
-- [Home](/): Landing page introducing Vibetail and the mix-a-cocktail flow.
-- [Mix a Vibe](/mood-input): Multi-step form to share mood, flavors, and ingredients to generate a cocktail.
-- [Vibe Bar](/gallery): Collection of previously generated cocktails.
+- [Home](/): Landing page — what Vibetail is, how it works, the specimen cards, partnerships, team and FAQ.
+- [Mix a Vibe](/mood-input): The five-step mixing flow. Each step is linkable via `?step=1..5`.
+- [Vibe Bar](/gallery): Your saved cocktails, filed as a catalogue.
+- [Mood cocktail recipes](/guides/mood-cocktail-recipes): Guide of 12 mood-matched recipes.
+
+The app is English-only.

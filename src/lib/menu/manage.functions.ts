@@ -338,10 +338,7 @@ export const deleteMenuItem = createServerFn({ method: "POST" })
     if (rowErr) throw new Error(rowErr.message);
     const owner = (row.menus as unknown as { merchant_id: string } | null)?.merchant_id;
     if (owner !== merchantId) throw new Error("Forbidden");
-    const { error } = await supabaseAdmin
-      .from("menu_items")
-      .delete()
-      .eq("id", data.menuItemId);
+    const { error } = await supabaseAdmin.from("menu_items").delete().eq("id", data.menuItemId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -422,4 +419,3 @@ export const clearMenuFile = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
-

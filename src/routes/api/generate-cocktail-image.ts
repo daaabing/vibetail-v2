@@ -22,7 +22,9 @@ interface GenBody {
 function buildPrompt(b: GenBody): string {
   const name = (b.name || "a cocktail").trim();
   const ingredients = (b.ingredients ?? [])
-    .map((i) => i.replace(/^[0-9./\s]+(oz|tsp|tbsp|splash|dash|sprig|cup|ml)?\s*(of\s+)?/i, "").trim())
+    .map((i) =>
+      i.replace(/^[0-9./\s]+(oz|tsp|tbsp|splash|dash|sprig|cup|ml)?\s*(of\s+)?/i, "").trim(),
+    )
     .filter(Boolean)
     .slice(0, 6);
   const flavors = (b.flavorProfile || "").trim();
@@ -31,27 +33,40 @@ function buildPrompt(b: GenBody): string {
   // Infer glassware + format from name/ingredients/recipe
   const text = `${name} ${ingredients.join(" ")} ${flavors} ${recipe}`.toLowerCase();
 
-  const longCues = /(highball|collins|spritz|mojito|paloma|long\s*island|moscow mule|gin\s*&?\s*tonic|tonic|club soda|soda water|sparkling|seltzer|ginger beer|ginger ale|lemonade|cola|coke|top(ped)? with|fill(ed)? with|tall glass|over ice)/;
-  const shortCues = /(martini|manhattan|negroni|old.fashioned|sazerac|gimlet|sidecar|aviation|daiquiri|sour|coupe|nick.+nora|served up|straight up|\bneat\b)/;
+  const longCues =
+    /(highball|collins|spritz|mojito|paloma|long\s*island|moscow mule|gin\s*&?\s*tonic|tonic|club soda|soda water|sparkling|seltzer|ginger beer|ginger ale|lemonade|cola|coke|top(ped)? with|fill(ed)? with|tall glass|over ice)/;
+  const shortCues =
+    /(martini|manhattan|negroni|old.fashioned|sazerac|gimlet|sidecar|aviation|daiquiri|sour|coupe|nick.+nora|served up|straight up|\bneat\b)/;
   const isLong = longCues.test(text);
   const isShort = !isLong && shortCues.test(text);
 
   let glass = "an elegant cocktail glass appropriate to the drink";
   if (isLong) {
-    if (/collins/.test(text)) glass = "a tall slim Collins glass filled to the top with crystal-clear ice cubes, liquid filling the entire tall glass";
-    else if (/spritz/.test(text)) glass = "a large stemmed wine glass filled with ice and the spritz, visible bubbles";
-    else if (/mojito/.test(text)) glass = "a tall highball glass packed with crushed ice and fresh mint, liquid filling the whole glass";
+    if (/collins/.test(text))
+      glass =
+        "a tall slim Collins glass filled to the top with crystal-clear ice cubes, liquid filling the entire tall glass";
+    else if (/spritz/.test(text))
+      glass = "a large stemmed wine glass filled with ice and the spritz, visible bubbles";
+    else if (/mojito/.test(text))
+      glass =
+        "a tall highball glass packed with crushed ice and fresh mint, liquid filling the whole glass";
     else if (/tiki|punch/.test(text)) glass = "a tall tiki mug filled with crushed ice";
-    else glass = "a tall highball glass filled to the brim with ice cubes, liquid filling the entire tall glass";
+    else
+      glass =
+        "a tall highball glass filled to the brim with ice cubes, liquid filling the entire tall glass";
   } else if (isShort) {
-    if (/martini|aviation|gimlet/.test(text)) glass = "a small classic martini glass, no ice, served up";
-    else if (/manhattan|sazerac|nick.+nora/.test(text)) glass = "a small stemmed Nick & Nora glass, served up, no ice";
-    else if (/negroni|old.fashioned/.test(text)) glass = "a short squat rocks glass with one large clear ice cube, low liquid level";
+    if (/martini|aviation|gimlet/.test(text))
+      glass = "a small classic martini glass, no ice, served up";
+    else if (/manhattan|sazerac|nick.+nora/.test(text))
+      glass = "a small stemmed Nick & Nora glass, served up, no ice";
+    else if (/negroni|old.fashioned/.test(text))
+      glass = "a short squat rocks glass with one large clear ice cube, low liquid level";
     else glass = "a small stemmed coupe glass, served up, no ice";
   } else {
     if (/martini/.test(text)) glass = "a classic martini glass";
     else if (/margarita/.test(text)) glass = "a margarita coupe with a salted rim";
-    else if (/negroni|old.fashioned|whisk/.test(text)) glass = "a short rocks glass with a large ice cube";
+    else if (/negroni|old.fashioned|whisk/.test(text))
+      glass = "a short rocks glass with a large ice cube";
     else if (/punch|tiki/.test(text)) glass = "a tiki-style glass";
   }
 
@@ -93,7 +108,9 @@ function buildMerchantPrompt(b: GenBody): string {
   const actualName = (m.actualDrinkName || b.name || "a cocktail").trim();
   const actualDesc = (m.actualDrinkDescription || "").trim();
   const actualIngredients = (m.actualDrinkIngredients ?? b.ingredients ?? [])
-    .map((i) => i.replace(/^[0-9./\s]+(oz|tsp|tbsp|splash|dash|sprig|cup|ml)?\s*(of\s+)?/i, "").trim())
+    .map((i) =>
+      i.replace(/^[0-9./\s]+(oz|tsp|tbsp|splash|dash|sprig|cup|ml)?\s*(of\s+)?/i, "").trim(),
+    )
     .filter(Boolean)
     .slice(0, 8);
   const vibeName = (m.vibeDrinkName || "").trim();
@@ -103,13 +120,27 @@ function buildMerchantPrompt(b: GenBody): string {
 
   // Reuse glassware inference from the base prompt so the actual drink stays recognizable.
   const text = `${actualName} ${actualIngredients.join(" ")} ${actualDesc} ${tone}`.toLowerCase();
-  const longCues = /(highball|collins|spritz|mojito|paloma|long\s*island|moscow mule|gin\s*&?\s*tonic|tonic|club soda|soda water|sparkling|seltzer|ginger beer|ginger ale|lemonade|cola|coke|top(ped)? with|fill(ed)? with|tall glass|over ice)/;
-  const shortCues = /(martini|manhattan|negroni|old.fashioned|sazerac|gimlet|sidecar|aviation|daiquiri|sour|coupe|nick.+nora|served up|straight up|\bneat\b)/;
+  const longCues =
+    /(highball|collins|spritz|mojito|paloma|long\s*island|moscow mule|gin\s*&?\s*tonic|tonic|club soda|soda water|sparkling|seltzer|ginger beer|ginger ale|lemonade|cola|coke|top(ped)? with|fill(ed)? with|tall glass|over ice)/;
+  const shortCues =
+    /(martini|manhattan|negroni|old.fashioned|sazerac|gimlet|sidecar|aviation|daiquiri|sour|coupe|nick.+nora|served up|straight up|\bneat\b)/;
   const isLong = longCues.test(text);
   const isShort = !isLong && shortCues.test(text);
   let glass = "an elegant glass appropriate to the drink";
-  if (isLong) glass = /collins/.test(text) ? "a tall slim Collins glass filled with crystal-clear ice, liquid to the top" : /spritz/.test(text) ? "a large stemmed wine glass filled with ice and the spritz, visible bubbles" : /mojito/.test(text) ? "a tall highball glass packed with crushed ice and fresh mint" : "a tall highball glass filled to the brim with ice cubes";
-  else if (isShort) glass = /martini|aviation|gimlet/.test(text) ? "a small classic martini glass, no ice, served up" : /negroni|old.fashioned/.test(text) ? "a short rocks glass with one large clear ice cube" : "a small stemmed coupe glass, served up, no ice";
+  if (isLong)
+    glass = /collins/.test(text)
+      ? "a tall slim Collins glass filled with crystal-clear ice, liquid to the top"
+      : /spritz/.test(text)
+        ? "a large stemmed wine glass filled with ice and the spritz, visible bubbles"
+        : /mojito/.test(text)
+          ? "a tall highball glass packed with crushed ice and fresh mint"
+          : "a tall highball glass filled to the brim with ice cubes";
+  else if (isShort)
+    glass = /martini|aviation|gimlet/.test(text)
+      ? "a small classic martini glass, no ice, served up"
+      : /negroni|old.fashioned/.test(text)
+        ? "a short rocks glass with one large clear ice cube"
+        : "a small stemmed coupe glass, served up, no ice";
 
   let garnish = "a fitting garnish";
   if (/lime|margarita|mojito|gimlet/.test(text)) garnish = "a fresh lime wedge";
@@ -120,9 +151,15 @@ function buildMerchantPrompt(b: GenBody): string {
   else if (/espresso|coffee/.test(text)) garnish = "three coffee beans floating on foam";
   else if (/cucumber/.test(text)) garnish = "a thin cucumber ribbon";
 
-  const ingredientLine = actualIngredients.length ? `Real ingredients that must inform liquid color, clarity and texture: ${actualIngredients.join(", ")}.` : "";
-  const descLine = actualDesc ? `Actual drink description (defines the true identity — do not deviate): ${actualDesc}.` : "";
-  const vibeLine = vibeDesc ? `Vibe interpretation (shapes composition, focal point, edge softness, background wash, pigment temperature — never literal objects): ${vibeDesc}.` : "";
+  const ingredientLine = actualIngredients.length
+    ? `Real ingredients that must inform liquid color, clarity and texture: ${actualIngredients.join(", ")}.`
+    : "";
+  const descLine = actualDesc
+    ? `Actual drink description (defines the true identity — do not deviate): ${actualDesc}.`
+    : "";
+  const vibeLine = vibeDesc
+    ? `Vibe interpretation (shapes composition, focal point, edge softness, background wash, pigment temperature — never literal objects): ${vibeDesc}.`
+    : "";
   const toneLine = tone ? `Tone keywords: ${tone}.` : "";
   const whyLine = why ? `Emotional through-line to hint at through color rhythm: ${why}.` : "";
 
@@ -144,7 +181,17 @@ export const Route = createFileRoute("/api/generate-cocktail-image")({
     handlers: {
       POST: async ({ request }) => {
         const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+        if (!key) {
+          if (process.env.NODE_ENV === "production") {
+            return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+          }
+          // Locally there is no illustrator; the card falls back to its drawn
+          // glass, which is a legitimate state in production too.
+          return new Response(JSON.stringify({ imageData: null }), {
+            status: 200,
+            headers: { "Content-Type": "application/json", "X-Vibetail-Stub": "1" },
+          });
+        }
 
         let body: GenBody;
         try {

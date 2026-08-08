@@ -49,7 +49,10 @@ function ensureSessionId(): string | null {
 function detectDeviceType(): "mobile" | "tablet" | "desktop" {
   if (!isBrowser()) return "desktop";
   const ua = navigator.userAgent || "";
-  if (/iPad|Tablet/i.test(ua) || (window.innerWidth >= 600 && window.innerWidth <= 1024 && /Mobi/i.test(ua))) {
+  if (
+    /iPad|Tablet/i.test(ua) ||
+    (window.innerWidth >= 600 && window.innerWidth <= 1024 && /Mobi/i.test(ua))
+  ) {
     return "tablet";
   }
   if (/Mobi|Android|iPhone|iPod/i.test(ua) || window.innerWidth < 600) return "mobile";
@@ -64,7 +67,9 @@ export function initAnalytics() {
   const host = window.location.hostname;
   const isProd = host === "vibetail.com" || host === "www.vibetail.com";
   if (!isProd) {
-    try { console.log("[analytics] skipped (non-prod host)", host); } catch {}
+    try {
+      console.log("[analytics] skipped (non-prod host)", host);
+    } catch {}
     initialized = true;
     return;
   }
@@ -121,7 +126,6 @@ export function initAnalytics() {
   });
 }
 
-
 export function track(event: string, props: Record<string, unknown> = {}) {
   if (!isBrowser()) return;
   try {
@@ -134,7 +138,9 @@ export function track(event: string, props: Record<string, unknown> = {}) {
       timestamp: new Date().toISOString(),
       ...props,
     };
-    try { console.log("[analytics] track", event, payload); } catch {}
+    try {
+      console.log("[analytics] track", event, payload);
+    } catch {}
     posthog.capture(event, payload);
   } catch (e) {
     // analytics must never break the app

@@ -33,11 +33,9 @@ const byId = new Map(GAMES.map((g) => [g.id, g]));
 const bySlug = new Map(GAMES.map((g) => [g.slug, g]));
 
 export const getGame = (id: string): GameDefinition | undefined => byId.get(id);
-export const getGameBySlug = (slug: string): GameDefinition | undefined =>
-  bySlug.get(slug);
+export const getGameBySlug = (slug: string): GameDefinition | undefined => bySlug.get(slug);
 
-export const listActiveGames = (): GameDefinition[] =>
-  GAMES.filter((g) => g.status === "active");
+export const listActiveGames = (): GameDefinition[] => GAMES.filter((g) => g.status === "active");
 
 /** Given a menu's enabled_game_ids, return active games in display order. */
 export function resolveMenuGames(

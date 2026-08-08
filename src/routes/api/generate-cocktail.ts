@@ -63,7 +63,8 @@ const SCHEMA = {
     },
     roast: {
       type: "string",
-      description: "One witty, slightly cutting one-liner that roasts the user's vibe in 12 words or fewer.",
+      description:
+        "One witty, slightly cutting one-liner that roasts the user's vibe in 12 words or fewer.",
     },
     category: {
       type: "string",
@@ -71,7 +72,15 @@ const SCHEMA = {
       description: "Pick the closest emotional category for this vibe.",
     },
   },
-  required: ["cocktailName", "tastesLike", "flavorProfile", "ingredients", "recipe", "roast", "category"],
+  required: [
+    "cocktailName",
+    "tastesLike",
+    "flavorProfile",
+    "ingredients",
+    "recipe",
+    "roast",
+    "category",
+  ],
 } as const;
 
 function buildUserPrompt(input: GenInput): string {
@@ -94,7 +103,11 @@ function buildUserPrompt(input: GenInput): string {
         `Reference name (DO NOT copy — invent a fresh witty name tied to the user's vibe): ${tashi.name}`,
         `Reference vibe (for tone reference only — write your OWN tastesLike, roast and flavor profile from scratch): ${tashi.vibe}`,
         `Reference ingredients:\n${tashi.ingredients.map((i) => `  - ${i}`).join("\n")}`,
-        `Reference steps:\n${tashi.recipe.split("\n").filter(Boolean).map((s, i) => `  ${i + 1}. ${s}`).join("\n")}`,
+        `Reference steps:\n${tashi.recipe
+          .split("\n")
+          .filter(Boolean)
+          .map((s, i) => `  ${i + 1}. ${s}`)
+          .join("\n")}`,
         ``,
       ].join("\n")
     : "";
@@ -174,18 +187,77 @@ function buildUserPrompt(input: GenInput): string {
   ].join("\n");
 }
 
+/**
+ * Development stand-in for the model. Deterministic, obviously synthetic, and
+ * only ever reachable when NODE_ENV is not production.
+ */
+function sampleCocktail(input: GenInput): GeneratedCocktail {
+  const zh = input.lang === "zh";
+  const mood = (input.mood ?? "").slice(0, 60);
+  const flavors = input.selectedFlavors?.length
+    ? input.selectedFlavors
+    : ["citrusy", "herbal", "dry"];
+
+  return zh
+    ? {
+        cocktailName: "半夜三点的诚实",
+        tastesLike: "青柠的酸先到，草本的苦跟在后面，像一句你本来不打算说出口的实话。",
+        flavorProfile: flavors.join("、"),
+        ingredients: [
+          "45 ml 金酒",
+          "20 ml 鲜榨青柠汁",
+          "15 ml 蜂蜜糖浆",
+          "10 ml 绿查特酒",
+          "2 滴苦精",
+        ],
+        recipe: "所有材料加冰摇匀 12 秒。\n双重过滤入冰镇碟形杯。\n喷一点青柠皮油，皮丢掉。",
+        roast: `“${mood}” —— 这杯不解决问题，但它会陪你坐着。`,
+        category: "late-night",
+      }
+    : {
+        cocktailName: "Three A.M. Honesty",
+        tastesLike:
+          "Lime arrives first, something herbal follows it in, and it finishes like a sentence you didn't plan to say out loud.",
+        flavorProfile: flavors.join(", "),
+        ingredients: [
+          "45 ml gin",
+          "20 ml fresh lime juice",
+          "15 ml honey syrup",
+          "10 ml green Chartreuse",
+          "2 dashes orange bitters",
+        ],
+        recipe:
+          "Shake everything hard with ice for 12 seconds.\nDouble strain into a chilled coupe.\nExpress a lime peel over the top and discard it.",
+        roast: `“${mood}” — this won't fix it, but it will sit with you.`,
+        category: "late-night",
+      };
+}
+
 export const Route = createFileRoute("/api/generate-cocktail")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
         let input: GenInput;
         try {
           input = (await request.json()) as GenInput;
         } catch {
           return new Response("Invalid JSON", { status: 400 });
+        }
+
+        // Without a key there is nothing to call. In production that's a real
+        // outage and must surface as one; locally it just means nobody has
+        // exported the secret, so hand back a stand-in so the flow stays
+        // walkable end to end.
+        if (!key) {
+          if (process.env.NODE_ENV === "production") {
+            return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+          }
+          return new Response(JSON.stringify(sampleCocktail(input)), {
+            status: 200,
+            headers: { "Content-Type": "application/json", "X-Vibetail-Stub": "1" },
+          });
         }
 
         const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

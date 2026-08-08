@@ -1,48 +1,21 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { type Cocktail, listMyCocktails } from "@/lib/cocktails-store";
 import { formatDistanceToNow } from "date-fns";
+
+import { type Cocktail, listMyCocktails } from "@/lib/cocktails-store";
 import { useLang } from "@/lib/i18n";
 import { getRestaurantCtx, clearRestaurantCtx } from "@/lib/restaurant-ctx";
 import { useAuth } from "@/lib/use-auth";
-import AuthModal from "@/components/moodtail/AuthModal";
-import UserMenu from "@/components/moodtail/UserMenu";
 import { supabase } from "@/integrations/supabase/client";
 
-const PAGE_SIZE = 10;
+import AuthModal from "@/components/moodtail/AuthModal";
+import UserMenu from "@/components/moodtail/UserMenu";
 
-function LangToggle() {
-  const { lang, setLang } = useLang();
-  return (
-    <div
-      className="flex rounded-full overflow-hidden"
-      style={{
-        border: "1px solid rgba(255,255,255,0.12)",
-        background: "rgba(255,255,255,0.05)",
-        backdropFilter: "blur(8px)",
-      }}
-    >
-      {(["zh", "en"] as const).map((l) => (
-        <motion.button
-          key={l}
-          whileTap={{ scale: 0.92 }}
-          onClick={() => setLang(l)}
-          className="px-2.5 py-1 text-[11px] font-semibold tracking-wider transition-all"
-          style={{
-            background: lang === l ? "var(--app-primary)" : "transparent",
-            color: lang === l ? "white" : "var(--app-text-muted)",
-            borderRadius: "9999px",
-          }}
-        >
-          {l === "zh" ? "中文" : "EN"}
-        </motion.button>
-      ))}
-    </div>
-  );
-}
+const PAGE_SIZE = 12;
 
+/**
+ * The Vibe Bar — every drink you've kept, filed as a catalogue of specimens.
+ */
 export default function GalleryScreen() {
   const navigate = useNavigate();
   const { t, lang } = useLang();
@@ -67,17 +40,19 @@ export default function GalleryScreen() {
     });
   }, [user, authLoading]);
 
-  useEffect(() => { setPage(1); }, [lang]);
+  useEffect(() => {
+    setPage(1);
+  }, [lang]);
 
   if (!authLoading && !user) {
     return (
       <>
-        <div className="min-h-svh" />
+        <div className="noir min-h-svh" style={{ background: "var(--paper)" }} />
         <AuthModal
           open
           onClose={() => {
-            // AuthModal auto-fires onClose on SIGNED_IN — if a session now exists, stay so gallery re-renders.
-            // Otherwise the user dismissed the modal manually; send them home.
+            // AuthModal auto-fires onClose on SIGNED_IN — if a session now exists,
+            // stay so the gallery re-renders. Otherwise the user dismissed it.
             supabase.auth.getSession().then(({ data }) => {
               if (!data.session) navigate({ to: "/" });
             });
@@ -87,10 +62,9 @@ export default function GalleryScreen() {
     );
   }
 
-
   // Filter by current language. Legacy entries without an explicit `lang`
   // field are bucketed by sniffing CJK characters in the cocktail name.
-  const cjk = /[\u4e00-\u9fff]/;
+  const cjk = /[一-鿿]/;
   const filtered = cocktails.filter((c) => {
     const cLang = c.lang ?? (cjk.test(c.cocktailName) ? "zh" : "en");
     return cLang === lang;
@@ -99,184 +73,188 @@ export default function GalleryScreen() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  const goHome = () => {
+    if (restaurantCtx) {
+      if (restaurantCtx === "double-chicken-please") {
+        navigate({ to: "/restaurants/double-chicken-please" });
+      } else {
+        navigate({ to: "/restaurant/$id", params: { id: restaurantCtx } });
+      }
+      return;
+    }
+    clearRestaurantCtx();
+    navigate({ to: "/" });
+  };
+
   return (
-    <div className="w-full md:max-w-4xl lg:max-w-5xl md:mx-auto px-5 pb-28 md:pb-8 relative">
-
-      {/* ── 顶部返回首页 ── */}
-      <div className="relative flex items-center justify-between pt-3 pb-4">
-
-        <motion.button
-          whileTap={{ scale: 0.88 }}
-          onClick={() => {
-            if (restaurantCtx) {
-              if (restaurantCtx === "double-chicken-please") {
-                navigate({ to: "/restaurants/double-chicken-please" });
-              } else {
-                navigate({ to: "/restaurant/$id", params: { id: restaurantCtx } });
-              }
-            } else {
-              clearRestaurantCtx();
-              navigate({ to: "/" });
-            }
-          }}
-          className="flex items-center gap-1.5 text-xs"
-          style={{ color: "var(--app-text-secondary)" }}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M15.75 19.5L8.25 12l7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="text-[10px] tracking-wider" style={{ fontFamily: "var(--font-body)" }}>{t("gallery.home")}</span>
-        </motion.button>
-
-        <span
-          className="absolute left-1/2 -translate-x-1/2 text-[10px] tracking-wider pointer-events-none"
-          style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}
-        >
-          {t("nav.vibeBar")}
-        </span>
-
-        <div className="flex items-center gap-2">
-          <LangToggle />
-          <UserMenu />
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => navigate({ to: "/mood-input" })}
-            className="text-xs font-semibold tracking-wider px-3 py-1.5 relative overflow-hidden"
-            style={{
-              borderRadius: "4px",
-              background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
-              color: "white",
-              boxShadow: "1px 2px 8px rgba(0,0,0,0.45)",
-            }}
-          >
-            {t("gallery.addVibe")}
-          </motion.button>
+    <div className="noir flex min-h-svh flex-col" style={{ background: "var(--paper)" }}>
+      {/* ── Top bar ── */}
+      <div
+        className="sticky top-0 z-30"
+        style={{
+          background: "rgba(14,14,13,0.92)",
+          backdropFilter: "blur(8px)",
+          borderBottom: "1px solid var(--line)",
+        }}
+      >
+        <div className="shell flex items-center justify-between gap-4 py-3.5">
+          <button type="button" onClick={goHome} className="mono flex items-center gap-2">
+            <span aria-hidden>←</span>
+            {t("gallery.home")}
+          </button>
+          <div className="flex items-center gap-2.5">
+            <UserMenu />
+            <button
+              className="btn btn-solid !px-4 !py-2.5"
+              onClick={() => navigate({ to: "/mood-input" })}
+            >
+              {t("gallery.addVibe")}
+            </button>
+          </div>
         </div>
       </div>
 
+      <div className="shell pb-28 pt-10 md:pb-16">
+        <div className="section-eyebrow">
+          <span className="eyebrow-gilt">{"The collection"}</span>
+        </div>
+        <h1 className="display text-[clamp(32px,5.4vw,56px)]">{t("gallery.title")}</h1>
+        <p className="mono-sm mt-3" style={{ color: "var(--gold)" }}>
+          {filtered.length} {filtered.length === 1 ? "specimen filed" : "specimens filed"}
+        </p>
 
-      <h1 className="sr-only">Vibe Bar — Your Cocktail Gallery</h1>
-
-      <h2 className="text-[10px] uppercase tracking-[0.3em] mb-3" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
-        {t("gallery.collectionHeading") || "Your Collection"}
-      </h2>
-
-      {/* ── 卡片列表 ── */}
-      <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
-
-        {loading ? (
-          [1, 2, 3, 4].map((i) => (
-            <div key={i} className="glass-card rounded-xl p-4 space-y-2">
-              <div className="h-3 w-24 rounded shimmer" />
-              <div className="h-5 w-3/4 rounded shimmer" />
-              <div className="h-3 w-full rounded shimmer" />
-              <div className="h-3 w-2/3 rounded shimmer" />
-            </div>
-          ))
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-3 md:col-span-2 lg:col-span-3">
-            <svg className="w-12 h-12 opacity-20" fill="none" stroke="var(--app-text-muted)" strokeWidth="1.5" viewBox="0 0 24 24">
-              <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <p className="text-sm" style={{ color: "var(--app-text-muted)" }}>{t("gallery.empty")}</p>
-            <motion.button
-              whileTap={{ scale: 0.94 }}
-              onClick={() => navigate({ to: "/mood-input" })}
-              className="text-xs font-semibold underline"
-              style={{ color: "var(--app-primary)" }}
-            >
-              {t("gallery.emptyBtn")}
-            </motion.button>
-          </div>
-        ) : (
-          paged.map((cocktail, idx) => (
-            <motion.div
-              key={cocktail.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, delay: idx * 0.03 }}
-              onClick={() => navigate({ to: "/drinks/$id", params: { id: cocktail.publicId ?? String(cocktail.id) }, search: { from: "gallery", ...(restaurantCtx ? { restaurant: restaurantCtx } : {}) } })}
-              className="glass-card rounded-xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
-            >
-              {/* 缩略图 */}
-              {cocktail.imageData && (
-                <div className="w-full overflow-hidden bg-white">
-                  <img
-                    src={`data:image/png;base64,${cocktail.imageData}`}
-                    alt={cocktail.cocktailName}
-                    className="w-full h-auto object-contain block"
-                  />
-                </div>
-              )}
-
-
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-1.5">
-                  <span className="text-[8px] tracking-wider uppercase"
-                    style={{ fontFamily: "var(--font-body)", color: "var(--app-text-muted)" }}>
-                    {formatDistanceToNow(new Date(cocktail.createdAt), { addSuffix: true })}
-                  </span>
-                </div>
-                <h2 className="text-lg font-semibold leading-snug"
-                  style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
-                  {cocktail.cocktailName}
-                </h2>
-                <p className="text-[11px] mt-1 leading-relaxed"
-                  style={{ color: "var(--app-text-secondary)", fontFamily: "var(--font-heading)", fontStyle: "italic" }}>
-                  "{cocktail.originalMood.slice(0, 80)}{cocktail.originalMood.length > 80 ? "…" : ""}"
-                </p>
-                <div className="mt-2.5 pt-2 flex items-center justify-between"
-                  style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                  <p className="text-[9px] leading-relaxed" style={{ color: "var(--app-text-muted)" }}>
-                    {cocktail.tastesLike.slice(0, 60)}…
-                  </p>
-                  <svg className="w-4 h-4 flex-shrink-0 ml-2 opacity-30" fill="none" stroke="var(--app-text)" strokeWidth="1.5" viewBox="0 0 24 24">
-                    <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
+        {/* ── Catalogue ── */}
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {loading ? (
+            [0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="card-paper p-5">
+                <div className="shimmer mb-4 h-3 w-20" />
+                <div className="shimmer mb-3 h-40 w-full" />
+                <div className="shimmer h-5 w-3/4" />
               </div>
-            </motion.div>
-          ))
+            ))
+          ) : filtered.length === 0 ? (
+            <div
+              className="col-span-full flex flex-col items-start gap-5 py-16"
+              style={{ borderTop: "1px solid var(--line)" }}
+            >
+              <p className="display text-2xl">{t("gallery.empty")}</p>
+              <button className="btn btn-accent" onClick={() => navigate({ to: "/mood-input" })}>
+                {t("gallery.emptyBtn")}
+                <span aria-hidden>→</span>
+              </button>
+            </div>
+          ) : (
+            paged.map((cocktail, idx) => {
+              const no = String((page - 1) * PAGE_SIZE + idx + 1).padStart(2, "0");
+              const image = cocktail.imageData
+                ? `data:image/png;base64,${cocktail.imageData}`
+                : (cocktail.imageUrl ?? null);
+              return (
+                <button
+                  key={cocktail.id}
+                  type="button"
+                  onClick={() =>
+                    navigate({
+                      to: "/drinks/$id",
+                      params: { id: cocktail.publicId ?? String(cocktail.id) },
+                      search: {
+                        from: "gallery",
+                        ...(restaurantCtx ? { restaurant: restaurantCtx } : {}),
+                      },
+                    })
+                  }
+                  className="paper-pocket pocket-card card-lift relative overflow-hidden text-left"
+                  style={{ background: "var(--paper-card)", border: "1px solid var(--line)" }}
+                >
+                  <div className="grain-layer" aria-hidden style={{ opacity: 0.26 }} />
+
+                  <div className="relative flex items-baseline justify-between px-4 pt-3.5">
+                    <span className="specimen-no" style={{ color: "var(--gold)" }}>
+                      {no}
+                    </span>
+                    <span className="mono-sm">
+                      {formatDistanceToNow(new Date(cocktail.createdAt), { addSuffix: true })}
+                    </span>
+                  </div>
+
+                  <div
+                    className="relative mx-auto flex items-center justify-center px-4"
+                    style={{ height: 170 }}
+                  >
+                    {image ? (
+                      <img
+                        src={image}
+                        alt={cocktail.cocktailName}
+                        className="print-img max-h-full max-w-full object-contain"
+                      />
+                    ) : (
+                      <svg
+                        width="56"
+                        height="56"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="var(--ink-faint)"
+                        strokeWidth="0.8"
+                      >
+                        <path
+                          d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </div>
+
+                  <div className="relative px-4 pb-4">
+                    <hr className="rule mb-3" />
+                    <h2 className="display text-[21px] leading-tight">{cocktail.cocktailName}</h2>
+                    <p
+                      className="serif-italic mt-1.5 text-[14px] leading-snug"
+                      style={{ color: "var(--ink-mute)" }}
+                    >
+                      &ldquo;{cocktail.originalMood.slice(0, 78)}
+                      {cocktail.originalMood.length > 78 ? "…" : ""}&rdquo;
+                    </p>
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+
+        {/* ── Pagination ── */}
+        {totalPages > 1 && (
+          <div
+            className="mt-12 flex items-center justify-between pt-6"
+            style={{ borderTop: "1px solid var(--line)" }}
+          >
+            <button
+              className="btn btn-outline"
+              disabled={page === 1}
+              onClick={() => {
+                setPage((p) => Math.max(1, p - 1));
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              {t("gallery.prev")}
+            </button>
+            <span className="mono">
+              {String(page).padStart(2, "0")} / {String(totalPages).padStart(2, "0")}
+            </span>
+            <button
+              className="btn btn-outline"
+              disabled={page === totalPages}
+              onClick={() => {
+                setPage((p) => Math.min(totalPages, p + 1));
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              {t("gallery.next")}
+            </button>
+          </div>
         )}
       </div>
-
-      {/* ── 分页 ── */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-6">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-            disabled={page === 1}
-            className="px-4 py-2 text-xs font-semibold rounded disabled:opacity-30"
-            style={{
-              border: "1px solid rgba(255,255,255,0.12)",
-              color: "var(--app-text-secondary)",
-              background: "rgba(255,255,255,0.05)",
-            }}
-          >
-            ← Prev
-          </motion.button>
-
-          <span className="text-[11px]" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-body)" }}>
-            {page} / {totalPages}
-          </span>
-
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-            disabled={page === totalPages}
-            className="px-4 py-2 text-xs font-semibold rounded disabled:opacity-30"
-            style={{
-              border: "1px solid rgba(255,255,255,0.12)",
-              color: "var(--app-text-secondary)",
-              background: "rgba(255,255,255,0.05)",
-            }}
-          >
-            Next →
-          </motion.button>
-        </div>
-      )}
-
     </div>
   );
 }

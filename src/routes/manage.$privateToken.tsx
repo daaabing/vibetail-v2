@@ -26,7 +26,13 @@ export const Route = createFileRoute("/manage/$privateToken")({
   component: ManagePage,
 });
 
-type Merchant = { id: string; slug: string; name: string; short_intro: string | null; is_active: boolean };
+type Merchant = {
+  id: string;
+  slug: string;
+  name: string;
+  short_intro: string | null;
+  is_active: boolean;
+};
 type Menu = {
   id: string;
   slug: string;
@@ -88,7 +94,9 @@ function ManagePage() {
       })
       .catch((e: Error) => {
         if (cancelled) return;
-        setStatusMsg(e.message === "Unauthorized" || e.message === "Invalid token" ? "unauth" : "error");
+        setStatusMsg(
+          e.message === "Unauthorized" || e.message === "Invalid token" ? "unauth" : "error",
+        );
       });
     return () => {
       cancelled = true;
@@ -143,7 +151,10 @@ function ManagePage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-svh flex items-center justify-center px-6" style={{ color: "var(--app-text-muted)" }}>
+      <div
+        className="min-h-svh flex items-center justify-center px-6"
+        style={{ color: "var(--app-text-muted)" }}
+      >
         Verifying access…
       </div>
     );
@@ -151,7 +162,10 @@ function ManagePage() {
   if (status === "unauth") {
     return (
       <div className="min-h-svh flex flex-col items-center justify-center text-center px-6">
-        <h1 className="text-3xl mb-3" style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}>
+        <h1
+          className="text-3xl mb-3"
+          style={{ fontFamily: "var(--font-heading)", color: "var(--app-text)" }}
+        >
           Invalid or revoked link
         </h1>
         <p style={{ color: "var(--app-text-muted)" }}>Ask Vibetail for a new management link.</p>
@@ -160,7 +174,10 @@ function ManagePage() {
   }
   if (status === "error" || !merchant) {
     return (
-      <div className="min-h-svh flex items-center justify-center px-6" style={{ color: "var(--app-text-muted)" }}>
+      <div
+        className="min-h-svh flex items-center justify-center px-6"
+        style={{ color: "var(--app-text-muted)" }}
+      >
         Something went wrong.
       </div>
     );
@@ -169,7 +186,10 @@ function ManagePage() {
   const activeMenu = menus.find((m) => m.id === activeMenuId) ?? null;
 
   return (
-    <div className="min-h-svh w-full md:max-w-4xl md:mx-auto px-6 py-10" style={{ color: "var(--app-text)" }}>
+    <div
+      className="min-h-svh w-full md:max-w-4xl md:mx-auto px-6 py-10"
+      style={{ color: "var(--app-text)" }}
+    >
       <header className="mb-8">
         <div
           className="text-[10px] uppercase tracking-[0.3em]"
@@ -188,7 +208,10 @@ function ManagePage() {
       </header>
 
       <section className="mb-6">
-        <div className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--app-text-muted)" }}>
+        <div
+          className="text-xs uppercase tracking-widest mb-2"
+          style={{ color: "var(--app-text-muted)" }}
+        >
           Menus
         </div>
         <div className="flex flex-wrap gap-2">
@@ -198,8 +221,8 @@ function ManagePage() {
               onClick={() => setActiveMenuId(m.id)}
               className="px-3 py-1.5 rounded-full text-sm"
               style={{
-                background: m.id === activeMenuId ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.12)",
+                background: m.id === activeMenuId ? "rgba(25,21,16,0.15)" : "rgba(25,21,16,0.07)",
+                border: "1px solid rgba(25,21,16,0.13)",
                 fontFamily: "var(--font-heading)",
               }}
             >
@@ -244,12 +267,17 @@ function ManagePage() {
             <button
               disabled={busy}
               onClick={() =>
-                runTogglable("Published", () => publish({ data: { token: privateToken, menuId: activeMenu.id } }), reloadMenus)
+                runTogglable(
+                  "Published",
+                  () => publish({ data: { token: privateToken, menuId: activeMenu.id } }),
+                  reloadMenus,
+                )
               }
               className="px-4 py-2 rounded-full text-sm"
               style={{
-                background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
-                border: "1px solid rgba(255,255,255,0.14)",
+                background:
+                  "linear-gradient(135deg, rgba(25,21,16,0.15) 0%, rgba(25,21,16,0.09) 50%, rgba(25,21,16,0.15) 100%)",
+                border: "1px solid rgba(25,21,16,0.15)",
                 fontFamily: "var(--font-heading)",
                 opacity: busy ? 0.5 : 1,
               }}
@@ -262,12 +290,18 @@ function ManagePage() {
                 onClick={() =>
                   runTogglable(
                     "Paused",
-                    () => setStatus({ data: { token: privateToken, menuId: activeMenu.id, status: "paused" } }),
+                    () =>
+                      setStatus({
+                        data: { token: privateToken, menuId: activeMenu.id, status: "paused" },
+                      }),
                     reloadMenus,
                   )
                 }
                 className="px-4 py-2 rounded-full text-sm"
-                style={{ border: "1px solid rgba(255,255,255,0.14)", fontFamily: "var(--font-heading)" }}
+                style={{
+                  border: "1px solid rgba(25,21,16,0.15)",
+                  fontFamily: "var(--font-heading)",
+                }}
               >
                 Pause menu
               </button>
@@ -277,17 +311,27 @@ function ManagePage() {
                 onClick={() =>
                   runTogglable(
                     "Resumed",
-                    () => setStatus({ data: { token: privateToken, menuId: activeMenu.id, status: "published" } }),
+                    () =>
+                      setStatus({
+                        data: { token: privateToken, menuId: activeMenu.id, status: "published" },
+                      }),
                     reloadMenus,
                   )
                 }
                 className="px-4 py-2 rounded-full text-sm"
-                style={{ border: "1px solid rgba(255,255,255,0.14)", fontFamily: "var(--font-heading)" }}
+                style={{
+                  border: "1px solid rgba(25,21,16,0.15)",
+                  fontFamily: "var(--font-heading)",
+                }}
               >
                 Resume menu
               </button>
             )}
-            {msg && <span className="text-xs" style={{ color: "var(--app-text-muted)" }}>{msg}</span>}
+            {msg && (
+              <span className="text-xs" style={{ color: "var(--app-text-muted)" }}>
+                {msg}
+              </span>
+            )}
           </section>
 
           <FullMenuFileSection
@@ -320,9 +364,11 @@ function ManagePage() {
             }}
           />
 
-
           <section>
-            <div className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--app-text-muted)" }}>
+            <div
+              className="text-xs uppercase tracking-widest mb-3"
+              style={{ color: "var(--app-text-muted)" }}
+            >
               Items ({items.length}) — sold-out changes take effect immediately
             </div>
             <ul className="space-y-2">
@@ -330,14 +376,19 @@ function ManagePage() {
                 <li
                   key={it.id}
                   className="p-3 rounded-lg"
-                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                  style={{
+                    background: "rgba(25,21,16,0.04)",
+                    border: "1px solid rgba(25,21,16,0.09)",
+                  }}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div style={{ fontFamily: "var(--font-heading)", fontSize: 16 }}>
                         {it.name}{" "}
                         {it.section && (
-                          <span style={{ color: "var(--app-text-muted)", fontSize: 11, marginLeft: 6 }}>
+                          <span
+                            style={{ color: "var(--app-text-muted)", fontSize: 11, marginLeft: 6 }}
+                          >
                             [{it.section}]
                           </span>
                         )}
@@ -356,7 +407,11 @@ function ManagePage() {
                               `${it.name}: ${v}`,
                               () =>
                                 toggleAvail({
-                                  data: { token: privateToken, menuItemId: it.id, availabilityStatus: v },
+                                  data: {
+                                    token: privateToken,
+                                    menuItemId: it.id,
+                                    availabilityStatus: v,
+                                  },
                                 }),
                               reloadItems,
                             )
@@ -364,8 +419,10 @@ function ManagePage() {
                           className="px-2.5 py-1 rounded text-[11px]"
                           style={{
                             background:
-                              it.availability_status === v ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.04)",
-                            border: "1px solid rgba(255,255,255,0.1)",
+                              it.availability_status === v
+                                ? "rgba(25,21,16,0.18)"
+                                : "rgba(25,21,16,0.04)",
+                            border: "1px solid rgba(25,21,16,0.11)",
                             fontFamily: "var(--font-heading)",
                             opacity: busy ? 0.5 : 1,
                           }}
@@ -378,7 +435,7 @@ function ManagePage() {
                         onClick={() => setEditingId(editingId === it.id ? null : it.id)}
                         className="px-2.5 py-1 rounded text-[11px]"
                         style={{
-                          border: "1px solid rgba(255,255,255,0.2)",
+                          border: "1px solid rgba(25,21,16,0.22)",
                           fontFamily: "var(--font-heading)",
                           opacity: busy ? 0.5 : 1,
                         }}
@@ -431,7 +488,9 @@ function ManagePage() {
               busy={busy}
               onCreate={async (payload) => {
                 await runTogglable("Item added", async () => {
-                  await addItem({ data: { token: privateToken, menuId: activeMenu.id, ...payload } });
+                  await addItem({
+                    data: { token: privateToken, menuId: activeMenu.id, ...payload },
+                  });
                   await reloadItems();
                 });
               }}
@@ -465,9 +524,7 @@ function NewMenuForm({
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [shortIntro, setShortIntro] = useState("");
-  const [gameIds, setGameIds] = useState<string[]>(
-    activeGames[0] ? [activeGames[0].id] : [],
-  );
+  const [gameIds, setGameIds] = useState<string[]>(activeGames[0] ? [activeGames[0].id] : []);
 
   if (!open) {
     return (
@@ -475,7 +532,7 @@ function NewMenuForm({
         onClick={() => setOpen(true)}
         className="mt-4 px-3 py-1.5 rounded-full text-sm"
         style={{
-          border: "1px dashed rgba(255,255,255,0.25)",
+          border: "1px dashed rgba(25,21,16,0.28)",
           fontFamily: "var(--font-heading)",
         }}
       >
@@ -487,7 +544,7 @@ function NewMenuForm({
   return (
     <form
       className="mt-4 p-4 rounded-lg space-y-3"
-      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}
+      style={{ background: "rgba(25,21,16,0.04)", border: "1px solid rgba(25,21,16,0.11)" }}
       onSubmit={async (e) => {
         e.preventDefault();
         if (!name.trim() || !slug.trim() || gameIds.length === 0) return;
@@ -525,8 +582,8 @@ function NewMenuForm({
                 }
                 className="px-2.5 py-1 rounded text-[11px]"
                 style={{
-                  background: on ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: on ? "rgba(25,21,16,0.18)" : "rgba(25,21,16,0.04)",
+                  border: "1px solid rgba(25,21,16,0.11)",
                   fontFamily: "var(--font-heading)",
                 }}
               >
@@ -542,8 +599,8 @@ function NewMenuForm({
           type="submit"
           className="px-4 py-2 rounded-full text-sm"
           style={{
-            background: "rgba(255,255,255,0.14)",
-            border: "1px solid rgba(255,255,255,0.2)",
+            background: "rgba(25,21,16,0.15)",
+            border: "1px solid rgba(25,21,16,0.22)",
             fontFamily: "var(--font-heading)",
             opacity: busy ? 0.5 : 1,
           }}
@@ -554,7 +611,7 @@ function NewMenuForm({
           type="button"
           onClick={() => setOpen(false)}
           className="px-4 py-2 rounded-full text-sm"
-          style={{ border: "1px solid rgba(255,255,255,0.14)", fontFamily: "var(--font-heading)" }}
+          style={{ border: "1px solid rgba(25,21,16,0.15)", fontFamily: "var(--font-heading)" }}
         >
           Cancel
         </button>
@@ -605,7 +662,7 @@ function AddItemForm({
         onClick={() => setOpen(true)}
         className="mt-4 px-3 py-1.5 rounded-full text-sm"
         style={{
-          border: "1px dashed rgba(255,255,255,0.25)",
+          border: "1px dashed rgba(25,21,16,0.28)",
           fontFamily: "var(--font-heading)",
         }}
       >
@@ -617,7 +674,7 @@ function AddItemForm({
   return (
     <form
       className="mt-4 p-4 rounded-lg space-y-3"
-      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}
+      style={{ background: "rgba(25,21,16,0.04)", border: "1px solid rgba(25,21,16,0.11)" }}
       onSubmit={async (e) => {
         e.preventDefault();
         if (!name.trim()) return;
@@ -681,8 +738,8 @@ function AddItemForm({
           type="submit"
           className="px-4 py-2 rounded-full text-sm"
           style={{
-            background: "rgba(255,255,255,0.14)",
-            border: "1px solid rgba(255,255,255,0.2)",
+            background: "rgba(25,21,16,0.15)",
+            border: "1px solid rgba(25,21,16,0.22)",
             fontFamily: "var(--font-heading)",
             opacity: busy ? 0.5 : 1,
           }}
@@ -693,7 +750,7 @@ function AddItemForm({
           type="button"
           onClick={() => setOpen(false)}
           className="px-4 py-2 rounded-full text-sm"
-          style={{ border: "1px solid rgba(255,255,255,0.14)", fontFamily: "var(--font-heading)" }}
+          style={{ border: "1px solid rgba(25,21,16,0.15)", fontFamily: "var(--font-heading)" }}
         >
           Close
         </button>
@@ -735,7 +792,7 @@ function TextInput({
       className="w-full px-3 py-2 rounded-md text-sm"
       style={{
         background: "rgba(0,0,0,0.25)",
-        border: "1px solid rgba(255,255,255,0.12)",
+        border: "1px solid rgba(25,21,16,0.13)",
         color: "var(--app-text)",
         fontFamily: "var(--font-body)",
       }}
@@ -764,12 +821,15 @@ function EditItemForm({
   const [moodTags, setMoodTags] = useState((item.mood_tags ?? []).join(", "));
 
   const splitCsv = (s: string): string[] =>
-    s.split(",").map((x) => x.trim()).filter(Boolean);
+    s
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
 
   return (
     <form
       className="mt-3 p-4 rounded-lg space-y-3"
-      style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.1)" }}
+      style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(25,21,16,0.11)" }}
       onSubmit={async (e) => {
         e.preventDefault();
         if (!name.trim()) return;
@@ -785,22 +845,34 @@ function EditItemForm({
         });
       }}
     >
-      <FieldRow label="Name"><TextInput value={name} onChange={setName} /></FieldRow>
-      <FieldRow label="Section"><TextInput value={section} onChange={setSection} /></FieldRow>
+      <FieldRow label="Name">
+        <TextInput value={name} onChange={setName} />
+      </FieldRow>
+      <FieldRow label="Section">
+        <TextInput value={section} onChange={setSection} />
+      </FieldRow>
       <FieldRow label="Ingredients (comma separated)">
         <TextInput value={ingredients} onChange={setIngredients} />
       </FieldRow>
-      <FieldRow label="Base spirit"><TextInput value={baseSpirit} onChange={setBaseSpirit} /></FieldRow>
+      <FieldRow label="Base spirit">
+        <TextInput value={baseSpirit} onChange={setBaseSpirit} />
+      </FieldRow>
       <FieldRow label="Flavor tags (comma separated)">
         <TextInput value={flavorTags} onChange={setFlavorTags} />
       </FieldRow>
       <FieldRow label="Mood tags (comma separated)">
         <TextInput value={moodTags} onChange={setMoodTags} />
       </FieldRow>
-      <FieldRow label="Image URL"><TextInput value={imageUrl} onChange={setImageUrl} /></FieldRow>
+      <FieldRow label="Image URL">
+        <TextInput value={imageUrl} onChange={setImageUrl} />
+      </FieldRow>
       <FieldRow label="Alcoholic?">
         <label className="inline-flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={alcoholic} onChange={(e) => setAlcoholic(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={alcoholic}
+            onChange={(e) => setAlcoholic(e.target.checked)}
+          />
           <span style={{ color: "var(--app-text-muted)" }}>Contains alcohol</span>
         </label>
       </FieldRow>
@@ -810,8 +882,8 @@ function EditItemForm({
           type="submit"
           className="px-4 py-2 rounded-full text-sm"
           style={{
-            background: "rgba(255,255,255,0.14)",
-            border: "1px solid rgba(255,255,255,0.2)",
+            background: "rgba(25,21,16,0.15)",
+            border: "1px solid rgba(25,21,16,0.22)",
             fontFamily: "var(--font-heading)",
             opacity: busy ? 0.5 : 1,
           }}
@@ -822,7 +894,7 @@ function EditItemForm({
           type="button"
           onClick={onCancel}
           className="px-4 py-2 rounded-full text-sm"
-          style={{ border: "1px solid rgba(255,255,255,0.14)", fontFamily: "var(--font-heading)" }}
+          style={{ border: "1px solid rgba(25,21,16,0.15)", fontFamily: "var(--font-heading)" }}
         >
           Cancel
         </button>
@@ -856,20 +928,25 @@ function FullMenuFileSection({
   const inputRef = useRef<HTMLInputElement | null>(null);
   return (
     <section>
-      <div className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--app-text-muted)" }}>
+      <div
+        className="text-xs uppercase tracking-widest mb-3"
+        style={{ color: "var(--app-text-muted)" }}
+      >
         Full menu file (shown as "View full menu" on the cocktail card)
       </div>
       <div
         className="p-4 rounded-2xl flex flex-col gap-3"
         style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.10)",
+          background: "rgba(25,21,16,0.04)",
+          border: "1px solid rgba(25,21,16,0.11)",
         }}
       >
         {menu.menu_file_url ? (
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-xs uppercase tracking-widest px-2 py-1 rounded-full"
-              style={{ background: "rgba(153,185,198,0.18)", color: "#99B9C6" }}>
+            <span
+              className="text-xs uppercase tracking-widest px-2 py-1 rounded-full"
+              style={{ background: "rgba(153,185,198,0.18)", color: "#99B9C6" }}
+            >
               {menu.menu_file_type === "pdf" ? "PDF" : "Image"} uploaded
             </span>
             <a
@@ -938,4 +1015,3 @@ function FullMenuFileSection({
     </section>
   );
 }
-

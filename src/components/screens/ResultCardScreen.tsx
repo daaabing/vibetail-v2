@@ -1,26 +1,43 @@
-
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import * as htmlToImage from "html-to-image";
 import QRCode from "qrcode";
-import { type Cocktail, decodeCocktailFromHash, encodeCocktailToHash, getCocktail, saveCocktailFromPreview, updateCocktailImage } from "@/lib/cocktails-store";
+import {
+  type Cocktail,
+  decodeCocktailFromHash,
+  encodeCocktailToHash,
+  getCocktail,
+  saveCocktailFromPreview,
+  updateCocktailImage,
+} from "@/lib/cocktails-store";
 import { useLang } from "@/lib/i18n";
+import { loadingLines } from "@/lib/vibeflow";
 import { useAuth } from "@/lib/use-auth";
 import AuthModal from "@/components/moodtail/AuthModal";
-import VibeBottle from "@/components/moodtail/VibeBottle";
 import MixingOverlay from "@/components/moodtail/MixingOverlay";
+import GuestList from "@/components/site/GuestList";
+import Draw from "@/components/draw/art";
+import { ROUGH } from "@/components/draw/Sketch";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 
 import { useSharePosterPreparation } from "@/hooks/use-share-poster";
+import { getPublishedMenu } from "@/lib/menu/public.functions";
+import type { PublicMenu, PublicMenuItem } from "@/lib/matching/types";
 
 /** Strip quantity / measurement prefixes from AI-generated ingredient strings. */
 function simplifyIngredient(name: string): string {
   return name
-    .replace(/^\d+(\.\d+)?\s*(oz|ounce|tsp|tbsp|ml|cl|cup|part|shot|drop|pinch|dash|splash|squeeze|sprig|slice|piece|crushed|g|kg|lb|oz\.|tsp\.|tbsp\.)\s*(of\s+)?/i, "")
-    .replace(/^[Aa]n?\s+(garnish|splash|squeeze|dash|sprig|twist|pinch|drop|slice|piece)\s*(of\s+)?/i, "")
+    .replace(
+      /^\d+(\.\d+)?\s*(oz|ounces?|tsps?|tbsps?|ml|cl|cups?|parts?|shots?|drops?|pinch(es)?|dash(es)?|splash(es)?|squeezes?|sprigs?|slices?|pieces?|crushed|g|kg|lb|oz\.|tsp\.|tbsp\.)\b\s*(of\s+)?/i,
+      "",
+    )
+    .replace(
+      /^[Aa]n?\s+(garnish|splash|squeeze|dash|sprig|twist|pinch|drop|slice|piece)\s*(of\s+)?/i,
+      "",
+    )
     .replace(/^Topped with\s+/i, "")
     .replace(/^Garnish:\s*[Aa]n?\s*/i, "")
     .replace(/^Garnish:\s*/i, "")
@@ -29,7 +46,6 @@ function simplifyIngredient(name: string): string {
 
 // Image background processing removed — Gemini now renders drinks directly on
 // parchment (#E9DBC4), so we display the returned image as-is.
-
 
 interface ResultCardScreenProps {
   id: string;
@@ -86,7 +102,8 @@ const FRAME_STYLES: FrameStyle[] = [
     id: "vintage",
     label: "Vintage",
     inset: "0.18in",
-    outerCss: "border: 2px dashed #6b4a2b; box-shadow: inset 0 0 0 4px #fdf8f3, inset 0 0 0 5px #6b4a2b;",
+    outerCss:
+      "border: 2px dashed #6b4a2b; box-shadow: inset 0 0 0 4px #fdf8f3, inset 0 0 0 5px #6b4a2b;",
     innerCss: "",
     showCorners: false,
     cornerSize: "0",
@@ -97,7 +114,8 @@ const FRAME_STYLES: FrameStyle[] = [
     id: "double",
     label: "Double Line",
     inset: "0.15in",
-    outerCss: "border: 1px solid #4a3e3d; box-shadow: inset 0 0 0 3px #fdf8f3, inset 0 0 0 4px #4a3e3d;",
+    outerCss:
+      "border: 1px solid #4a3e3d; box-shadow: inset 0 0 0 3px #fdf8f3, inset 0 0 0 4px #4a3e3d;",
     innerCss: "",
     showCorners: false,
     cornerSize: "0",
@@ -117,335 +135,287 @@ const FRAME_STYLES: FrameStyle[] = [
   },
 ];
 
-/* ── Skeleton card ── */
-function CardSkeleton() {
+/** A guest already in the glass — drawn over the drink, the way the
+    drummer sits over the hero photograph. Sunglasses, a spare coupe,
+    zero apologies. */
+function PerchedGuest({ style }: { style?: CSSProperties }) {
   return (
-    <div className="w-full rounded-3xl overflow-hidden shimmer max-h-[340px] md:max-h-[480px]" style={{ aspectRatio: "3/4" }} />
+    <svg
+      viewBox="0 0 220 210"
+      style={{ overflow: "visible", ...style }}
+      aria-hidden
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <g filter={ROUGH}>
+        {/* body */}
+        <path d="M72 122 C 66 96, 92 78, 128 84 C 162 90, 176 114, 162 138 C 148 160, 100 164, 80 148 C 72 141, 70 132, 72 122 Z" />
+        {/* speckles */}
+        <path d="M132 112 l7 -3 M142 124 l7 -3 M128 130 l7 -3 M146 108 l6 -3" strokeWidth="2.2" />
+        {/* neck */}
+        <path d="M88 96 C 80 74, 84 54, 98 42" />
+        <path d="M102 100 C 96 78, 99 62, 108 48" />
+        {/* head */}
+        <path d="M98 42 C 100 30, 116 26, 122 36 C 126 44, 118 52, 108 48" />
+        {/* crest */}
+        <path d="M104 30 l-2 -9 M112 28 l2 -9" strokeWidth="2.4" />
+        {/* beak */}
+        <path d="M98 38 L 74 45 L 99 50" />
+        {/* sunglasses */}
+        <circle cx="108" cy="39" r="5.5" strokeWidth="2.4" />
+        <circle cx="120" cy="41" r="5.5" strokeWidth="2.4" />
+        <path d="M113.5 40 h1.5" strokeWidth="2.4" />
+        {/* wing up, holding a spare coupe */}
+        <path d="M84 112 C 62 106, 48 94, 52 80 C 58 84, 66 86, 74 86" />
+        <path d="M52 80 C 46 72, 46 64, 50 58" strokeWidth="2.4" />
+        {/* the spare coupe */}
+        <path d="M34 52 h26 l-9 12 h-8 Z" strokeWidth="2.4" />
+        <path d="M47 64 v10 M39 76 h16" strokeWidth="2.4" />
+        {/* legs into the glass */}
+        <path d="M116 162 C 115 176, 114 188, 114 198" />
+        <path d="M134 158 C 134 172, 133 184, 133 196" />
+        <path d="M114 198 l12 5 M133 196 l12 4" strokeWidth="2.4" />
+      </g>
+    </svg>
   );
 }
 
-/* ── Front face: cocktail name + AI illustration ── */
-function CardFront({ cocktail, imageData, imageUrl, imageLoading, tapHint, distillingText }: {
+/* ── The card — a note taped up on the wall behind the bar ── */
+function SpecimenCard({
+  cocktail,
+  illustration,
+  imageLoading,
+  distillingText,
+  serial,
+}: {
   cocktail: Cocktail;
-  imageData: string | null;
-  imageUrl: string | null;
+  illustration: string | null;
   imageLoading: boolean;
-  tapHint: string;
   distillingText: string;
+  serial: string;
 }) {
-  const rawImageSource = imageUrl ?? (imageData ? `data:image/png;base64,${imageData}` : null);
+  const tags =
+    Array.isArray((cocktail as { flavorKeywords?: string[] }).flavorKeywords) &&
+    (cocktail as { flavorKeywords?: string[] }).flavorKeywords!.length > 0
+      ? (cocktail as { flavorKeywords?: string[] }).flavorKeywords!
+      : cocktail.flavorProfile.split(",").map((s) => s.trim());
+
+  // The venue's own photograph wins whenever there is one — we only knock the
+  // background out so the glass sits on the paper. Otherwise the AI
+  // illustration, and failing that a drawn glass.
+  const photo = cocktail.menuItemImageUrl ?? illustration;
 
   return (
-    <div
-      className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col"
-
-      style={{
-        backfaceVisibility: "hidden",
-        WebkitBackfaceVisibility: "hidden",
-        background: "#E9DBC4",
-        border: "1px solid rgba(80,60,40,0.18)",
-        boxShadow:
-          "0 24px 60px rgba(0,0,0,0.55), inset 0 0 80px rgba(80,55,30,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",
-      }}
+    <article
+      className="paper-pocket pocket-card frame-gilt relative"
+      style={{ background: "var(--paper-card)" }}
     >
-      {/* AI illustration — printed directly onto the parchment, no frame */}
-      <div
-        className="flex-1 min-h-0 flex items-center justify-center relative overflow-hidden"
-        style={{
-          background:
-            "radial-gradient(circle at center, rgba(238,207,145,0.45) 0%, rgba(234,220,196,0.25) 42%, rgba(233,219,196,0) 72%)",
-        }}
-      >
-        {rawImageSource ? (
-          <div
-            className="flex items-center justify-center"
-            style={{
-              width: "88%",
-              height: "100%",
-              WebkitMaskImage:
-                "radial-gradient(circle at center, black 0%, black 48%, rgba(0,0,0,0.6) 64%, rgba(0,0,0,0.2) 78%, transparent 90%)",
-              maskImage:
-                "radial-gradient(circle at center, black 0%, black 48%, rgba(0,0,0,0.6) 64%, rgba(0,0,0,0.2) 78%, transparent 90%)",
-            }}
-          >
-            <img
-              src={rawImageSource}
-              alt={cocktail.cocktailName}
-              className="max-w-full max-h-full"
-              style={{
-                objectFit: "contain",
-                objectPosition: "center",
-                mixBlendMode: "multiply",
-                filter: "contrast(1.02) saturate(0.96)",
-              }}
-            />
-          </div>
-        ) : imageLoading ? (
-          <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
-            <VibeBottle size={110} mode="mixing" />
-            <p className="text-[10px] tracking-wider" style={{ color: "#8A7A62", fontFamily: "var(--font-body)" }}>
-              {distillingText}
-            </p>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center w-full h-full">
-            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#8A7A62" strokeWidth="0.8" opacity="0.5">
-              <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-        )}
-      </div>
+      <div className="grain-layer" aria-hidden style={{ opacity: 0.32 }} />
 
-
-
-
-
-      {/* Cocktail name + vibe diagnosis */}
-      <div className="px-5 pt-3 pb-2" style={{ minHeight: 0 }}>
+      {/* ── Masthead — set like a poster ── */}
+      <div className="relative px-9 pt-10 text-center">
+        <div className="mono-sm" style={{ letterSpacing: "0.3em" }}>
+          {cocktail.matchedFromMenu
+            ? (cocktail.restaurantName ?? "From the menu").toUpperCase()
+            : "VIBETAL(E.) — TONIGHT'S POUR"}
+        </div>
         <h1
-          className="font-semibold leading-tight text-center"
-          style={{
-            fontFamily: "var(--font-heading)",
-            color: "#2A2118",
-            fontSize: "clamp(1.4rem, 6vw, 2rem)",
-          }}
+          className="display mx-auto mt-6 max-w-[22ch] text-[clamp(30px,5vw,42px)] leading-[1.06]"
+          style={{ textTransform: "uppercase", letterSpacing: "0.03em" }}
         >
           {cocktail.cocktailName}
         </h1>
-
-        {/* Vibe diagnosis — roast line */}
-        <p className="text-center text-xs mt-2 leading-snug italic"
-          style={{ fontFamily: "var(--font-heading)", color: "#2A2118" }}>
-          "{cocktail.roast}"
+        <p
+          className="accent-italic mx-auto mt-4 max-w-[34ch] text-[21px] leading-snug"
+          style={{ color: "var(--ink-mute)" }}
+        >
+          &ldquo;{cocktail.originalMood}&rdquo;
         </p>
+      </div>
 
-
-
-        {/* Vibe-based tasting note (front) — for menu matches, prefer the narrative
-            tastesLike over the sentence-shaped flavorProfile which reads oddly as a chip. */}
-        {cocktail.matchedFromMenu ? (
-          <p className="text-center text-[11px] mt-3 leading-relaxed px-2"
-            style={{ fontFamily: "var(--font-body)", color: "#8A7A62" }}>
-            {cocktail.tastesLike}
-          </p>
+      {/* ── The drawing, given the whole field — and a guest already
+             sitting in the glass, drawn over the drink ── */}
+      <div
+        className="relative mx-auto mt-2 flex items-end justify-center px-9 pb-6"
+        style={{ width: "100%", aspectRatio: "5/4" }}
+      >
+        {photo ? (
+          <>
+            <img
+              src={photo}
+              alt={cocktail.cocktailName}
+              className="drink-cutout max-h-full max-w-full"
+              style={{ objectFit: "contain" }}
+            />
+            <PerchedGuest
+              style={{
+                position: "absolute",
+                width: "40%",
+                left: "50%",
+                top: "-6%",
+                transform: "translateX(-52%)",
+                color: "var(--ink)",
+              }}
+            />
+          </>
+        ) : imageLoading ? (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-4 self-center">
+            <div className="shimmer h-28 w-28 rounded-full" />
+            <span className="scrawl-sm">{distillingText}</span>
+          </div>
         ) : (
-          <div className="flex justify-center gap-1.5 mt-3 flex-wrap">
-            {(Array.isArray((cocktail as any).flavorKeywords) && (cocktail as any).flavorKeywords.length > 0
-              ? (cocktail as any).flavorKeywords as string[]
-              : cocktail.flavorProfile.split(",").map((s: string) => s.trim())
-            ).map((f: string) => (
-              <span key={f} className="px-2 py-0.5 rounded text-[9px] uppercase"
-                style={{
-                  background: "rgba(80,55,30,0.08)",
-                  border: "1px solid rgba(80,55,30,0.15)",
-                  fontFamily: "var(--font-body)",
-                  color: "#8A7A62",
-                }}>
-                {f.trim()}
-              </span>
-            ))}
+          <div className="relative self-end" style={{ width: "60%" }}>
+            <span className="block" style={{ color: "var(--ink)" }}>
+              <Draw name="glass" strokeWidth={2} />
+            </span>
+            <PerchedGuest
+              style={{
+                position: "absolute",
+                width: "72%",
+                left: "50%",
+                bottom: "66%",
+                transform: "translateX(-44%)",
+                color: "var(--ink)",
+              }}
+            />
           </div>
         )}
       </div>
 
+      {/* ── Colophon ── */}
+      <div className="relative px-9 pb-9 pt-1 text-center">
+        <span
+          className="mx-auto block h-px w-12"
+          aria-hidden
+          style={{ background: "var(--line-strong)" }}
+        />
+        <p className="note mx-auto mt-5 max-w-[40ch] text-[15.5px]">{cocktail.roast}</p>
 
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
+          {tags.map((f) => (
+            <span key={f} className="scrawl-sm">
+              {f}
+            </span>
+          ))}
+        </div>
 
-      {/* Tap hint */}
-      <div className="pb-2 flex justify-center flex-shrink-0">
-        <span className="text-[9px] tracking-widest flex items-center gap-1.5"
-          style={{ color: "#8A7A62", fontFamily: "var(--font-body)" }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {tapHint}
-        </span>
+        <div className="mt-8 flex items-end justify-between">
+          <span className="specimen-no">No. {serial}</span>
+          <span className="signature text-[25px]" style={{ color: "var(--ink-mute)" }}>
+            Vibetail
+          </span>
+        </div>
       </div>
-    </div>
+    </article>
   );
 }
 
+/* ── Dossier — everything behind the card, laid out in the open ── */
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <section className="py-6" style={{ borderTop: "1px solid var(--line)" }}>
+      <div className="mono-sm mb-3">{label}</div>
+      {children}
+    </section>
+  );
+}
 
-/* ── Back face: recipe + roast + details — light style ── */
-function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
+function Dossier({
+  cocktail,
+  labels,
+  hideRecipe,
+}: {
   cocktail: Cocktail;
-  tapHint: string;
-  labels: { originalVibe: string; tastingNotes: string; ingredients: string; ingredientsBar: string; howToMake: string; };
+  labels: {
+    originalVibe: string;
+    tastingNotes: string;
+    ingredients: string;
+    ingredientsBar: string;
+    howToMake: string;
+  };
   hideRecipe?: boolean;
 }) {
   const recipeLines = cocktail.recipe.split("\n").filter(Boolean);
 
   return (
-    <div
-      className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col"
-
-      style={{
-        backfaceVisibility: "hidden",
-        WebkitBackfaceVisibility: "hidden",
-        transform: "rotateY(180deg)",
-        background:
-          "radial-gradient(ellipse at 50% 35%, #F3E8D6 0%, #E9DBC4 55%, #C9B79A 100%)",
-        border: "1px solid rgba(80,60,40,0.18)",
-        boxShadow:
-          "0 24px 60px rgba(0,0,0,0.55), inset 0 0 80px rgba(80,55,30,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",
-      }}
-    >
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-6 pt-6 pb-4 relative z-10" style={{ scrollbarWidth: "none" }}>
-
-        {/* Header — name only */}
-        <div className="mb-4 pb-3" style={{ borderBottom: "1px solid rgba(80,55,30,0.20)" }}>
-          <h3 className="font-semibold leading-tight"
-            style={{ fontFamily: "var(--font-heading)", color: "#2A2118", fontSize: "1.3rem" }}>
-            {cocktail.cocktailName}
-          </h3>
-        </div>
-
-        {/* Order this — only when matched from menu */}
-        {cocktail.matchedFromMenu && (
-          <div className="mb-4 p-3 rounded-xl"
-            style={{ background: "rgba(80,55,30,0.08)", border: "1px solid rgba(80,55,30,0.18)" }}>
-            <span className="text-[8px] tracking-widest uppercase block mb-1.5"
-              style={{ fontFamily: "var(--font-body)", color: "#2A2118" }}>
-              {cocktail.lang === "zh" ? "点这杯" : "Order this"}
-            </span>
-            <div className="flex items-center gap-3">
-              {cocktail.menuItemImageUrl && (
-                <img
-                  src={cocktail.menuItemImageUrl}
-                  alt={cocktail.menuItemName ?? cocktail.cocktailName}
-                  className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                  style={{ border: "1px solid rgba(80,55,30,0.18)" }}
-                />
-              )}
-              <p className="text-xs leading-relaxed flex-1" style={{ color: "#2A2118" }}>
-                {cocktail.menuItemName || cocktail.cocktailName}
-                {cocktail.menuPrice ? ` · ${cocktail.menuPrice}` : ""}
-                {cocktail.restaurantName ? ` @ ${cocktail.restaurantName}` : ""}
-              </p>
-            </div>
+    <div>
+      {cocktail.matchedFromMenu && (
+        <Field label={"Order this"}>
+          <div className="flex items-center gap-4">
+            {cocktail.menuItemImageUrl && (
+              <img
+                src={cocktail.menuItemImageUrl}
+                alt={cocktail.menuItemName ?? cocktail.cocktailName}
+                className="h-20 w-20 flex-none object-cover"
+                style={{ border: "1px solid var(--line)" }}
+              />
+            )}
+            <p className="display text-[20px] leading-snug">
+              {cocktail.menuItemName || cocktail.cocktailName}
+              {cocktail.menuPrice ? ` · ${cocktail.menuPrice}` : ""}
+              {cocktail.restaurantName ? (
+                <span className="mono-sm mt-1 block">@ {cocktail.restaurantName}</span>
+              ) : null}
+            </p>
           </div>
-        )}
-
-
-
-
-        {/* Original vibe */}
-        <div className="mb-4 p-3 rounded-xl"
-          style={{ background: "rgba(80,55,30,0.05)", border: "1px solid rgba(80,55,30,0.15)" }}>
-          <span className="text-[8px] tracking-widest uppercase block mb-1"
-            style={{ fontFamily: "var(--font-body)", color: "#8A7A62" }}>
-            {labels.originalVibe}
-          </span>
-          <p className="text-xs leading-relaxed"
-            style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "#2A2118" }}>
-            "{cocktail.originalMood}"
-          </p>
-        </div>
-
-        {/* Tasting notes — for menu matches, this becomes a playful "why this match" note */}
-        <div className="mb-4">
-          <span className="text-[8px] tracking-widest uppercase block mb-1.5"
-            style={{ fontFamily: "var(--font-body)", color: "#8A7A62" }}>
-            {cocktail.matchedFromMenu
-              ? (cocktail.lang === "zh" ? "为什么是这杯" : "WHY THIS ONE")
-              : labels.tastingNotes}
-          </span>
-          <p className="text-xs leading-relaxed" style={{ color: "#2A2118" }}>
-            {cocktail.matchedFromMenu ? (cocktail.whyThisMatch || cocktail.tastesLike) : cocktail.tastesLike}
-          </p>
-        </div>
-
-
-
-
-        {/* Ingredients */}
-        <div className="mb-4">
-          <span className="text-[8px] tracking-widest uppercase block mb-2"
-            style={{ fontFamily: "var(--font-body)", color: "#8A7A62" }}>
-            {labels.ingredients}
-          </span>
-          <ul className="space-y-1.5">
-            {(cocktail.ingredients as string[]).map((ing, i) => (
-              <li key={i} className="flex items-start gap-2 text-[11px]"
-                style={{ color: "#2A2118" }}>
-                <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: "#2A2118" }} />
-                {simplifyIngredient(ing)}
-              </li>
-            ))}
-          </ul>
-          <p className="text-[9px] mt-2 italic" style={{ color: "#8A7A62" }}>
-            {labels.ingredientsBar}
-          </p>
-        </div>
-
-        {/* Recipe — numbered steps */}
-        {!hideRecipe && (
-          <div className="mb-4 p-3 rounded-xl"
-            style={{ background: "rgba(80,55,30,0.08)", border: "1px solid rgba(80,55,30,0.18)" }}>
-            <span className="text-[8px] tracking-widest uppercase block mb-3"
-              style={{ fontFamily: "var(--font-body)", color: "#2A2118" }}>
-              {labels.howToMake}
-            </span>
-            <ol className="space-y-2.5">
-              {recipeLines.map((line: string, i: number) => (
-                <li key={i} className="flex items-start gap-2.5">
-                  <span
-                    className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold"
-                    style={{
-                      backgroundColor: "#2A2118",
-                      color: "#F3E8D6",
-                      marginTop: 1,
-                    }}
-                  >
-                    {i + 1}
-                  </span>
-                  <span className="text-[11px] leading-relaxed" style={{ color: "#2A2118" }}>
-                    {line}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        )}
-
-        {cocktail.matchedFromMenu && cocktail.fullMenuUrl && (
-          <div className="mt-2 mb-2 flex justify-center">
+          {cocktail.fullMenuUrl && (
             <a
+              className="link-ul mono-sm mt-4 inline-block"
               href={cocktail.fullMenuUrl}
               target="_blank"
               rel="noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full"
-              style={{
-                background: "rgba(80,55,30,0.10)",
-                border: "1px solid rgba(80,55,30,0.28)",
-                color: "#2A2118",
-                fontFamily: "var(--font-heading)",
-                letterSpacing: "0.06em",
-              }}
             >
-              {cocktail.lang === "zh" ? "查看完整菜单" : "View full menu"}
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M7 17L17 7M17 7H8M17 7V16" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              {"View full menu →"}
             </a>
-          </div>
-        )}
+          )}
+        </Field>
+      )}
 
-      </div>
+      <Field label={cocktail.matchedFromMenu ? "Why this one" : labels.tastingNotes}>
+        <p className="text-[15px] leading-relaxed" style={{ color: "var(--ink-soft)" }}>
+          {cocktail.matchedFromMenu
+            ? cocktail.whyThisMatch || cocktail.tastesLike
+            : cocktail.tastesLike}
+        </p>
+      </Field>
 
-      {/* Tap hint */}
-      <div className="pb-5 flex justify-center flex-shrink-0 relative z-10">
-        <span className="text-[9px] tracking-widest flex items-center gap-1.5"
-          style={{ color: "#8A7A62", fontFamily: "var(--font-body)" }}>
+      <Field label={labels.ingredients}>
+        <ul>
+          {(cocktail.ingredients as string[]).map((ing, i) => (
+            <li
+              key={i}
+              className="grid grid-cols-[30px_1fr] gap-3 py-2"
+              style={{ borderBottom: "1px solid var(--line-soft)" }}
+            >
+              <span className="specimen-no pt-1">{String(i + 1).padStart(2, "0")}</span>
+              <span className="note text-[17px] leading-snug">{ing}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mono-sm mt-3">{labels.ingredientsBar}</p>
+      </Field>
 
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {tapHint}
-        </span>
-      </div>
+      {!hideRecipe && (
+        <Field label={labels.howToMake}>
+          <ol className="space-y-4">
+            {recipeLines.map((line, i) => (
+              <li key={i} className="grid grid-cols-[30px_1fr] gap-3">
+                <span className="specimen-no pt-1">{String(i + 1).padStart(2, "0")}</span>
+                <span className="text-[15px] leading-relaxed">{line}</span>
+              </li>
+            ))}
+          </ol>
+        </Field>
+      )}
+
+      <Field label={labels.originalVibe}>
+        <p className="serif-italic text-[17px] leading-relaxed">
+          &ldquo;{cocktail.originalMood}&rdquo;
+        </p>
+      </Field>
     </div>
   );
 }
@@ -453,14 +423,22 @@ function CardBack({ cocktail, tapHint, labels, hideRecipe }: {
 /* ── Main screen ── */
 export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const navigate = useNavigate();
-  const search = useSearch({ from: "/drinks/$id" }) as { from?: string; d?: string; restaurant?: string; menu?: string };
+  const search = useSearch({ from: "/drinks/$id" }) as {
+    from?: string;
+    d?: string;
+    restaurant?: string;
+    menu?: string;
+  };
   const fromGallery = search.from === "gallery";
   const restaurantId = search.restaurant;
   const menuSlug = search.menu;
   const isRestaurant = !!restaurantId;
   const goToRestaurant = () => {
     if (menuSlug && restaurantId) {
-      navigate({ to: "/m/$merchantSlug/$menuSlug", params: { merchantSlug: restaurantId, menuSlug } });
+      navigate({
+        to: "/m/$merchantSlug/$menuSlug",
+        params: { merchantSlug: restaurantId, menuSlug },
+      });
     } else if (restaurantId === "double-chicken-please") {
       navigate({ to: "/restaurants/double-chicken-please" });
     } else {
@@ -471,7 +449,25 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const { user } = useAuth();
   const [cocktail, setCocktail] = useState<Cocktail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [flipped, setFlipped] = useState(false);
+  // Figma capture mode: keep overlays and offscreen capture targets out of the DOM snapshot.
+  const [figMode, setFigMode] = useState(false);
+  // "See more" — the full order, and (at a venue) the rest of the shelf.
+  const [seeMore, setSeeMore] = useState(false);
+  const [publicMenu, setPublicMenu] = useState<PublicMenu | null>(null);
+  const menuFetchedRef = useRef(false);
+  useEffect(() => {
+    if (window.location.hash.includes("figmacapture")) setFigMode(true);
+  }, []);
+
+  useEffect(() => {
+    if (!seeMore || menuFetchedRef.current || !restaurantId || !menuSlug) return;
+    menuFetchedRef.current = true;
+    getPublishedMenu({ data: { merchantSlug: restaurantId, menuSlug } })
+      .then((m) => setPublicMenu(m))
+      .catch(() => {
+        // the shelf stays closed; the order still shows
+      });
+  }, [seeMore, restaurantId, menuSlug]);
   const [imageData, setImageData] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -484,17 +480,17 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
   const [showAuth, setShowAuth] = useState(false);
   const [pendingAction, setPendingAction] = useState<null | "save" | "share" | "bar">(null);
   const [mixingVisible, setMixingVisible] = useState(true);
-  
+
   const mixingStartedAtRef = useRef(Date.now());
   const wasMixingRef = useRef(false);
   const captureRef = useRef<HTMLDivElement>(null);
-  
+
   const illustrationSource = imageData
     ? `data:image/png;base64,${imageData}`
     : cocktail?.matchedFromMenu
       ? null
       : (cocktail?.imageUrl ?? null);
-  
+
   const isPreview = !id || id === "preview";
   const isPersisted = !isPreview || persistedId !== null;
 
@@ -529,7 +525,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       color: { dark: "#2A2118", light: "#00000000" },
     })
       .then(setQrDataUrl)
-      .catch((err) => { console.error("QR generation failed", err); setQrDataUrl(null); });
+      .catch((err) => {
+        console.error("QR generation failed", err);
+        setQrDataUrl(null);
+      });
   }, []);
 
   useEffect(() => {
@@ -551,7 +550,9 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       }
       setLoading(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id, search.d]);
 
   // Generate watercolor illustration if missing. In restaurant mode, menu photos
@@ -575,7 +576,8 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
               ? {
                   actualDrinkName: cocktail.menuItemName ?? "",
                   actualDrinkDescription: cocktail.menuItemDescription ?? "",
-                  actualDrinkIngredients: cocktail.menuItemIngredients ?? cocktail.ingredients ?? [],
+                  actualDrinkIngredients:
+                    cocktail.menuItemIngredients ?? cocktail.ingredients ?? [],
                   vibeDrinkName: cocktail.cocktailName,
                   vibeDescription: cocktail.tastesLike,
                   whyThisMatch: cocktail.whyThisMatch ?? "",
@@ -687,35 +689,47 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           ctx.textBaseline = "top";
           ctx.font = `600 ${Math.round(bandH * 0.16)}px "Cormorant Garamond", Georgia, serif`;
           const sloganY = offsetY + H + Math.round(bandH * 0.18);
-          wrapText(ctx, slogan, textX, sloganY, textW, Math.round(bandH * 0.20));
+          wrapText(ctx, slogan, textX, sloganY, textW, Math.round(bandH * 0.2));
 
           ctx.fillStyle = "#8A7A62";
           ctx.font = `600 ${Math.round(bandH * 0.11)}px "Cormorant Garamond", Georgia, serif`;
           ctx.fillText(scanLine, textX, offsetY + H + Math.round(bandH * 0.58));
 
           ctx.fillStyle = "#8A7A62";
-          ctx.font = `500 ${Math.round(bandH * 0.10)}px "Cormorant Garamond", Georgia, serif`;
-          ctx.fillText(igLine, textX, offsetY + H + Math.round(bandH * 0.80));
+          ctx.font = `500 ${Math.round(bandH * 0.1)}px "Cormorant Garamond", Georgia, serif`;
+          ctx.fillText(igLine, textX, offsetY + H + Math.round(bandH * 0.8));
 
           return { qrX, qrY, qrSize };
         };
 
-        if (!qr) { drawText(); return resolve(canvas.toDataURL("image/png")); }
+        if (!qr) {
+          drawText();
+          return resolve(canvas.toDataURL("image/png"));
+        }
         const qrImg = new Image();
         qrImg.onload = () => {
           const { qrX, qrY, qrSize } = drawText();
           ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
           resolve(canvas.toDataURL("image/png"));
         };
-        qrImg.onerror = () => { drawText(); resolve(canvas.toDataURL("image/png")); };
+        qrImg.onerror = () => {
+          drawText();
+          resolve(canvas.toDataURL("image/png"));
+        };
         qrImg.src = qr;
       };
       base.onerror = reject;
       base.src = baseDataUrl;
     });
 
-
-  function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number) {
+  function wrapText(
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    x: number,
+    y: number,
+    maxW: number,
+    lineH: number,
+  ) {
     const words = text.split(" ");
     let line = "";
     let yy = y;
@@ -760,8 +774,14 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         }
         await new Promise<void>((resolve) => {
           const timeout = window.setTimeout(resolve, 2500);
-          img.onload = () => { window.clearTimeout(timeout); resolve(); };
-          img.onerror = () => { window.clearTimeout(timeout); resolve(); };
+          img.onload = () => {
+            window.clearTimeout(timeout);
+            resolve();
+          };
+          img.onerror = () => {
+            window.clearTimeout(timeout);
+            resolve();
+          };
         });
       }),
     );
@@ -786,8 +806,6 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     await downloadDataUrl(dataUrl, filename);
   };
 
-
-
   // Background pre-generation of the dedicated 2:3 share poster.
   const shareFilename = cocktail
     ? `${cocktail.cocktailName.replace(/\s+/g, "-").toLowerCase()}-vibetail.png`
@@ -802,11 +820,10 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     enabled: !!cocktail && !!illustrationSource,
   });
 
-
   const handleSave = async () => {
     if (!cocktail) return;
     if (!illustrationSource) {
-      toast.info(lang === "zh" ? "酒图还在生成，请稍候" : "Illustration still brewing — one moment");
+      toast.info("Illustration still brewing — one moment");
       return;
     }
     if (sharePoster.status === "error") {
@@ -814,7 +831,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       return;
     }
     if (sharePoster.status !== "ready" || !sharePoster.file || !sharePoster.dataUrl) {
-      toast.info(lang === "zh" ? "卡片还在准备中…" : "Preparing your card…");
+      toast.info("Preparing your card…");
       return;
     }
     track("save_clicked", { cocktail_name: cocktail.cocktailName });
@@ -829,12 +846,11 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       }
     } catch (e) {
       console.error("save error", e);
-      toast.error(lang === "zh" ? "保存失败，请重试" : "Save failed, please retry");
+      toast.error("Save failed, please retry");
     } finally {
       setSaving(false);
     }
   };
-
 
   const handlePrint = async (frameId: string = "none") => {
     if (!cocktail || !captureRef.current) return;
@@ -868,7 +884,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 </style></head><body>
 <div class="sheet">
   <div class="frame"></div>
-  ${frame.showCorners ? '<div class="corner c-tl"></div><div class="corner c-tr"></div><div class="corner c-br"></div><div class="corner c-bl"></div>' : ''}
+  ${frame.showCorners ? '<div class="corner c-tl"></div><div class="corner c-tr"></div><div class="corner c-br"></div><div class="corner c-bl"></div>' : ""}
   <div class="inner"><img src="${dataUrl}" onload="setTimeout(function(){window.focus();window.print();},250)" /></div>
 </div></body></html>`;
       w.document.write(html);
@@ -934,7 +950,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       const saved = await saveCocktailFromPreview(cocktail, imageData);
       setPersistedId(saved.publicId ?? null);
       setPersistedNumericId(saved.id);
-      toast.success(lang === "zh" ? "已保存到你的 Vibe Bar" : "Saved to your Vibe Bar");
+      toast.success("Saved to your Vibe Bar");
       if (saved.publicId) {
         navigate({
           to: "/drinks/$id",
@@ -948,7 +964,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
         setShowAuth(true);
       } else {
         console.error(e);
-        toast.error(lang === "zh" ? "保存失败，请重试" : "Save failed, please retry");
+        toast.error("Save failed, please retry");
       }
     } finally {
       setPersisting(false);
@@ -976,20 +992,7 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const mixingLines =
-    lang === "zh"
-      ? [
-          "正在捕捉你的当下味道…",
-          "正在调和你的情绪基酒…",
-          "加入一点不理智的香气…",
-          "为你的 vibe 倒上最后一滴…",
-        ]
-      : [
-          "Capturing your current flavor…",
-          "Blending your emotional base…",
-          "Adding a dash of irrational aroma…",
-          "Pouring the last drop of your vibe…",
-        ];
+  const mixingLines = loadingLines(lang, !!cocktail?.matchedFromMenu);
 
   const wantsMixingOverlay = loading || (!!cocktail && imageLoading && !illustrationSource);
 
@@ -1010,39 +1013,43 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
   if (loading) {
     return (
-      <div className="min-h-svh flex flex-col p-5 pb-24 md:pb-5 w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative">
-        <div className="glass-card-warm rounded-xl px-4 py-3 mb-4 flex items-center justify-between">
-          <div className="h-4 w-24 rounded shimmer" />
-          <div className="h-4 w-16 rounded shimmer" />
+      <div className="noir min-h-svh" style={{ background: "var(--paper)" }}>
+        <div className="shell-narrow flex min-h-svh flex-col py-6">
+          <div className="shimmer mb-6 h-4 w-32" />
+          <div className="shimmer w-full" style={{ aspectRatio: "3/4" }} />
+          <MixingOverlay open={mixingVisible && !figMode} lines={mixingLines} />
         </div>
-        <div className="flex-1 flex items-center justify-center py-4">
-          <CardSkeleton />
-        </div>
-        <MixingOverlay open={mixingVisible} lines={mixingLines} />
       </div>
     );
   }
 
   if (!cocktail) {
     return (
-      <div className="min-h-svh flex flex-col items-center justify-center p-5">
-        <p style={{ color: "var(--app-text-muted)" }}>Cocktail not found.</p>
-        <button onClick={() => navigate({ to: "/mood-input" })} className="mt-4 text-sm underline"
-          style={{ color: "var(--app-primary)" }}>
-          Check another vibe
+      <div
+        className="noir flex min-h-svh flex-col items-center justify-center gap-4 p-5 text-center"
+        style={{ background: "var(--paper)" }}
+      >
+        <p className="display text-2xl">{"This drink isn't on the shelf."}</p>
+        <button className="btn btn-gilt" onClick={() => navigate({ to: "/mood-input" })}>
+          {"Mix another"}
         </button>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-svh flex flex-col w-full md:max-w-2xl lg:max-w-3xl md:mx-auto relative"
-      style={{ background: "transparent" }}>
+  // A stable four-character catalogue number: the public id once the drink has
+  // been saved, otherwise a hash of the name so previews still read as filed.
+  const serial = makeSerial(
+    persistedId ?? cocktail.publicId ?? `${cocktail.cocktailName}|${cocktail.originalMood}`,
+  );
 
+  return (
+    <div className="noir relative flex min-h-svh flex-col" style={{ background: "var(--paper)" }}>
       {/* Offscreen capture target — flat long image, no card frame */}
       <div
         aria-hidden
         style={{
+          display: figMode ? "none" : undefined,
           position: "fixed",
           top: 0,
           left: -9999,
@@ -1062,12 +1069,21 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
             fontFamily: "var(--font-heading)",
             color: "#2A2118",
             border: "1px solid rgba(80,60,40,0.18)",
-            boxShadow:
-              "inset 0 0 80px rgba(80,55,30,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",
+            boxShadow: "inset 0 0 80px rgba(80,55,30,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",
           }}
         >
           {/* Hero image — printed directly onto parchment */}
-          <div style={{ width: "100%", height: 480, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
+          <div
+            style={{
+              width: "100%",
+              height: 480,
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 24,
+            }}
+          >
             {illustrationSource ? (
               <img
                 src={illustrationSource}
@@ -1082,30 +1098,85 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                 }}
               />
             ) : (
-              <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#8A7A62" strokeWidth="0.8" opacity="0.3">
-                <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z" strokeLinecap="round" strokeLinejoin="round" />
+              <svg
+                width="120"
+                height="120"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#8A7A62"
+                strokeWidth="0.8"
+                opacity="0.3"
+              >
+                <path
+                  d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             )}
           </div>
 
-
           {/* Name */}
-          <h2 style={{ fontFamily: "var(--font-heading)", color: "#2A2118", fontSize: 40, fontWeight: 600, lineHeight: 1.15, textAlign: "center", margin: 0 }}>
+          <h2
+            style={{
+              fontFamily: "var(--font-heading)",
+              color: "#2A2118",
+              fontSize: 40,
+              fontWeight: 600,
+              lineHeight: 1.15,
+              textAlign: "center",
+              margin: 0,
+            }}
+          >
             {cocktail.cocktailName}
           </h2>
 
           {/* Roast */}
-          <p style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "#5C4A36", fontSize: 16, lineHeight: 1.45, textAlign: "center", marginTop: 12 }}>
+          <p
+            style={{
+              fontFamily: "var(--font-heading)",
+              fontStyle: "italic",
+              color: "#5C4A36",
+              fontSize: 16,
+              lineHeight: 1.45,
+              textAlign: "center",
+              marginTop: 12,
+            }}
+          >
             "{cocktail.roast}"
           </p>
 
           {/* Flavor keywords */}
-          <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 6, marginTop: 16 }}>
-            {(Array.isArray((cocktail as any).flavorKeywords) && (cocktail as any).flavorKeywords.length > 0
-              ? (cocktail as any).flavorKeywords as string[]
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              flexWrap: "wrap",
+              gap: 6,
+              marginTop: 16,
+            }}
+          >
+            {(Array.isArray((cocktail as { flavorKeywords?: string[] }).flavorKeywords) &&
+            (cocktail as { flavorKeywords?: string[] }).flavorKeywords!.length > 0
+              ? (cocktail as { flavorKeywords?: string[] }).flavorKeywords!
               : cocktail.flavorProfile.split(",").map((s: string) => s.trim())
             ).map((f: string) => (
-              <span key={f} style={{ padding: "3px 10px", borderRadius: 999, fontFamily: "var(--font-heading)", fontSize: 10, textTransform: "uppercase", letterSpacing: 0.8, background: "rgba(80,55,30,0.06)", border: "1px solid rgba(80,55,30,0.25)", color: "#2A2118", whiteSpace: "nowrap", flexShrink: 0 }}>
+              <span
+                key={f}
+                style={{
+                  padding: "3px 10px",
+                  borderRadius: 999,
+                  fontFamily: "var(--font-heading)",
+                  fontSize: 10,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.8,
+                  background: "rgba(80,55,30,0.06)",
+                  border: "1px solid rgba(80,55,30,0.25)",
+                  color: "#2A2118",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
                 {f.trim()}
               </span>
             ))}
@@ -1116,9 +1187,26 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
 
           {/* Order this — only for menu matches */}
           {cocktail.matchedFromMenu && (
-            <div style={{ marginBottom: 20, padding: 14, borderRadius: 14, background: "rgba(80,55,30,0.08)", border: "1px solid rgba(80,55,30,0.18)" }}>
-              <div style={{ fontFamily: "var(--font-heading)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#2A2118", marginBottom: 8 }}>
-                {cocktail.lang === "zh" ? "点这杯" : "Order this"}
+            <div
+              style={{
+                marginBottom: 20,
+                padding: 14,
+                borderRadius: 14,
+                background: "rgba(80,55,30,0.08)",
+                border: "1px solid rgba(80,55,30,0.18)",
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: "var(--font-heading)",
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  color: "#2A2118",
+                  marginBottom: 8,
+                }}
+              >
+                {"Order this"}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 {cocktail.menuItemImageUrl && (
@@ -1126,10 +1214,25 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
                     src={cocktail.menuItemImageUrl}
                     alt={cocktail.menuItemName ?? cocktail.cocktailName}
                     crossOrigin="anonymous"
-                    style={{ width: 72, height: 72, borderRadius: 10, objectFit: "cover", border: "1px solid rgba(80,55,30,0.18)", flexShrink: 0 }}
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: 10,
+                      objectFit: "cover",
+                      border: "1px solid rgba(80,55,30,0.18)",
+                      flexShrink: 0,
+                    }}
                   />
                 )}
-                <p style={{ fontFamily: "var(--font-heading)", fontSize: 14, lineHeight: 1.5, color: "#2A2118", margin: 0 }}>
+                <p
+                  style={{
+                    fontFamily: "var(--font-heading)",
+                    fontSize: 14,
+                    lineHeight: 1.5,
+                    color: "#2A2118",
+                    margin: 0,
+                  }}
+                >
                   {cocktail.menuItemName || cocktail.cocktailName}
                   {cocktail.menuPrice ? ` · ${cocktail.menuPrice}` : ""}
                   {cocktail.restaurantName ? ` @ ${cocktail.restaurantName}` : ""}
@@ -1139,53 +1242,204 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
           )}
 
           {/* Original vibe */}
-          <div style={{ marginBottom: 20, padding: 14, borderRadius: 14, background: "rgba(80,55,30,0.05)", border: "1px solid rgba(80,55,30,0.15)" }}>
-            <div style={{ fontFamily: "var(--font-heading)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#8A7A62", marginBottom: 6 }}>{cardLabels.originalVibe}</div>
-            <p style={{ fontFamily: "var(--font-heading)", fontStyle: "italic", color: "#2A2118", fontSize: 14, lineHeight: 1.55, margin: 0 }}>
+          <div
+            style={{
+              marginBottom: 20,
+              padding: 14,
+              borderRadius: 14,
+              background: "rgba(80,55,30,0.05)",
+              border: "1px solid rgba(80,55,30,0.15)",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "var(--font-heading)",
+                fontSize: 10,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                color: "#8A7A62",
+                marginBottom: 6,
+              }}
+            >
+              {cardLabels.originalVibe}
+            </div>
+            <p
+              style={{
+                fontFamily: "var(--font-heading)",
+                fontStyle: "italic",
+                color: "#2A2118",
+                fontSize: 14,
+                lineHeight: 1.55,
+                margin: 0,
+              }}
+            >
               "{cocktail.originalMood}"
             </p>
           </div>
 
           {/* Tasting notes / Why this one */}
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontFamily: "var(--font-heading)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#8A7A62", marginBottom: 6 }}>
-              {cocktail.matchedFromMenu
-                ? (cocktail.lang === "zh" ? "为什么是这杯" : "Why this one")
-                : cardLabels.tastingNotes}
+            <div
+              style={{
+                fontFamily: "var(--font-heading)",
+                fontSize: 10,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                color: "#8A7A62",
+                marginBottom: 6,
+              }}
+            >
+              {cocktail.matchedFromMenu ? "Why this one" : cardLabels.tastingNotes}
             </div>
-            <p style={{ fontFamily: "var(--font-heading)", color: "#2A2118", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
-              {cocktail.matchedFromMenu ? (cocktail.whyThisMatch || cocktail.tastesLike) : cocktail.tastesLike}
+            <p
+              style={{
+                fontFamily: "var(--font-heading)",
+                color: "#2A2118",
+                fontSize: 14,
+                lineHeight: 1.6,
+                margin: 0,
+              }}
+            >
+              {cocktail.matchedFromMenu
+                ? cocktail.whyThisMatch || cocktail.tastesLike
+                : cocktail.tastesLike}
             </p>
           </div>
 
           {/* Ingredients */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
-              <span style={{ fontFamily: "var(--font-heading)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#8A7A62" }}>{cardLabels.ingredients}</span>
-              <span style={{ fontFamily: "var(--font-heading)", fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: "#8A7A62", fontStyle: "italic" }}>· {cardLabels.ingredientsRef}</span>
+              <span
+                style={{
+                  fontFamily: "var(--font-heading)",
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  color: "#8A7A62",
+                }}
+              >
+                {cardLabels.ingredients}
+              </span>
+              <span
+                style={{
+                  fontFamily: "var(--font-heading)",
+                  fontSize: 9,
+                  letterSpacing: 1,
+                  textTransform: "uppercase",
+                  color: "#8A7A62",
+                  fontStyle: "italic",
+                }}
+              >
+                · {cardLabels.ingredientsRef}
+              </span>
             </div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {(cocktail.ingredients as string[]).map((ing, i) => (
-                <li key={i} style={{ position: "relative", paddingLeft: 16, fontFamily: "var(--font-heading)", fontSize: 13, color: "#2A2118", marginBottom: 8, lineHeight: 1.55, wordBreak: "break-word" }}>
-                  <span style={{ position: "absolute", left: 0, top: 8, width: 6, height: 6, borderRadius: "50%", background: "#2A2118" }} />
+                <li
+                  key={i}
+                  style={{
+                    position: "relative",
+                    paddingLeft: 16,
+                    fontFamily: "var(--font-heading)",
+                    fontSize: 13,
+                    color: "#2A2118",
+                    marginBottom: 8,
+                    lineHeight: 1.55,
+                    wordBreak: "break-word",
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 8,
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: "#2A2118",
+                    }}
+                  />
                   {simplifyIngredient(ing)}
                 </li>
               ))}
             </ul>
-            <p style={{ fontFamily: "var(--font-heading)", fontSize: 10, color: "#8A7A62", fontStyle: "italic", marginTop: 6, marginBottom: 0 }}>{cardLabels.ingredientsBar}</p>
+            <p
+              style={{
+                fontFamily: "var(--font-heading)",
+                fontSize: 10,
+                color: "#8A7A62",
+                fontStyle: "italic",
+                marginTop: 6,
+                marginBottom: 0,
+              }}
+            >
+              {cardLabels.ingredientsBar}
+            </p>
           </div>
 
           {/* Recipe */}
           {!isRestaurant && (
-            <div style={{ padding: 14, borderRadius: 14, background: "rgba(80,55,30,0.08)", border: "1px solid rgba(80,55,30,0.18)" }}>
-              <div style={{ fontFamily: "var(--font-heading)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#2A2118", marginBottom: 12 }}>{cardLabels.howToMake}</div>
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 14,
+                background: "rgba(80,55,30,0.08)",
+                border: "1px solid rgba(80,55,30,0.18)",
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: "var(--font-heading)",
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  color: "#2A2118",
+                  marginBottom: 12,
+                }}
+              >
+                {cardLabels.howToMake}
+              </div>
               <ol style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                {cocktail.recipe.split("\n").filter(Boolean).map((line, i) => (
-                  <li key={i} style={{ position: "relative", paddingLeft: 34, minHeight: 24, marginBottom: 12, fontFamily: "var(--font-heading)", fontSize: 13, lineHeight: 1.55, color: "#2A2118", wordBreak: "break-word" }}>
-                    <span style={{ position: "absolute", left: 0, top: 0, width: 22, height: 22, borderRadius: "50%", background: "#2A2118", color: "#F3E8D6", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
-                    {line}
-                  </li>
-                ))}
+                {cocktail.recipe
+                  .split("\n")
+                  .filter(Boolean)
+                  .map((line, i) => (
+                    <li
+                      key={i}
+                      style={{
+                        position: "relative",
+                        paddingLeft: 34,
+                        minHeight: 24,
+                        marginBottom: 12,
+                        fontFamily: "var(--font-heading)",
+                        fontSize: 13,
+                        lineHeight: 1.55,
+                        color: "#2A2118",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      <span
+                        style={{
+                          position: "absolute",
+                          left: 0,
+                          top: 0,
+                          width: 22,
+                          height: 22,
+                          borderRadius: "50%",
+                          background: "#2A2118",
+                          color: "#F3E8D6",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {i + 1}
+                      </span>
+                      {line}
+                    </li>
+                  ))}
               </ol>
             </div>
           )}
@@ -1197,380 +1451,495 @@ export default function ResultCardScreen({ id }: ResultCardScreenProps) {
       {/* Saved 2:3 poster is rendered entirely on canvas via
           useSharePosterPreparation — no offscreen React node needed. */}
 
-
-
-
-
       {/* Top bar */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => isRestaurant ? goToRestaurant() : fromGallery ? navigate({ to: "/gallery" }) : navigate({ to: "/" })}
-          className="flex items-center gap-1.5 text-xs"
-          style={{ color: "var(--app-text-secondary)" }}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M15.75 19.5L8.25 12l7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="text-[10px] tracking-wider" style={{ fontFamily: "var(--font-body)" }}>
+      <div
+        className="sticky top-0 z-30"
+        style={{ background: "var(--paper)", borderBottom: "1px solid var(--line)" }}
+      >
+        <div className="shell-narrow flex items-center justify-between py-3.5">
+          <button
+            type="button"
+            onClick={() =>
+              isRestaurant
+                ? goToRestaurant()
+                : fromGallery
+                  ? navigate({ to: "/gallery" })
+                  : navigate({ to: "/" })
+            }
+            className="mono flex items-center gap-2"
+          >
+            <span aria-hidden>←</span>
             {fromGallery ? t("gallery.title") : t("result.home")}
+          </button>
+          <span className="mono-sm" style={{ color: "var(--gold)" }}>
+            {t("result.checked")}
           </span>
-        </motion.button>
-        <div className="text-[10px] tracking-widest font-semibold uppercase"
-          style={{ color: "var(--app-states-success)" }}>
-          {t("result.checked")}
         </div>
       </div>
 
-      {/* ── Flip card ── */}
-      <div className="flex-1 flex items-center justify-center px-5 py-2 md:py-6">
-        <div
-          className="w-full cursor-pointer select-none"
-          style={{ perspective: 1200, maxWidth: 440 }}
-          onClick={() => setFlipped((f) => !f)}
-        >
-          <motion.div
-            className="relative w-full max-h-[400px] md:max-h-[520px]"
-            style={{
-              aspectRatio: "3/4",
-              transformStyle: "preserve-3d",
-            }}
-            animate={{ rotateY: flipped ? 180 : 0 }}
-            transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
+      {/* ── The card ── */}
+      <div className="shell-narrow pb-28 pt-8 md:pb-14">
+        <div className="mx-auto" style={{ maxWidth: 460 }}>
+          <SpecimenCard
+            cocktail={cocktail}
+            illustration={illustrationSource}
+            imageLoading={imageLoading}
+            distillingText={distillingText}
+            serial={serial}
+          />
+        </div>
+
+        {/* ── Actions ── */}
+        <div className="mx-auto mt-7 flex flex-wrap gap-2" style={{ maxWidth: 460 }}>
+          <button
+            className="btn btn-solid flex-1"
+            onClick={handleSave}
+            disabled={saving || sharePoster.status === "preparing"}
           >
-            <CardFront cocktail={cocktail} imageData={imageData} imageUrl={cocktail.matchedFromMenu ? null : (cocktail.imageUrl ?? null)} imageLoading={imageLoading} tapHint={tapHint} distillingText={distillingText} />
-            <CardBack cocktail={cocktail} tapHint={tapHint} labels={cardLabels} hideRecipe={isRestaurant} />
-
-          </motion.div>
+            {saving
+              ? t("result.saving")
+              : sharePoster.status === "preparing"
+                ? "Preparing…"
+                : sharePoster.status === "error"
+                  ? "Retry"
+                  : t("result.save")}
+          </button>
+          <button
+            className="btn btn-outline flex-1"
+            onClick={handleShare}
+            style={copied ? { borderColor: "var(--gold)", color: "var(--gold)" } : undefined}
+          >
+            {copied ? t("result.copied") : t("result.share")}
+          </button>
+          {isRestaurant && (
+            <button className="btn btn-outline flex-1" onClick={() => setShowFramePicker(true)}>
+              {t("result.print")}
+            </button>
+          )}
         </div>
-      </div>
 
-      {/* ── Bottom action group: CTAs + community ── */}
-      <div className="px-5 pt-3 pb-6 md:pb-8 flex-shrink-0 space-y-3">
-        {/* Above-the-fold CTAs: Save / Share / Follow */}
-        <div className={`grid gap-2 ${isRestaurant ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
-            {/* Save → download */}
-            <motion.button
-              whileTap={{ scale: 0.96 }}
-              onClick={handleSave}
-              disabled={saving || sharePoster.status === "preparing"}
-              className="py-2 px-3 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
-              style={{
-                borderRadius: "4px",
-                background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
-                color: "white",
-                boxShadow: "2px 3px 10px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
-              }}
-            >
-              <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span className="relative z-10" style={{ fontFamily: "var(--font-heading)" }}>
-                {saving
-                  ? t("result.saving")
-                  : sharePoster.status === "preparing"
-                    ? (lang === "zh" ? "准备中…" : "Preparing…")
-                    : sharePoster.status === "error"
-                      ? (lang === "zh" ? "重试" : "Retry")
-                      : t("result.save")}
-              </span>
-            </motion.button>
-
-            {/* Share — copy link */}
-            <motion.button
-              whileTap={{ scale: 0.96 }}
-              onClick={handleShare}
-              className="py-2 px-3 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 transition-all"
-              style={{
-                borderRadius: "4px",
-                background: copied ? "rgba(141,163,130,0.15)" : "transparent",
-                color: copied ? "var(--app-states-success)" : "var(--app-text-secondary)",
-                border: copied ? "1.5px solid var(--app-states-success)" : "1px solid rgba(255,255,255,0.14)",
-                boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
-              }}
-            >
-              {copied ? (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <path d="M4.5 12.75l6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" fill="none" stroke="var(--app-text-secondary)" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-              <span style={{ fontFamily: "var(--font-heading)" }}>{copied ? t("result.copied") : t("result.share")}</span>
-            </motion.button>
-
-            {/* Print — only in restaurant flow */}
-            {isRestaurant && (
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                onClick={() => setShowFramePicker(true)}
-                className="py-2 px-3 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 transition-all"
-                style={{
-                  borderRadius: "4px",
-                  background: "transparent",
-                  color: "var(--app-text-secondary)",
-                  border: "1px solid rgba(255,255,255,0.14)",
-                  boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
-                }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="var(--app-text-secondary)" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span style={{ fontFamily: "var(--font-heading)" }}>{t("result.print")}</span>
-              </motion.button>
-            )}
-
-            {/* Follow */}
-            <motion.a
-              href="https://instagram.com/vibe.tail"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => track("instagram_clicked")}
-              whileTap={{ scale: 0.96 }}
-              className="py-2 px-3 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 transition-all"
-              style={{
-                borderRadius: "4px",
-                background: "transparent",
-                color: "var(--app-text-secondary)",
-                border: "1px solid rgba(255,255,255,0.14)",
-                boxShadow: "1px 2px 8px rgba(0,0,0,0.06)",
-              }}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="var(--app-text-secondary)" strokeWidth="2" viewBox="0 0 24 24">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" strokeLinecap="round" strokeLinejoin="round" />
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span style={{ fontFamily: "var(--font-heading)" }}>{lang === "zh" ? "关注 Vibetail" : "Follow Vibetail"}</span>
-            </motion.a>
-          </div>
-
-        {/* Save to Vibe Bar (secondary) */}
         {!isPersisted && (
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            onClick={handleSaveToBar}
-            disabled={persisting}
-            className="w-full py-2 px-4 text-[11px] font-semibold tracking-wider whitespace-nowrap flex items-center justify-center gap-1.5 relative overflow-hidden disabled:opacity-60"
-            style={{
-              borderRadius: "4px",
-              background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
-              color: "white",
-              boxShadow: "2px 3px 10px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
-            }}
-          >
-            <svg className="w-4 h-4 relative z-10" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M12 3v18M8 22h8M4 6c0 4.418 3.582 8 8 8s8-3.582 8-8V4H4v2z" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="relative z-10" style={{ fontFamily: "var(--font-heading)" }}>
-              {persisting
-                ? (lang === "zh" ? "保存中…" : "Saving…")
-                : (lang === "zh" ? "保存到 Vibe Bar" : "Save to Vibe Bar")}
-            </span>
-          </motion.button>
+          <div className="mx-auto mt-2 flex" style={{ maxWidth: 460 }}>
+            <button
+              className="btn btn-outline w-full"
+              onClick={handleSaveToBar}
+              disabled={persisting}
+            >
+              {persisting ? "Saving…" : "Save to Vibe Bar"}
+            </button>
+          </div>
         )}
 
-        {/* Community card: Guest list */}
-        <NewsletterSection lang={lang} />
+        {/* ── Dossier ── */}
+        <div className="mx-auto mt-12" style={{ maxWidth: 560 }}>
+          <Dossier cocktail={cocktail} labels={cardLabels} hideRecipe={isRestaurant} />
+        </div>
 
-        {/* Last secondary action */}
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => isRestaurant ? goToRestaurant() : navigate({ to: "/mood-input" })}
-          className="w-full text-xs font-semibold uppercase tracking-widest py-3 text-center block"
-          style={{ color: "var(--app-primary)", fontFamily: "var(--font-heading)" }}
+        {/* ── See more — every choice behind the pour, then the shelf ── */}
+        <div className="mx-auto mt-10" style={{ maxWidth: 560 }}>
+          <button
+            type="button"
+            className="btn btn-outline w-full"
+            onClick={() => setSeeMore((o) => !o)}
+            aria-expanded={seeMore}
+          >
+            {seeMore ? "See less" : "See more"}
+            <span aria-hidden style={{ transform: seeMore ? "rotate(180deg)" : "none" }}>
+              ⌄
+            </span>
+          </button>
+
+          {seeMore && (
+            <div className="mt-9">
+              <div className="mono-sm mb-1" style={{ color: "var(--gold)" }}>
+                {"The order — everything you told us"}
+              </div>
+              {(
+                [
+                  ["The mood", cocktail.originalMood],
+                  ["The flavours", (cocktail.selectedFlavors ?? []).join(", ")],
+                  ["The profile", cocktail.flavorProfile],
+                  ["The ask", cocktail.customPreference],
+                ] as const
+              )
+                .filter(([, v]) => v && String(v).trim())
+                .map(([k, v]) => (
+                  <div
+                    key={k}
+                    className="grid grid-cols-[120px_1fr] items-baseline gap-4 py-3.5"
+                    style={{ borderBottom: "1px solid var(--line)" }}
+                  >
+                    <span className="mono-sm">{k}</span>
+                    <span className="note text-[15px] leading-snug">{String(v)}</span>
+                  </div>
+                ))}
+
+              {publicMenu && publicMenu.items.length > 0 && (
+                <div className="mt-10">
+                  <div className="mono-sm mb-1" style={{ color: "var(--gold)" }}>
+                    {"The rest of the shelf"}
+                    {cocktail.restaurantName ? ` — ${cocktail.restaurantName}` : ""}
+                  </div>
+                  {publicMenu.items.map((item: PublicMenuItem) => {
+                    const soldOut = item.availabilityStatus === "sold_out";
+                    const isThisOne =
+                      !!cocktail.menuItemName && item.name === cocktail.menuItemName;
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex items-baseline justify-between gap-4 py-3.5"
+                        style={{
+                          borderBottom: "1px solid var(--line)",
+                          opacity: soldOut ? 0.45 : 1,
+                        }}
+                      >
+                        <div className="min-w-0">
+                          <span
+                            className="block text-[17px] leading-tight"
+                            style={{
+                              fontFamily: "var(--font-display)",
+                              color: isThisOne ? "var(--gold-bright)" : "var(--ink)",
+                            }}
+                          >
+                            {item.name}
+                            {isThisOne ? "  ·  yours" : ""}
+                          </span>
+                          {item.description ? (
+                            <span
+                              className="mt-0.5 block truncate text-[13px]"
+                              style={{ color: "var(--ink-mute)" }}
+                            >
+                              {item.description}
+                            </span>
+                          ) : null}
+                        </div>
+                        <span className="mono-sm shrink-0">
+                          {soldOut ? "sold out" : (item.baseSpirit ?? item.section ?? "")}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {cocktail.fullMenuUrl && (
+                    <a
+                      className="link-ul mono-sm mt-5 inline-block"
+                      href={cocktail.fullMenuUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {"View the full menu →"}
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ── Community ── */}
+        <div className="card-paper-warm relative mx-auto mt-12 p-6" style={{ maxWidth: 560 }}>
+          <div className="grain-layer" aria-hidden style={{ opacity: 0.26 }} />
+          <div className="relative">
+            <GuestList source="cocktail_card" />
+          </div>
+        </div>
+
+        <div
+          className="mx-auto mt-10 flex flex-wrap items-center justify-between gap-4"
+          style={{ maxWidth: 560 }}
         >
-          {t("result.another")}
-        </motion.button>
+          <button
+            className="btn btn-accent"
+            onClick={() => (isRestaurant ? goToRestaurant() : navigate({ to: "/mood-input" }))}
+          >
+            {t("result.another")}
+            <span aria-hidden>→</span>
+          </button>
+          <a
+            className="mono link-ul"
+            href="https://instagram.com/vibe.tail"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track("instagram_clicked")}
+          >
+            {"Follow @vibe.tail"}
+          </a>
+        </div>
       </div>
 
-
-
       {/* Frame picker modal — interactive preview */}
-      {showFramePicker && (() => {
-        const selected = FRAME_STYLES.find((f) => f.id === selectedFrameId) ?? FRAME_STYLES[0];
-        // Preview card is 2:3 aspect — match the printed 2in x 3in proportion.
-        const PREVIEW_W = 220;
-        const PREVIEW_H = 330;
-        // Scale "in"-based insets/borders to preview pixels (1in -> PREVIEW_W/2 px).
-        const scaleIn = (v: string) => v.replace(/([\d.]+)in/g, (_, n) => `${(parseFloat(n) * PREVIEW_W) / 2}px`);
-        const previewOuterCss = scaleIn(selected.outerCss);
-        const previewInnerCss = scaleIn(selected.innerCss);
-        const previewCornerCss = scaleIn(selected.cornerCss);
-        const previewInset = scaleIn(selected.inset);
-        const previewCornerSize = scaleIn(selected.cornerSize);
-        const previewCornerOffset = scaleIn(selected.cornerOffset);
+      {showFramePicker &&
+        (() => {
+          const selected = FRAME_STYLES.find((f) => f.id === selectedFrameId) ?? FRAME_STYLES[0];
+          // Preview card is 2:3 aspect — match the printed 2in x 3in proportion.
+          const PREVIEW_W = 220;
+          const PREVIEW_H = 330;
+          // Scale "in"-based insets/borders to preview pixels (1in -> PREVIEW_W/2 px).
+          const scaleIn = (v: string) =>
+            v.replace(/([\d.]+)in/g, (_, n) => `${(parseFloat(n) * PREVIEW_W) / 2}px`);
+          const previewOuterCss = scaleIn(selected.outerCss);
+          const previewInnerCss = scaleIn(selected.innerCss);
+          const previewCornerCss = scaleIn(selected.cornerCss);
+          const previewInset = scaleIn(selected.inset);
+          const previewCornerSize = scaleIn(selected.cornerSize);
+          const previewCornerOffset = scaleIn(selected.cornerOffset);
 
-        return (
-          <div
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-            style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
-            onClick={() => setShowFramePicker(false)}
-          >
-            <motion.div
-              initial={{ y: 30, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md rounded-2xl p-5 flex flex-col gap-5"
-              style={{ background: "#fdf8f3", border: "1px solid rgba(255,255,255,0.10)", maxHeight: "92vh" }}
+          return (
+            <div
+              className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+              style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
+              onClick={() => setShowFramePicker(false)}
             >
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold tracking-wider uppercase" style={{ color: "var(--app-text-primary)", fontFamily: "var(--font-body)" }}>
-                  {t("result.chooseFrame") || "Choose a frame"}
-                </h3>
-                <button onClick={() => setShowFramePicker(false)} className="text-xs w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/5" style={{ color: "var(--app-text-muted)" }}>✕</button>
-              </div>
+              <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-md rounded-2xl p-5 flex flex-col gap-5"
+                style={{
+                  background: "#fdf8f3",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  maxHeight: "92vh",
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <h3
+                    className="text-sm font-semibold tracking-wider uppercase"
+                    style={{ color: "var(--app-text-primary)", fontFamily: "var(--font-body)" }}
+                  >
+                    {t("result.chooseFrame") || "Choose a frame"}
+                  </h3>
+                  <button
+                    onClick={() => setShowFramePicker(false)}
+                    className="text-xs w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/5"
+                    style={{ color: "var(--app-text-muted)" }}
+                  >
+                    ✕
+                  </button>
+                </div>
 
-              {/* Live preview of the actual card inside the frame */}
-              <div className="flex justify-center py-2">
-                <div
-                  style={{
-                    width: PREVIEW_W,
-                    height: PREVIEW_H,
-                    position: "relative",
-                    background: "#fdf8f3",
-                    boxShadow: "0 12px 32px rgba(0,0,0,0.18)",
-                    boxSizing: "border-box",
-                  }}
-                >
-                  {/* outer frame border */}
-                  <div style={{ position: "absolute", inset: 0, boxSizing: "border-box", pointerEvents: "none", ...parseFrameCss(previewOuterCss) }} />
-                  {/* corner ornaments */}
-                  {selected.showCorners && (
-                    <>
-                      {(["tl", "tr", "br", "bl"] as const).map((c, i) => (
-                        <div key={c} style={{
-                          position: "absolute",
-                          width: previewCornerSize,
-                          height: previewCornerSize,
-                          boxSizing: "border-box",
-                          top: c.includes("t") ? previewCornerOffset : undefined,
-                          bottom: c.includes("b") ? previewCornerOffset : undefined,
-                          left: c.includes("l") ? previewCornerOffset : undefined,
-                          right: c.includes("r") ? previewCornerOffset : undefined,
-                          transform: `rotate(${i * 90}deg)`,
-                          ...parseFrameCss(previewCornerCss),
-                        }} />
-                      ))}
-                    </>
-                  )}
-                  {/* inner content area */}
-                  <div style={{
-                    position: "absolute",
-                    inset: previewInset || 0,
-                    boxSizing: "border-box",
-                    overflow: "hidden",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "linear-gradient(160deg, rgba(30,34,40,0.72) 0%, rgba(20,24,28,0.85) 100%)",
-                    padding: 10,
-                    gap: 6,
-                    ...parseFrameCss(previewInnerCss),
-                  }}>
-                    {/* cocktail thumbnail */}
-                    <div style={{ width: "100%", flex: "1 1 auto", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                      {illustrationSource ? (
-                        <img
-                          src={illustrationSource}
-                          alt=""
-                          style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
-                        />
-                      ) : (
-                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--app-primary)" strokeWidth="1" opacity="0.4">
-                          <path d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      )}
-                    </div>
-                    <div style={{
-                      fontFamily: "var(--font-heading)",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "var(--app-text)",
-                      textAlign: "center",
-                      lineHeight: 1.15,
-                      padding: "0 4px",
-                    }}>
-                      {cocktail?.cocktailName ?? "Vibetail"}
+                {/* Live preview of the actual card inside the frame */}
+                <div className="flex justify-center py-2">
+                  <div
+                    style={{
+                      width: PREVIEW_W,
+                      height: PREVIEW_H,
+                      position: "relative",
+                      background: "#fdf8f3",
+                      boxShadow: "0 12px 32px rgba(0,0,0,0.18)",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    {/* outer frame border */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        boxSizing: "border-box",
+                        pointerEvents: "none",
+                        ...parseFrameCss(previewOuterCss),
+                      }}
+                    />
+                    {/* corner ornaments */}
+                    {selected.showCorners && (
+                      <>
+                        {(["tl", "tr", "br", "bl"] as const).map((c, i) => (
+                          <div
+                            key={c}
+                            style={{
+                              position: "absolute",
+                              width: previewCornerSize,
+                              height: previewCornerSize,
+                              boxSizing: "border-box",
+                              top: c.includes("t") ? previewCornerOffset : undefined,
+                              bottom: c.includes("b") ? previewCornerOffset : undefined,
+                              left: c.includes("l") ? previewCornerOffset : undefined,
+                              right: c.includes("r") ? previewCornerOffset : undefined,
+                              transform: `rotate(${i * 90}deg)`,
+                              ...parseFrameCss(previewCornerCss),
+                            }}
+                          />
+                        ))}
+                      </>
+                    )}
+                    {/* inner content area */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: previewInset || 0,
+                        boxSizing: "border-box",
+                        overflow: "hidden",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background:
+                          "linear-gradient(160deg, rgba(30,34,40,0.72) 0%, rgba(20,24,28,0.85) 100%)",
+                        padding: 10,
+                        gap: 6,
+                        ...parseFrameCss(previewInnerCss),
+                      }}
+                    >
+                      {/* cocktail thumbnail */}
+                      <div
+                        style={{
+                          width: "100%",
+                          flex: "1 1 auto",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {illustrationSource ? (
+                          <img
+                            src={illustrationSource}
+                            alt=""
+                            style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                          />
+                        ) : (
+                          <svg
+                            width="60"
+                            height="60"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="var(--app-primary)"
+                            strokeWidth="1"
+                            opacity="0.4"
+                          >
+                            <path
+                              d="M12 21h8M4 21h8M12 11v10M19 3H5v4c0 3.866 3.134 7 7 7s7-3.134 7-7V3z"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "var(--font-heading)",
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: "var(--app-text)",
+                          textAlign: "center",
+                          lineHeight: 1.15,
+                          padding: "0 4px",
+                        }}
+                      >
+                        {cocktail?.cocktailName ?? "Vibetail"}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Frame swatch row */}
-              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "thin" }}>
-                {FRAME_STYLES.map((f) => {
-                  const isActive = f.id === selectedFrameId;
-                  return (
-                    <button
-                      key={f.id}
-                      onClick={() => setSelectedFrameId(f.id)}
-                      className="flex flex-col items-center gap-1.5 p-1.5 rounded-lg transition flex-shrink-0"
-                      style={{
-                        background: isActive ? "rgba(0,0,0,0.45)" : "transparent",
-                        border: isActive ? "1.5px solid var(--app-primary)" : "1.5px solid transparent",
-                      }}
-                    >
-                      <div style={{ width: 48, height: 72, position: "relative", background: "#fdf8f3", boxSizing: "border-box" }}>
-                        <div style={{ position: "absolute", inset: 0, boxSizing: "border-box", ...parseFrameCss(scaleIn(f.outerCss).replace(/(\d+(\.\d+)?)px/g, (_, n) => `${Math.max(1, parseFloat(n) * 48 / PREVIEW_W)}px`)) }} />
-                        <div style={{
-                          position: "absolute",
-                          inset: f.id === "none" ? 3 : 6,
-                          background: "linear-gradient(160deg,#e0533c33,#b8893a22)",
-                          borderRadius: 1,
-                        }} />
-                      </div>
-                      <span className="text-[9px] tracking-wider uppercase whitespace-nowrap" style={{ color: isActive ? "var(--app-primary)" : "var(--app-text-secondary)", fontFamily: "var(--font-body)" }}>
-                        {f.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                {/* Frame swatch row */}
+                <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "thin" }}>
+                  {FRAME_STYLES.map((f) => {
+                    const isActive = f.id === selectedFrameId;
+                    return (
+                      <button
+                        key={f.id}
+                        onClick={() => setSelectedFrameId(f.id)}
+                        className="flex flex-col items-center gap-1.5 p-1.5 rounded-lg transition flex-shrink-0"
+                        style={{
+                          background: isActive ? "rgba(0,0,0,0.45)" : "transparent",
+                          border: isActive
+                            ? "1.5px solid var(--app-primary)"
+                            : "1.5px solid transparent",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 48,
+                            height: 72,
+                            position: "relative",
+                            background: "#fdf8f3",
+                            boxSizing: "border-box",
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              boxSizing: "border-box",
+                              ...parseFrameCss(
+                                scaleIn(f.outerCss).replace(
+                                  /(\d+(\.\d+)?)px/g,
+                                  (_, n) => `${Math.max(1, (parseFloat(n) * 48) / PREVIEW_W)}px`,
+                                ),
+                              ),
+                            }}
+                          />
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: f.id === "none" ? 3 : 6,
+                              background: "linear-gradient(160deg,#e0533c33,#b8893a22)",
+                              borderRadius: 1,
+                            }}
+                          />
+                        </div>
+                        <span
+                          className="text-[9px] tracking-wider uppercase whitespace-nowrap"
+                          style={{
+                            color: isActive ? "var(--app-primary)" : "var(--app-text-secondary)",
+                            fontFamily: "var(--font-body)",
+                          }}
+                        >
+                          {f.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
 
-              {/* Action buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowFramePicker(false)}
-                  className="flex-1 py-3 text-xs font-semibold tracking-wider uppercase rounded transition"
-                  style={{
-                    background: "transparent",
-                    color: "var(--app-text-secondary)",
-                    border: "1px solid rgba(255,255,255,0.14)",
-                  }}
-                >
-                  {t("result.cancel") || "Cancel"}
-                </button>
-                <button
-                  onClick={() => { setShowFramePicker(false); handlePrint(selectedFrameId); }}
-                  className="flex-1 py-3 text-xs font-semibold tracking-wider uppercase rounded transition"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
-                    color: "white",
-                    border: "none",
-                    boxShadow: "2px 3px 12px rgba(0,0,0,0.45)",
-                  }}
-                >
-                  {t("result.print") || "Print"}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        );
-      })()}
-
+                {/* Action buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowFramePicker(false)}
+                    className="flex-1 py-3 text-xs font-semibold tracking-wider uppercase rounded transition"
+                    style={{
+                      background: "transparent",
+                      color: "var(--app-text-secondary)",
+                      border: "1px solid rgba(255,255,255,0.14)",
+                    }}
+                  >
+                    {t("result.cancel") || "Cancel"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowFramePicker(false);
+                      handlePrint(selectedFrameId);
+                    }}
+                    className="flex-1 py-3 text-xs font-semibold tracking-wider uppercase rounded transition"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
+                      color: "white",
+                      border: "none",
+                      boxShadow: "2px 3px 12px rgba(0,0,0,0.45)",
+                    }}
+                  >
+                    {t("result.print") || "Print"}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          );
+        })()}
 
       <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
 
-      <MixingOverlay
-        open={mixingVisible}
-        lines={mixingLines}
-      />
+      <MixingOverlay open={mixingVisible && !figMode} lines={mixingLines} />
     </div>
   );
+}
+
+/** Four-character catalogue number, stable for a given key. */
+function makeSerial(key: string): string {
+  const clean = key.replace(/\W/g, "");
+  if (clean.length >= 8 && !/\s/.test(key)) return clean.slice(0, 4).toUpperCase();
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return h.toString(36).toUpperCase().padStart(4, "0").slice(-4);
 }
 
 /** Convert a small subset of inline CSS string into a React style object for the preview swatches. */
@@ -1587,111 +1956,3 @@ function parseFrameCss(css: string): CSSProperties {
   });
   return style as CSSProperties;
 }
-
-function NewsletterSection({ lang }: { lang: "zh" | "en" }) {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
-
-  const copy = lang === "zh"
-    ? {
-        emailLabel: "加入宾客名单",
-        emailHint: "受邀参与未来的快闪活动、新社交体验与独家首发。",
-        placeholder: "your@email.com",
-        submit: "加入",
-        submitting: "加入中…",
-        done: "已加入 ✓",
-        invalid: "请输入有效的邮箱",
-        error: "加入失败，请稍后再试",
-        already: "你已经在名单上啦 ✓",
-      }
-    : {
-        emailLabel: "Join the guest list",
-        emailHint: "Get invited to future pop-ups, new social experiences, and exclusive launches.",
-        placeholder: "your@email.com",
-        submit: "Join",
-        submitting: "Joining…",
-        done: "You're on the list ✓",
-        invalid: "Please enter a valid email",
-        error: "Something went wrong. Try again.",
-        already: "You're already on the list ✓",
-      };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = email.trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmed)) {
-      toast.error(copy.invalid);
-      return;
-    }
-    setStatus("loading");
-    const { error } = await supabase
-      .from("newsletter_subscribers")
-      .insert({ email: trimmed, source: "cocktail_card" });
-    if (error) {
-      if (error.code === "23505") {
-        toast.success(copy.already);
-        setStatus("done");
-        track("email_submitted", { already_subscribed: true });
-        return;
-      }
-      console.error("newsletter subscribe failed", error);
-      toast.error(copy.error);
-      setStatus("idle");
-      return;
-    }
-    toast.success(copy.done);
-    setStatus("done");
-    track("email_submitted");
-  };
-
-  return (
-    <div
-      className="rounded-2xl p-4 space-y-3"
-      style={{
-        background: "rgba(255,255,255,0.05)",
-        border: "1px solid rgba(255,255,255,0.10)",
-      }}
-    >
-      <div className="space-y-0.5">
-        <div className="text-xs font-semibold tracking-wide" style={{ color: "var(--app-text)", fontFamily: "var(--font-heading)" }}>
-          {copy.emailLabel}
-        </div>
-        <p className="text-xs" style={{ color: "var(--app-text-secondary)", fontFamily: "var(--font-heading)" }}>
-          {copy.emailHint}
-        </p>
-      </div>
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={status !== "idle"}
-          placeholder={copy.placeholder}
-          className="flex-1 min-w-0 px-3 py-2.5 text-sm rounded-md outline-none disabled:opacity-60"
-          style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            color: "var(--app-text)",
-            fontFamily: "var(--font-heading)",
-          }}
-        />
-        <button
-          type="submit"
-          disabled={status !== "idle"}
-          className="px-4 py-2.5 text-xs font-semibold tracking-wider rounded-md disabled:opacity-60 whitespace-nowrap"
-          style={{
-            background: "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.14) 100%)",
-            color: "white",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.45)",
-            fontFamily: "var(--font-heading)",
-          }}
-        >
-          {status === "loading" ? copy.submitting : status === "done" ? "✓" : copy.submit}
-        </button>
-      </form>
-    </div>
-  );
-}
-
-

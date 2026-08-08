@@ -1,10 +1,14 @@
 import { useRouterState, useNavigate } from "@tanstack/react-router";
-import { motion } from "framer-motion";
 import { useState } from "react";
 import { useLang } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
 import AuthModal from "@/components/moodtail/AuthModal";
 
+/**
+ * Mobile-only app bar. Deliberately absent from the marketing landing page
+ * (which carries its own nav) and from the mixing flow (which is a focused,
+ * one-decision-per-screen wizard).
+ */
 export default function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
@@ -12,87 +16,67 @@ export default function BottomNav() {
   const { user } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
 
-  // Hide the global bottom nav while inside the mixology flow.
-  const isVibeFlow =
+  const hidden =
+    pathname === "/" ||
     pathname === "/mood-input" ||
     pathname.startsWith("/restaurant/") ||
+    pathname.startsWith("/manage/") ||
     /^\/m\/[^/]+\/[^/]+$/.test(pathname);
-  if (isVibeFlow) return null;
+  if (hidden) return null;
 
   const tabs = [
-    {
-      to: "/",
-      label: t("nav.vibeCheck"),
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M8 22h8" /><path d="M12 11v11" />
-          <path d="M19 3a1 1 0 0 1 1 1v4a8 8 0 0 1-16 0V4a1 1 0 0 1 1-1z" />
-        </svg>
-      ),
-    },
-    {
-      to: "/gallery",
-      label: t("nav.vibeBar"),
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          <polyline points="9 22 9 12 15 12 15 22" />
-        </svg>
-      ),
-    },
+    { to: "/", label: t("nav.vibeCheck") },
+    { to: "/gallery", label: t("nav.vibeBar") },
   ];
 
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-20 md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 md:hidden"
         style={{
-          background: "rgba(18,21,26,0.72)",
-          backdropFilter: "blur(24px) saturate(160%)",
-          borderTop: "1px solid rgba(255,255,255,0.08)",
+          background: "var(--paper)",
+          borderTop: "1px solid var(--line-strong)",
           paddingBottom: "env(safe-area-inset-bottom)",
-          boxShadow: "0 -12px 32px rgba(0,0,0,0.5)",
         }}
       >
         <div className="flex">
           {tabs.map((tab) => {
             const isActive = pathname === tab.to || (tab.to !== "/" && pathname.startsWith(tab.to));
-            const color = isActive ? "var(--app-primary)" : "var(--app-text-muted)";
             const isGallery = tab.to === "/gallery";
             return (
               <button
                 key={tab.to}
                 onClick={() => {
-                  if (isGallery && !user) { setShowAuth(true); return; }
-                  navigate({ to: tab.to as any });
+                  if (isGallery && !user) {
+                    setShowAuth(true);
+                    return;
+                  }
+                  navigate({ to: tab.to as string });
                 }}
-                className="flex-1 flex flex-col items-center gap-1 py-3 relative"
+                className="mono relative flex-1 py-4"
+                style={{
+                  color: isActive ? "var(--ink)" : "var(--ink-mute)",
+                  borderRight: "1px solid var(--line)",
+                }}
               >
                 {isActive && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full"
-                    style={{ background: "var(--app-primary)", boxShadow: "0 0 10px var(--app-primary)" }} />
+                  <span
+                    className="absolute inset-x-0 top-0 h-[2px]"
+                    style={{ background: "var(--vermilion)" }}
+                  />
                 )}
-                <motion.div whileTap={{ scale: 0.85 }} style={{ color }}>{tab.icon}</motion.div>
-                <span className="text-[10px] font-medium tracking-wide" style={{ color }}>{tab.label}</span>
+                {tab.label}
               </button>
             );
           })}
-
           <a
             href="https://instagram.com/vibe.tail"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 flex flex-col items-center gap-1 py-3"
-            style={{ color: "var(--app-text-muted)" }}
+            className="mono flex-1 py-4 text-center"
+            style={{ color: "var(--ink-mute)" }}
           >
-            <motion.div whileTap={{ scale: 0.85 }} style={{ color: "var(--app-text-muted)" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-              </svg>
-            </motion.div>
-            <span className="text-[10px] font-medium tracking-wide" style={{ color: "var(--app-text-muted)", fontFamily: "var(--font-heading)" }}>Instagram</span>
+            Instagram
           </a>
         </div>
       </nav>

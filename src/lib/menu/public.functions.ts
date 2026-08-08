@@ -123,7 +123,10 @@ export const getPublishedMenu = createServerFn({ method: "GET" })
       shortIntro: menu.short_intro,
       coverImageUrl: menu.cover_image_url,
       fullMenuUrl: menu.menu_file_url,
-      fullMenuType: (menu.menu_file_type === "pdf" || menu.menu_file_type === "image") ? menu.menu_file_type : null,
+      fullMenuType:
+        menu.menu_file_type === "pdf" || menu.menu_file_type === "image"
+          ? menu.menu_file_type
+          : null,
       enabledGameIds: menu.enabled_game_ids ?? [],
       gameDisplayOrder: menu.game_display_order ?? [],
       hasAlcoholic: mapped.some((i) => i.alcoholic && i.availabilityStatus === "active"),

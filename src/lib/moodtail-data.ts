@@ -8,7 +8,8 @@ export const SEED_COCKTAILS: NewCocktail[] = [
     selectedFlavors: ["bitter", "chaotic", "refreshing"],
     customPreference: "",
     flavorProfile: "bitter, chaotic, refreshing",
-    tastesLike: "Three broken APIs, one working button, and the dangerous belief that everything will ship on time.",
+    tastesLike:
+      "Three broken APIs, one working button, and the dangerous belief that everything will ship on time.",
     ingredients: [
       "2 oz cold brew confidence",
       "1 splash of last-minute panic",
@@ -26,7 +27,8 @@ export const SEED_COCKTAILS: NewCocktail[] = [
     selectedFlavors: ["chaotic", "dangerous", "spicy"],
     customPreference: "",
     flavorProfile: "chaotic, dangerous, spicy",
-    tastesLike: "Nineteen system prompt rewrites, one hallucinated feature, and existential trust issues with your own code.",
+    tastesLike:
+      "Nineteen system prompt rewrites, one hallucinated feature, and existential trust issues with your own code.",
     ingredients: [
       "3 oz misaligned instructions",
       "A splash of jailbreak paranoia",
@@ -44,7 +46,8 @@ export const SEED_COCKTAILS: NewCocktail[] = [
     selectedFlavors: ["sweet", "dangerous"],
     customPreference: "something like a daiquiri but terrifying",
     flavorProfile: "sweet, dangerous",
-    tastesLike: "Polished slides, one hardcoded response, and the unshakeable belief that nobody will click that button.",
+    tastesLike:
+      "Polished slides, one hardcoded response, and the unshakeable belief that nobody will click that button.",
     ingredients: [
       "2 oz rehearsed confidence",
       "1 oz live data (please don't break)",
@@ -62,7 +65,8 @@ export const SEED_COCKTAILS: NewCocktail[] = [
     selectedFlavors: ["refreshing", "chaotic"],
     customPreference: "",
     flavorProfile: "refreshing, chaotic",
-    tastesLike: "Focus music on loop, a Figma tab you haven't touched, and pure kinetic energy with nowhere to go.",
+    tastesLike:
+      "Focus music on loop, a Figma tab you haven't touched, and pure kinetic energy with nowhere to go.",
     ingredients: [
       "4 oz undirected momentum",
       "1 oz 'we'll fix it in the next sprint'",
@@ -80,7 +84,8 @@ export const SEED_COCKTAILS: NewCocktail[] = [
     selectedFlavors: ["unhinged", "expensive", "chaotic"],
     customPreference: "espresso martini vibes",
     flavorProfile: "unhinged, expensive, chaotic",
-    tastesLike: "GPT-4's confidence, a citation that leads nowhere, and the electric feeling of being wrong at scale.",
+    tastesLike:
+      "GPT-4's confidence, a citation that leads nowhere, and the electric feeling of being wrong at scale.",
     ingredients: [
       "3 oz model confidence (unjustified)",
       "1 tbsp fabricated references",
@@ -98,7 +103,8 @@ export const SEED_COCKTAILS: NewCocktail[] = [
     selectedFlavors: ["sweet", "mysterious", "dreamy"],
     customPreference: "something that tastes like mixed signals",
     flavorProfile: "sweet, mysterious, dreamy",
-    tastesLike: "A text left on read for three hours, replied to casually, and a notification you turned your phone over for.",
+    tastesLike:
+      "A text left on read for three hours, replied to casually, and a notification you turned your phone over for.",
     ingredients: [
       "2 oz maintained indifference",
       "1 oz extremely tracked read receipts",
@@ -116,7 +122,8 @@ export const SEED_COCKTAILS: NewCocktail[] = [
     selectedFlavors: ["bitter", "elegant", "dramatic"],
     customPreference: "bitter but make it glamorous",
     flavorProfile: "bitter, elegant, dramatic",
-    tastesLike: "Unanswered Instagram stories, a glow-up still in progress, and the specific bitterness of choosing yourself loudly.",
+    tastesLike:
+      "Unanswered Instagram stories, a glow-up still in progress, and the specific bitterness of choosing yourself loudly.",
     ingredients: [
       "2 oz dignified silence",
       "1 oz revenge gym membership",
@@ -134,7 +141,8 @@ export const SEED_COCKTAILS: NewCocktail[] = [
     selectedFlavors: ["sour", "dreamy", "unhinged"],
     customPreference: "sweet but emotionally damaging",
     flavorProfile: "sour, dreamy, unhinged",
-    tastesLike: "Plausible deniability, the middle section of a Phoebe Bridgers song, and feelings you have agreed not to name.",
+    tastesLike:
+      "Plausible deniability, the middle section of a Phoebe Bridgers song, and feelings you have agreed not to name.",
     ingredients: [
       "1.5 oz undefined terms",
       "2 oz 'we're just hanging out'",
@@ -152,7 +160,8 @@ export const SEED_COCKTAILS: NewCocktail[] = [
     selectedFlavors: ["elegant", "dramatic", "expensive"],
     customPreference: "espresso martini vibes but make it a main character moment",
     flavorProfile: "elegant, dramatic, expensive",
-    tastesLike: "A mid-song walk in the rain, a meaningful glance across the room, and the profound certainty that this scene matters.",
+    tastesLike:
+      "A mid-song walk in the rain, a meaningful glance across the room, and the profound certainty that this scene matters.",
     ingredients: [
       "3 oz narrative gravitas",
       "1 oz 'everyone is watching me right now'",
@@ -170,7 +179,8 @@ export const SEED_COCKTAILS: NewCocktail[] = [
     selectedFlavors: ["bitter", "unhinged", "dangerous"],
     customPreference: "make it taste like heartbreak and cold brew",
     flavorProfile: "bitter, unhinged, dangerous",
-    tastesLike: "Four cold brews, a bold career move you made at midnight, and the specific clarity that arrives too late.",
+    tastesLike:
+      "Four cold brews, a bold career move you made at midnight, and the specific clarity that arrives too late.",
     ingredients: [
       "4 oz cold brew (double strength)",
       "1 oz 'I can sleep when I'm finished'",
@@ -185,21 +195,21 @@ export const SEED_COCKTAILS: NewCocktail[] = [
 ];
 
 export const FLAVOR_CHIPS = [
-  { label: "sweet",    labelZh: "甜",   color: "#F472B6" },
-  { label: "bitter",   labelZh: "苦",   color: "#78716C" },
-  { label: "spicy",    labelZh: "辣",   color: "#EF4444" },
-  { label: "smoky",    labelZh: "烟熏", color: "#A8A29E" },
-  { label: "sour",     labelZh: "酸",   color: "#A3E635" },
-  { label: "citrusy",  labelZh: "柑橘", color: "#FACC15" },
-  { label: "herbal",   labelZh: "草本", color: "#4ADE80" },
-  { label: "dry",      labelZh: "干型", color: "#D6D3D1" },
-  { label: "fruity",   labelZh: "果香", color: "#FB7185" },
-  { label: "floral",   labelZh: "花香", color: "#E879F9" },
-  { label: "earthy",   labelZh: "泥土", color: "#A16207" },
-  { label: "creamy",   labelZh: "奶感", color: "#FDE68A" },
-  { label: "bubbly",   labelZh: "气泡", color: "#67E8F9" },
-  { label: "boozy",    labelZh: "酒感", color: "#C084FC" },
-  { label: "tart",     labelZh: "涩口", color: "#86EFAC" },
+  { label: "sweet", labelZh: "甜", color: "#F472B6" },
+  { label: "bitter", labelZh: "苦", color: "#78716C" },
+  { label: "spicy", labelZh: "辣", color: "#EF4444" },
+  { label: "smoky", labelZh: "烟熏", color: "#A8A29E" },
+  { label: "sour", labelZh: "酸", color: "#A3E635" },
+  { label: "citrusy", labelZh: "柑橘", color: "#FACC15" },
+  { label: "herbal", labelZh: "草本", color: "#4ADE80" },
+  { label: "dry", labelZh: "干型", color: "#D6D3D1" },
+  { label: "fruity", labelZh: "果香", color: "#FB7185" },
+  { label: "floral", labelZh: "花香", color: "#E879F9" },
+  { label: "earthy", labelZh: "泥土", color: "#A16207" },
+  { label: "creamy", labelZh: "奶感", color: "#FDE68A" },
+  { label: "bubbly", labelZh: "气泡", color: "#67E8F9" },
+  { label: "boozy", labelZh: "酒感", color: "#C084FC" },
+  { label: "tart", labelZh: "涩口", color: "#86EFAC" },
 ];
 
 export const MOOD_PLACEHOLDERS_EN = [

@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import GalleryScreen from "@/components/screens/GalleryScreen";
 
 const TITLE = "Vibe Bar — Your Cocktail Gallery | Vibetail";
-const DESC = "Browse your collection of AI-generated cocktails. Revisit every vibe you've mixed, with names, recipes, and tasting notes.";
+const DESC =
+  "Browse your collection of AI-generated cocktails. Revisit every vibe you've mixed, with names, recipes, and tasting notes.";
 const URL = "https://vibetail.com/gallery";
 
 export const Route = createFileRoute("/gallery")({

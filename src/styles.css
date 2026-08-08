@@ -4,9 +4,29 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ═══════════════════════════════════════════════════════════════════════
+   VIBETAIL — noir & gilt
+   ───────────────────────────────────────────────────────────────────────
+   Three materials, nothing else: black ink, ivory paper, and one leaf of
+   gold. The tension the whole thing runs on: charcoal line-drawings that
+   look made by hand, set against type that is anything but — a
+   high-contrast didone for statements and a tight grotesk for everything
+   you actually have to read. Gold appears the way it does on a bistro
+   menu: numerals, hairlines, one italic word — never a surface.
+   Handwriting survives in exactly one place, as a signature.
+   ═══════════════════════════════════════════════════════════════════ */
+
 @theme inline {
-  --font-heading: "Cormorant Garamond", Georgia, serif;
+  --font-display: "Bodoni Moda", "Didot", "Playfair Display", Georgia, serif;
+  --font-heading: "Bodoni Moda", "Didot", "Playfair Display", Georgia, serif;
   --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-note: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "Inter", system-ui, -apple-system, sans-serif;
+  /* Italic accents — a lighter, rounder garamond against the didone. */
+  --font-accent: "Cormorant Garamond", "Bodoni Moda", Georgia, serif;
+  /* Reserved for the signature on a drink card. Nothing else. */
+  --font-hand: "Caveat", "Bradley Hand", cursive;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
@@ -27,206 +47,1122 @@
 }
 
 :root {
-  /* Mood Lab palette — Morandi */
-  --app-bg-deep: #1A1B1C;
-  --app-bg-charcoal: #202124;
-  --app-bg-coffee: #24211F;
+  /* ── Paper — cool gallery white, no cream ── */
+  --paper: #f2f1ee;
+  --paper-warm: #eae9e5;
+  --paper-deep: #dddcd6;
+  --paper-tint: #f7f6f4;
+  --paper-card: #fbfaf8;
 
-  --app-primary: #99B9C6;          /* Morandi Blue — cool glass accent */
-  --app-secondary: #A9B4A1;        /* Morandi Green */
-  --app-accent: #D8D3C9;           /* Morandi Beige */
-  --app-accent-lav: #B7A9B3;       /* Morandi Lavender */
-  --app-accent-sage: #A9B4A1;      /* Morandi Green */
-  --app-accent-vermouth: #DAC5C3;  /* Morandi Pink (reserved) */
-  --app-accent-blue: #99B9C6;      /* Morandi Blue */
-  --app-accent-gray: #BFBEBD;      /* Morandi Gray */
+  /* ── Ink — neutral black ── */
+  --ink: #141413;
+  --ink-soft: #3d3c39;
+  --ink-mute: #7e7c76;
+  --ink-faint: #b4b2ab;
 
-  --app-surface: rgba(255,255,255,0.06);
-  --app-surface-strong: rgba(255,255,255,0.10);
-  --app-border: rgba(255,255,255,0.12);
-  --app-border-strong: rgba(255,255,255,0.18);
+  /* ── Rules ── */
+  --line: rgba(20, 20, 19, 0.15);
+  --line-soft: rgba(20, 20, 19, 0.06);
+  --line-strong: rgba(20, 20, 19, 0.4);
 
-  --app-text: #D8D3C9;
-  --app-text-secondary: #BFBEBD;
-  --app-text-muted: #7F7D7A;
+  /* ── The "accent" is silver — graphite on paper, platinum on ink.
+     (Variable names keep the old gold vocabulary; values are mono.) ── */
+  --gold: #6f6d67;
+  --gold-bright: #9d9b94;
+  --gold-deep: #504e49;
+  --gold-line: rgba(20, 20, 19, 0.26);
+  --gold-line-strong: rgba(20, 20, 19, 0.46);
 
-  --app-states-success: #A9B4A1;
+  /* ── After hours ── */
+  --night: #0d0d0c;
+  --night-2: #171716;
 
-  --app-glow-amber: 0 0 24px rgba(153,185,198,0.35);
-  --app-shadow-glass: 0 20px 60px -20px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.08);
+  /* ── The only accent is gold. Every legacy "accent" resolves to ink or
+     gold, so a stray reference degrades to the right thing instead of
+     reintroducing hue. ── */
+  --lamp: #f3f2ef;
+  --marigold: var(--gold);
+  --oxblood: var(--ink);
+  --vermilion: var(--ink);
+  --olive: var(--ink);
+  --moss: var(--ink);
+  --plum: var(--ink);
+  --sky: var(--ink);
+  --clay: var(--ink);
+  --blush: var(--ink);
+  --accent-hot: var(--ink);
+  --accent-warm: var(--ink);
+  --accent-cool: var(--ink);
 
-  /* shadcn tokens — dark Morandi */
-  --background: oklch(0.19 0.006 240);
-  --foreground: oklch(0.90 0.015 70);
-  --card: oklch(0.22 0.006 240);
-  --card-foreground: oklch(0.90 0.015 70);
-  --primary: oklch(0.76 0.04 230);
-  --primary-foreground: oklch(0.18 0.01 240);
-  --secondary: oklch(0.26 0.008 240);
-  --secondary-foreground: oklch(0.90 0.015 70);
-  --muted: oklch(0.24 0.006 240);
-  --muted-foreground: oklch(0.68 0.010 60);
-  --accent: oklch(0.30 0.010 240);
-  --accent-foreground: oklch(0.92 0.015 70);
-  --destructive: oklch(0.60 0.15 28);
-  --border: oklch(0.32 0.006 240);
-  --input: oklch(0.32 0.006 240);
-  --ring: oklch(0.76 0.04 230);
-  --radius: 1.5rem;
+  /* ── Legacy aliases (older components still reference these) ── */
+  --app-bg-deep: var(--paper);
+  --app-bg-charcoal: var(--paper);
+  --app-bg-coffee: var(--paper-warm);
+  --app-primary: var(--oxblood);
+  --app-secondary: var(--olive);
+  --app-accent: var(--marigold);
+  --app-accent-lav: var(--plum);
+  --app-accent-sage: var(--moss);
+  --app-accent-vermouth: var(--clay);
+  --app-accent-blue: var(--sky);
+  --app-accent-gray: var(--ink-mute);
+  --app-surface: var(--paper-warm);
+  --app-surface-strong: var(--paper-deep);
+  --app-border: var(--line);
+  --app-border-strong: var(--line-strong);
+  --app-text: var(--ink);
+  --app-text-secondary: var(--ink-soft);
+  --app-text-muted: var(--ink-mute);
+  --app-states-success: var(--olive);
+  --app-glow-amber: none;
+  --app-shadow-glass: 0 18px 40px -28px rgba(25, 21, 16, 0.4);
+
+  /* ── shadcn tokens — light paper ── */
+  --background: oklch(0.955 0 0);
+  --foreground: oklch(0.16 0 0);
+  --card: oklch(0.985 0 0);
+  --card-foreground: oklch(0.16 0 0);
+  --primary: oklch(0.16 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.92 0 0);
+  --secondary-foreground: oklch(0.2 0 0);
+  --muted: oklch(0.93 0 0);
+  --muted-foreground: oklch(0.52 0 0);
+  --accent: oklch(0.9 0 0);
+  --accent-foreground: oklch(0.18 0 0);
+  --destructive: oklch(0.42 0 0);
+  --border: oklch(0.86 0 0);
+  --input: oklch(0.86 0 0);
+  --ring: oklch(0.16 0 0);
+  --radius: 0.125rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   NOIR — the app after dark.
+   The whole mixing flow (and any surface wrapped in .noir) flips to the
+   room the hero was photographed in: near-black walls, ivory ink, gold
+   where a hand would have gilded it. Every component keeps reading the
+   same variables, so nothing needs to know which world it's in.
+   ═══════════════════════════════════════════════════════════════════ */
+.noir {
+  /* paper → walls */
+  --paper: #0e0e0d;
+  --paper-warm: #151514;
+  --paper-deep: #1d1d1b;
+  --paper-tint: #121211;
+  --paper-card: #161615;
+
+  /* ink → bone white */
+  --ink: #edece7;
+  --ink-soft: #cfcec8;
+  --ink-mute: #94938c;
+  --ink-faint: #5c5b56;
+
+  --line: rgba(237, 236, 231, 0.14);
+  --line-soft: rgba(237, 236, 231, 0.07);
+  --line-strong: rgba(237, 236, 231, 0.38);
+
+  --gold: #c3c1ba;
+  --gold-bright: #e7e5df;
+  --gold-deep: #94928b;
+  --gold-line: rgba(237, 236, 231, 0.28);
+  --gold-line-strong: rgba(237, 236, 231, 0.55);
+
+  --lamp: #edece7;
+
+  background: var(--paper);
+  color: var(--ink);
+}
+/* Grain multiplies to nothing on near-black — switch it to a soft-light dust. */
+.noir .grain-layer,
+.noir.paper-grain::after,
+.noir .paper-grain::after {
+  mix-blend-mode: soft-light;
+  opacity: 0.5;
+}
+/* The drawn slider rule, re-inked in ivory for dark rooms. */
+.noir .slider-track-drawn {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 50 3, 90 8, 148 5 S 250 3, 298 6' fill='none' stroke='%23ede5d3' stroke-width='2.2' stroke-linecap='round' opacity='0.7'/%3E%3C/svg%3E");
+}
+.noir .slider-ink::-webkit-slider-thumb {
+  background: var(--gold);
+  border-color: #0d0a06;
+  box-shadow: 0 0 0 1px var(--gold);
+}
+.noir .slider-ink::-moz-range-thumb {
+  background: var(--gold);
+  border-color: #0d0a06;
+  box-shadow: 0 0 0 1px var(--gold);
+}
+.noir .underline-hand {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M1 5 C 22 2, 38 7, 58 4 S 98 2, 119 5' fill='none' stroke='%23c9a25c' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+.noir .card-note {
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.4),
+    0 18px 34px -22px rgba(0, 0, 0, 0.9);
+}
+/* Selection carried in gold when the room is dark. */
+.noir ::selection {
+  background: var(--gold);
+  color: #0d0a06;
+}
+
+/* A sheet of the original paper carried into the dark room — the printed
+   card, the auth slip. Everything inside reads light-mode variables again. */
+.paper-pocket {
+  --paper: #f2f1ee;
+  --paper-warm: #eae9e5;
+  --paper-deep: #dddcd6;
+  --paper-tint: #f7f6f4;
+  --paper-card: #fbfaf8;
+  --ink: #141413;
+  --ink-soft: #3d3c39;
+  --ink-mute: #7e7c76;
+  --ink-faint: #b4b2ab;
+  --line: rgba(20, 20, 19, 0.15);
+  --line-soft: rgba(20, 20, 19, 0.06);
+  --line-strong: rgba(20, 20, 19, 0.4);
+  --gold: #6f6d67;
+  --gold-bright: #9d9b94;
+  --gold-deep: #504e49;
+  --gold-line: rgba(20, 20, 19, 0.26);
+  --gold-line-strong: rgba(20, 20, 19, 0.46);
+  --lamp: #f3f2f0;
+  color: var(--ink);
+}
+.paper-pocket.pocket-card {
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.8);
+}
+.paper-pocket .grain-layer,
+.paper-pocket.paper-grain::after,
+.paper-pocket .paper-grain::after {
+  mix-blend-mode: multiply;
+  opacity: 0.42;
+}
+.paper-pocket .slider-track-drawn {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 50 3, 90 8, 148 5 S 250 3, 298 6' fill='none' stroke='%23101010' stroke-width='2.2' stroke-linecap='round' opacity='0.75'/%3E%3C/svg%3E");
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Gilt — the gold vocabulary. Small, and always linear.
+   ═══════════════════════════════════════════════════════════════════ */
+.gilt {
+  color: var(--gold);
+}
+.gilt-bright {
+  color: var(--gold-bright);
+}
+/* A hairline of leaf: bright in the middle, gone at the ends. */
+.rule-gilt {
+  border: 0;
+  height: 1px;
+  margin: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gold-line-strong) 18%,
+    var(--gold-line-strong) 82%,
+    transparent 100%
+  );
+}
+.rule-gilt-solid {
+  border: 0;
+  height: 1px;
+  margin: 0;
+  background: var(--gold-line-strong);
+}
+/* Eyebrow set in leaf: № 01 — LABEL ————— */
+.eyebrow-gilt {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+/* The italic word inside a didone statement. */
+.accent-italic {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+/* A framed plate: single rule outside, gilt hairline inside — menu-card. */
+.frame-gilt {
+  position: relative;
+  border: 1px solid var(--line-strong);
+}
+.frame-gilt::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid var(--gold-line);
+  pointer-events: none;
+}
+.btn-gilt {
+  background: transparent;
+  color: var(--gold);
+  border-color: var(--gold-line-strong);
+}
+.btn-gilt:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #0d0a06;
+}
+.btn-gilt-solid {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #14100a;
+}
+.btn-gilt-solid:hover {
+  background: transparent;
+  color: var(--gold);
 }
 
 @layer base {
   * {
-    border-color: var(--color-border);
+    border-color: var(--line);
     -webkit-tap-highlight-color: transparent;
   }
   html {
     font-family: var(--font-body);
+    background-color: var(--paper);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   body {
-    background-color: var(--app-bg-charcoal);
-    background-image:
-      radial-gradient(1200px 700px at 20% -10%, rgba(153,185,198,0.10), transparent 60%),
-      radial-gradient(1000px 600px at 100% 20%, rgba(183,169,179,0.10), transparent 60%),
-      radial-gradient(900px 600px at 50% 110%, rgba(169,180,161,0.10), transparent 60%),
-      linear-gradient(160deg, #1A1B1C 0%, #202124 45%, #24211F 100%);
-    background-attachment: fixed;
-    color: var(--app-text);
+    background-color: var(--paper);
+    color: var(--ink);
     font-family: var(--font-body);
     min-height: 100svh;
+    font-synthesis-weight: none;
   }
-  input, textarea, select, optgroup {
+  input,
+  textarea,
+  select,
+  optgroup {
     font-family: inherit;
   }
-  button, [role="button"], a[class*="button"] {
-    font-family: var(--font-heading);
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    color: var(--ink);
   }
-  h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
+  ::selection {
+    background: var(--ink);
+    color: var(--paper);
+  }
 }
 
-
-/* ── Glass utilities ── */
-@utility glass-panel {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow: 0 20px 60px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
-  backdrop-filter: blur(24px) saturate(140%);
-  border-radius: 28px;
+/* ═══════════════════════════════════════════════════════════════════
+   Paper texture — a fine print grain laid over everything.
+   ═══════════════════════════════════════════════════════════════════ */
+.paper-grain::after,
+.grain-layer {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.42;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
 }
-@utility glass-panel-strong {
-  background: rgba(255,255,255,0.09);
-  border: 1px solid rgba(255,255,255,0.14);
-  box-shadow: 0 28px 80px -24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08);
-  backdrop-filter: blur(28px) saturate(150%);
-  border-radius: 28px;
-}
-@utility glass-chip {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.10);
-  backdrop-filter: blur(14px) saturate(140%);
-  color: var(--app-text-secondary);
-  border-radius: 9999px;
-  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
-}
-@utility glass-chip-active {
-  background: rgba(153,185,198,0.16);
-  border: 1px solid rgba(153,185,198,0.55);
-  color: var(--app-text);
-  box-shadow: 0 0 0 3px rgba(153,185,198,0.10), 0 0 18px rgba(153,185,198,0.30);
-}
-@utility glass-input {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.10);
-  color: var(--app-text);
-  backdrop-filter: blur(14px);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-@utility glass-input-focus {
-  border-color: rgba(153,185,198,0.55);
-  box-shadow: 0 0 0 3px rgba(153,185,198,0.16), 0 0 24px rgba(153,185,198,0.24);
+/* Sits above the page so every surface gets the same tooth — otherwise
+   painted content masks the grain and the sheet reads as two tones. */
+.grain-fixed {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0.45;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.3'/%3E%3C/svg%3E");
 }
 
-@utility no-scrollbar {
+/* ═══════════════════════════════════════════════════════════════════
+   Typography — the elegant half of the contrast
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Statements. High-contrast didone, set tight and large. */
+.display,
+.display-fat,
+.hand {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-optical-sizing: auto;
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.display-fat {
+  font-weight: 700;
+}
+.hand-light {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.serif-italic {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Everything you actually read. */
+.note {
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: -0.005em;
+  color: var(--ink-soft);
+}
+.note-bold {
+  font-family: var(--font-body);
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+/* Labels: small, wide, quiet. */
+.scrawl,
+.mono {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  color: var(--ink-mute);
+}
+.scrawl-sm,
+.mono-sm {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.mono-plain {
+  font-family: var(--font-body);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.ui {
+  font-family: var(--font-body);
+}
+
+/* Figures set as figures. */
+.specimen-no {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-mute);
+}
+
+/* The one place handwriting is allowed: a signature on a card. */
+.signature {
+  font-family: var(--font-hand);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+}
+
+/* A block of small caps laid across an image. */
+.spec-block {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1.9;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+/* Ruled by hand, under something that isn't. */
+.underline-hand {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M1 5 C 22 2, 38 7, 58 4 S 98 2, 119 5' fill='none' stroke='%23101010' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 7px;
+  padding-bottom: 6px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Surfaces — crisp edges, so the drawings carry the informality alone
+   ═══════════════════════════════════════════════════════════════════ */
+.rule {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 0;
+}
+.rule-strong {
+  border: 0;
+  border-top: 1px solid var(--line-strong);
+  margin: 0;
+}
+.wonky,
+.wonky-sm {
+  border-radius: 0;
+}
+
+.card-paper,
+.card-paper-warm {
+  position: relative;
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: 0;
+}
+.card-paper-warm {
+  background: var(--paper-warm);
+}
+
+/* A sheet stuck to the wall. */
+.card-note {
+  position: relative;
+  background: var(--paper-card);
+  box-shadow:
+    0 1px 0 rgba(16, 16, 16, 0.05),
+    0 18px 34px -26px rgba(16, 16, 16, 0.55);
+}
+.tape {
+  position: absolute;
+  width: 74px;
+  height: 22px;
+  background: rgba(232, 231, 226, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(16, 16, 16, 0.08);
+  transform: rotate(-4deg);
+  pointer-events: none;
+}
+.tape::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.5) 0 3px,
+    transparent 3px 7px
+  );
+}
+.tape-tl {
+  top: -10px;
+  left: -13px;
+}
+.tape-tr {
+  top: -10px;
+  right: -13px;
+  transform: rotate(5deg);
+}
+
+.card-lift {
+  transition:
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 26px 44px -30px rgba(16, 16, 16, 0.6);
+}
+
+/* After hours. The accent lightens to platinum. */
+.panel-ink {
+  background: var(--night);
+  color: var(--paper);
+  --gold: #c3c1ba;
+  --gold-bright: #e7e5df;
+  --gold-line: rgba(237, 236, 231, 0.28);
+  --gold-line-strong: rgba(237, 236, 231, 0.55);
+}
+.panel-ink h1,
+.panel-ink h2,
+.panel-ink h3,
+.panel-ink .hand,
+.panel-ink .hand-light,
+.panel-ink .display,
+.panel-ink .display-fat {
+  color: var(--paper);
+}
+.panel-ink .note,
+.panel-ink .mono,
+.panel-ink .mono-sm,
+.panel-ink .scrawl,
+.panel-ink .scrawl-sm,
+.panel-ink .specimen-no {
+  color: rgba(239, 233, 221, 0.62);
+}
+
+/* Photography is monochrome throughout — no exceptions. */
+.print-img,
+.photo-mono {
+  filter: grayscale(1) contrast(1.08);
+}
+
+/* A venue's drink photograph, dissolved into the paper it sits on. */
+.drink-cutout {
+  mix-blend-mode: multiply;
+  filter: grayscale(1) contrast(1.12) brightness(1.04);
+  -webkit-mask-image: radial-gradient(
+    ellipse 62% 68% at 50% 50%,
+    #000 55%,
+    rgba(0, 0, 0, 0.55) 72%,
+    transparent 88%
+  );
+  mask-image: radial-gradient(
+    ellipse 62% 68% at 50% 50%,
+    #000 55%,
+    rgba(0, 0, 0, 0.55) 72%,
+    transparent 88%
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Controls
+   ═══════════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 1rem 1.9rem;
+  border-radius: 0;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    background 200ms ease,
+    color 200ms ease,
+    border-color 200ms ease,
+    opacity 200ms ease;
+  white-space: nowrap;
+  line-height: 1;
+}
+.btn-solid {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.btn-solid:hover {
+  background: transparent;
+  color: var(--ink);
+}
+.btn-outline {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.btn-outline:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+.btn-accent {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.btn-accent:hover {
+  background: transparent;
+  color: var(--ink);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  border-color: transparent;
+  padding: 0.5rem 0.75rem;
+}
+.btn-ghost:hover {
+  color: var(--ink);
+}
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.panel-ink .btn-outline,
+.on-dark .btn-outline {
+  color: var(--paper);
+  border-color: rgba(239, 233, 221, 0.55);
+}
+.panel-ink .btn-outline:hover,
+.on-dark .btn-outline:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+.panel-ink .btn-solid,
+.on-dark .btn-solid,
+.panel-ink .btn-accent,
+.on-dark .btn-accent {
+  background: var(--paper);
+  color: var(--ink);
+  border-color: var(--paper);
+}
+.panel-ink .btn-solid:hover,
+.on-dark .btn-solid:hover,
+.panel-ink .btn-accent:hover,
+.on-dark .btn-accent:hover {
+  background: transparent;
+  color: var(--paper);
+}
+.on-dark {
+  color: var(--paper);
+}
+.on-dark .note,
+.on-dark .scrawl,
+.on-dark .scrawl-sm {
+  color: rgba(239, 233, 221, 0.72);
+}
+
+/* ── Plates ──────────────────────────────────────────────────────────
+   The house card. No border, no shadow, no tape: a drawing given room,
+   a hairline under it, and a caption in small caps. Selection is carried
+   by the rule and the label, never by a box.
+   ──────────────────────────────────────────────────────────────────── */
+.plate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.plate-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  color: var(--ink-mute);
+  transition:
+    color 300ms ease,
+    transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.plate:hover .plate-art {
+  color: var(--ink);
+  transform: translateY(-4px);
+}
+.plate-rule {
+  height: 1px;
+  width: 100%;
+  background: var(--line);
+  transition:
+    background 260ms ease,
+    height 260ms ease;
+}
+.plate:hover .plate-rule {
+  background: var(--line-strong);
+}
+.plate-label {
+  color: var(--ink-mute);
+  transition: color 260ms ease;
+}
+.plate:hover .plate-label {
+  color: var(--ink);
+}
+.plate[data-selected="true"] .plate-art {
+  color: var(--ink);
+}
+.plate[data-selected="true"] .plate-rule {
+  background: var(--ink);
+  height: 2px;
+}
+.plate[data-selected="true"] .plate-label {
+  color: var(--ink);
+}
+/* In the dark room, a chosen plate is gilded, not inked. */
+.noir .plate[data-selected="true"] .plate-art {
+  color: var(--gold-bright);
+}
+.noir .plate[data-selected="true"] .plate-rule {
+  background: var(--gold);
+}
+.noir .plate[data-selected="true"] .plate-label {
+  color: var(--gold-bright);
+}
+.noir .plate[data-selected="true"] .specimen-no {
+  color: var(--gold);
+}
+
+/* Selectable card. Selection is an inversion, never a colour. */
+.tile {
+  position: relative;
+  display: flex;
+  border: 1px solid var(--line);
+  background: var(--paper-card);
+  border-radius: 0;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 200ms ease,
+    background 200ms ease,
+    color 200ms ease;
+}
+.tile:hover {
+  border-color: var(--line-strong);
+}
+.tile[data-selected="true"] {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  padding: 0.62rem 0.95rem;
+  border: 1px solid var(--line);
+  background: transparent;
+  border-radius: 0;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition:
+    border-color 200ms ease,
+    background 200ms ease,
+    color 200ms ease;
+  white-space: nowrap;
+}
+.chip:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+.chip[data-selected="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.noir .chip[data-selected="true"] {
+  background: transparent;
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 1px var(--gold);
+  color: var(--gold-bright);
+}
+.noir .tile[data-selected="true"] {
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 1px var(--gold);
+}
+.chip-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  flex: none;
+}
+
+/* Fields are ruled lines on a page. */
+.field {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  padding: 0.6rem 0.1rem;
+  outline: none;
+  transition: border-color 200ms ease;
+}
+.field::placeholder {
+  color: var(--ink-faint);
+}
+.field:focus {
+  border-color: var(--ink);
+}
+.field-box {
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  padding: 0.75rem 0.9rem;
+  background: transparent;
+}
+
+.link-ul {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 1px;
+  transition: opacity 200ms ease;
+}
+.link-ul:hover {
+  opacity: 0.55;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Layout helpers
+   ═══════════════════════════════════════════════════════════════════ */
+.shell {
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  padding-inline: clamp(18px, 4vw, 48px);
+}
+.shell-narrow {
+  width: 100%;
+  max-width: 780px;
+  margin-inline: auto;
+  padding-inline: clamp(18px, 4vw, 48px);
+}
+.section {
+  padding-block: clamp(56px, 9vw, 120px);
+}
+
+/* Section header: 01 — LABEL, with a hairline running to the edge. */
+.section-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: clamp(24px, 4vw, 44px);
+}
+.section-eyebrow::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-@utility no-scrollbar-webkit {
-  &::-webkit-scrollbar { display: none; }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
-.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
-.no-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
-/* ── Ambient / motion ── */
+/* Range slider — a drawn line with an inked bead riding it. */
+.slider-ink {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 34px;
+  background: transparent;
+  cursor: pointer;
+}
+.slider-ink::-webkit-slider-runnable-track {
+  height: 3px;
+  background: transparent;
+}
+.slider-ink::-moz-range-track {
+  height: 3px;
+  background: transparent;
+}
+.slider-ink::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 999px;
+  background: var(--ink);
+  border: 3px solid var(--paper);
+  box-shadow: 0 0 0 1px var(--ink);
+  transition: transform 160ms ease;
+}
+.slider-ink::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--ink);
+  border: 3px solid var(--paper);
+  box-shadow: 0 0 0 1px var(--ink);
+}
+.slider-ink:active::-webkit-slider-thumb {
+  transform: scale(1.12);
+}
 
-@keyframes liquid-blob-1 {
-  0%,100% { transform: translate(0,0) scale(1); }
-  33% { transform: translate(30px,-20px) scale(1.05); }
-  66% { transform: translate(-20px,15px) scale(0.95); }
+/* The wobbly rule the bead runs along. */
+.slider-track-drawn {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 10px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 50 3, 90 8, 148 5 S 250 3, 298 6' fill='none' stroke='%23101010' stroke-width='2.2' stroke-linecap='round' opacity='0.75'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
 }
-@keyframes liquid-blob-2 {
-  0%,100% { transform: translate(0,0) scale(1); }
-  40% { transform: translate(-25px,20px) scale(1.08); }
-  70% { transform: translate(15px,-15px) scale(0.92); }
-}
-@keyframes liquid-blob-3 {
-  0%,100% { transform: translate(0,0) scale(1); }
-  50% { transform: translate(20px,-25px) scale(1.06); }
-}
-@keyframes liquid-flow {
-  0% { transform: translateX(-100%); }
-  40% { transform: translateX(100%); }
-  100% { transform: translateX(100%); }
-}
-@keyframes breathe-glow {
-  0%,100% { opacity: 0.30; transform: scale(1); }
-  50% { opacity: 0.55; transform: scale(1.06); }
-}
-.breathing-glow { animation: breathe-glow 5.2s ease-in-out infinite; }
 
-@keyframes float-y {
-  0%,100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+/* Marquee strip used on the landing hero. */
+@keyframes marquee-x {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
-.float-y { animation: float-y 6s ease-in-out infinite; }
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-x 42s linear infinite;
+}
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* Entrance. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise-in {
+  animation: rise-in 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 .shimmer {
-  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+  background: linear-gradient(
+    90deg,
+    rgba(25, 21, 16, 0.04) 25%,
+    rgba(25, 21, 16, 0.09) 50%,
+    rgba(25, 21, 16, 0.04) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.6s infinite;
 }
 
-@keyframes vibe-bottle-sway {
-  0%,100% { transform: rotate(-3deg); }
-  50% { transform: rotate(3deg); }
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
-@keyframes vibe-bottle-shake {
-  0%   { transform: rotate(-7deg) translateY(0); }
-  25%  { transform: rotate(6deg)  translateY(-2px); }
-  50%  { transform: rotate(-7deg) translateY(0); }
-  75%  { transform: rotate(6deg)  translateY(-2px); }
-  100% { transform: rotate(-7deg) translateY(0); }
-}
-.vibe-bottle-shaker { transform-origin: 50% 55%; will-change: transform; }
-.vibe-bottle-shaker--idle   { animation: vibe-bottle-sway 5s ease-in-out infinite; }
-.vibe-bottle-shaker--mixing { animation: vibe-bottle-shake 1.05s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) {
-  .vibe-bottle-shaker--mixing { animation-duration: 2s; }
-  .vibe-bottle-shaker--idle   { animation: none; }
-  .breathing-glow, .float-y { animation: none; }
+.float-y {
+  animation: float-y 6s ease-in-out infinite;
 }
 
-/* ── Liquid wave motion inside MoodBottle ── */
+@keyframes breathe-glow {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.06);
+  }
+}
+.breathing-glow {
+  animation: breathe-glow 5.2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   The pour stage — a slow orbit, like a bottle turned in the hand.
+   ═══════════════════════════════════════════════════════════════════ */
+@keyframes stage-orbit {
+  0% {
+    transform: perspective(700px) rotateY(-24deg) rotate(-2.6deg) translateY(0);
+  }
+  25% {
+    transform: perspective(700px) rotateY(0deg) rotate(0deg) translateY(-11px);
+  }
+  50% {
+    transform: perspective(700px) rotateY(24deg) rotate(2.6deg) translateY(0);
+  }
+  75% {
+    transform: perspective(700px) rotateY(0deg) rotate(0deg) translateY(-11px);
+  }
+  100% {
+    transform: perspective(700px) rotateY(-24deg) rotate(-2.6deg) translateY(0);
+  }
+}
+.stage-orbit {
+  animation: stage-orbit 9s ease-in-out infinite;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Bottle / mixing motion — kept from the original build.
+   ═══════════════════════════════════════════════════════════════════ */
+@keyframes vibe-bottle-sway {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes vibe-bottle-shake {
+  0% {
+    transform: rotate(-7deg) translateY(0);
+  }
+  25% {
+    transform: rotate(6deg) translateY(-2px);
+  }
+  50% {
+    transform: rotate(-7deg) translateY(0);
+  }
+  75% {
+    transform: rotate(6deg) translateY(-2px);
+  }
+  100% {
+    transform: rotate(-7deg) translateY(0);
+  }
+}
+.vibe-bottle-shaker {
+  transform-origin: 50% 55%;
+  will-change: transform;
+}
+.vibe-bottle-shaker--idle {
+  animation: vibe-bottle-sway 5s ease-in-out infinite;
+}
+.vibe-bottle-shaker--mixing {
+  animation: vibe-bottle-shake 1.05s ease-in-out infinite;
+}
+
 @keyframes liquid-wave-shift-1 {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 @keyframes liquid-wave-shift-2 {
-  0%   { transform: translateX(-50%); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
 .liquid-wave-1 {
   animation: liquid-wave-shift-1 4.5s linear infinite;
@@ -236,54 +1172,106 @@
   animation: liquid-wave-shift-2 3.5s linear infinite;
   transform-origin: center;
 }
-@media (prefers-reduced-motion: reduce) {
-  .liquid-wave-1, .liquid-wave-2 { animation: none; }
-}
 
-/* ── Mixing shaker shake (CSS-driven so it doesn't restart on re-render) ── */
 .mixing-bottle {
   transform-origin: 50% 86%;
   animation: moodtail-shake 0.82s infinite linear;
   will-change: transform;
 }
 @keyframes moodtail-shake {
-  0%   { transform: rotate(-8deg) translateY(0px); }
-  18%  { transform: rotate(7deg)  translateY(-4px); }
-  36%  { transform: rotate(-6deg) translateY(2px); }
-  54%  { transform: rotate(8deg)  translateY(-3px); }
-  72%  { transform: rotate(-5deg) translateY(1px); }
-  100% { transform: rotate(-8deg) translateY(0px); }
+  0% {
+    transform: rotate(-8deg) translateY(0px);
+  }
+  18% {
+    transform: rotate(7deg) translateY(-4px);
+  }
+  36% {
+    transform: rotate(-6deg) translateY(2px);
+  }
+  54% {
+    transform: rotate(8deg) translateY(-3px);
+  }
+  72% {
+    transform: rotate(-5deg) translateY(1px);
+  }
+  100% {
+    transform: rotate(-8deg) translateY(0px);
+  }
 }
 
-/* ── Bubble rise (CSS-driven, no per-frame React state) ── */
 .bubble {
   animation: bubble-rise 5s infinite linear;
   will-change: transform, opacity;
   transform-box: fill-box;
   transform-origin: center;
 }
-.bubble-brewing { animation-duration: 2.2s; }
-@keyframes bubble-rise {
-  0%   { transform: translateY(28px); opacity: 0.12; }
-  50%  { opacity: 0.45; }
-  100% { transform: translateY(-80px); opacity: 0; }
+.bubble-brewing {
+  animation-duration: 2.2s;
 }
-@media (prefers-reduced-motion: reduce) {
-  .mixing-bottle { animation: none; }
-  .bubble { animation: none; }
+@keyframes bubble-rise {
+  0% {
+    transform: translateY(28px);
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateY(-80px);
+    opacity: 0;
+  }
 }
 
-/* Legacy glass helpers still referenced */
-.glass-card {
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow: 0 20px 60px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
+@media (prefers-reduced-motion: reduce) {
+  .vibe-bottle-shaker--mixing {
+    animation-duration: 2s;
+  }
+  .vibe-bottle-shaker--idle,
+  .breathing-glow,
+  .float-y,
+  .mixing-bottle,
+  .bubble,
+  .liquid-wave-1,
+  .liquid-wave-2,
+  .marquee-track {
+    animation: none;
+  }
+  .rise-in {
+    animation: none;
+  }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Legacy class shims — older components still reference these names.
+   They now resolve to paper surfaces instead of dark glass.
+   ═══════════════════════════════════════════════════════════════════ */
+.glass-panel,
+.glass-panel-strong,
+.glass-card,
 .glass-card-warm {
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: var(--paper-tint);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.glass-chip {
+  background: var(--paper-tint);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  border-radius: 999px;
+}
+.glass-chip-active {
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  color: var(--paper);
+}
+.glass-input {
+  background: var(--paper-tint);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+.glass-input-focus {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
 }

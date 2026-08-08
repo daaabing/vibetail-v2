@@ -1,27 +1,23 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  Outlet,
-  createRootRouteWithContext,
-  HeadContent,
-  Scripts,
-} from "@tanstack/react-router";
+import { Outlet, createRootRouteWithContext, HeadContent, Scripts } from "@tanstack/react-router";
 import appCss from "../styles.css?url";
 import { LangProvider } from "@/lib/i18n";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { initAnalytics } from "@/lib/analytics";
 
 import BottomNav from "@/components/moodtail/BottomNav";
+import { SketchDefs } from "@/components/draw/Sketch";
 import { Toaster } from "@/components/ui/sonner";
 
 const FONT_HREF =
-  "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap";
+  "https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..700&family=Inter:wght@300;400;500;600;700&family=Caveat:wght@500;600&family=Cormorant+Garamond:ital,wght@0,400..600;1,400..600&display=swap";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" },
-      { name: "theme-color", content: "#12151A" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#F3F2EF" },
       { property: "og:site_name", content: "Vibetail" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -47,7 +43,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               "@type": "WebSite",
               name: "Vibetail",
               url: "https://vibetail.com",
-              description: "AI cocktail generator that turns your current vibe into a personalized drink.",
+              description:
+                "AI cocktail generator that turns your current vibe into a personalized drink.",
             },
           ],
         }),
@@ -67,47 +64,32 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <link rel="stylesheet" href={FONT_HREF} />
         <HeadContent />
       </head>
-      <body>{children}<Scripts /></body>
+      <body>
+        {children}
+        <Scripts />
+      </body>
     </html>
   );
 }
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  useEffect(() => { initAnalytics(); }, []);
+  const [figMode, setFigMode] = useState(false);
+  useEffect(() => {
+    initAnalytics();
+    if (window.location.hash.includes("figmacapture")) setFigMode(true);
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <LangProvider>
-        {/* Ambient breathing blobs — cool, quiet, dark-mode Mood Lab */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-          <div style={{
-            position: "absolute", top: "-10%", left: "-8%",
-            width: "60vw", height: "60vw", maxWidth: 520, maxHeight: 520,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(153,185,198,0.18) 0%, transparent 70%)",
-            filter: "blur(60px)",
-            animation: "liquid-blob-1 12s ease-in-out infinite",
-          }} />
-          <div style={{
-            position: "absolute", top: "25%", right: "-12%",
-            width: "55vw", height: "55vw", maxWidth: 480, maxHeight: 480,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(183,169,179,0.18) 0%, transparent 70%)",
-            filter: "blur(70px)",
-            animation: "liquid-blob-2 14s ease-in-out infinite",
-          }} />
-          <div style={{
-            position: "absolute", bottom: "-10%", left: "15%",
-            width: "50vw", height: "50vw", maxWidth: 440, maxHeight: 440,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(169,180,161,0.18) 0%, transparent 70%)",
-            filter: "blur(80px)",
-            animation: "liquid-blob-3 16s ease-in-out infinite",
-          }} />
+        {/* One shared rough-ink filter, referenced by every drawing. */}
+        <SketchDefs />
 
-        </div>
+        {/* Print grain over the whole sheet — the paper stock of the app.
+            Hidden during Figma capture: the snapshot rasterizes it badly. */}
+        {!figMode && <div className="grain-fixed" aria-hidden />}
 
-        <main className="flex-1 flex flex-col relative" style={{ zIndex: 1 }}>
+        <main className="relative flex min-h-svh flex-col" style={{ zIndex: 1 }}>
           <Outlet />
         </main>
         <BottomNav />

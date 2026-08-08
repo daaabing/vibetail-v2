@@ -55,7 +55,9 @@ async function loadPublishedMenu(merchantSlug: string, menuSlug: string) {
   if (!merchant) return null;
   const { data: menu } = await supabase
     .from("menus")
-    .select("id, slug, name, status, enabled_game_ids, published_version_id, menu_file_url, menu_file_type")
+    .select(
+      "id, slug, name, status, enabled_game_ids, published_version_id, menu_file_url, menu_file_type",
+    )
     .eq("merchant_id", merchant.id)
     .eq("slug", menuSlug)
     .eq("status", "published")
@@ -87,7 +89,10 @@ async function loadPublishedMenu(merchantSlug: string, menuSlug: string) {
   return { merchant, menu, items: mapped };
 }
 
-function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: string; user: string; names: string[] } {
+function buildPrompt(
+  input: MatchBody,
+  items: PublicMenuItem[],
+): { system: string; user: string; names: string[] } {
   const mood = input.mood?.trim() || "(no mood given)";
   const flavors = (input.selectedFlavors ?? []).join(", ") || "(no flavor tags)";
   const pref = input.customPreference?.trim() || "(no custom preference)";
@@ -95,20 +100,21 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
   const vibe = input.vibeReference ?? null;
   // Chinese output is ALWAYS the 吐槽/口语/内心OS style — that's the brand voice.
   const isLiterary = !isZh && vibe?.nameStyle === "literary" && Math.random() < 0.5;
-  const vibeBlock = isZh && vibe
-    ? [
-        ``,
-        `=== 中文起名语气参考（真实手写小酒馆菜单示例） ===`,
-        `参考名（仅作语气参考，禁止复用）: ${vibe.name}`,
-        `参考 tasting note（仅作语气参考）: ${vibe.tastesLike}`,
-        `参考 flavor 描述（仅作语气参考）: ${vibe.flavorProfile}`,
-        ``,
-        `【极其重要 - 主题隔离】参考条目只用来学"语气 / 节奏 / 句式"，绝对不要沿用参考条目的"主题 / 场景 / 关系对象 / 情绪对象"。`,
-        `例如：参考条目是恋爱 / 暧昧 / 前任 / 接盘 / 表白 / 分手类，但用户当下的 vibe 是失业 / 裁员 / 被优化 / 搬家 / 独处 / 学业 / 疲惫，那 vibeName 必须完全围绕用户当下的主题，绝对不能出现"恋爱 / 接盘 / 前任 / 暧昧 / 表白 / 分手 / 男友 / 女友 / 对象"这些参考条目里才有的词。反之亦然。`,
-        `vibeName 里出现的名词 / 场景 / 对象，必须来自"用户当下的 mood / flavor / preference"，不能来自"参考条目"。`,
-        ``,
-      ].join("\n")
-    : "";
+  const vibeBlock =
+    isZh && vibe
+      ? [
+          ``,
+          `=== 中文起名语气参考（真实手写小酒馆菜单示例） ===`,
+          `参考名（仅作语气参考，禁止复用）: ${vibe.name}`,
+          `参考 tasting note（仅作语气参考）: ${vibe.tastesLike}`,
+          `参考 flavor 描述（仅作语气参考）: ${vibe.flavorProfile}`,
+          ``,
+          `【极其重要 - 主题隔离】参考条目只用来学"语气 / 节奏 / 句式"，绝对不要沿用参考条目的"主题 / 场景 / 关系对象 / 情绪对象"。`,
+          `例如：参考条目是恋爱 / 暧昧 / 前任 / 接盘 / 表白 / 分手类，但用户当下的 vibe 是失业 / 裁员 / 被优化 / 搬家 / 独处 / 学业 / 疲惫，那 vibeName 必须完全围绕用户当下的主题，绝对不能出现"恋爱 / 接盘 / 前任 / 暧昧 / 表白 / 分手 / 男友 / 女友 / 对象"这些参考条目里才有的词。反之亦然。`,
+          `vibeName 里出现的名词 / 场景 / 对象，必须来自"用户当下的 mood / flavor / preference"，不能来自"参考条目"。`,
+          ``,
+        ].join("\n")
+      : "";
 
   const langRule = isZh
     ? [
@@ -202,7 +208,6 @@ function buildPrompt(input: MatchBody, items: PublicMenuItem[]): { system: strin
   };
 }
 
-
 export const Route = createFileRoute("/api/menu-match")({
   server: {
     handlers: {
@@ -222,7 +227,8 @@ export const Route = createFileRoute("/api/menu-match")({
 
         const loaded = await loadPublishedMenu(input.merchantSlug, input.menuSlug);
         if (!loaded) return new Response("Menu not found or not published", { status: 404 });
-        if (loaded.items.length === 0) return new Response("Menu has no active items", { status: 409 });
+        if (loaded.items.length === 0)
+          return new Response("Menu has no active items", { status: 409 });
 
         const gameId = input.gameId ?? "vibetail-mood";
         const enabled = loaded.menu.enabled_game_ids ?? [];
@@ -309,7 +315,10 @@ export const Route = createFileRoute("/api/menu-match")({
             validNames: loaded.items.map((i) => i.name),
           });
           return new Response(
-            JSON.stringify({ error: "Match failed. Please try again.", detail: `Unknown item: ${parsed.matchedName}` }),
+            JSON.stringify({
+              error: "Match failed. Please try again.",
+              detail: `Unknown item: ${parsed.matchedName}`,
+            }),
             { status: 502, headers: { "Content-Type": "application/json" } },
           );
         }
@@ -389,7 +398,8 @@ export const Route = createFileRoute("/api/menu-match")({
           whyThisMatch: parsed.whyThisMatch,
           menuItemImageUrl: menuItem.imageUrl ?? null,
           fullMenuUrl: (loaded.menu as { menu_file_url?: string | null }).menu_file_url ?? null,
-          fullMenuType: ((loaded.menu as { menu_file_type?: string | null }).menu_file_type ?? null) as "pdf" | "image" | null,
+          fullMenuType: ((loaded.menu as { menu_file_type?: string | null }).menu_file_type ??
+            null) as "pdf" | "image" | null,
         };
 
         return new Response(JSON.stringify(shaped), {
