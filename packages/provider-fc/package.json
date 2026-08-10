@@ -1,0 +1,12 @@
+{
+  "name": "@vibetail/provider-fc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@vibetail/sandbox-runtime": "workspace:*"
+  }
+}

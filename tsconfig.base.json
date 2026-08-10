@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "allowJs": false,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "paths": {
+      "@vibetail/agent-core": ["packages/agent-core/src/index.ts"],
+      "@vibetail/contracts": ["packages/contracts/src/index.ts"],
+      "@vibetail/model-providers": ["packages/model-providers/src/index.ts"],
+      "@vibetail/observability": ["packages/observability/src/index.ts"],
+      "@vibetail/provider-e2b": ["packages/provider-e2b/src/index.ts"],
+      "@vibetail/provider-fc": ["packages/provider-fc/src/index.ts"],
+      "@vibetail/restaurant-core": ["packages/restaurant-core/src/index.ts"],
+      "@vibetail/sandbox-runtime": ["packages/sandbox-runtime/src/index.ts"]
+    },
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2023",
+    "useDefineForClassFields": true,
+    "verbatimModuleSyntax": true
+  }
+}
