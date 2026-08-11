@@ -51,14 +51,14 @@ function SectionHead({
         />
       </div>
       <h2
-        className="hand text-[clamp(38px,6vw,70px)]"
+        className="hand text-[clamp(30px,3.4vw,50px)]"
         style={ink ? { color: "var(--paper)" } : undefined}
       >
         {title}
       </h2>
       {sub && (
         <p
-          className="note mt-4 max-w-2xl text-[19px]"
+          className="note mt-4 max-w-2xl text-[16.5px]"
           style={{ color: ink ? "rgba(242,237,225,0.72)" : "var(--ink-soft)" }}
         >
           {sub}
@@ -181,10 +181,13 @@ export default function LandingPage({ onMix }: { onMix?: () => void }) {
           >
             <div className="max-w-3xl">
               <h1
-                className="hand text-[clamp(38px,5vw,76px)]"
+                className="hand text-[clamp(34px,4.2vw,64px)]"
                 style={{ color: "rgba(246,245,242,0.97)" }}
               >
-                {"Meet the drink you didn't know how to "}
+                <em className="accent-italic" style={{ color: "rgba(246,245,242,0.97)" }}>
+                  Meet the drink
+                </em>
+                {" you didn't know how to "}
                 <em className="accent-italic" style={{ color: "rgba(246,245,242,0.97)" }}>
                   order
                 </em>
@@ -251,7 +254,7 @@ export default function LandingPage({ onMix }: { onMix?: () => void }) {
             {WHAT.points.map((p) => (
               <div key={p.no} style={{ borderTop: "1px solid var(--line)" }} className="pt-7">
                 <span className="specimen-no">{p.no.toUpperCase()}</span>
-                <h3 className="hand mt-6 text-[clamp(22px,2.2vw,28px)] leading-tight">
+                <h3 className="hand mt-6 text-[clamp(19px,1.7vw,24px)] leading-tight">
                   {pick(p.title, lang)}
                 </h3>
                 <p className="note mt-3 text-[15px]">{pick(p.body, lang)}</p>
@@ -297,7 +300,7 @@ export default function LandingPage({ onMix }: { onMix?: () => void }) {
                   {st.no}
                 </span>
                 <h3
-                  className="hand text-[clamp(24px,2.6vw,34px)] leading-none"
+                  className="hand text-[clamp(20px,1.9vw,26px)] leading-tight"
                   style={{ color: "var(--paper)" }}
                 >
                   {pick(st.title, lang)}
@@ -369,7 +372,7 @@ export default function LandingPage({ onMix }: { onMix?: () => void }) {
                 >
                   <div className="flex items-baseline gap-5">
                     <span className="specimen-no">No. {sp.no}</span>
-                    <h3 className="hand text-[clamp(22px,2vw,30px)] leading-none">
+                    <h3 className="hand text-[clamp(19px,1.7vw,24px)] leading-tight">
                       {pick(sp.name, lang)}
                     </h3>
                   </div>
@@ -406,71 +409,48 @@ export default function LandingPage({ onMix }: { onMix?: () => void }) {
             sub={pick(VENUES.body, lang)}
           />
 
-          {/* One simple flow — from the venue's QR to a keepsake card */}
-          <div className="mt-14 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+          {/* What the venue actually gets — three claims, each explained */}
+          <div className="mt-16 grid gap-x-12 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 no: "01",
-                title: "Scan the menu",
-                body: "Open Vibetail from the QR code at a participating venue. No app, no account.",
+                title: "Guests decide faster",
+                body: "No more staring at a list of names nobody recognises. A guest says what they're in the mood for and gets one confident answer from your list — so the table orders sooner and the bar keeps moving.",
               },
               {
                 no: "02",
-                title: "Say what you want",
-                body: "Your own words — \u201cfresh and herbal, not too sweet.\u201d No cocktail vocabulary needed.",
+                title: "Ordering and payment included",
+                body: "The match, the reason it fits and the checkout all happen in one flow on the guest's own phone. Nothing to install, no account, and no extra device behind the bar.",
               },
               {
                 no: "03",
-                title: "Choose, order, pay",
-                body: "A match from the actual menu, why it fits, and the order completed in one flow.",
+                title: "Printed cards drive recall",
+                body: "Every guest leaves with a personalised card of the drink they had, watermarked with your venue — the kind of thing that gets photographed, kept, and brought back by a friend.",
               },
-              {
-                no: "04",
-                title: "Print your keepsake",
-                body: "Leave with a personalised card of your drink — made to collect and share.",
-              },
-            ].map((st) => (
-              <div key={st.no} className="pt-7" style={{ borderTop: "1px solid var(--line)" }}>
-                <span className="specimen-no">{st.no}</span>
-                <h3 className="hand mt-5 text-[clamp(22px,2.2vw,28px)] leading-tight">{st.title}</h3>
-                <p className="note mt-3 text-[15px]">{st.body}</p>
+            ].map((f) => (
+              <div key={f.no} className="pt-7" style={{ borderTop: "1px solid var(--line-strong)" }}>
+                <span className="specimen-no">{f.no}</span>
+                <h3 className="hand mt-5 text-[clamp(21px,1.9vw,26px)] leading-tight">{f.title}</h3>
+                <p className="note mt-3 text-[15px]">{f.body}</p>
               </div>
             ))}
           </div>
 
-          {/* Proof, in one quiet row */}
-          <div className="mt-14 grid gap-x-10 gap-y-6 sm:grid-cols-3">
-            {[
-              ["Guests decide faster", "i"],
-              ["Ordering + payment included", "ii"],
-              ["Printed cards drive recall", "iii"],
-            ].map(([label, no]) => (
-              <div
-                key={no}
-                className="flex items-baseline gap-4 pt-4"
-                style={{ borderTop: "1px solid var(--line-strong)" }}
-              >
-                <span className="specimen-no" style={{ color: "var(--gold)" }}>
-                  {no.toUpperCase()}
-                </span>
-                <span className="note text-[15px]">{label}</span>
-              </div>
-            ))}
-          </div>
-
-          <p className="accent-italic mt-8 text-[19px]" style={{ color: "var(--ink-mute)" }}>
-            Simple menus can go live in about 30 minutes.
-          </p>
-
-          <div className="mt-12 flex flex-wrap items-center gap-5">
+          <div
+            className="mt-14 flex flex-wrap items-center gap-x-8 gap-y-5 pt-8"
+            style={{ borderTop: "1px solid var(--line)" }}
+          >
             <a
               className="btn btn-solid"
               href={`mailto:${BRAND.email}?subject=Vibetail%20for%20our%20menu`}
             >
               {"Book a walkthrough"}
             </a>
-            <span className="accent-italic text-[18px]" style={{ color: "var(--gold-deep)" }}>
+            <a className="link-ul note text-[15px]" href={`mailto:${BRAND.email}`}>
               {BRAND.email}
+            </a>
+            <span className="accent-italic ml-auto text-[20px]" style={{ color: "var(--ink-mute)" }}>
+              simple menus can go live in about 30 minutes
             </span>
           </div>
         </div>
@@ -505,7 +485,7 @@ export default function LandingPage({ onMix }: { onMix?: () => void }) {
                 {"One last thing"}
               </span>
               <h2
-                className="hand mt-5 text-[clamp(44px,8vw,96px)]"
+                className="hand mt-5 text-[clamp(32px,4.4vw,64px)]"
                 style={{ color: "var(--paper)" }}
               >
                 {"So — what are you drinking "}
@@ -513,7 +493,7 @@ export default function LandingPage({ onMix }: { onMix?: () => void }) {
                 {"?"}
               </h2>
               <p
-                className="note mt-6 max-w-xl text-[19px]"
+                className="note mt-6 max-w-xl text-[16px]"
                 style={{ color: "rgba(242,237,225,0.72)" }}
               >
                 {pick(BRAND.oneLiner, lang)}
@@ -559,16 +539,16 @@ function FaqRow({ q, a, first }: { q: string; a: string; first: boolean }) {
         className="flex w-full items-center justify-between gap-6 py-4 text-left"
         aria-expanded={open}
       >
-        <span className="hand text-[26px] leading-snug">{q}</span>
+        <span className="hand text-[19px] leading-snug">{q}</span>
         <span
-          className="hand shrink-0 text-[30px] leading-none transition-transform"
+          className="hand shrink-0 text-[24px] leading-none transition-transform"
           style={{ color: "var(--gold)", transform: open ? "rotate(45deg)" : "none" }}
           aria-hidden
         >
           +
         </span>
       </button>
-      {open && <p className="note pb-5 pr-10 text-[17px]">{a}</p>}
+      {open && <p className="note pb-5 pr-10 text-[15px]">{a}</p>}
     </div>
   );
 }
