@@ -1,6 +1,6 @@
 # 当前系统状态
 
-最后核对：2026-08-09（Phase 2.5 完成后）
+最后核对：2026-08-10（Railway deploy-readiness 与 Supabase public-read 验证后）
 
 本文记录仓库中**已经真实实现的能力**、**当前本地运行模式**以及**尚未接入的后端能力**。它用于避免把“已有 contract 或 adapter”误认为“已经连接生产服务”。如实现或部署状态改变，应同步更新本文。
 
@@ -18,7 +18,7 @@ React browser
   → DeterministicMatchingProvider
 ```
 
-因此，当前可以称为“真实 API 后端 + 本地确定性数据和匹配器”，不能称为“已连接生产 Supabase + 真实 AI 的生产后端”。fixture 数据和管理修改只存在于当前服务进程内，重启服务后会恢复。
+因此，当前可以称为“真实 API 后端 + 已验证的旧 Supabase public read + 确定性匹配器”，不能称为“完整 Supabase management + 真实 AI 的生产后端”。fixture 数据和 fixture 管理修改只存在于当前服务进程内，重启服务后会恢复。
 
 ## 已经完成的产品链路
 
@@ -103,7 +103,7 @@ MODEL_PROVIDER=deterministic
 SANDBOX_PROVIDER=local
 ```
 
-当前工作区没有配置 `.env`，所以正在运行的本地页面没有连接 Supabase、PostHog、远程模型、FC 或 E2B。
+当前工作区已在 gitignored `.env` 中配置旧 Supabase 的 URL 和 publishable key。真实只读 smoke 已验证 `/ready`、restaurant directory 和 Double Chicken Please published menu；没有配置 service-role key，因此真实 management API 安全返回 `503`，未执行数据库写入。PostHog、远程模型、FC 和 E2B 仍未连接。
 
 本地 fixture management token 是公开测试字符串，不是生产凭证。fixture repository 在服务端内存中可变，用于验证管理修改会影响匹配；重启 dev server 会恢复 `fixtures/restaurant/menus.json`。
 
@@ -111,7 +111,7 @@ SANDBOX_PROVIDER=local
 
 | 能力 | 仓库中已有 | 当前没有完成 |
 | --- | --- | --- |
-| Supabase public read | `SupabaseRestaurantRepository` | 未配置 credentials，未连接旧 Supabase，未对真实数据运行验证 |
+| Supabase public read | `SupabaseRestaurantRepository`、generated database types | 已用旧项目 publishable credentials 验证 2 个 published menus；尚未完成 staging 浏览器全流程验收 |
 | Supabase management write | server-only `SupabaseManagementRepository` | 未对 staging/production 执行写入，未验证真实 token/schema/RLS 兼容性 |
 | PostHog | `POSTHOG_KEY`、`POSTHOG_HOST` env schema | 没有 SDK、初始化、事件 taxonomy 或任何 `capture` 调用 |
 | Remote AI | `ModelProvider` contract 和 provider 名称/env validation | 没有 Vertex/Gemini/OpenAI/Alibaba live adapter；web composition 当前始终使用 deterministic provider |
@@ -125,9 +125,9 @@ SANDBOX_PROVIDER=local
 
 ### 数据与身份
 
-- 旧 Supabase project 的真实连接；
+- 旧 Supabase service-role management 连接；
 - staging 数据库验收；
-- 从真实 schema 重新生成 Supabase types；
+- 在 schema 变更后持续重新生成 Supabase types；
 - 审核后的 additive migration；
 - Supabase Auth；
 - merchant membership 和 RBAC；
@@ -160,7 +160,7 @@ preferences + server-built allowlist
 - management 安全事件；
 - consent/privacy 策略；
 - server traces、metrics、alerting 和 SLS integration；
-- 当前 `/ready` 只报告被选择的 repository 名称，没有执行真实外部依赖探测。
+- `/ready` 已执行真实 repository 探测；仍缺少持续 uptime monitoring、traces、metrics 和 alerts。
 
 ### Agent、Sandbox 与运维
 
@@ -173,13 +173,13 @@ preferences + server-built allowlist
 - `staging.vibetail.com` 和 `vibetail.com` DNS；
 - billing、team management、advanced analytics、custom domain、完整 CMS。
 
-## Supabase 接入前的建议顺序
+## Supabase 后续接入顺序
 
-1. 获取明确授权的 staging credentials，不直接使用生产 service role 做首次验证；
-2. 设为 `RESTAURANT_REPOSITORY=supabase`，先验证 public read；
-3. 对照旧 schema、RLS、`published_version_id` 和 token hash 格式；
-4. 运行 active/inactive、published/draft、sold-out/hidden、cross-menu 的真实数据测试；
-5. 再验证最小 management write，并准备可恢复数据；
+1. 已使用 publishable credentials 验证 public read；
+2. 对照旧 schema、RLS、`published_version_id` 和 token hash 格式；
+3. 运行 active/inactive、published/draft、sold-out/hidden、cross-menu 的真实数据测试；
+4. 获取明确授权的 server-only staging credential；
+5. 使用专门测试 merchant 验证最小 management write，并准备可恢复数据；
 6. 完成 staging 浏览器验收后，才讨论生产切换；
 7. 全程不自动 replay 旧 migrations/seeds，不修改 DNS。
 
@@ -203,7 +203,7 @@ item_availability_changed
 ## 明确未发生的操作
 
 - 没有修改旧 repository；
-- 没有连接或修改生产 Supabase；
+- 已连接旧 Supabase 做 publishable-key 只读验证，没有执行 management 或其他数据库写入；
 - 没有执行 production migration 或 seed；
 - 没有接入真实远程 AI；
 - 没有发送 PostHog 事件；

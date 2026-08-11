@@ -43,6 +43,69 @@ export interface ManagementService {
   ): Promise<ManagedMerchant>;
 }
 
+/** Keeps public Supabase reads available when the privileged management key is not configured. */
+export class UnavailableManagementService implements ManagementService {
+  async getManagedMerchant(token: string): Promise<ManagedMerchant> {
+    void token;
+    return managementUnavailable();
+  }
+
+  async updateMerchant(token: string, input: UpdateMerchantInput): Promise<ManagedMerchant> {
+    void token;
+    void input;
+    return managementUnavailable();
+  }
+
+  async listMenus(token: string): Promise<ManagedMenu[]> {
+    void token;
+    return managementUnavailable();
+  }
+
+  async createMenu(token: string, input: CreateMenuInput): Promise<ManagedMerchant> {
+    void token;
+    void input;
+    return managementUnavailable();
+  }
+
+  async updateMenu(token: string, menuId: string, input: UpdateMenuInput): Promise<ManagedMerchant> {
+    void token;
+    void menuId;
+    void input;
+    return managementUnavailable();
+  }
+
+  async publishMenu(token: string, menuId: string): Promise<ManagedMerchant> {
+    void token;
+    void menuId;
+    return managementUnavailable();
+  }
+
+  async createMenuItem(token: string, menuId: string, input: MenuItemInput): Promise<ManagedMerchant> {
+    void token;
+    void menuId;
+    void input;
+    return managementUnavailable();
+  }
+
+  async updateMenuItem(token: string, menuItemId: string, input: MenuItemInput): Promise<ManagedMerchant> {
+    void token;
+    void menuItemId;
+    void input;
+    return managementUnavailable();
+  }
+
+  async updateMenuItemAvailability(
+    token: string,
+    menuItemId: string,
+    input: UpdateAvailabilityInput,
+  ): Promise<ManagedMerchant> {
+    void token;
+    void menuItemId;
+    void input;
+    return managementUnavailable();
+  }
+}
+
 export class DefaultManagementService implements ManagementService {
   constructor(private readonly repository: ManagementRepository) {}
 
@@ -172,5 +235,16 @@ function forbidden(): ManagementServiceError {
   return new ManagementServiceError(
     { code: "FORBIDDEN", message: "This management action is not allowed.", retryable: false },
     403,
+  );
+}
+
+function managementUnavailable(): never {
+  throw new ManagementServiceError(
+    {
+      code: "INTERNAL_ERROR",
+      message: "Management is unavailable until the server-only Supabase service-role key is configured.",
+      retryable: false,
+    },
+    503,
   );
 }

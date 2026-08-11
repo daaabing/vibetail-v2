@@ -13,6 +13,7 @@ const serverEnvSchema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+    HOST: z.string().min(1),
     PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
     RESTAURANT_REPOSITORY: z.enum(["fixture", "supabase"]).default("fixture"),
     MODEL_PROVIDER: z.enum(["deterministic", "vertex", "gemini", "openai", "alibaba"]).default("deterministic"),
@@ -29,7 +30,7 @@ const serverEnvSchema = z
   })
   .superRefine((env, context) => {
     if (env.RESTAURANT_REPOSITORY === "supabase") {
-      requireFields(env, ["SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "SUPABASE_SERVICE_ROLE_KEY"], context);
+      requireFields(env, ["SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY"], context);
     }
     if (env.MODEL_PROVIDER !== "deterministic") {
       requireFields(env, ["MODEL_API_KEY", "MODEL_NAME"], context);
@@ -49,9 +50,17 @@ export function parseWebEnv(source: NodeJS.ProcessEnv): {
   publicEnv: WebPublicEnv;
   serverEnv: WebServerEnv;
 } {
+  const nodeEnv = source.NODE_ENV ?? "development";
+  const inferredRestaurantRepository =
+    source.RESTAURANT_REPOSITORY ??
+    (source.SUPABASE_URL && source.SUPABASE_PUBLISHABLE_KEY ? "supabase" : undefined);
   return {
     publicEnv: publicEnvSchema.parse(source),
-    serverEnv: serverEnvSchema.parse(source),
+    serverEnv: serverEnvSchema.parse({
+      ...source,
+      HOST: source.HOST ?? (nodeEnv === "production" ? "0.0.0.0" : "127.0.0.1"),
+      RESTAURANT_REPOSITORY: inferredRestaurantRepository,
+    }),
   };
 }
 

@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import type { Database } from "./database.types.js";
 import {
   RestaurantRepositoryUnavailableError,
   storedMenuItemSchema,
@@ -56,12 +57,12 @@ export interface SupabaseRestaurantRepositoryConfig {
 }
 
 export class SupabaseRestaurantRepository implements RestaurantRepository {
-  private readonly client: SupabaseClient;
+  private readonly client: SupabaseClient<Database>;
 
-  constructor(config: SupabaseRestaurantRepositoryConfig, client?: SupabaseClient) {
+  constructor(config: SupabaseRestaurantRepositoryConfig, client?: SupabaseClient<Database>) {
     this.client =
       client ??
-      createClient(config.url, config.publishableKey, {
+      createClient<Database>(config.url, config.publishableKey, {
         auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
       });
   }

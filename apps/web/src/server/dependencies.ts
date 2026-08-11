@@ -5,13 +5,21 @@ import {
   FixtureRestaurantRepository,
   SupabaseManagementRepository,
   SupabaseRestaurantRepository,
+  UnavailableManagementService,
   type ManagementService,
 } from "@vibetail/restaurant-core";
 import type { WebServerEnv } from "../env.js";
 
+export interface DependencyReadinessCheck {
+  name: string;
+  ready: boolean;
+  detail: string;
+}
+
 export interface WebDependencies {
   restaurantService: DefaultRestaurantService;
   managementService: ManagementService;
+  checkReadiness(): Promise<DependencyReadinessCheck[]>;
 }
 
 export function createWebDependencies(env: WebServerEnv): WebDependencies {
@@ -21,9 +29,14 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
     return {
       restaurantService: new DefaultRestaurantService(repository, provider),
       managementService: new DefaultManagementService(repository),
+      checkReadiness: async () => [{
+        name: "restaurant_repository",
+        ready: true,
+        detail: "fixture loaded",
+      }],
     };
   }
-  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY || !env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
     throw new Error("Validated Supabase configuration is unavailable");
   }
   const repository = new SupabaseRestaurantRepository({
@@ -31,12 +44,30 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
     publishableKey: env.SUPABASE_PUBLISHABLE_KEY,
   });
   const provider = new DeterministicMatchingProvider();
-  const managementRepository = new SupabaseManagementRepository({
-    url: env.SUPABASE_URL,
-    serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
-  });
+  const managementService = env.SUPABASE_SERVICE_ROLE_KEY
+    ? new DefaultManagementService(new SupabaseManagementRepository({
+        url: env.SUPABASE_URL,
+        serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
+      }))
+    : new UnavailableManagementService();
   return {
     restaurantService: new DefaultRestaurantService(repository, provider),
-    managementService: new DefaultManagementService(managementRepository),
+    managementService,
+    checkReadiness: async () => {
+      try {
+        const scopes = await repository.listPublishedRestaurantMenus();
+        return [{
+          name: "restaurant_repository",
+          ready: true,
+          detail: `supabase reachable; ${scopes.length} published menu(s) visible`,
+        }];
+      } catch {
+        return [{
+          name: "restaurant_repository",
+          ready: false,
+          detail: "supabase query failed",
+        }];
+      }
+    },
   };
 }

@@ -15,6 +15,26 @@ function app() {
 }
 
 describe("restaurant HTTP slice", () => {
+  it("reports liveness and dependency readiness", async () => {
+    expect((await request(app()).get("/health").expect(200)).body.status).toBe("ok");
+    expect((await request(app()).get("/ready").expect(200)).body).toMatchObject({
+      status: "ready",
+      checks: [{ name: "restaurant_repository", ready: true, detail: "fixture" }],
+    });
+  });
+
+  it("fails readiness closed when a required dependency is unavailable", async () => {
+    const repository = new FixtureRestaurantRepository();
+    const unavailable = createWebApp({
+      restaurantService: new DefaultRestaurantService(repository, new DeterministicMatchingProvider()),
+      managementService: new DefaultManagementService(repository),
+      dataSource: "fixture",
+      checkReadiness: async () => [{ name: "restaurant_repository", ready: false, detail: "unavailable" }],
+      testFrontend: true,
+    });
+    expect((await request(unavailable).get("/ready").expect(503)).body.status).toBe("not_ready");
+  });
+
   it("serves the landing SPA route and active restaurant directory", async () => {
     expect((await request(app()).get("/").expect(200)).text).toContain('<div id="root"></div>');
     const directory = await request(app()).get("/v1/restaurants").expect(200);

@@ -8,6 +8,21 @@ import type {
   UpdateMerchantInput,
 } from "@vibetail/contracts";
 import type { ManagementRepository, StoredRestaurant } from "../types.js";
+import type { Database, TablesUpdate } from "./database.types.js";
+
+type MenuItemWrite = Pick<
+  Database["public"]["Tables"]["menu_items"]["Insert"],
+  | "name"
+  | "section"
+  | "ingredients"
+  | "base_spirit"
+  | "alcoholic"
+  | "description"
+  | "image_url"
+  | "flavor_tags"
+  | "mood_tags"
+  | "allergens"
+>;
 
 export interface SupabaseManagementRepositoryConfig {
   url: string;
@@ -16,10 +31,10 @@ export interface SupabaseManagementRepositoryConfig {
 
 /** Server-only compatibility adapter for the legacy private-token management flow. */
 export class SupabaseManagementRepository implements ManagementRepository {
-  private readonly client: SupabaseClient;
+  private readonly client: SupabaseClient<Database>;
 
-  constructor(config: SupabaseManagementRepositoryConfig, client?: SupabaseClient) {
-    this.client = client ?? createClient(config.url, config.serviceRoleKey, {
+  constructor(config: SupabaseManagementRepositoryConfig, client?: SupabaseClient<Database>) {
+    this.client = client ?? createClient<Database>(config.url, config.serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
     });
   }
@@ -70,7 +85,9 @@ export class SupabaseManagementRepository implements ManagementRepository {
         shortIntro: menu.short_intro ? String(menu.short_intro) : null,
         coverImageUrl: menu.cover_image_url ? String(menu.cover_image_url) : null,
         fullMenuUrl: menu.menu_file_url ? String(menu.menu_file_url) : null,
-        fullMenuType: menu.menu_file_type === "pdf" || menu.menu_file_type === "image" ? menu.menu_file_type : null,
+        fullMenuType: menu.menu_file_type === "pdf" || menu.menu_file_type === "image"
+          ? menu.menu_file_type as "pdf" | "image"
+          : null,
         items: (itemsResult.data ?? []).map((item) => ({
           id: String(item.id), name: String(item.name),
           description: item.description ? String(item.description) : null,
@@ -115,7 +132,7 @@ export class SupabaseManagementRepository implements ManagementRepository {
 
   async updateMenu(merchantId: string, menuId: string, input: UpdateMenuInput): Promise<void> {
     await this.requireMenuOwner(merchantId, menuId);
-    const update: Record<string, unknown> = {
+    const update: TablesUpdate<"menus"> = {
       name: input.name, slug: input.slug, short_intro: input.shortIntro,
     };
     if (input.status) update.status = input.status;
@@ -181,12 +198,13 @@ export class SupabaseManagementRepository implements ManagementRepository {
   }
 }
 
-function itemWrite(input: MenuItemInput): Record<string, unknown> {
+function itemWrite(input: MenuItemInput): MenuItemWrite {
   return {
     name: input.name, section: input.section, ingredients: input.ingredients,
     base_spirit: input.baseSpirit, alcoholic: input.alcoholic,
-    description: input.description, image_url: input.imageUrl,
+    description: input.description ?? "", image_url: input.imageUrl,
     flavor_tags: input.flavorTags, mood_tags: input.moodTags,
+    allergens: input.allergens,
   };
 }
 

@@ -82,11 +82,13 @@ Manual state URLs:
 - merchant missing: `/m/missing/main`
 - merchant inactive: `/m/inactive-restaurant/main`
 
-Set `RESTAURANT_REPOSITORY=supabase` only with valid `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and server-only `SUPABASE_SERVICE_ROLE_KEY`. Public reads use the publishable client. Management writes use a separately composed server-only repository; they never run migrations or seeds.
+Set `RESTAURANT_REPOSITORY=supabase` with valid `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`. Public reads use the publishable client and continue to work without a privileged key. Add the server-only `SUPABASE_SERVICE_ROLE_KEY` only when the legacy management flow is intentionally enabled; otherwise management APIs fail closed with `503`. These adapters never run migrations or seeds.
 
 ## Domain and deployment sequence
 
 `/` is the route intended to become `https://vibetail.com`. During acceptance it stays on localhost or a Railway preview URL. After product acceptance, the next step is `staging.vibetail.com`; the apex `vibetail.com` is switched only after staging acceptance. Phase 2.5 makes no deployment or DNS changes.
+
+The repository now includes a Railway staging configuration at [`railway.toml`](railway.toml). It builds the full workspace, starts the compiled Node server directly, and uses `/health` for deployment gating. Exact variables and online verification steps are documented in [`docs/operations/deployment.md`](docs/operations/deployment.md).
 
 The private-token management flow is a deliberately narrow demo compatibility layer. Tokens are verified server-side, omitted from application logs, and authorize exactly one merchant. The long-term replacement is Supabase Auth plus merchant membership/RBAC; do not add team, billing, analytics, CMS, custom-domain, or broader token permissions to this adapter.
 

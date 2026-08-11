@@ -31,16 +31,40 @@ if (serverEnv.NODE_ENV === "production") {
   app.use(vite.middlewares);
 }
 
-app.listen(serverEnv.PORT, "127.0.0.1", () => {
+const server = app.listen(serverEnv.PORT, serverEnv.HOST, () => {
   console.log(
     JSON.stringify({
       timestamp: new Date().toISOString(),
       level: "info",
       service: "web",
       event: "server_started",
-      url: `http://127.0.0.1:${serverEnv.PORT}`,
+      host: serverEnv.HOST,
+      port: serverEnv.PORT,
       restaurant_data_source: serverEnv.RESTAURANT_REPOSITORY,
       model_provider: serverEnv.MODEL_PROVIDER,
     }),
   );
 });
+
+for (const signal of ["SIGTERM", "SIGINT"] as const) {
+  process.once(signal, () => {
+    console.log(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      level: "info",
+      service: "web",
+      event: "server_stopping",
+      signal,
+    }));
+    server.close((error) => {
+      if (error) {
+        console.error(JSON.stringify({
+          timestamp: new Date().toISOString(),
+          level: "error",
+          service: "web",
+          event: "server_stop_failed",
+        }));
+        process.exitCode = 1;
+      }
+    });
+  });
+}

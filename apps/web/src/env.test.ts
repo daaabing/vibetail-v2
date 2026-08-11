@@ -14,6 +14,13 @@ describe("web environment", () => {
     const parsed = parseWebEnv(localEnv);
     expect(parsed.serverEnv.RESTAURANT_REPOSITORY).toBe("fixture");
     expect(parsed.serverEnv.MODEL_PROVIDER).toBe("deterministic");
+    expect(parsed.serverEnv.HOST).toBe("127.0.0.1");
+  });
+
+  it("binds production to all container interfaces by default", () => {
+    expect(parseWebEnv({ ...localEnv, NODE_ENV: "production" }).serverEnv.HOST).toBe("0.0.0.0");
+    expect(parseWebEnv({ ...localEnv, NODE_ENV: "production", HOST: "127.0.0.1" }).serverEnv.HOST)
+      .toBe("127.0.0.1");
   });
 
   it("fails clearly when a selected provider lacks credentials", () => {
@@ -23,6 +30,18 @@ describe("web environment", () => {
     expect(() => parseWebEnv({ ...localEnv, RESTAURANT_REPOSITORY: "supabase" })).toThrow(
       /SUPABASE_URL/,
     );
+  });
+
+  it("selects Supabase automatically when the existing public credentials are present", () => {
+    const parsed = parseWebEnv({
+      APP_URL: localEnv.APP_URL,
+      MODEL_PROVIDER: localEnv.MODEL_PROVIDER,
+      SANDBOX_PROVIDER: localEnv.SANDBOX_PROVIDER,
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_PUBLISHABLE_KEY: "publishable-key",
+    });
+    expect(parsed.serverEnv.RESTAURANT_REPOSITORY).toBe("supabase");
+    expect(parsed.serverEnv.SUPABASE_SERVICE_ROLE_KEY).toBeUndefined();
   });
 
   it("does not expose server secrets through public config", () => {

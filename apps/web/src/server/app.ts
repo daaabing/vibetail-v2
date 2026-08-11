@@ -23,6 +23,7 @@ export interface WebAppOptions {
   restaurantService: DefaultRestaurantService;
   managementService: ManagementService;
   dataSource: "fixture" | "supabase";
+  checkReadiness?: () => Promise<Array<{ name: string; ready: boolean; detail: string }>>;
   testFrontend?: boolean;
 }
 
@@ -35,14 +36,21 @@ export function createWebApp(options: WebAppOptions): Express {
     response.json({ status: "ok", service: "web", timestamp: new Date().toISOString() });
   });
 
-  app.get("/ready", (_request, response) => {
-    response.json({
-      status: "ready",
-      service: "web",
-      checks: [{ name: "restaurant_repository", ready: true, detail: options.dataSource }],
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get(
+    "/ready",
+    asyncRoute(async (_request, response) => {
+      const checks = options.checkReadiness
+        ? await options.checkReadiness()
+        : [{ name: "restaurant_repository", ready: true, detail: options.dataSource }];
+      const ready = checks.every((check) => check.ready);
+      response.status(ready ? 200 : 503).json({
+        status: ready ? "ready" : "not_ready",
+        service: "web",
+        checks,
+        timestamp: new Date().toISOString(),
+      });
+    }),
+  );
 
   app.get(
     "/v1/restaurants",

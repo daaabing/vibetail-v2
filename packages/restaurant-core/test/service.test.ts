@@ -2,7 +2,7 @@ import type { RestaurantMatchRequest } from "@vibetail/contracts";
 import { DeterministicMatchingProvider, type ModelProvider, type RestaurantModelRequest } from "@vibetail/model-providers";
 import { describe, expect, it, vi } from "vitest";
 import { FixtureRestaurantRepository } from "../src/repositories/fixture.js";
-import { DefaultManagementService } from "../src/management-service.js";
+import { DefaultManagementService, UnavailableManagementService } from "../src/management-service.js";
 import { DefaultRestaurantService, RestaurantServiceError } from "../src/service.js";
 
 const request: RestaurantMatchRequest = {
@@ -132,6 +132,14 @@ describe("DefaultRestaurantService", () => {
 });
 
 describe("DefaultManagementService", () => {
+  it("reports management as unavailable when only public Supabase credentials are configured", async () => {
+    await expect(new UnavailableManagementService().getManagedMerchant("any-token"))
+      .rejects.toMatchObject({
+        httpStatus: 503,
+        detail: { code: "INTERNAL_ERROR", retryable: false },
+      });
+  });
+
   it("requires a valid private fixture token", async () => {
     const service = new DefaultManagementService(new FixtureRestaurantRepository());
     await expect(service.getManagedMerchant("not-a-valid-token")).rejects.toMatchObject({
