@@ -20,33 +20,24 @@ interface Art {
 const SCENE = "0 0 120 100";
 
 const MOOD_ART: Record<string, Art> = {
-  // Rain past the window, a coupe left on the sill
+  // A rain cloud, mid-downpour
   rain: {
     box: SCENE,
     d: (
       <>
-        <path d="M16 8 H104 V60" />
-        <path d="M16 8 V60" />
-        <path d="M60 8 V60 M16 34 H104" strokeWidth="1.6" />
-        <path d="M26 18 l-5 13 M40 15 l-5 15 M74 17 l-5 14 M90 14 l-5 16" strokeWidth="1.6" />
-        <path d="M6 60 H114" />
-        <path d="M40 56 c 2 18, 34 18, 36 0 Z" />
-        <path d="M58 74 V86" />
-        <path d="M46 88 H70" />
+        <path d="M30 48 h58 a11 11 0 0 0 3 -22 a17 17 0 0 0 -33 -9 a15 15 0 0 0 -27 12 a10 10 0 0 0 -1 19 Z" />
+        <path d="M38 60 l-6 16 M56 60 l-6 16 M74 60 l-6 16 M90 58 l-6 16" strokeWidth="1.8" />
       </>
     ),
   },
-  // The laptop still open, a drink beside it
+  // Just the laptop, still open
   laptop: {
     box: SCENE,
     d: (
       <>
-        <path d="M18 24 H66 V58 H18 Z" />
-        <path d="M10 58 H74 l-6 10 H16 Z" />
-        <path d="M28 34 H54 M28 43 H46" strokeWidth="1.6" />
-        <path d="M86 40 H110 L106 76 H90 Z" />
-        <path d="M86 52 c 6 3, 18 -3, 24 0" strokeWidth="1.6" />
-        <path d="M98 34 V26" strokeWidth="1.6" />
+        <path d="M28 22 H92 V62 H28 Z" />
+        <path d="M18 62 H102 L94 76 H26 Z" />
+        <path d="M40 36 H80 M40 46 H68" strokeWidth="1.6" />
       </>
     ),
   },
@@ -65,138 +56,121 @@ const MOOD_ART: Record<string, Art> = {
       </>
     ),
   },
-  // A glass knocked over, a heart with a fault line through it
+  // A broken heart, nothing else
   heartbreak: {
     box: SCENE,
     d: (
       <>
-        <path d="M30 40 c -14 -12, 6 -30, 16 -18 c 10 -12, 30 6, 16 18 c -6 6, -12 12, -16 16 c -4 -4, -10 -10, -16 -16 Z" />
-        <path d="M46 22 l-5 9 l8 5 l-6 9" strokeWidth="1.6" />
-        <path d="M74 46 c 16 4, 22 26, 8 32 l-24 8 c -14 4, -22 -14, -10 -22 Z" />
-        <path d="M96 72 l14 6" strokeWidth="1.6" />
-        <path d="M50 92 c 14 -6, 34 -6, 48 0" strokeWidth="1.6" />
+        <path d="M60 84 C 42 68, 22 52, 22 34 C 22 18, 40 12, 52 22 L60 30 L68 22 C 80 12, 98 18, 98 34 C 98 52, 78 68, 60 84 Z" />
+        <path d="M60 30 l-7 12 l10 8 l-8 12 l6 9" strokeWidth="1.8" />
       </>
     ),
   },
-  // Sun clearing the roofline, a tall glass in front of it
+  // Friday's sun
   sun: {
     box: SCENE,
     d: (
       <>
-        <circle cx="70" cy="38" r="18" />
+        <circle cx="60" cy="46" r="22" />
         <path
-          d="M70 12 v-8 M70 64 v8 M44 38 h-8 M96 38 h8 M52 20 l-6 -6 M88 20 l6 -6 M52 56 l-6 6 M88 56 l6 6"
+          d="M60 14 v-10 M60 78 v10 M28 46 h-10 M92 46 h10 M38 24 l-8 -8 M82 24 l8 -8 M38 68 l-8 8 M82 68 l8 8"
           strokeWidth="1.6"
         />
-        <path d="M6 76 H114" />
-        <path d="M22 32 H46 L42 76 H26 Z" />
-        <path d="M22 46 c 6 3, 18 -3, 24 0" strokeWidth="1.6" />
       </>
     ),
   },
-  // The phone turned over on the bar, next to a drink
+  // The reply that hasn't come — a message bubble, typing
   phone: {
     box: SCENE,
     d: (
       <>
-        <path d="M18 52 L52 40 c 4 -2, 8 0, 9 4 l 8 22 c 2 4, 0 8, -4 9 L30 88 c -4 2, -8 0, -9 -4 L14 62 c -2 -5, 0 -8, 4 -10 Z" />
-        <path d="M28 52 l24 -8" strokeWidth="1.4" />
-        <path d="M78 30 c 2 18, 32 18, 34 0 Z" />
-        <path d="M95 48 V66 M85 68 H105" />
-        <path d="M95 14 V6 M84 18 l-6 -6" strokeWidth="1.4" />
+        <path d="M38 22 h44 a14 14 0 0 1 14 14 v14 a14 14 0 0 1 -14 14 H56 l-16 16 v-16 h-2 a14 14 0 0 1 -14 -14 v-14 a14 14 0 0 1 14 -14 Z" />
+        <circle cx="46" cy="43" r="3" strokeWidth="1.8" />
+        <circle cx="60" cy="43" r="3" strokeWidth="1.8" />
+        <circle cx="74" cy="43" r="3" strokeWidth="1.8" />
       </>
     ),
   },
-  // Sofa, blanket, a glass on the arm
+  // Just the couch
   couch: {
     box: SCENE,
     d: (
       <>
-        <path d="M20 56 v-10 a7 7 0 0 1 7 -7 h50 a7 7 0 0 1 7 7 v10" />
-        <path d="M12 58 h82 v22 H12 Z" />
-        <path d="M20 80 v8 M86 80 v8" />
-        <path d="M36 58 v-19 M70 58 v-19" strokeWidth="1.6" />
-        <path d="M96 40 H114 L110 62 H100 Z" />
-        <path d="M96 50 c 5 2, 13 -2, 18 0" strokeWidth="1.4" />
+        <path d="M24 54 v-12 a8 8 0 0 1 8 -8 h56 a8 8 0 0 1 8 8 v12" />
+        <path d="M14 56 h92 v24 H14 Z" />
+        <path d="M24 80 v8 M96 80 v8" />
+        <path d="M44 56 v-20 M76 56 v-20" strokeWidth="1.6" />
       </>
     ),
   },
-  // The cork leaves the bottle
+  // A party popper going off
   confetti: {
     box: SCENE,
     d: (
       <>
-        <path d="M20 88 c -8 -10, -6 -34, 6 -44 l 6 -6 c 4 -4, 4 -12, 2 -16 l 14 -8 c 4 4, 10 6, 16 4 l 4 6 c 4 8, 0 16, -8 20 l -8 4 c -14 8, -24 30, -22 42 Z" />
-        <path d="M62 18 l 12 -8" strokeWidth="1.8" />
-        <path d="M84 12 a7 7 0 1 1 12 6 a7 7 0 0 1 -12 -6 Z" />
-        <path d="M78 34 l 14 4 M84 48 l 16 -2 M74 24 l 8 -12 M100 26 l 10 -6" strokeWidth="1.6" />
-        <path d="M92 56 c 2 16, 22 16, 24 0 Z" strokeWidth="1.8" />
-        <path d="M104 72 V84 M96 86 H112" strokeWidth="1.8" />
+        <path d="M26 88 L52 50 L74 70 Z" />
+        <path d="M40 76 L60 60" strokeWidth="1.4" />
+        <path d="M60 42 l8 -14 M72 50 l14 -8 M80 62 l16 -2" strokeWidth="1.8" />
+        <circle cx="74" cy="20" r="3" strokeWidth="1.6" />
+        <circle cx="94" cy="36" r="3" strokeWidth="1.6" />
+        <circle cx="100" cy="56" r="2.5" strokeWidth="1.6" />
+        <path d="M52 34 c 6 -10, 16 -8, 18 0" strokeWidth="1.5" />
       </>
     ),
   },
-  // A late moon behind the glass
+  // A late crescent
   moon: {
     box: SCENE,
     d: (
       <>
-        <path d="M84 14 A30 30 0 1 0 84 74 A24 24 0 1 1 84 14 Z" />
-        <path d="M22 26 c 2 20, 34 20, 36 0 Z" />
-        <path d="M40 46 V64 M30 66 H50" />
-        <path d="M14 16 l0 8 M10 20 l8 0 M100 82 l0 6 M97 85 l6 0" strokeWidth="1.5" />
+        <path d="M74 10 A34 34 0 1 0 74 78 A27 27 0 1 1 74 10 Z" />
+        <path d="M28 22 v8 M24 26 h8 M94 64 v6 M91 67 h6" strokeWidth="1.6" />
       </>
     ),
   },
-  // Coffee to the left, the shaker still to come
+  // One coffee too many
   coffee: {
     box: SCENE,
     d: (
       <>
-        <path d="M16 34 H50 L45 84 H21 Z" />
-        <path d="M13 34 H53" />
-        <path d="M26 22 c 5 -6, -5 -10, 0 -16 M40 22 c 5 -6, -5 -10, 0 -16" strokeWidth="1.6" />
-        <path d="M72 36 H106 L102 84 H76 Z" />
-        <path d="M70 36 H108 V28 H70 Z" />
-        <path d="M78 28 V20 h22 v8" />
-        <path d="M74 54 H104" strokeWidth="1.5" />
+        <path d="M38 36 H82 L77 88 H43 Z" />
+        <path d="M34 36 H86" />
+        <path d="M52 26 c 5 -6, -5 -10, 0 -16 M68 26 c 5 -6, -5 -10, 0 -16" strokeWidth="1.6" />
       </>
     ),
   },
-  // Something lit on top of the glass
+  // A single flame
   fire: {
     box: SCENE,
     d: (
       <>
-        <path d="M60 42 C 46 34, 48 16, 60 6 C 60 16, 68 16, 66 4 C 78 12, 82 30, 70 40" />
-        <path d="M60 34 c -5 -3, -5 -10, 0 -14 c 5 4, 5 11, 0 14 Z" strokeWidth="1.6" />
-        <path d="M40 46 H82 L76 86 H46 Z" />
-        <path d="M40 60 c 8 4, 26 -4, 36 0" strokeWidth="1.6" />
-        <path d="M24 70 l-12 -6 M98 70 l12 -6" strokeWidth="1.5" />
+        <path d="M60 88 C 38 78, 33 54, 47 36 C 51 48, 60 50, 58 34 C 56 20, 66 12, 72 6 C 70 18, 82 24, 84 40 C 88 62, 80 80, 60 88 Z" />
+        <path d="M60 74 c -8 -6, -8 -18, 0 -26 c 8 8, 8 20, 0 26 Z" strokeWidth="1.6" />
       </>
     ),
   },
-  // The thought that keeps going round, rising off the glass
+  // The brain that won't stop
   spiral: {
     box: SCENE,
     d: (
       <>
-        <path d="M62 32 a4 4 0 1 1 -6 -3 a11 11 0 1 1 13 13 a19 19 0 1 1 -24 -22" />
-        <path d="M42 58 H80 L75 88 H47 Z" />
-        <path d="M42 70 c 8 4, 24 -4, 33 0" strokeWidth="1.6" />
+        <path d="M60 14 C 46 6, 28 14, 26 30 C 14 34, 14 52, 24 58 C 22 72, 36 82, 50 78 C 56 86, 70 86, 76 78 C 90 82, 102 70, 98 56 C 108 48, 104 30, 92 26 C 90 12, 72 6, 60 14 Z" />
+        <path d="M60 14 V 82" strokeWidth="1.6" />
+        <path d="M42 32 c 8 0, 10 8, 4 12 M78 34 c -8 2, -8 10, -2 12 M38 54 c 8 -2, 12 4, 8 10 M82 56 c -8 0, -10 8, -4 12" strokeWidth="1.4" />
       </>
     ),
   },
-  // A ball turning above the coupe
+  // The disco ball
   disco: {
     box: SCENE,
     d: (
       <>
-        <circle cx="60" cy="28" r="18" />
-        <path d="M42 28 h36 M60 10 v36 M47 15 L73 41 M73 15 L47 41" strokeWidth="1.4" />
-        <path d="M60 10 V0" />
-        <path d="M32 52 c 2 20, 54 20, 56 0 Z" />
-        <path d="M60 72 V86 M48 88 H72" />
-        <path d="M28 44 l-10 6 M92 44 l10 6" strokeWidth="1.4" />
+        <path d="M60 2 V12" />
+        <circle cx="60" cy="46" r="32" />
+        <path d="M28 46 h64 M60 14 v64" strokeWidth="1.4" />
+        <path d="M36 26 a46 46 0 0 0 48 0 M36 66 a46 46 0 0 1 48 0" strokeWidth="1.4" />
+        <path d="M44 17 c -8 18, -8 40, 0 58 M76 17 c 8 18, 8 40, 0 58" strokeWidth="1.4" />
+        <path d="M100 18 v8 M96 22 h8" strokeWidth="1.6" />
       </>
     ),
   },
@@ -218,25 +192,21 @@ const MOOD_ART: Record<string, Art> = {
     box: SCENE,
     d: (
       <>
-        <circle cx="70" cy="40" r="26" />
-        <path d="M70 24 v16 l11 7" />
-        <path d="M52 16 l-7 -7 M88 16 l7 -7" strokeWidth="1.6" />
-        <path d="M14 40 H44 L40 84 H18 Z" />
-        <path d="M14 54 c 7 4, 22 -4, 30 0" strokeWidth="1.6" />
+        <circle cx="60" cy="48" r="30" />
+        <path d="M60 30 v18 l13 8" />
+        <path d="M38 22 l-8 -8 M82 22 l8 -8" strokeWidth="1.6" />
       </>
     ),
   },
-  // The face you put on, propped against the glass
+  // The face you put on
   mask: {
     box: SCENE,
     d: (
       <>
-        <path d="M22 24 H74 V44 C74 60, 62 68, 48 68 C34 68, 22 60, 22 44 Z" />
-        <path d="M34 40 h8 M54 40 h8" strokeWidth="2.4" />
-        <path d="M40 52 c 5 5, 13 5, 18 0" strokeWidth="1.8" />
-        <path d="M48 68 v22" />
-        <path d="M84 44 H112 L108 86 H88 Z" />
-        <path d="M84 58 c 7 4, 20 -4, 28 0" strokeWidth="1.6" />
+        <path d="M34 18 H86 V44 C86 62, 74 72, 60 72 C46 72, 34 62, 34 44 Z" />
+        <path d="M46 38 h8 M66 38 h8" strokeWidth="2.4" />
+        <path d="M50 52 c 5 5, 15 5, 20 0" strokeWidth="1.8" />
+        <path d="M60 72 v20" />
       </>
     ),
   },

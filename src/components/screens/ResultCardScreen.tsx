@@ -135,52 +135,26 @@ const FRAME_STYLES: FrameStyle[] = [
   },
 ];
 
-/** A guest already in the glass — drawn over the drink, the way the
-    drummer sits over the hero photograph. Sunglasses, a spare coupe,
-    zero apologies. */
-function PerchedGuest({ style }: { style?: CSSProperties }) {
-  return (
-    <svg
-      viewBox="0 0 220 210"
-      style={{ overflow: "visible", ...style }}
-      aria-hidden
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <g filter={ROUGH}>
-        {/* body */}
-        <path d="M72 122 C 66 96, 92 78, 128 84 C 162 90, 176 114, 162 138 C 148 160, 100 164, 80 148 C 72 141, 70 132, 72 122 Z" />
-        {/* speckles */}
-        <path d="M132 112 l7 -3 M142 124 l7 -3 M128 130 l7 -3 M146 108 l6 -3" strokeWidth="2.2" />
-        {/* neck */}
-        <path d="M88 96 C 80 74, 84 54, 98 42" />
-        <path d="M102 100 C 96 78, 99 62, 108 48" />
-        {/* head */}
-        <path d="M98 42 C 100 30, 116 26, 122 36 C 126 44, 118 52, 108 48" />
-        {/* crest */}
-        <path d="M104 30 l-2 -9 M112 28 l2 -9" strokeWidth="2.4" />
-        {/* beak */}
-        <path d="M98 38 L 74 45 L 99 50" />
-        {/* sunglasses */}
-        <circle cx="108" cy="39" r="5.5" strokeWidth="2.4" />
-        <circle cx="120" cy="41" r="5.5" strokeWidth="2.4" />
-        <path d="M113.5 40 h1.5" strokeWidth="2.4" />
-        {/* wing up, holding a spare coupe */}
-        <path d="M84 112 C 62 106, 48 94, 52 80 C 58 84, 66 86, 74 86" />
-        <path d="M52 80 C 46 72, 46 64, 50 58" strokeWidth="2.4" />
-        {/* the spare coupe */}
-        <path d="M34 52 h26 l-9 12 h-8 Z" strokeWidth="2.4" />
-        <path d="M47 64 v10 M39 76 h16" strokeWidth="2.4" />
-        {/* legs into the glass */}
-        <path d="M116 162 C 115 176, 114 188, 114 198" />
-        <path d="M134 158 C 134 172, 133 184, 133 196" />
-        <path d="M114 198 l12 5 M133 196 l12 4" strokeWidth="2.4" />
-      </g>
-    </svg>
-  );
+/* ── The brand's line-drawn guests. One is picked per drink (stable by
+   serial) and drawn onto the drink, black ink on the paper card. Art is
+   white line-work from the Figma brand board, inverted via CSS filter. ── */
+const CARD_GUESTS = [
+  // lounging in the glass, bottles mid-air
+  { src: "/brand/ill-party.png", width: "42%", left: "50%", top: "1%", tx: "-46%", rotate: 0 },
+  // legs kicked over the rim
+  { src: "/brand/ill-legs.png", width: "28%", left: "54%", top: "16%", tx: "0%", rotate: 8 },
+  // a face leaning in for a sip
+  { src: "/brand/ill-face.png", width: "36%", left: "8%", top: "22%", tx: "0%", rotate: -4 },
+  // a hand presenting the drink
+  { src: "/brand/ill-hand-open.png", width: "46%", left: "50%", top: "58%", tx: "-58%", rotate: -8 },
+  // two tiny guests sitting on the rim
+  { src: "/brand/ill-sitters.png", width: "36%", left: "32%", top: "12%", tx: "0%", rotate: 0 },
+] as const;
+
+function guestForSerial(serial: string) {
+  let h = 0;
+  for (const ch of serial) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return CARD_GUESTS[h % CARD_GUESTS.length];
 }
 
 /* ── The card — a note taped up on the wall behind the bar ── */
@@ -207,6 +181,7 @@ function SpecimenCard({
   // background out so the glass sits on the paper. Otherwise the AI
   // illustration, and failing that a drawn glass.
   const photo = cocktail.menuItemImageUrl ?? illustration;
+  const guest = guestForSerial(serial);
 
   return (
     <article
@@ -236,70 +211,70 @@ function SpecimenCard({
         </p>
       </div>
 
-      {/* ── The drawing, given the whole field — and a guest already
-             sitting in the glass, drawn over the drink ── */}
+      {/* ── The drink, centered in a unified slot, with the house guest
+             drawn onto it ── */}
       <div
-        className="relative mx-auto mt-2 flex items-end justify-center px-9 pb-6"
-        style={{ width: "100%", aspectRatio: "5/4" }}
+        className="relative mx-auto mt-2 flex items-center justify-center px-10"
+        style={{ width: "100%", aspectRatio: "1/1", maxHeight: 380 }}
       >
-        {photo ? (
-          <>
+        <div className="relative flex h-full w-full items-center justify-center">
+          {photo ? (
             <img
               src={photo}
               alt={cocktail.cocktailName}
               className="drink-cutout max-h-full max-w-full"
               style={{ objectFit: "contain" }}
             />
-            <PerchedGuest
-              style={{
-                position: "absolute",
-                width: "40%",
-                left: "50%",
-                top: "-6%",
-                transform: "translateX(-52%)",
-                color: "var(--ink)",
-              }}
-            />
-          </>
-        ) : imageLoading ? (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-4 self-center">
-            <div className="shimmer h-28 w-28 rounded-full" />
-            <span className="scrawl-sm">{distillingText}</span>
-          </div>
-        ) : (
-          <div className="relative self-end" style={{ width: "60%" }}>
-            <span className="block" style={{ color: "var(--ink)" }}>
+          ) : imageLoading ? (
+            <div className="flex flex-col items-center justify-center gap-4">
+              <div className="shimmer h-28 w-28 rounded-full" />
+              <span className="scrawl-sm">{distillingText}</span>
+            </div>
+          ) : (
+            <span className="block" style={{ width: "52%", color: "var(--ink)" }}>
               <Draw name="glass" strokeWidth={2} />
             </span>
-            <PerchedGuest
+          )}
+
+          {!imageLoading && (
+            <img
+              src={guest.src}
+              alt=""
+              aria-hidden
+              draggable={false}
               style={{
                 position: "absolute",
-                width: "72%",
-                left: "50%",
-                bottom: "66%",
-                transform: "translateX(-44%)",
-                color: "var(--ink)",
+                width: guest.width,
+                left: guest.left,
+                top: guest.top,
+                transform: `translateX(${guest.tx}) rotate(${guest.rotate}deg)`,
+                // brand art is white line-work — invert to ink for the paper card
+                filter: "invert(0.92)",
+                pointerEvents: "none",
               }}
             />
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* ── Colophon ── */}
-      <div className="relative px-9 pb-9 pt-1 text-center">
+      {/* ── Colophon — description on the left, the tone on the right ── */}
+      <div className="relative px-10 pb-9 pt-2">
         <span
           className="mx-auto block h-px w-12"
           aria-hidden
           style={{ background: "var(--line-strong)" }}
         />
-        <p className="note mx-auto mt-5 max-w-[40ch] text-[15.5px]">{cocktail.roast}</p>
-
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
-          {tags.map((f) => (
-            <span key={f} className="scrawl-sm">
-              {f}
-            </span>
-          ))}
+        <div className="mt-6 grid grid-cols-[1.4fr_0.9fr] items-start gap-8">
+          <p className="note text-left text-[13.5px] leading-relaxed" style={{ maxWidth: "36ch" }}>
+            {cocktail.roast}
+          </p>
+          <div className="flex flex-col items-end gap-1.5">
+            {tags.slice(0, 5).map((f) => (
+              <span key={f} className="scrawl-sm" style={{ letterSpacing: "0.24em", textAlign: "right" }}>
+                {f}
+              </span>
+            ))}
+          </div>
         </div>
 
         <div className="mt-8 flex items-end justify-between">

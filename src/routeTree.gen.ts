@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as MoodInputRouteImport } from './routes/mood-input'
 import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as ForBarsRouteImport } from './routes/for-bars'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RestaurantsDoubleChickenPleaseRouteImport } from './routes/restaurants.double-chicken-please'
@@ -38,6 +39,11 @@ const MoodInputRoute = MoodInputRouteImport.update({
 const GalleryRoute = GalleryRouteImport.update({
   id: '/gallery',
   path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForBarsRoute = ForBarsRouteImport.update({
+  id: '/for-bars',
+  path: '/for-bars',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -107,6 +113,7 @@ const MMerchantSlugMenuSlugRoute = MMerchantSlugMenuSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/for-bars': typeof ForBarsRoute
   '/gallery': typeof GalleryRoute
   '/mood-input': typeof MoodInputRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/for-bars': typeof ForBarsRoute
   '/gallery': typeof GalleryRoute
   '/mood-input': typeof MoodInputRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/for-bars': typeof ForBarsRoute
   '/gallery': typeof GalleryRoute
   '/mood-input': typeof MoodInputRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/for-bars'
     | '/gallery'
     | '/mood-input'
     | '/sitemap.xml'
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/for-bars'
     | '/gallery'
     | '/mood-input'
     | '/sitemap.xml'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/for-bars'
     | '/gallery'
     | '/mood-input'
     | '/sitemap.xml'
@@ -213,6 +225,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  ForBarsRoute: typeof ForBarsRoute
   GalleryRoute: typeof GalleryRoute
   MoodInputRoute: typeof MoodInputRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -249,6 +262,13 @@ declare module '@tanstack/react-router' {
       path: '/gallery'
       fullPath: '/gallery'
       preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-bars': {
+      id: '/for-bars'
+      path: '/for-bars'
+      fullPath: '/for-bars'
+      preLoaderRoute: typeof ForBarsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -341,6 +361,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  ForBarsRoute: ForBarsRoute,
   GalleryRoute: GalleryRoute,
   MoodInputRoute: MoodInputRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

@@ -184,16 +184,11 @@ export function StepVibe({
   onText: (text: string) => void;
   onDiy: () => void;
 }) {
-  const railRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLTextAreaElement>(null);
   // The box opens only when the guest asks for it (or arrived with typed text).
   const [diyOpen, setDiyOpen] = useState(() => !!moodText.trim() && !pickedLabel);
   const placeholders = MOOD_PLACEHOLDERS_EN;
   const shuffle = () => onText(placeholders[Math.floor(Math.random() * placeholders.length)]);
-
-  const nudge = (dir: -1 | 1) => {
-    railRef.current?.scrollBy({ left: dir * 320, behavior: "smooth" });
-  };
 
   const pickPlate = (key: string) => {
     setDiyOpen(false);
@@ -210,34 +205,21 @@ export function StepVibe({
 
   return (
     <div>
-      <div className="mb-3 flex items-baseline justify-between gap-4">
+      <div className="mb-4">
         <span className="scrawl">{"Which one is tonight?"}</span>
-        <span className="hidden gap-2 sm:flex">
-          <button type="button" onClick={() => nudge(-1)} className="btn btn-outline !px-3 !py-1">
-            ←
-          </button>
-          <button type="button" onClick={() => nudge(1)} className="btn btn-outline !px-3 !py-1">
-            →
-          </button>
-        </span>
       </div>
 
-      {/* A rack of plates — the drawing does the work, the rule holds the row.
-          Writing it yourself is just one more plate on the rack. */}
-      <div
-        ref={railRef}
-        className="no-scrollbar -mx-1 flex gap-8 overflow-x-auto px-1 pb-2 pt-2"
-        style={{ scrollSnapType: "x mandatory" }}
-      >
+      {/* All the plates on the table at once — four to a row.
+          Writing it yourself is just one more plate. */}
+      <div className="grid grid-cols-2 gap-x-8 gap-y-14 sm:grid-cols-3 lg:grid-cols-4">
         <button
           type="button"
           onClick={openDiy}
-          className="plate shrink-0"
+          className="plate"
           data-selected={diySelected}
-          style={{ width: 172, scrollSnapAlign: "start" }}
         >
-          <span className="plate-art" style={{ height: 120 }}>
-            <Draw name="pen" strokeWidth={2.6} style={{ width: "100%" }} />
+          <span className="plate-art" style={{ height: 52 }}>
+            <Draw name="pen" strokeWidth={2.6} style={{ width: "48%" }} />
           </span>
           <span className="plate-rule mt-4" />
           <span className="mt-3 flex items-baseline gap-2">
@@ -255,12 +237,11 @@ export function StepVibe({
               key={v.key}
               type="button"
               onClick={() => pickPlate(v.key)}
-              className="plate shrink-0"
+              className="plate"
               data-selected={selected}
-              style={{ width: 172, scrollSnapAlign: "start" }}
             >
-              <span className="plate-art" style={{ height: 120 }}>
-                <Draw name={v.art} strokeWidth={2.6} style={{ width: "100%" }} />
+              <span className="plate-art" style={{ height: 52 }}>
+                <Draw name={v.art} strokeWidth={2.6} style={{ width: "48%" }} />
               </span>
               <span className="plate-rule mt-4" />
               <span className="mt-3 flex items-baseline gap-2">
@@ -428,29 +409,23 @@ export function StepSpirit({
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => onPick("")}
-        className="mb-12 flex w-full items-center justify-between gap-4 py-4"
-        style={{
-          borderTop: "1px solid var(--line)",
-          borderBottom: `${baseSpirit === "" ? 2 : 1}px solid ${
-            baseSpirit === "" ? "var(--ink)" : "var(--line)"
-          }`,
-        }}
-      >
-        <span
-          className="hand text-[clamp(22px,2.2vw,30px)] leading-none"
-          style={{ color: baseSpirit === "" ? "var(--ink)" : "var(--ink-mute)" }}
+      <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+        {/* No preference sits on the shelf like everything else */}
+        <button
+          type="button"
+          className="plate"
+          data-selected={baseSpirit === ""}
+          onClick={() => onPick("")}
         >
-          No preference — you pick
-        </span>
-        <span style={{ width: 30, color: "var(--ink-mute)", flex: "none" }} aria-hidden>
-          <Draw name="dice" strokeWidth={3} />
-        </span>
-      </button>
-
-      <div className="grid grid-cols-3 gap-x-6 gap-y-9 sm:grid-cols-4 lg:grid-cols-5">
+          <span className="plate-art" style={{ height: 84 }}>
+            <Draw name="dice" strokeWidth={2.6} style={{ width: 62 }} />
+          </span>
+          <span className="plate-rule mt-3" />
+          <span className="plate-label note mt-2.5 block text-[15px] leading-tight">
+            {"No preference"}
+          </span>
+          <span className="scrawl-sm mt-1 block leading-tight">{"You pick for me"}</span>
+        </button>
         {options.map((sp) => {
           const selected = baseSpirit === sp.key;
           return (

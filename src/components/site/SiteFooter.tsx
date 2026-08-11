@@ -96,8 +96,11 @@ export default function SiteFooter({ onMix }: { onMix: () => void }) {
 
         <hr className="my-10" style={{ borderColor: "rgba(244,240,230,0.16)" }} />
 
+        <p className="accent-italic text-[19px]" style={{ color: "rgba(244,240,230,0.7)" }}>
+          {"Better choices. Completed orders. Memorable nights."}
+        </p>
         <p
-          className="mono-plain max-w-3xl text-[11px] leading-relaxed"
+          className="mono-plain mt-4 max-w-3xl text-[11px] leading-relaxed"
           style={{ color: "rgba(244,240,230,0.5)" }}
         >
           {pick(FOOTER_NOTE, lang)}

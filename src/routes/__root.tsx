@@ -10,7 +10,7 @@ import { SketchDefs } from "@/components/draw/Sketch";
 import { Toaster } from "@/components/ui/sonner";
 
 const FONT_HREF =
-  "https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..700&family=Inter:wght@300;400;500;600;700&family=Caveat:wght@500;600&family=Cormorant+Garamond:ital,wght@0,400..600;1,400..600&display=swap";
+  "https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=Loved+by+the+King&display=swap";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({

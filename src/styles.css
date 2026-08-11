@@ -17,15 +17,15 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 @theme inline {
-  --font-display: "Bodoni Moda", "Didot", "Playfair Display", Georgia, serif;
-  --font-heading: "Bodoni Moda", "Didot", "Playfair Display", Georgia, serif;
+  /* Two typefaces, and only two: a quiet grotesk for everything, and the
+     house script for the one word per statement that carries the feeling. */
+  --font-display: "Inter", system-ui, -apple-system, sans-serif;
+  --font-heading: "Inter", system-ui, -apple-system, sans-serif;
   --font-body: "Inter", system-ui, -apple-system, sans-serif;
   --font-note: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "Inter", system-ui, -apple-system, sans-serif;
-  /* Italic accents — a lighter, rounder garamond against the didone. */
-  --font-accent: "Cormorant Garamond", "Bodoni Moda", Georgia, serif;
-  /* Reserved for the signature on a drink card. Nothing else. */
-  --font-hand: "Caveat", "Bradley Hand", cursive;
+  --font-accent: "Loved by the King", cursive;
+  --font-hand: "Loved by the King", cursive;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -284,9 +284,12 @@
 /* The italic word inside a didone statement. */
 .accent-italic {
   font-family: var(--font-accent);
-  font-style: italic;
-  font-weight: 500;
-  letter-spacing: 0;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  /* the script runs small on its em — nudge it up to sit with Inter */
+  font-size: 1.12em;
+  line-height: inherit;
 }
 /* A framed plate: single rule outside, gilt hairline inside — menu-card. */
 .frame-gilt {
@@ -394,25 +397,26 @@
 .display-fat,
 .hand {
   font-family: var(--font-display);
-  font-weight: 500;
-  font-optical-sizing: auto;
-  line-height: 1.02;
-  letter-spacing: -0.015em;
+  font-weight: 300;
+  /* the script accent has tall ascenders — the statement leaves room */
+  line-height: 1.16;
+  letter-spacing: -0.035em;
   color: var(--ink);
 }
 .display-fat {
-  font-weight: 700;
+  font-weight: 500;
+  letter-spacing: -0.03em;
 }
 .hand-light {
   font-family: var(--font-display);
-  font-weight: 400;
-  line-height: 1.18;
-  letter-spacing: -0.01em;
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
   color: var(--ink);
 }
 .serif-italic {
-  font-family: var(--font-display);
-  font-style: italic;
+  font-family: var(--font-accent);
+  font-style: normal;
   font-weight: 400;
 }
 
@@ -473,7 +477,7 @@
 /* The one place handwriting is allowed: a signature on a card. */
 .signature {
   font-family: var(--font-hand);
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 0.01em;
   line-height: 1.1;
 }

@@ -9,7 +9,6 @@ import SiteNav from "./SiteNav";
 import SiteFooter from "./SiteFooter";
 import GuestList from "./GuestList";
 import HeroStage, { Drummer } from "@/components/draw/HeroStage";
-import Draw from "@/components/draw/art";
 import {
   BRAND,
   FAQ,
@@ -78,6 +77,53 @@ function Gilt({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** The house-style cards, dealt one at a time — flips to the next every 3s. */
+const HOUSE_CARDS = [
+  { src: "/brand/tile-martini.jpg", alt: "A martini with a guest draped over the rim" },
+  { src: "/brand/tile-dancers.jpg", alt: "An iced highball with dancers drawn around it" },
+  { src: "/brand/tile-champagne.jpg", alt: "A champagne coupe with a party drawn in it" },
+  { src: "/brand/tile-oldfashioned.jpg", alt: "An old fashioned with a drawn companion" },
+  { src: "/brand/tile-gintonic.jpg", alt: "A gin and tonic held by a drawn hand" },
+  { src: "/brand/tile-beer.jpg", alt: "A beer opened beside a drawn face" },
+];
+
+function RotatingHouseCard() {
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => setIdx((i) => (i + 1) % HOUSE_CARDS.length), 3000);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div
+      className="frame-gilt relative mx-auto w-full max-w-[440px] overflow-hidden"
+      style={{ aspectRatio: "3/4", background: "var(--night)" }}
+    >
+      <AnimatePresence initial={false}>
+        <motion.img
+          key={HOUSE_CARDS[idx].src}
+          src={HOUSE_CARDS[idx].src}
+          alt={HOUSE_CARDS[idx].alt}
+          className="absolute inset-0 h-full w-full object-cover"
+          initial={{ opacity: 0, scale: 1.04 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </AnimatePresence>
+      <div className="absolute inset-x-0 bottom-0 flex items-baseline justify-between px-5 pb-4">
+        <span className="mono-sm" style={{ color: "rgba(244,243,240,0.85)" }}>
+          {`No. ${String(idx + 1).padStart(2, "0")} / ${String(HOUSE_CARDS.length).padStart(2, "0")}`}
+        </span>
+        <span className="signature text-[20px]" style={{ color: "rgba(244,243,240,0.85)" }}>
+          Vibetail
+        </span>
+      </div>
+    </div>
+  );
+}
+
 
 export default function LandingPage({ onMix }: { onMix?: () => void }) {
   const navigate = useNavigate();
@@ -135,43 +181,40 @@ export default function LandingPage({ onMix }: { onMix?: () => void }) {
           >
             <div className="max-w-3xl">
               <h1
-                className="hand text-[clamp(40px,5.4vw,84px)]"
-                style={{ color: "rgba(244,243,240,0.96)" }}
+                className="hand text-[clamp(38px,5vw,76px)]"
+                style={{ color: "rgba(246,245,242,0.97)" }}
               >
-                {"Tell us how you "}
-                <em className="accent-italic" style={{ color: "rgba(244,243,240,0.85)" }}>
-                  actually
+                {"Meet the drink you didn't know how to "}
+                <em className="accent-italic" style={{ color: "rgba(246,245,242,0.97)" }}>
+                  order
                 </em>
-                {" feel tonight."}
               </h1>
               <p
-                className="mt-5 max-w-md"
+                className="mt-6 max-w-md"
                 style={{
                   fontFamily: "var(--font-body)",
-                  fontWeight: 500,
-                  fontSize: 11,
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                  lineHeight: 1.9,
-                  color: "rgba(244,243,240,0.72)",
+                  fontWeight: 400,
+                  fontSize: 14.5,
+                  lineHeight: 1.75,
+                  color: "rgba(246,245,242,0.78)",
                 }}
               >
                 {pick(HERO.sub)}
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-4">
+              <div className="mt-9 flex flex-wrap items-center gap-5">
                 <button
                   className="btn"
                   onClick={startMixing}
                   style={{
-                    background: "rgba(244,243,240,0.96)",
-                    color: "#0d0d0c",
-                    borderColor: "rgba(244,243,240,0.96)",
-                    padding: "1.1rem 2.4rem",
+                    background: "#d9d3c4",
+                    color: "#14140f",
+                    borderColor: "#d9d3c4",
+                    padding: "1.15rem 2.5rem",
                   }}
                 >
                   {pick(HERO.primaryCta, lang)}
                 </button>
-                <span className="scrawl-sm" style={{ color: "rgba(244,243,240,0.55)" }}>
+                <span className="scrawl-sm" style={{ color: "rgba(246,245,242,0.6)" }}>
                   {pick(HERO.note, lang)}
                 </span>
               </div>
@@ -187,6 +230,7 @@ export default function LandingPage({ onMix }: { onMix?: () => void }) {
           </motion.div>
         )}
       </section>
+
 
       {/* ══════════════ WHAT IT IS ══════════════ */}
       <section id="what" className="section" style={{ borderTop: "1px solid var(--line)" }}>
@@ -307,43 +351,8 @@ export default function LandingPage({ onMix }: { onMix?: () => void }) {
           />
 
           <div className="mt-16 grid items-start gap-x-16 gap-y-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-            {/* One card, given the whole wall */}
-            <article
-              className="frame-gilt relative mx-auto w-full max-w-[440px]"
-              style={{ background: "var(--paper-card)" }}
-            >
-              <div className="flex items-baseline justify-between px-7 pt-6">
-                <span className="specimen-no">No. {SPECIMENS[0].no}</span>
-                <span className="accent-italic text-[15px]" style={{ color: "var(--ink-faint)" }}>
-                  Vibetail
-                </span>
-              </div>
-              <div
-                className="relative mx-auto flex items-center justify-center"
-                style={{ width: "100%", aspectRatio: "5/4" }}
-              >
-                <span style={{ width: "48%", color: "var(--ink)" }} aria-hidden>
-                  <Draw name="glass" strokeWidth={2} />
-                </span>
-              </div>
-              <div className="px-7 pb-8">
-                <hr className="rule" />
-                <h3 className="hand mt-5 text-[clamp(26px,2.4vw,36px)] leading-none">
-                  {pick(SPECIMENS[0].name, lang)}
-                </h3>
-                <p className="accent-italic mt-2.5 text-[18px]" style={{ color: "var(--ink-mute)" }}>
-                  &ldquo;{pick(SPECIMENS[0].mood, lang)}&rdquo;
-                </p>
-                <p className="note mt-3 text-[15px]">{pick(SPECIMENS[0].note, lang)}</p>
-                <div className="mt-5 flex flex-wrap gap-x-4">
-                  {SPECIMENS[0].tags.map((t) => (
-                    <span key={t.en} className="scrawl-sm">
-                      {pick(t, lang)}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </article>
+            {/* The house cards, dealt one at a time */}
+            <RotatingHouseCard />
 
             {/* The rest of the night's ledger, as lines — not more cards */}
             <div className="lg:pt-4">
@@ -382,73 +391,6 @@ export default function LandingPage({ onMix }: { onMix?: () => void }) {
         </div>
       </section>
 
-      {/* ══════════════ INTERLUDE — the photograph and the drawing ══════════════ */}
-      <section className="relative overflow-hidden" style={{ background: "var(--night)" }}>
-        <div className="relative grid min-h-[76svh] lg:grid-cols-2">
-          {/* The photograph, film-toned, breathing slowly */}
-          <div className="relative min-h-[54svh] overflow-hidden">
-            <motion.img
-              src="/still-portrait.jpg"
-              alt="A hand resting on a glass over a chessboard"
-              className="absolute inset-0 h-full w-full object-cover"
-              style={{ filter: "grayscale(1) contrast(1.08)" }}
-              initial={{ scale: 1.08 }}
-              whileInView={{ scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 3.4, ease: [0.22, 1, 0.36, 1] }}
-            />
-            {/* Drawn over the print, the way the drummer sits on the hero */}
-            <motion.span
-              className="absolute left-[8%] top-[10%] w-[30%]"
-              style={{ color: "#f4efe6" }}
-              aria-hidden
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, delay: 0.5 }}
-            >
-              <Draw name="confetti" strokeWidth={2.2} />
-            </motion.span>
-            <div
-              aria-hidden
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(90deg, transparent 70%, rgba(13,13,12,0.85) 100%), linear-gradient(0deg, rgba(13,13,12,0.35) 0%, transparent 30%)",
-              }}
-            />
-          </div>
-
-          {/* The claim, set like a menu head */}
-          <div className="on-dark relative flex flex-col justify-center gap-7 px-[clamp(22px,5vw,80px)] py-16">
-            <span className="eyebrow-gilt" style={{ color: "var(--gold-bright)" }}>
-              {"№ 04 — The house style"}
-            </span>
-            <h2 className="hand text-[clamp(36px,4.2vw,58px)]" style={{ color: "var(--paper)" }}>
-              {"Drawn by hand."}
-              <br />
-              {"Printed in "}
-              <Gilt>silver</Gilt>
-              {"."}
-            </h2>
-            <p className="note max-w-md text-[18px]" style={{ color: "rgba(242,237,225,0.7)" }}>
-              {
-                "Every drink card pairs a photograph of the night with a drawing of the feeling — charcoal line over silver-print film. Two materials, nothing else."
-              }
-            </p>
-            <div className="mt-2 flex items-center gap-5">
-              <button className="btn btn-gilt" onClick={startMixing}>
-                {"Mix yours"}
-              </button>
-              <span className="accent-italic text-[19px]" style={{ color: "rgba(242,237,225,0.55)" }}>
-                est. 2025 · after hours
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="rule-gilt absolute inset-x-0 bottom-0" aria-hidden />
-      </section>
-
       {/* ══════════════ FOR VENUES ══════════════ */}
       <section id="venues" className="section" style={{ borderTop: "1px solid var(--line)" }}>
         <div className="shell">
@@ -464,22 +406,68 @@ export default function LandingPage({ onMix }: { onMix?: () => void }) {
             sub={pick(VENUES.body, lang)}
           />
 
-          <div className="mt-14 grid gap-x-9 gap-y-11 sm:grid-cols-2 lg:grid-cols-3">
-            {VENUES.features.map((f) => (
-              <div key={f.no} className="pt-6" style={{ borderTop: "1px solid var(--line)" }}>
-                <span className="specimen-no">{f.no}</span>
-                <h3 className="hand mt-4 text-[26px]">{pick(f.title, lang)}</h3>
-                <p className="note mt-2 text-[15px]">{pick(f.body, lang)}</p>
+          {/* One simple flow — from the venue's QR to a keepsake card */}
+          <div className="mt-14 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                no: "01",
+                title: "Scan the menu",
+                body: "Open Vibetail from the QR code at a participating venue. No app, no account.",
+              },
+              {
+                no: "02",
+                title: "Say what you want",
+                body: "Your own words — \u201cfresh and herbal, not too sweet.\u201d No cocktail vocabulary needed.",
+              },
+              {
+                no: "03",
+                title: "Choose, order, pay",
+                body: "A match from the actual menu, why it fits, and the order completed in one flow.",
+              },
+              {
+                no: "04",
+                title: "Print your keepsake",
+                body: "Leave with a personalised card of your drink — made to collect and share.",
+              },
+            ].map((st) => (
+              <div key={st.no} className="pt-7" style={{ borderTop: "1px solid var(--line)" }}>
+                <span className="specimen-no">{st.no}</span>
+                <h3 className="hand mt-5 text-[clamp(22px,2.2vw,28px)] leading-tight">{st.title}</h3>
+                <p className="note mt-3 text-[15px]">{st.body}</p>
               </div>
             ))}
           </div>
+
+          {/* Proof, in one quiet row */}
+          <div className="mt-14 grid gap-x-10 gap-y-6 sm:grid-cols-3">
+            {[
+              ["Guests decide faster", "i"],
+              ["Ordering + payment included", "ii"],
+              ["Printed cards drive recall", "iii"],
+            ].map(([label, no]) => (
+              <div
+                key={no}
+                className="flex items-baseline gap-4 pt-4"
+                style={{ borderTop: "1px solid var(--line-strong)" }}
+              >
+                <span className="specimen-no" style={{ color: "var(--gold)" }}>
+                  {no.toUpperCase()}
+                </span>
+                <span className="note text-[15px]">{label}</span>
+              </div>
+            ))}
+          </div>
+
+          <p className="accent-italic mt-8 text-[19px]" style={{ color: "var(--ink-mute)" }}>
+            Simple menus can go live in about 30 minutes.
+          </p>
 
           <div className="mt-12 flex flex-wrap items-center gap-5">
             <a
               className="btn btn-solid"
               href={`mailto:${BRAND.email}?subject=Vibetail%20for%20our%20menu`}
             >
-              {pick(VENUES.cta, lang)}
+              {"Book a walkthrough"}
             </a>
             <span className="accent-italic text-[18px]" style={{ color: "var(--gold-deep)" }}>
               {BRAND.email}
@@ -496,7 +484,7 @@ export default function LandingPage({ onMix }: { onMix?: () => void }) {
       >
         <div className="shell grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
-            <SectionHead eyebrow={"( 06 ) FAQ"} title={"Things you might ask."} />
+            <SectionHead eyebrow={"( 05 ) FAQ"} title={"Things you might ask."} />
           </div>
           <div>
             {FAQ.map((f, i) => (

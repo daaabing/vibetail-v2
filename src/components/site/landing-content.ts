@@ -226,7 +226,7 @@ export const SPECIMENS: {
 /* ── For venues ───────────────────────────────────────────────────────── */
 
 export const VENUES = {
-  eyebrow: { en: "( 06 ) For bars & restaurants" } as Bi,
+  eyebrow: { en: "( 04 ) For bars & restaurants" } as Bi,
   headline: {
     en: "Put your own menu behind the vibe.",
   } as Bi,

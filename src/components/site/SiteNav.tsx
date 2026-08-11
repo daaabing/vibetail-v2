@@ -56,16 +56,27 @@ export default function SiteNav({ onMix }: { onMix: () => void }) {
         <div className="flex items-baseline gap-10">
           <Logotype />
           <nav className="hidden items-baseline gap-8 lg:flex">
-            {NAV_LINKS.map((l) => (
-              <button
-                key={l.id}
-                onClick={() => jump(l.id)}
-                className="transition-opacity hover:opacity-100"
-                style={linkStyle}
-              >
-                {pick(l.label, lang)}
-              </button>
-            ))}
+            {NAV_LINKS.map((l) =>
+              l.id === "venues" ? (
+                <a
+                  key={l.id}
+                  href="/for-bars"
+                  className="transition-opacity hover:opacity-100"
+                  style={{ ...linkStyle, textDecoration: "none" }}
+                >
+                  {pick(l.label, lang)}
+                </a>
+              ) : (
+                <button
+                  key={l.id}
+                  onClick={() => jump(l.id)}
+                  className="transition-opacity hover:opacity-100"
+                  style={linkStyle}
+                >
+                  {pick(l.label, lang)}
+                </button>
+              ),
+            )}
           </nav>
         </div>
 
@@ -111,16 +122,31 @@ export default function SiteNav({ onMix }: { onMix: () => void }) {
           }}
         >
           <div className="shell grid gap-0 py-2">
-            {NAV_LINKS.map((l) => (
-              <button
-                key={l.id}
-                onClick={() => jump(l.id)}
-                className="py-4 text-left"
-                style={{ ...linkStyle, borderBottom: "1px solid rgba(244,243,240,0.1)" }}
-              >
-                {pick(l.label, lang)}
-              </button>
-            ))}
+            {NAV_LINKS.map((l) =>
+              l.id === "venues" ? (
+                <a
+                  key={l.id}
+                  href="/for-bars"
+                  className="py-4 text-left"
+                  style={{
+                    ...linkStyle,
+                    textDecoration: "none",
+                    borderBottom: "1px solid rgba(244,243,240,0.1)",
+                  }}
+                >
+                  {pick(l.label, lang)}
+                </a>
+              ) : (
+                <button
+                  key={l.id}
+                  onClick={() => jump(l.id)}
+                  className="py-4 text-left"
+                  style={{ ...linkStyle, borderBottom: "1px solid rgba(244,243,240,0.1)" }}
+                >
+                  {pick(l.label, lang)}
+                </button>
+              ),
+            )}
             <button onClick={onMix} className="py-4 text-left" style={linkStyle}>
               Mix your drink
             </button>
