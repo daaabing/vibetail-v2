@@ -41,3 +41,4 @@ export interface ModelProvider {
 // canonical menu facts and cannot make an unavailable item eligible.
 
 export * from "./deterministic.js";
+export * from "./openai.js";

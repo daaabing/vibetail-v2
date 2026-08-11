@@ -1,4 +1,8 @@
-import { DeterministicMatchingProvider } from "@vibetail/model-providers";
+import {
+  DeterministicMatchingProvider,
+  OpenAIModelProvider,
+  type ModelProvider,
+} from "@vibetail/model-providers";
 import {
   DefaultRestaurantService,
   DefaultManagementService,
@@ -25,7 +29,7 @@ export interface WebDependencies {
 export function createWebDependencies(env: WebServerEnv): WebDependencies {
   if (env.RESTAURANT_REPOSITORY === "fixture") {
     const repository = new FixtureRestaurantRepository();
-    const provider = new DeterministicMatchingProvider({ failureMenuIds: repository.fixture.matchingFailureMenuIds });
+    const provider = createModelProvider(env, repository.fixture.matchingFailureMenuIds);
     return {
       restaurantService: new DefaultRestaurantService(repository, provider),
       managementService: new DefaultManagementService(repository),
@@ -43,7 +47,7 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
     url: env.SUPABASE_URL,
     publishableKey: env.SUPABASE_PUBLISHABLE_KEY,
   });
-  const provider = new DeterministicMatchingProvider();
+  const provider = createModelProvider(env);
   const managementService = env.SUPABASE_SERVICE_ROLE_KEY
     ? new DefaultManagementService(new SupabaseManagementRepository({
         url: env.SUPABASE_URL,
@@ -70,4 +74,21 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
       }
     },
   };
+}
+
+function createModelProvider(
+  env: WebServerEnv,
+  deterministicFailureMenuIds: readonly string[] = [],
+): ModelProvider {
+  switch (env.MODEL_PROVIDER) {
+    case "deterministic":
+      return new DeterministicMatchingProvider({ failureMenuIds: deterministicFailureMenuIds });
+    case "openai":
+      if (!env.MODEL_API_KEY || !env.MODEL_NAME) {
+        throw new Error("Validated OpenAI model configuration is unavailable");
+      }
+      return new OpenAIModelProvider({ apiKey: env.MODEL_API_KEY, model: env.MODEL_NAME });
+    default:
+      throw new Error(`MODEL_PROVIDER=${env.MODEL_PROVIDER} is not implemented`);
+  }
 }
