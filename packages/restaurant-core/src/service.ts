@@ -152,7 +152,7 @@ export class DefaultRestaurantService implements RestaurantService {
         allowedItems: candidates.map(({ item }) => toCandidate(item)),
         locale: preferences.locale,
         traceId,
-        timeoutMs: 8_000,
+        timeoutMs: 20_000,
       });
     } catch {
       throw serviceError("MATCH_PROVIDER_UNAVAILABLE", "The matching service is temporarily unavailable.", true, 503, traceId);

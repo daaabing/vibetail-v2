@@ -63,7 +63,11 @@ export class OpenRouterModelProvider implements ModelProvider {
           }),
         },
       ],
-      max_tokens: 500,
+      max_completion_tokens: 800,
+      reasoning: {
+        effort: "minimal",
+        exclude: true,
+      },
       response_format: zodResponseFormat(
         modelMatchSelectionSchema.strict(),
         "restaurant_match_selection",

@@ -75,7 +75,8 @@ describe("OpenRouterModelProvider", () => {
     });
     expect(capturedRequest).toMatchObject({
       model: "openai/gpt-5-mini",
-      max_tokens: 500,
+      max_completion_tokens: 800,
+      reasoning: { effort: "minimal", exclude: true },
       provider: { require_parameters: true, data_collection: "deny" },
       response_format: { type: "json_schema" },
     });
