@@ -42,3 +42,4 @@ export interface ModelProvider {
 
 export * from "./deterministic.js";
 export * from "./openai.js";
+export * from "./openrouter.js";

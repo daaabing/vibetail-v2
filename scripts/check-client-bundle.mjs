@@ -5,6 +5,7 @@ const root = "apps/web/dist/client";
 const forbidden = [
   "SUPABASE_SERVICE_ROLE_KEY",
   "MODEL_API_KEY",
+  "OPENROUTER_API_KEY",
   "FC_SANDBOX_API_KEY",
   "E2B_API_KEY",
   "@lovable.dev/",

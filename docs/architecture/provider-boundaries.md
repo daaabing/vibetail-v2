@@ -65,7 +65,7 @@ The restaurant model port accepts bounded `RestaurantPreferences`, canonical can
 
 The restaurant service, not the provider, validates allowlist membership, merchant/menu ownership, active/visible status, and canonical facts. Invalid structured output fails closed. Provider adapters own timeout/retry mechanics and safe error mapping; retry must remain bounded and observable.
 
-The first executable remote adapter is OpenAI Responses API with Structured Outputs. Vertex AI, Gemini, and Alibaba remain future adapters behind the same interface. `deterministic` is the credential-free test/demo fallback. Image generation is intentionally absent; a future `ImageProvider` would be a separate product decision and interface.
+The preferred remote path is OpenRouter Chat Completions with strict Structured Outputs. It uses OpenRouter's OpenAI-compatible endpoint while keeping `openrouter` as a distinct adapter and provider identity. The request requires a route that supports every requested parameter and denies providers that may use prompts for training. A direct OpenAI Responses API adapter remains available. Vertex AI, direct Gemini, and Alibaba remain future adapters behind the same interface. `deterministic` is the credential-free test/demo fallback. Image generation is intentionally absent; a future `ImageProvider` would be a separate product decision and interface.
 
 ## Configuration and secret boundary
 
@@ -73,6 +73,7 @@ The first executable remote adapter is OpenAI Responses API with Structured Outp
 | --- | --- | --- |
 | `RESTAURANT_REPOSITORY=supabase` | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | server only |
 | privileged Supabase operations | `SUPABASE_SERVICE_ROLE_KEY` | server/worker only; never browser/sandbox by default |
+| `MODEL_PROVIDER=openrouter` | `OPENROUTER_API_KEY`, `MODEL_NAME` | server/worker only |
 | `MODEL_PROVIDER=openai` | `MODEL_API_KEY`, `MODEL_NAME` | server/worker only |
 | `SANDBOX_PROVIDER=fc` | `FC_SANDBOX_ENDPOINT`, `FC_SANDBOX_API_KEY` | worker/server only |
 | `SANDBOX_PROVIDER=e2b` | `E2B_ENDPOINT`, `E2B_API_KEY` | worker/server only |
@@ -92,4 +93,4 @@ PostHog remains product analytics and is configured separately. It is never used
 - Only `packages/provider-e2b` may add E2B-specific SDK imports.
 - Provider-specific model SDKs remain inside model adapter modules.
 - CI scans runtime source and manifests for forbidden Lovable packages, gateway host, and key name.
-- The OpenAI adapter has mocked structured-output contract tests; live calls require an explicitly configured staging API key and remain a separate deployment verification step.
+- The OpenRouter and direct OpenAI adapters have mocked structured-output contract tests; live calls require an explicitly configured staging API key and remain a separate deployment verification step.

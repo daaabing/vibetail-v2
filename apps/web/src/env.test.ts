@@ -30,6 +30,21 @@ describe("web environment", () => {
     expect(() => parseWebEnv({ ...localEnv, RESTAURANT_REPOSITORY: "supabase" })).toThrow(
       /SUPABASE_URL/,
     );
+    expect(() => parseWebEnv({ ...localEnv, MODEL_PROVIDER: "openrouter" })).toThrow(
+      /OPENROUTER_API_KEY/,
+    );
+  });
+
+  it("accepts OpenRouter with a server-only key and explicit model", () => {
+    const parsed = parseWebEnv({
+      ...localEnv,
+      MODEL_PROVIDER: "openrouter",
+      OPENROUTER_API_KEY: "server-secret",
+      MODEL_NAME: "openai/gpt-5-mini",
+    });
+    expect(parsed.serverEnv.MODEL_PROVIDER).toBe("openrouter");
+    expect(parsed.serverEnv.MODEL_NAME).toBe("openai/gpt-5-mini");
+    expect("OPENROUTER_API_KEY" in parsed.publicEnv).toBe(false);
   });
 
   it("selects Supabase automatically when the existing public credentials are present", () => {
@@ -45,8 +60,13 @@ describe("web environment", () => {
   });
 
   it("does not expose server secrets through public config", () => {
-    const parsed = parseWebEnv({ ...localEnv, SUPABASE_SERVICE_ROLE_KEY: "server-secret" });
+    const parsed = parseWebEnv({
+      ...localEnv,
+      SUPABASE_SERVICE_ROLE_KEY: "server-secret",
+      OPENROUTER_API_KEY: "openrouter-secret",
+    });
     expect("SUPABASE_SERVICE_ROLE_KEY" in parsed.publicEnv).toBe(false);
+    expect("OPENROUTER_API_KEY" in parsed.publicEnv).toBe(false);
   });
 });
 

@@ -48,7 +48,7 @@ pnpm test
 pnpm build
 ```
 
-The checked-in defaults use fixture restaurant data, a deterministic model, and the local sandbox. Empty optional credentials are normalized as absent. Selecting `supabase`, `fc`, `e2b`, or a remote model provider makes that provider's required variables mandatory at startup.
+The checked-in defaults use fixture restaurant data, a deterministic model, and the local sandbox. Empty optional credentials are normalized as absent. Selecting `supabase`, `fc`, `e2b`, or a remote model provider makes that provider's required variables mandatory at startup. The preferred remote model selection is `MODEL_PROVIDER=openrouter`, `MODEL_NAME=openai/gpt-5-mini`, and a server-only `OPENROUTER_API_KEY`.
 
 ## Local product walkthrough
 

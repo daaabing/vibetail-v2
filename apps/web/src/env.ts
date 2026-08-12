@@ -12,16 +12,25 @@ const publicEnvSchema = z.object({
 const serverEnvSchema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    APP_URL: z.string().url().default("http://127.0.0.1:3000"),
     LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
     HOST: z.string().min(1),
     PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
     RESTAURANT_REPOSITORY: z.enum(["fixture", "supabase"]).default("fixture"),
-    MODEL_PROVIDER: z.enum(["deterministic", "vertex", "gemini", "openai", "alibaba"]).default("deterministic"),
+    MODEL_PROVIDER: z.enum([
+      "deterministic",
+      "vertex",
+      "gemini",
+      "openai",
+      "openrouter",
+      "alibaba",
+    ]).default("deterministic"),
     SANDBOX_PROVIDER: z.enum(["local", "fc", "e2b"]).default("local"),
     SUPABASE_URL: optionalString(z.string().url()),
     SUPABASE_PUBLISHABLE_KEY: optionalString(),
     SUPABASE_SERVICE_ROLE_KEY: optionalString(),
     MODEL_API_KEY: optionalString(),
+    OPENROUTER_API_KEY: optionalString(),
     MODEL_NAME: optionalString(),
     FC_SANDBOX_ENDPOINT: optionalString(z.string().url()),
     FC_SANDBOX_API_KEY: optionalString(),
@@ -32,7 +41,9 @@ const serverEnvSchema = z
     if (env.RESTAURANT_REPOSITORY === "supabase") {
       requireFields(env, ["SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY"], context);
     }
-    if (env.MODEL_PROVIDER !== "deterministic") {
+    if (env.MODEL_PROVIDER === "openrouter") {
+      requireFields(env, ["OPENROUTER_API_KEY", "MODEL_NAME"], context);
+    } else if (env.MODEL_PROVIDER !== "deterministic") {
       requireFields(env, ["MODEL_API_KEY", "MODEL_NAME"], context);
     }
     if (env.SANDBOX_PROVIDER === "fc") {
