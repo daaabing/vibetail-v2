@@ -1,6 +1,6 @@
 # 当前系统状态
 
-最后核对：2026-08-12（OpenRouter adapter 实现后）
+最后核对：2026-08-12（Railway staging 完成 OpenRouter 真实调用验收后）
 
 本文记录仓库中**已经真实实现的能力**、**当前本地运行模式**以及**尚未接入的后端能力**。它用于避免把“已有 contract 或 adapter”误认为“已经连接生产服务”。如实现或部署状态改变，应同步更新本文。
 
@@ -18,7 +18,7 @@ React browser
   → DeterministicMatchingProvider
 ```
 
-因此，当前可以称为“已上线的真实 API 后端 + 已验证的旧 Supabase public read + 可切换 OpenRouter/OpenAI adapter”。Railway staging 目前仍选择 deterministic provider，因为尚未配置 OpenRouter API key；所以不能称为“完整 Supabase management + 已连接真实 AI 的生产后端”。fixture 数据和 fixture 管理修改只存在于当前服务进程内，重启服务后会恢复。
+因此，当前可以称为“已上线的真实 API 后端 + 已验证的旧 Supabase public read + 已连接 OpenRouter 的 staging AI matching”。Railway staging 当前选择 `openrouter`，并已完成 Global Match 与 restaurant-specific match 的真实模型调用验收；它仍不能称为“完整 Supabase management 或生产后端”。fixture 数据和 fixture 管理修改只存在于当前服务进程内，重启服务后会恢复。
 
 ## 已经完成的产品链路
 
@@ -103,7 +103,7 @@ MODEL_PROVIDER=deterministic
 SANDBOX_PROVIDER=local
 ```
 
-当前工作区已在 gitignored `.env` 中配置旧 Supabase 的 URL 和 publishable key。Railway 项目 `vibetail-staging` / 环境 `staging` 已部署到 `https://vibetailweb-production.up.railway.app`，真实浏览器和公网 smoke 已验证 Landing、Global Match、restaurant directory、Double Chicken Please deep link、restaurant-specific match、`/health` 和 `/ready`。没有配置 service-role key，因此真实 management API 安全返回 `503`，未执行数据库写入。OpenRouter 和 direct OpenAI adapter 已实现但没有对应 API key，staging 仍使用 deterministic；PostHog、FC 和 E2B 仍未连接。
+当前工作区已在 gitignored `.env` 中配置旧 Supabase 的 URL 和 publishable key。Railway 项目 `vibetail-staging` / 环境 `staging` 已部署到 `https://vibetailweb-production.up.railway.app`，真实浏览器和公网 smoke 已验证 Landing、Global Match、restaurant directory、Double Chicken Please deep link、restaurant-specific match、`/health` 和 `/ready`。没有配置 service-role key，因此真实 management API 安全返回 `503`，未执行数据库写入。Railway 已配置 server-only OpenRouter key、`MODEL_PROVIDER=openrouter` 和 `MODEL_NAME=openai/gpt-5-mini`；真实 Global Match 返回约 4.2 秒，页面端 restaurant-specific match 也成功显示非模板 AI 文案。PostHog、FC 和 E2B 仍未连接。
 
 本地 fixture management token 是公开测试字符串，不是生产凭证。fixture repository 在服务端内存中可变，用于验证管理修改会影响匹配；重启 dev server 会恢复 `fixtures/restaurant/menus.json`。
 
@@ -114,7 +114,7 @@ SANDBOX_PROVIDER=local
 | Supabase public read | `SupabaseRestaurantRepository`、generated database types | 已在 Railway staging 验证 2 个 published menus 和完整 public matching 流程；生产切换未执行 |
 | Supabase management write | server-only `SupabaseManagementRepository` | 未对 staging/production 执行写入，未验证真实 token/schema/RLS 兼容性 |
 | PostHog | `POSTHOG_KEY`、`POSTHOG_HOST` env schema | 没有 SDK、初始化、事件 taxonomy 或任何 `capture` 调用 |
-| Remote AI | OpenRouter Chat Completions + Structured Outputs、direct OpenAI Responses adapter、mock contract tests、web composition switch | staging 尚无 API key，仍运行 deterministic；没有真实调用验收、usage/cost telemetry，Vertex/direct Gemini/Alibaba 尚未实现 |
+| Remote AI | OpenRouter Chat Completions + Structured Outputs、direct OpenAI Responses adapter、mock contract tests、web composition switch | Railway staging 已使用 `openai/gpt-5-mini` 完成真实 Global/restaurant match 验收；仍缺 usage/cost telemetry、rate limit、spend guardrails，Vertex/direct Gemini/Alibaba 尚未实现 |
 | Agent worker | workspace、contracts、env validation、provider-neutral boundaries | 没有 Agent state machine、durable run store、queue、checkpoint、approval execution 或实际 worker loop |
 | Alibaba FC Sandbox | interface、config type、provider package skeleton | 没有 FC SDK、真实 execute/hibernate/wake/resume、SLS/trace 证据 |
 | E2B | interface、config type、provider package skeleton | 没有 live adapter 或 provider parity tests |
@@ -136,12 +136,12 @@ SANDBOX_PROVIDER=local
 
 ### AI 与 matching provider
 
-- 为 staging 配置 OpenRouter API key 并完成真实远程 AI 调用验收；
+- 增加 OpenRouter usage、latency 和 cost telemetry；
 - provider-specific timeout/retry/usage/cost telemetry；
 - 真实模型 structured-output contract tests；
 - production rate limiting 和 spend guardrails。
 
-当前 staging 的 deterministic matcher 是规则评分器，不是大模型。它会从允许的候选 item 中选择一个 ID 并生成模板化解释。OpenRouter adapter 已能通过 OpenAI-compatible Chat Completions + Structured Outputs 返回严格的 `matchedItemId + whyThisMatch`；direct OpenAI Responses adapter 仍保留。没有对应 key 时二者都不会启用。系统不会让 AI 自由生成酒名、价格、配料或不存在的 menu item。
+当前 staging 使用 OpenRouter 的 `openai/gpt-5-mini`，通过 OpenAI-compatible Chat Completions + Structured Outputs 返回严格的 `matchedItemId + whyThisMatch`；direct OpenAI Responses adapter 和本地 deterministic fallback 仍保留。系统不会让 AI 自由生成酒名、价格、配料或不存在的 menu item。
 
 接入真实 AI 后仍必须保持：
 
@@ -205,7 +205,7 @@ item_availability_changed
 - 没有修改旧 repository；
 - 已连接旧 Supabase 做 publishable-key 只读验证，没有执行 management 或其他数据库写入；
 - 没有执行 production migration 或 seed；
-- 已实现 OpenRouter 和 direct OpenAI adapter，但没有配置 API key，因此没有发生真实远程 AI 调用；
+- Railway staging 已配置 OpenRouter 并完成真实远程 AI 调用；key 只存在于 Railway server variables，未进入仓库或 browser bundle；
 - 没有发送 PostHog 事件；
 - 已部署 Railway staging；没有切换 DNS 或修改 `vibetail.com`；
 - 没有迁移 Lovable dependency。
