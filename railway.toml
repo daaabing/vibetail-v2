@@ -1,4 +1,5 @@
 [build]
+# Keep builds explicit so staging deploys the same production artifact verified in CI.
 builder = "RAILPACK"
 buildCommand = "pnpm build"
 watchPatterns = ["/apps/**", "/packages/**", "/fixtures/**", "/package.json", "/pnpm-lock.yaml", "/pnpm-workspace.yaml", "/tsconfig*.json", "/railway.toml"]
