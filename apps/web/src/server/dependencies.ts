@@ -91,7 +91,7 @@ function createModelProvider(
       return new OpenAIModelProvider({ apiKey: env.MODEL_API_KEY, model: env.MODEL_NAME });
     case "openrouter":
       if (!env.OPENROUTER_API_KEY || !env.MODEL_NAME) {
-        throw new Error("Validated OpenRouter model configuration is unavailable");
+        throw new Error("Validated OpenRouter provider configuration is unavailable");
       }
       return new OpenRouterModelProvider({
         apiKey: env.OPENROUTER_API_KEY,
