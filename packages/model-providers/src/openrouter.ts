@@ -4,6 +4,7 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import type { ModelProvider, ModelProviderResult, RestaurantModelRequest } from "./index.js";
 import { restaurantMatchSystemPrompt } from "./restaurant-prompt.js";
 
+// Keep the gateway URL inside this adapter so domain and UI code stay vendor-neutral.
 const openRouterBaseUrl = "https://openrouter.ai/api/v1";
 
 export interface OpenRouterChatClient {
