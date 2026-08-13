@@ -18,6 +18,7 @@ describe("platform routes", () => {
     ["/restaurants", { kind: "restaurants" }],
     ["/restaurants/nightjar-demo", { kind: "restaurant_detail", merchantSlug: "nightjar-demo" }],
     ["/manage", { kind: "management" }],
+    ["/for-bars", { kind: "for_bars" }],
     ["/manage/fixture-double-chicken-demo", { kind: "management", privateToken: "fixture-double-chicken-demo" }],
   ])("resolves %s", (path, expected) => expect(resolveAppRoute(path)).toEqual(expected));
 

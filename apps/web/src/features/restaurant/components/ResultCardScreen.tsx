@@ -1,8 +1,8 @@
-import type { LegacyResultViewModel } from "../adapters/legacy-result.js";
+import type { RestaurantMatchResult } from "@vibetail/contracts";
 
 interface ResultCardScreenProps {
   locale: "en" | "zh";
-  result: LegacyResultViewModel;
+  result: RestaurantMatchResult;
   onAgain(): void;
   onEdit(): void;
 }
@@ -16,17 +16,17 @@ export function ResultCardScreen({ locale, result, onAgain, onEdit }: ResultCard
       </div>
       <div className="result-heading">
         <div>
-          <p className="result-section">{result.section ?? (locale === "zh" ? "餐厅精选" : "House selection")}</p>
-          <h2>{result.itemName}</h2>
+          <p className="result-section">{result.item.section ?? (locale === "zh" ? "餐厅精选" : "House selection")}</p>
+          <h2>{result.item.name}</h2>
         </div>
-        {result.price && <strong>{result.price}</strong>}
+        {result.item.price && <strong>{result.item.price}</strong>}
       </div>
-      {result.description && <p className="result-description">{result.description}</p>}
-      <blockquote>{result.explanation}</blockquote>
+      {result.item.description && <p className="result-description">{result.item.description}</p>}
+      <blockquote>{result.whyThisMatch}</blockquote>
       <dl className="detail-grid">
-        {result.baseSpirit && <div><dt>{locale === "zh" ? "基酒" : "Base"}</dt><dd>{result.baseSpirit}</dd></div>}
-        <div><dt>{locale === "zh" ? "风味" : "Flavors"}</dt><dd>{result.flavorTags.join(" · ")}</dd></div>
-        <div><dt>{locale === "zh" ? "配料" : "Ingredients"}</dt><dd>{result.ingredients.join(", ")}</dd></div>
+        {result.item.baseSpirit && <div><dt>{locale === "zh" ? "基酒" : "Base"}</dt><dd>{result.item.baseSpirit}</dd></div>}
+        <div><dt>{locale === "zh" ? "风味" : "Flavors"}</dt><dd>{result.item.flavorTags.join(" · ")}</dd></div>
+        <div><dt>{locale === "zh" ? "配料" : "Ingredients"}</dt><dd>{result.item.ingredients.join(", ")}</dd></div>
       </dl>
       <div className="button-row">
         <button className="primary-button" type="button" onClick={onAgain}>{locale === "zh" ? "再匹配一次" : "Match again"}</button>

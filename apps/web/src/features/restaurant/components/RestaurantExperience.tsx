@@ -1,7 +1,6 @@
 import { useState } from "react";
-import type { RestaurantClient, RestaurantError, RestaurantMenu, RestaurantPreferences } from "@vibetail/contracts";
-import { RestaurantClientError } from "../adapters/http-restaurant-client.js";
-import { toLegacyResultViewModel, type LegacyResultViewModel } from "../adapters/legacy-result.js";
+import type { RestaurantClient, RestaurantError, RestaurantMatchResult, RestaurantMenu, RestaurantPreferences } from "@vibetail/contracts";
+import { RestaurantClientError } from "../../../clients/http-restaurant-client.js";
 import { LoadingOverlay } from "./LoadingOverlay.js";
 import { MoodInputScreen } from "./MoodInputScreen.js";
 import { ResultCardScreen } from "./ResultCardScreen.js";
@@ -17,7 +16,7 @@ export function RestaurantExperience({ client, menu }: RestaurantExperienceProps
   const [locale, setLocale] = useState<"en" | "zh">("en");
   const [stage, setStage] = useState<Stage>("intro");
   const [preferences, setPreferences] = useState<RestaurantPreferences>();
-  const [result, setResult] = useState<LegacyResultViewModel>();
+  const [result, setResult] = useState<RestaurantMatchResult>();
   const [error, setError] = useState<RestaurantError>();
 
   async function match(nextPreferences: RestaurantPreferences) {
@@ -29,7 +28,7 @@ export function RestaurantExperience({ client, menu }: RestaurantExperienceProps
         client.matchItem(menu.restaurant.slug, menu.slug, { ...nextPreferences, locale }),
         delay(650),
       ]);
-      setResult(toLegacyResultViewModel(matchResult));
+      setResult(matchResult);
       setStage("result");
     } catch (caught) {
       setError(toClientError(caught));

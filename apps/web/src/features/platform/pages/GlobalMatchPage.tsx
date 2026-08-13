@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { GlobalMatchResult, RestaurantPreferences } from "@vibetail/contracts";
 import { HttpRestaurantClient, RestaurantClientError } from "../../../clients/http-restaurant-client.js";
 import { PreferenceForm } from "../components/PreferenceForm.js";
-import { SiteHeader } from "../components/SiteHeader.js";
+import { SiteFooter, SiteHeader } from "../components/SiteHeader.js";
 import { useSeo } from "../useSeo.js";
 
 const client = new HttpRestaurantClient();
@@ -29,5 +29,5 @@ export function GlobalMatchPage() {
       <div className="vt-tags">{[...result.item.flavorTags, ...result.item.moodTags].slice(0, 6).map((tag) => <span key={tag}>{tag}</span>)}</div>
       <div className="vt-actions"><a className="vt-primary" href={result.restaurantSpecificUrl}>Enter {result.restaurant.name}</a><button className="vt-secondary" onClick={() => setResult(undefined)}>Match again</button></div>
     </article>}
-  </main></div>;
+  </main><SiteFooter /></div>;
 }

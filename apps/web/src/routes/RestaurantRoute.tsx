@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { RestaurantError, RestaurantMenu } from "@vibetail/contracts";
 import { HttpRestaurantClient, RestaurantClientError } from "../clients/http-restaurant-client.js";
-import { RestaurantExperience } from "../features/restaurant-legacy/components/RestaurantExperience.js";
+import { RestaurantExperience } from "../features/restaurant/components/RestaurantExperience.js";
 
 const client = new HttpRestaurantClient();
 

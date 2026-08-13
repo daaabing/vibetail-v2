@@ -8,12 +8,12 @@ import type {
 } from "@vibetail/contracts";
 import { HttpManagementClient } from "../../../clients/http-management-client.js";
 import { RestaurantClientError } from "../../../clients/http-restaurant-client.js";
-import { SiteHeader } from "../components/SiteHeader.js";
+import { SiteFooter, SiteHeader } from "../components/SiteHeader.js";
 import { useSeo } from "../useSeo.js";
 
 export function ManagementPage({ privateToken }: { privateToken?: string }) {
   useSeo("Bar management — Vibetail", "Manage a Vibetail merchant and its menus.", true);
-  if (!privateToken) return <div className="vt-page"><SiteHeader /><main className="vt-narrow"><header className="vt-page-title"><p className="vt-kicker">For bar teams</p><h1>Keep every recommendation honest.</h1><p>Open your private management link to edit menus, mark sold-out items and publish changes.</p></header><div className="vt-management-entry"><p>Local fixture demo</p><a className="vt-primary" href="/manage/fixture-double-chicken-demo">Open Double Chicken Please</a><small>This demo token is local, non-sensitive fixture data.</small></div></main></div>;
+  if (!privateToken) return <div className="vt-page"><SiteHeader /><main className="vt-narrow"><header className="vt-page-title"><p className="vt-kicker">For bar teams</p><h1>Keep every recommendation honest.</h1><p>Open your private management link to edit menus, mark sold-out items and publish changes.</p></header><div className="vt-management-entry"><p>Local fixture demo</p><a className="vt-primary" href="/manage/fixture-double-chicken-demo">Open Double Chicken Please</a><small>This demo token is local, non-sensitive fixture data.</small></div></main><SiteFooter /></div>;
   return <ManagementWorkspace privateToken={privateToken} />;
 }
 
@@ -41,7 +41,7 @@ function ManagementWorkspace({ privateToken }: { privateToken: string }) {
       <CreateMenuForm create={(input) => run(() => client.createMenu(input), "Draft menu created.")} />
       <div className="vt-menu-stack">{merchant.menus.map((menu) => <MenuEditor key={menu.id} merchantSlug={merchant.slug} menu={menu} run={run} client={client} />)}</div>
     </section>
-  </main></div>;
+  </main><SiteFooter /></div>;
 }
 
 function MerchantForm({ merchant, save }: { merchant: ManagedMerchant; save: (input: { name: string; shortIntro: string | null; logoUrl: string | null; coverImageUrl: string | null; isActive: boolean }) => void }) {

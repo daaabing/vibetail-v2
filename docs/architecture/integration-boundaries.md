@@ -4,9 +4,8 @@
 
 | Path | Owner / purpose | Allowed dependencies | Must not contain |
 | --- | --- | --- | --- |
-| `apps/web/src/features/restaurant-legacy/` | Temporary legacy restaurant view and interaction adapter | `RestaurantClient`, shared contracts, UI primitives | domain matching, Supabase service role, model/sandbox SDKs, Agent workflow |
 | `apps/web/src/features/platform/` | Landing, global match, directory, and minimal management UI | `RestaurantClient`, `ManagementClient`, shared contracts | Supabase/model SDKs, service-role key, matching policy |
-| `apps/web/src/features/restaurant/` | Incoming new restaurant UI/flow integration | shared contracts, `RestaurantClient` | provider SDKs, privileged data access |
+| `apps/web/src/features/restaurant/` | Current restaurant UI/flow | shared contracts, `RestaurantClient` | provider SDKs, privileged data access |
 | `apps/web/src/features/agent/` | Agent status/approval UI | Agent API contracts | restaurant component internals, worker execution |
 | `apps/web/` | HTTP composition, server/client env split, API/page wiring | core packages and adapters selected at composition root | vendor business logic, browser secrets |
 | `apps/agent-worker/` | durable run execution and provider composition | `agent-core`, `sandbox-runtime`, adapters, observability | React/UI implementation |
@@ -28,25 +27,20 @@ Changes to `packages/contracts` must be backward compatible for current consumer
 1. runtime schema and inferred type change together;
 2. fixture and contract-test updates;
 3. documented optionality/default semantics;
-4. verification that legacy adapter, incoming UI, restaurant core, and API agree;
+4. verification that the current UI, restaurant core, and API agree;
 5. no legacy-only field added to the canonical contract.
 
 The version 1 restaurant boundary fixes route identity, semantic states, input limits, selection-by-ID, canonical facts, and error codes. Visual layout, question wording, animation, and page composition remain replaceable.
 
-## How the new UI replaces legacy UI
+## How UI replacement is integrated
 
-1. Build the new feature in a separate directory without editing `restaurant-legacy` internals.
-2. Consume the same `RestaurantClient` and shared fixtures.
-3. Map loading, not-found, unpublished, empty/no-active-items, retryable failure, and matched states.
-4. Pass contract, route, mobile, accessibility, and no-forbidden-import checks.
-5. Switch only the route composition import.
-6. Delete `restaurant-legacy` and its compatibility mapper in one reviewed change.
+The `ui-polish` visual system was reimplemented in the current Vite application while retaining `RestaurantClient`, `ManagementClient`, shared fixtures, and every semantic error state. The old restaurant feature and its compatibility mapper were removed after route, mobile, accessibility, and forbidden-import checks passed.
 
 No API, Agent backend, worker, sandbox provider, or Supabase boundary should change merely to replace presentation.
 
 ## How the new restaurant flow connects
 
-The incoming flow provides approved preferences to `RestaurantClient.matchItem` and renders `RestaurantMatchResult`. If it needs an additional domain field, change the contract first rather than reading Supabase from the browser. Backend behavior is implemented in `restaurant-core`; temporary UI adapters translate at the edge and never change canonical response shape.
+The restaurant flow provides approved preferences to `RestaurantClient.matchItem` and renders `RestaurantMatchResult` directly. If it needs an additional domain field, change the contract first rather than reading Supabase from the browser. Backend behavior remains in `restaurant-core`.
 
 ## Global and management boundaries
 
@@ -65,6 +59,6 @@ The token adapter is temporary. Its deletion condition is Supabase Auth plus `me
 - Each parallel branch adds files within its owned directory; route composition changes happen only at integration time.
 - Do not format or reorganize unrelated code during integration.
 
-## Temporary compatibility mapper
+## Compatibility mapper status
 
-If Phase 2 needs one, it lives beside `restaurant-legacy/adapters`, is marked temporary, and maps canonical responses **to** the old view shape. It cannot add fields to the canonical API. Its deletion condition is the new UI owning `/m/:merchantSlug/:menuSlug`; generated-recipe, image, save, poster, and game fields will never be preserved.
+The temporary restaurant compatibility mapper has been deleted. Generated-recipe, image, save, poster, and game fields were not added to the canonical API.

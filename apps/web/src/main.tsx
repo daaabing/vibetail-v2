@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.js";
-import "./features/restaurant-legacy/styles/restaurant-legacy.css";
+import "./features/restaurant/styles/restaurant.css";
 import "./features/platform/styles/platform.css";
 
 const root = document.getElementById("root");

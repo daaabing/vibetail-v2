@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { RestaurantDirectoryEntry } from "@vibetail/contracts";
 import { HttpRestaurantClient } from "../../../clients/http-restaurant-client.js";
-import { SiteHeader } from "../components/SiteHeader.js";
+import { SiteFooter, SiteHeader } from "../components/SiteHeader.js";
 import { useSeo } from "../useSeo.js";
 
 const client = new HttpRestaurantClient();
@@ -16,5 +16,5 @@ export function RestaurantsPage() {
       <div className={`vt-venue-art vt-art-${index % 3}`}><span>{String(index + 1).padStart(2, "0")}</span></div><div><p className="vt-kicker">{menus.length} published {menus.length === 1 ? "menu" : "menus"}</p><h2>{restaurant.name}</h2><p>{restaurant.shortIntro}</p>
       <div className="vt-menu-links">{menus.map((menu) => <a key={menu.id} href={`/m/${restaurant.slug}/${menu.slug}`}>{menu.name}<span>→</span></a>)}</div></div>
     </article>)}</div>
-  </main></div>;
+  </main><SiteFooter /></div>;
 }
