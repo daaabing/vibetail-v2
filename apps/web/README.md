@@ -22,7 +22,7 @@ The API boundary is:
 - `POST /v1/matches/global`
 - `/v1/management/*` with a server-validated bearer token
 
-The temporary view lives under `src/features/restaurant-legacy`; the route only composes it. See that directory's README for deletion and compatibility rules.
+The guest-facing restaurant experience lives under `src/features/restaurant` and renders the canonical `RestaurantMatchResult` directly through `RestaurantClient`. The previous legacy view and compatibility mapper have been removed.
 
 ## Manual fixture matrix
 
@@ -42,6 +42,7 @@ The temporary view lives under `src/features/restaurant-legacy`; the route only 
 | Active bar directory | `/restaurants` |
 | Second restaurant | `/m/nightjar-demo/cocktails` |
 | Management | `/manage/fixture-double-chicken-demo` |
+| For bars | `/for-bars` |
 
 `fixture-double-chicken-demo` and `fixture-nightjar-demo-token` are public, local-only fixture tokens. Real private tokens belong only in private links and the request Authorization header; application logs must never contain them.
 

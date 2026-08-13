@@ -4,6 +4,7 @@ import { LandingPage } from "./features/platform/pages/LandingPage.js";
 import { ManagementPage } from "./features/platform/pages/ManagementPage.js";
 import { RestaurantsPage } from "./features/platform/pages/RestaurantsPage.js";
 import { RestaurantDetailPage } from "./features/platform/pages/RestaurantDetailPage.js";
+import { ForBarsPage } from "./features/platform/pages/ForBarsPage.js";
 
 export function App() {
   const route = resolveAppRoute(window.location.pathname);
@@ -12,6 +13,7 @@ export function App() {
   if (route.kind === "restaurants") return <RestaurantsPage />;
   if (route.kind === "restaurant_detail") return <RestaurantDetailPage merchantSlug={route.merchantSlug} />;
   if (route.kind === "management") return <ManagementPage {...(route.privateToken ? { privateToken: route.privateToken } : {})} />;
+  if (route.kind === "for_bars") return <ForBarsPage />;
   if (route.kind === "restaurant") return <RestaurantRoute merchantSlug={route.merchantSlug} menuSlug={route.menuSlug} />;
   return <main className="route-state"><p>404 · LOST THE THREAD</p><h1>That Vibetail page doesn’t exist.</h1><a href="/">Return home</a></main>;
 }
@@ -22,6 +24,7 @@ export type AppRoute =
   | { kind: "restaurants" }
   | { kind: "restaurant_detail"; merchantSlug: string }
   | { kind: "management"; privateToken?: string }
+  | { kind: "for_bars" }
   | { kind: "restaurant"; merchantSlug: string; menuSlug: string }
   | { kind: "not_found" };
 
@@ -33,6 +36,7 @@ export function resolveAppRoute(pathname: string): AppRoute {
   const detail = normalized.match(/^\/restaurants\/([^/]+)$/);
   if (detail?.[1]) return { kind: "restaurant_detail", merchantSlug: decodeURIComponent(detail[1]) };
   if (normalized === "/manage") return { kind: "management" };
+  if (normalized === "/for-bars") return { kind: "for_bars" };
   const management = normalized.match(/^\/manage\/([^/]+)$/);
   if (management?.[1]) return { kind: "management", privateToken: decodeURIComponent(management[1]) };
   const restaurant = matchRestaurantRoute(normalized);

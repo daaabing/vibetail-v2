@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import type { RestaurantError, RestaurantMenu } from "@vibetail/contracts";
 import { HttpRestaurantClient, RestaurantClientError } from "../clients/http-restaurant-client.js";
-import { RestaurantExperience } from "../features/restaurant-legacy/components/RestaurantExperience.js";
+import { RestaurantExperience } from "../features/restaurant/components/RestaurantExperience.js";
+import { clearMatchHandoff, readMatchHandoff } from "../features/matching/match-handoff.js";
 
 const client = new HttpRestaurantClient();
 
 export function RestaurantRoute({ merchantSlug, menuSlug }: { merchantSlug: string; menuSlug: string }) {
+  const [handoff] = useState(() => readMatchHandoff(`/m/${merchantSlug}/${menuSlug}`));
   const [menu, setMenu] = useState<RestaurantMenu>();
   const [error, setError] = useState<RestaurantError>();
+
+  useEffect(() => { if (handoff) clearMatchHandoff(); }, [handoff]);
 
   useEffect(() => {
     let active = true;
@@ -28,5 +32,5 @@ export function RestaurantRoute({ merchantSlug, menuSlug }: { merchantSlug: stri
     return <main className="route-state" data-testid="error-state"><p>{error.code}</p><h1>{error.message}</h1><a href={window.location.pathname}>Try again</a></main>;
   }
   if (!menu) return <main className="route-state" data-testid="route-loading"><div className="loading-orbit" aria-hidden="true"><span /></div><p>Opening the menu…</p></main>;
-  return <RestaurantExperience client={client} menu={menu} />;
+  return <RestaurantExperience client={client} menu={menu} {...(handoff?.preferences ? { initialPreferences: handoff.preferences } : {})} {...(handoff?.result ? { initialResult: handoff.result } : {})} />;
 }
