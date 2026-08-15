@@ -2,20 +2,20 @@
 
 ## Decision
 
-`vibetail-v2` is the long-term source of truth because the existing repository hides build/runtime behavior behind Lovable packages, mixes multiple retired product surfaces, and couples UI, provider calls, analytics, and persistence. The new repository keeps only the durable restaurant and agent capabilities behind explicit contracts.
+`vibetail-v2` is the long-term source of truth because the existing repository hides build/runtime behavior behind Lovable packages, mixes multiple retired product surfaces, and couples UI, provider calls, analytics, and persistence. The new repository keeps only the durable venue and agent capabilities behind explicit contracts.
 
-The demo may temporarily reuse selected restaurant interaction/UI pieces to protect the August 22 schedule. That code is an isolated replaceable feature, not a foundation. Two parallel owners will replace the restaurant UI and restaurant flow; they integrate through `packages/contracts`, the versioned REST API, fixtures, and semantic states rather than by modifying Agent or provider packages.
+The demo may temporarily reuse selected venue interaction/UI pieces to protect the August 22 schedule. That code is an isolated replaceable feature, not a foundation. Two parallel owners will replace the venue UI and venue flow; they integrate through `packages/contracts`, the versioned REST API, fixtures, and semantic states rather than by modifying Agent or provider packages.
 
 ## Runtime topology
 
 ```mermaid
 flowchart LR
   Browser["Guest / operator browser"] --> Web["apps/web: UI + HTTP API"]
-  Web --> Restaurant["packages/restaurant-core"]
-  Restaurant --> Repo["RestaurantRepository"]
+  Web --> Venue["packages/venue-core"]
+  Venue --> Repo["VenueRepository"]
   Repo --> Fixture["Deterministic fixtures"]
   Repo --> Supabase["Existing Supabase project"]
-  Restaurant --> Model["ModelProvider"]
+  Venue --> Model["ModelProvider"]
   Model --> Deterministic["Deterministic matcher"]
   Model --> RemoteModels["Vertex / Gemini / OpenAI / Alibaba adapters"]
   Web --> RunStore["Durable AgentRun store"]
@@ -35,28 +35,28 @@ For the demo, this may deploy as one web/API service and one worker. The same pa
 
 `packages/contracts` owns runtime-validated version 1 schemas for:
 
-- `RestaurantSummary`, `RestaurantMenu`, `RestaurantMenuItem`
-- `RestaurantPreferences`, `RestaurantMatchRequest`, `RestaurantMatchResult`, `RestaurantError`
+- `VenueSummary`, `VenueMenu`, `VenueMenuItem`
+- `VenuePreferences`, `VenueMatchRequest`, `VenueMatchResult`, `VenueError`
 - `AgentRun`, `AgentRunEvent`, `AgentApprovalRequest`
-- `RestaurantClient`
+- `VenueClient`
 - canonical API route templates
 - global directory/match results and minimal management inputs/results
 
 The contract deliberately excludes legacy recipe/card/save/share fields. Model selection has the smaller `{ matchedItemId, whyThisMatch }` shape. Public menu availability is only `active | sold_out`; `hidden` is an internal storage state and cannot parse as public output.
 
-## Restaurant boundary
+## Venue boundary
 
 Public entry remains `/m/:merchantSlug/:menuSlug`. The stable APIs are:
 
-- `GET /v1/restaurants`
-- `GET /v1/restaurants/:merchantSlug`
+- `GET /v1/venues`
+- `GET /v1/venues/:merchantSlug`
 - `POST /v1/matches/global`
-- `GET /v1/restaurants/:merchantSlug/menus/:menuSlug`
-- `POST /v1/restaurants/:merchantSlug/menus/:menuSlug/match`
+- `GET /v1/venues/:merchantSlug/menus/:menuSlug`
+- `POST /v1/venues/:merchantSlug/menus/:menuSlug/match`
 
-`RestaurantRepository` is the only database-facing port. `RestaurantService` loads the published menu, produces an active-item allowlist, asks a model provider for an ID, validates the current item again, and joins canonical database facts. UI code calls `RestaurantClient`; it never imports Supabase, a model SDK, or sandbox code.
+`VenueRepository` is the only database-facing port. `VenueService` loads the published menu, produces an active-item allowlist, asks a model provider for an ID, validates the current item again, and joins canonical database facts. UI code calls `VenueClient`; it never imports Supabase, a model SDK, or sandbox code.
 
-Global and restaurant-specific matching are two scopes over that same pipeline. Global returns canonical merchant/menu/item facts plus the route to the selected restaurant experience. Inactive merchants, unpublished menus, sold-out items, hidden items, and provider IDs outside the allowlist fail closed.
+Global and venue-specific matching are two scopes over that same pipeline. Global returns canonical merchant/menu/item facts plus the route to the selected venue experience. Inactive merchants, unpublished menus, sold-out items, hidden items, and provider IDs outside the allowlist fail closed.
 
 Phase 2.5 adds a minimal `ManagementService`/`ManagementRepository` boundary for merchant/menu/item editing and publishing. Fixture mode uses public local demo tokens. The Supabase adapter hashes real private tokens and uses the service role only in the server dependency tree. This is an explicit compatibility step toward Supabase Auth plus merchant membership/RBAC, not the long-term authorization model.
 
@@ -96,8 +96,8 @@ The web foundation contains testable health/readiness response builders. Phase 2
 
 | Concern | Demo path | Long-term path |
 | --- | --- | --- |
-| Restaurant data | deterministic fixture fallback; existing Supabase adapter in Phase 2 | repository adapter can evolve without UI changes |
-| Restaurant UI | optional isolated legacy subset | parallel new UI replaces the entire legacy feature |
+| Venue data | deterministic fixture fallback; existing Supabase adapter in Phase 2 | repository adapter can evolve without UI changes |
+| Venue UI | optional isolated legacy subset | parallel new UI replaces the entire legacy feature |
 | Matching | deterministic provider fallback | selectable model adapters behind one contract |
 | Sandbox | local tests plus real FC demo path | FC, E2B, or another provider by configuration/capability |
 | Deployment | standard Node/container, Railway-compatible | portable service/worker topology |

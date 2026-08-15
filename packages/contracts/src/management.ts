@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { restaurantSummarySchema } from "./restaurant.js";
+import { venueSummarySchema } from "./venue.js";
 
 const slugSchema = z.string().min(1).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const nullableUrlInputSchema = z.union([z.string().url(), z.literal(""), z.null()]).transform((value) => value || null);
@@ -28,7 +28,7 @@ export const managedMenuSchema = z.object({
   id: z.string().uuid(),
   slug: slugSchema,
   name: z.string().min(1).max(200),
-  status: z.enum(["draft", "published", "paused"]),
+  status: z.enum(["draft", "published", "paused", "archived"]),
   publishedVersionId: z.string().uuid().nullable(),
   shortIntro: z.string().max(1_000).nullable(),
   coverImageUrl: z.string().url().nullable(),
@@ -36,7 +36,7 @@ export const managedMenuSchema = z.object({
 });
 export type ManagedMenu = z.infer<typeof managedMenuSchema>;
 
-export const managedMerchantSchema = restaurantSummarySchema.extend({
+export const managedMerchantSchema = venueSummarySchema.extend({
   isActive: z.boolean(),
   menus: z.array(managedMenuSchema),
 });

@@ -4,7 +4,7 @@ import { readinessResponse } from "./health.js";
 
 const localEnv = {
   APP_URL: "http://127.0.0.1:3000",
-  RESTAURANT_REPOSITORY: "fixture",
+  VENUE_REPOSITORY: "fixture",
   MODEL_PROVIDER: "deterministic",
   SANDBOX_PROVIDER: "local",
 };
@@ -12,7 +12,7 @@ const localEnv = {
 describe("web environment", () => {
   it("accepts credential-free deterministic local mode", () => {
     const parsed = parseWebEnv(localEnv);
-    expect(parsed.serverEnv.RESTAURANT_REPOSITORY).toBe("fixture");
+    expect(parsed.serverEnv.VENUE_REPOSITORY).toBe("fixture");
     expect(parsed.serverEnv.MODEL_PROVIDER).toBe("deterministic");
     expect(parsed.serverEnv.HOST).toBe("127.0.0.1");
   });
@@ -27,7 +27,7 @@ describe("web environment", () => {
     expect(() => parseWebEnv({ ...localEnv, SANDBOX_PROVIDER: "fc" })).toThrow(
       /FC_SANDBOX_ENDPOINT/,
     );
-    expect(() => parseWebEnv({ ...localEnv, RESTAURANT_REPOSITORY: "supabase" })).toThrow(
+    expect(() => parseWebEnv({ ...localEnv, VENUE_REPOSITORY: "supabase" })).toThrow(
       /SUPABASE_URL/,
     );
     expect(() => parseWebEnv({ ...localEnv, MODEL_PROVIDER: "openrouter" })).toThrow(
@@ -47,6 +47,18 @@ describe("web environment", () => {
     expect("OPENROUTER_API_KEY" in parsed.publicEnv).toBe(false);
   });
 
+  it("honors the deprecated RESTAURANT_REPOSITORY alias when VENUE_REPOSITORY is unset", () => {
+    const parsed = parseWebEnv({
+      APP_URL: localEnv.APP_URL,
+      MODEL_PROVIDER: localEnv.MODEL_PROVIDER,
+      SANDBOX_PROVIDER: localEnv.SANDBOX_PROVIDER,
+      RESTAURANT_REPOSITORY: "fixture",
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_PUBLISHABLE_KEY: "publishable-key",
+    });
+    expect(parsed.serverEnv.VENUE_REPOSITORY).toBe("fixture");
+  });
+
   it("selects Supabase automatically when the existing public credentials are present", () => {
     const parsed = parseWebEnv({
       APP_URL: localEnv.APP_URL,
@@ -55,7 +67,7 @@ describe("web environment", () => {
       SUPABASE_URL: "https://example.supabase.co",
       SUPABASE_PUBLISHABLE_KEY: "publishable-key",
     });
-    expect(parsed.serverEnv.RESTAURANT_REPOSITORY).toBe("supabase");
+    expect(parsed.serverEnv.VENUE_REPOSITORY).toBe("supabase");
     expect(parsed.serverEnv.SUPABASE_SERVICE_ROLE_KEY).toBeUndefined();
   });
 

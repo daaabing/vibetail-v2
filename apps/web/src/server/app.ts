@@ -1,27 +1,40 @@
 import {
   createMenuInputSchema,
+  createVenueInputSchema,
+  createVenueMenuInputSchema,
+  drinkInfoRequestSchema,
+  drinkInputSchema,
+  feedbackInputSchema,
   globalMatchRequestSchema,
   menuItemInputSchema,
-  restaurantErrorSchema,
-  restaurantPreferencesSchema,
+  menuViewEventSchema,
+  updateVenueMenuInputSchema,
+  venueDashboardRangeSchema,
+  venueErrorSchema,
+  venueLoginInputSchema,
+  venuePreferencesSchema,
   updateAvailabilityInputSchema,
   updateMenuInputSchema,
   updateMerchantInputSchema,
-  type RestaurantError,
+  type VenueError,
+  type VenueMatchResult,
 } from "@vibetail/contracts";
 import {
   ManagementServiceError,
-  RestaurantRepositoryUnavailableError,
-  RestaurantServiceError,
-  type DefaultRestaurantService,
+  VenueManagementServiceError,
+  VenueRepositoryUnavailableError,
+  VenueServiceError,
+  type DefaultVenueService,
   type ManagementService,
-} from "@vibetail/restaurant-core";
+  type VenueManagementService,
+} from "@vibetail/venue-core";
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
 import { ZodError } from "zod";
 
 export interface WebAppOptions {
-  restaurantService: DefaultRestaurantService;
+  venueService: DefaultVenueService;
   managementService: ManagementService;
+  venueManagementService: VenueManagementService;
   dataSource: "fixture" | "supabase";
   checkReadiness?: () => Promise<Array<{ name: string; ready: boolean; detail: string }>>;
   testFrontend?: boolean;
@@ -41,7 +54,7 @@ export function createWebApp(options: WebAppOptions): Express {
     asyncRoute(async (_request, response) => {
       const checks = options.checkReadiness
         ? await options.checkReadiness()
-        : [{ name: "restaurant_repository", ready: true, detail: options.dataSource }];
+        : [{ name: "venue_repository", ready: true, detail: options.dataSource }];
       const ready = checks.every((check) => check.ready);
       response.status(ready ? 200 : 503).json({
         status: ready ? "ready" : "not_ready",
@@ -53,16 +66,16 @@ export function createWebApp(options: WebAppOptions): Express {
   );
 
   app.get(
-    "/v1/restaurants",
+    "/v1/venues",
     asyncRoute(async (_request, response) => {
-      response.json(await options.restaurantService.listActiveRestaurants());
+      response.json(await options.venueService.listActiveVenues());
     }),
   );
 
   app.get(
-    "/v1/restaurants/:merchantSlug",
+    "/v1/venues/:merchantSlug",
     asyncRoute(async (request, response) => {
-      response.json(await options.restaurantService.getRestaurant(request.params.merchantSlug ?? ""));
+      response.json(await options.venueService.getVenue(request.params.merchantSlug ?? ""));
     }),
   );
 
@@ -70,14 +83,31 @@ export function createWebApp(options: WebAppOptions): Express {
     "/v1/matches/global",
     asyncRoute(async (request, response) => {
       const { preferences } = globalMatchRequestSchema.parse(request.body);
-      response.json(await options.restaurantService.matchGlobalItem(preferences));
+      const result = await options.venueService.matchGlobalItem(preferences);
+      response.json(await withMatchId(options.venueManagementService, result));
     }),
   );
 
   app.get(
-    "/v1/restaurants/:merchantSlug/menus/:menuSlug",
+    "/v1/venues/:merchantSlug/current-menu",
     asyncRoute(async (request, response) => {
-      const menu = await options.restaurantService.getPublishedRestaurantMenu(
+      const merchantSlug = request.params.merchantSlug ?? "";
+      const entry = await options.venueService.getVenue(merchantSlug);
+      const currentMenu = entry.menus[0];
+      if (!currentMenu) {
+        throw new VenueServiceError(
+          { code: "NO_PUBLISHED_MENU", message: "This venue has no published menu right now.", retryable: false },
+          404,
+        );
+      }
+      response.json(await options.venueService.getPublishedVenueMenu(merchantSlug, currentMenu.slug));
+    }),
+  );
+
+  app.get(
+    "/v1/venues/:merchantSlug/menus/:menuSlug",
+    asyncRoute(async (request, response) => {
+      const menu = await options.venueService.getPublishedVenueMenu(
         request.params.merchantSlug ?? "",
         request.params.menuSlug ?? "",
       );
@@ -163,18 +193,180 @@ export function createWebApp(options: WebAppOptions): Express {
   );
 
   app.post(
-    "/v1/restaurants/:merchantSlug/menus/:menuSlug/match",
+    "/v1/venues/:merchantSlug/menus/:menuSlug/match",
     asyncRoute(async (request, response) => {
       const rawPreferences = isRecord(request.body) && "preferences" in request.body
         ? request.body.preferences
         : request.body;
-      const preferences = restaurantPreferencesSchema.parse(rawPreferences);
-      const result = await options.restaurantService.matchRestaurantItem({
+      const preferences = venuePreferencesSchema.parse(rawPreferences);
+      const result = await options.venueService.matchVenueItem({
         merchantSlug: request.params.merchantSlug ?? "",
         menuSlug: request.params.menuSlug ?? "",
         preferences,
       });
-      response.json(result);
+      response.json(await withMatchId(options.venueManagementService, result));
+    }),
+  );
+
+  const venueManagement = options.venueManagementService;
+
+  app.post(
+    "/v1/venue/session",
+    asyncRoute(async (request, response) => {
+      const { name } = venueLoginInputSchema.parse(request.body);
+      response.status(201).json(await venueManagement.login(name));
+    }),
+  );
+
+  app.get(
+    "/v1/venue/session",
+    asyncRoute(async (request, response) => {
+      response.json(await venueManagement.getSession(readBearerToken(request)));
+    }),
+  );
+
+  app.delete(
+    "/v1/venue/session",
+    asyncRoute(async (request, response) => {
+      await venueManagement.logout(readBearerToken(request));
+      response.status(204).end();
+    }),
+  );
+
+  app.post(
+    "/v1/venue",
+    asyncRoute(async (request, response) => {
+      response.status(201).json(await venueManagement.createVenue(
+        readBearerToken(request), createVenueInputSchema.parse(request.body),
+      ));
+    }),
+  );
+
+  app.get(
+    "/v1/venue/dashboard",
+    asyncRoute(async (request, response) => {
+      const range = venueDashboardRangeSchema.parse(request.query.range ?? "today");
+      response.json(await venueManagement.getDashboard(readBearerToken(request), range));
+    }),
+  );
+
+  app.get(
+    "/v1/venue/qr",
+    asyncRoute(async (request, response) => {
+      response.json(await venueManagement.getQr(readBearerToken(request)));
+    }),
+  );
+
+  app.get(
+    "/v1/venue/drinks",
+    asyncRoute(async (request, response) => {
+      response.json(await venueManagement.listDrinks(readBearerToken(request)));
+    }),
+  );
+
+  app.post(
+    "/v1/venue/drinks",
+    asyncRoute(async (request, response) => {
+      response.status(201).json(await venueManagement.createDrink(
+        readBearerToken(request), drinkInputSchema.parse(request.body),
+      ));
+    }),
+  );
+
+  app.post(
+    "/v1/venue/drinks/suggest",
+    asyncRoute(async (request, response) => {
+      response.json(await venueManagement.suggestDrinkInfo(
+        readBearerToken(request), drinkInfoRequestSchema.parse(request.body),
+      ));
+    }),
+  );
+
+  app.patch(
+    "/v1/venue/drinks/:drinkId",
+    asyncRoute(async (request, response) => {
+      response.json(await venueManagement.updateDrink(
+        readBearerToken(request), request.params.drinkId ?? "", drinkInputSchema.parse(request.body),
+      ));
+    }),
+  );
+
+  app.get(
+    "/v1/venue/drinks/:drinkId/usage",
+    asyncRoute(async (request, response) => {
+      response.json(await venueManagement.getDrinkUsage(
+        readBearerToken(request), request.params.drinkId ?? "",
+      ));
+    }),
+  );
+
+  app.delete(
+    "/v1/venue/drinks/:drinkId",
+    asyncRoute(async (request, response) => {
+      response.json(await venueManagement.deleteDrink(
+        readBearerToken(request), request.params.drinkId ?? "",
+      ));
+    }),
+  );
+
+  app.get(
+    "/v1/venue/menus",
+    asyncRoute(async (request, response) => {
+      response.json(await venueManagement.listMenus(readBearerToken(request)));
+    }),
+  );
+
+  app.post(
+    "/v1/venue/menus",
+    asyncRoute(async (request, response) => {
+      response.status(201).json(await venueManagement.createMenu(
+        readBearerToken(request), createVenueMenuInputSchema.parse(request.body),
+      ));
+    }),
+  );
+
+  app.patch(
+    "/v1/venue/menus/:menuId",
+    asyncRoute(async (request, response) => {
+      response.json(await venueManagement.updateMenu(
+        readBearerToken(request), request.params.menuId ?? "", updateVenueMenuInputSchema.parse(request.body),
+      ));
+    }),
+  );
+
+  app.delete(
+    "/v1/venue/menus/:menuId",
+    asyncRoute(async (request, response) => {
+      await venueManagement.deleteMenu(readBearerToken(request), request.params.menuId ?? "");
+      response.status(204).end();
+    }),
+  );
+
+  app.post(
+    "/v1/venue/menus/:menuId/publish",
+    asyncRoute(async (request, response) => {
+      response.json(await venueManagement.publishMenu(
+        readBearerToken(request), request.params.menuId ?? "",
+      ));
+    }),
+  );
+
+  app.post(
+    "/v1/events/menu-views",
+    asyncRoute(async (request, response) => {
+      // Always 204: consumer beacons must never surface analytics failures.
+      const parsed = menuViewEventSchema.safeParse(request.body);
+      if (parsed.success) await venueManagement.recordMenuView(parsed.data);
+      response.status(204).end();
+    }),
+  );
+
+  app.post(
+    "/v1/matches/:matchId/feedback",
+    asyncRoute(async (request, response) => {
+      response.status(201).json(await venueManagement.submitFeedback(
+        request.params.matchId ?? "", feedbackInputSchema.parse(request.body),
+      ));
     }),
   );
 
@@ -183,7 +375,7 @@ export function createWebApp(options: WebAppOptions): Express {
       code: "MENU_NOT_FOUND",
       message: "API route not found.",
       retryable: false,
-    } satisfies RestaurantError);
+    } satisfies VenueError);
   });
 
   if (options.testFrontend) {
@@ -210,12 +402,28 @@ function asyncRoute(
   };
 }
 
-function mapError(error: unknown): { status: number; body: RestaurantError } {
-  if (error instanceof RestaurantServiceError) {
-    return { status: error.httpStatus, body: restaurantErrorSchema.parse(error.detail) };
+// Analytics writes are best-effort: a failed record must never fail the match.
+async function withMatchId(
+  service: VenueManagementService,
+  result: VenueMatchResult,
+): Promise<VenueMatchResult> {
+  try {
+    const matchId = await service.recordMatch(result);
+    return matchId ? { ...result, matchId } : result;
+  } catch {
+    return result;
+  }
+}
+
+function mapError(error: unknown): { status: number; body: VenueError } {
+  if (error instanceof VenueServiceError) {
+    return { status: error.httpStatus, body: venueErrorSchema.parse(error.detail) };
   }
   if (error instanceof ManagementServiceError) {
-    return { status: error.httpStatus, body: restaurantErrorSchema.parse(error.detail) };
+    return { status: error.httpStatus, body: venueErrorSchema.parse(error.detail) };
+  }
+  if (error instanceof VenueManagementServiceError) {
+    return { status: error.httpStatus, body: venueErrorSchema.parse(error.detail) };
   }
   if (error instanceof ZodError) {
     return {
@@ -227,12 +435,12 @@ function mapError(error: unknown): { status: number; body: RestaurantError } {
       },
     };
   }
-  if (error instanceof RestaurantRepositoryUnavailableError) {
+  if (error instanceof VenueRepositoryUnavailableError) {
     return {
       status: 503,
       body: {
         code: "INTERNAL_ERROR",
-        message: "Restaurant data is temporarily unavailable.",
+        message: "Venue data is temporarily unavailable.",
         retryable: true,
       },
     };
@@ -249,13 +457,13 @@ function readBearerToken(request: Request): string {
   return match?.[1] ?? "";
 }
 
-function logServerError(request: Request, error: RestaurantError): void {
+function logServerError(request: Request, error: VenueError): void {
   console.error(
     JSON.stringify({
       timestamp: new Date().toISOString(),
       level: "error",
       service: "web",
-      event: "restaurant_request_failed",
+      event: "venue_request_failed",
       method: request.method,
       path: request.path,
       error_code: error.code,

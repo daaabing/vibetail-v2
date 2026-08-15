@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { OpenAIModelProvider, type OpenAIResponsesClient, type RestaurantModelRequest } from "./index.js";
+import { OpenAIModelProvider, type OpenAIResponsesClient, type VenueModelRequest } from "./index.js";
 
 const selectedId = "33333333-3333-4333-8333-333333333331";
 
-function request(): RestaurantModelRequest {
+function request(): VenueModelRequest {
   return {
     merchantId: "11111111-1111-4111-8111-111111111111",
     menuId: "22222222-2222-4222-8222-222222222222",
@@ -52,7 +52,7 @@ describe("OpenAIModelProvider", () => {
     };
 
     const result = await new OpenAIModelProvider({ apiKey: "test-key", model: "gpt-5.6-terra", client })
-      .selectRestaurantItem(request());
+      .selectVenueItem(request());
 
     expect(result.selection.matchedItemId).toBe(selectedId);
     expect(result.metadata).toMatchObject({ provider: "openai", model: "gpt-5.6-terra", attempt: 1 });
@@ -76,6 +76,39 @@ describe("OpenAIModelProvider", () => {
     };
 
     await expect(new OpenAIModelProvider({ apiKey: "test-key", model: "gpt-5.6-terra", client })
-      .selectRestaurantItem(request())).rejects.toThrow();
+      .selectVenueItem(request())).rejects.toThrow();
+  });
+
+  it("suggests drink info with strict structured output", async () => {
+    let capturedRequest: Record<string, unknown> | undefined;
+    const client: OpenAIResponsesClient = {
+      responses: {
+        parse: async (body) => {
+          capturedRequest = body;
+          return {
+            output_parsed: {
+              flavorTags: ["citrusy"],
+              baseSpirit: "gin",
+              strength: "light",
+              recommendationNote: "A bright, low-lift opener for guests starting their evening.",
+            },
+          };
+        },
+      },
+    };
+
+    const result = await new OpenAIModelProvider({ apiKey: "test-key", model: "gpt-5.6-terra", client })
+      .suggestDrinkInfo({
+        name: "Garden Spritz",
+        description: null,
+        ingredients: ["gin", "tonic"],
+        locale: "en",
+        traceId: "trace-openai-drink-info",
+        timeoutMs: 8_000,
+      });
+
+    expect(result.suggestion.strength).toBe("light");
+    expect(capturedRequest).toMatchObject({ store: false, reasoning: { effort: "low" } });
+    expect(JSON.stringify(capturedRequest)).toContain("Garden Spritz");
   });
 });

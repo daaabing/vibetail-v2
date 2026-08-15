@@ -1,3 +1,4 @@
 export * from "./agent.js";
 export * from "./management.js";
-export * from "./restaurant.js";
+export * from "./venue.js";
+export * from "./venue-management.js";

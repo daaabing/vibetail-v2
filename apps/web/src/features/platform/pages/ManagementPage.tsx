@@ -7,7 +7,7 @@ import type {
   UpdateMenuInput,
 } from "@vibetail/contracts";
 import { HttpManagementClient } from "../../../clients/http-management-client.js";
-import { RestaurantClientError } from "../../../clients/http-restaurant-client.js";
+import { VenueClientError } from "../../../clients/http-venue-client.js";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader.js";
 import { useSeo } from "../useSeo.js";
 
@@ -34,7 +34,7 @@ function ManagementWorkspace({ privateToken }: { privateToken: string }) {
   if (!merchant) return <div className="vt-page"><SiteHeader /><main className="vt-narrow"><div className="vt-alert" role="alert"><strong>Management link unavailable</strong><p>{error}</p></div></main></div>;
 
   return <div className="vt-page vt-management"><SiteHeader /><main className="vt-wide">
-    <header className="vt-management-title"><div><p className="vt-kicker">Temporary private-link management</p><h1>{merchant.name}</h1><p>Edit the live facts. Matching only sees active items on published menus.</p></div><a className="vt-secondary" href={`/restaurants/${merchant.slug}`}>Public listing</a></header>
+    <header className="vt-management-title"><div><p className="vt-kicker">Temporary private-link management</p><h1>{merchant.name}</h1><p>Edit the live facts. Matching only sees active items on published menus.</p></div><a className="vt-secondary" href={`/venues/${merchant.slug}`}>Public listing</a></header>
     {error && <div className="vt-alert" role="alert">{error}</div>}{notice && <p className="vt-notice" role="status">{notice}</p>}
     <MerchantForm merchant={merchant} save={(input) => run(() => client.updateMerchant(input), "Bar profile saved.")} />
     <section className="vt-manage-section"><div className="vt-section-heading"><div><p className="vt-kicker">Menus</p><h2>Published experiences</h2></div><span>{merchant.menus.length} total</span></div>
@@ -88,4 +88,4 @@ function ItemFields({ item, save }: { item?: ManagedMenuItem; save: (event: Form
 function itemInput(data: FormData): MenuItemInput { return { name: String(data.get("name")), description: nullable(data.get("description")), imageUrl: nullable(data.get("imageUrl")), alcoholic: data.get("alcoholic") === "on", baseSpirit: nullable(data.get("baseSpirit")), flavorTags: tags(data.get("flavorTags")), moodTags: tags(data.get("moodTags")), ingredients: tags(data.get("ingredients")), allergens: tags(data.get("allergens")), section: nullable(data.get("section")) }; }
 function tags(value: FormDataEntryValue | null): string[] { return String(value ?? "").split(",").map((item) => item.trim()).filter(Boolean); }
 function nullable(value: FormDataEntryValue | null): string | null { const result = String(value ?? "").trim(); return result || null; }
-function message(error: unknown): string { return error instanceof RestaurantClientError ? error.detail.message : "The management service could not complete that action."; }
+function message(error: unknown): string { return error instanceof VenueClientError ? error.detail.message : "The management service could not complete that action."; }

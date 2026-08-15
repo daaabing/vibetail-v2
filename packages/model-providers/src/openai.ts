@@ -1,8 +1,16 @@
-import { modelMatchSelectionSchema } from "@vibetail/contracts";
+import { drinkInfoSuggestionSchema, modelMatchSelectionSchema } from "@vibetail/contracts";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
-import type { ModelProvider, ModelProviderResult, RestaurantModelRequest } from "./index.js";
-import { restaurantMatchSystemPrompt } from "./restaurant-prompt.js";
+import type {
+  DrinkInfoModelRequest,
+  DrinkInfoProvider,
+  DrinkInfoResult,
+  ModelProvider,
+  ModelProviderResult,
+  VenueModelRequest,
+} from "./index.js";
+import { drinkInfoSystemPrompt } from "./drink-info-prompt.js";
+import { venueMatchSystemPrompt } from "./venue-prompt.js";
 
 export interface OpenAIResponsesClient {
   responses: {
@@ -19,7 +27,7 @@ export interface OpenAIModelProviderOptions {
   client?: OpenAIResponsesClient;
 }
 
-export class OpenAIModelProvider implements ModelProvider {
+export class OpenAIModelProvider implements ModelProvider, DrinkInfoProvider {
   readonly id = "openai";
   private readonly client: OpenAIResponsesClient;
   private readonly model: string;
@@ -34,7 +42,7 @@ export class OpenAIModelProvider implements ModelProvider {
     }) as unknown as OpenAIResponsesClient);
   }
 
-  async selectRestaurantItem(request: RestaurantModelRequest): Promise<ModelProviderResult> {
+  async selectVenueItem(request: VenueModelRequest): Promise<ModelProviderResult> {
     if (request.allowedItems.length === 0) throw new Error("No allowed menu items were provided");
     const startedAt = performance.now();
     const response = await this.client.responses.parse({
@@ -45,7 +53,7 @@ export class OpenAIModelProvider implements ModelProvider {
       input: [
         {
           role: "system",
-          content: restaurantMatchSystemPrompt(request.locale),
+          content: venueMatchSystemPrompt(request.locale),
         },
         {
           role: "user",
@@ -57,13 +65,52 @@ export class OpenAIModelProvider implements ModelProvider {
       ],
       text: {
         verbosity: "low",
-        format: zodTextFormat(modelMatchSelectionSchema, "restaurant_match_selection"),
+        format: zodTextFormat(modelMatchSelectionSchema, "venue_match_selection"),
       },
     }, { timeout: request.timeoutMs });
 
     const selection = modelMatchSelectionSchema.strict().parse(response.output_parsed);
     return {
       selection,
+      metadata: {
+        provider: this.id,
+        model: this.model,
+        attempt: 1,
+        durationMs: Math.max(0, Math.round(performance.now() - startedAt)),
+      },
+    };
+  }
+
+  async suggestDrinkInfo(request: DrinkInfoModelRequest): Promise<DrinkInfoResult> {
+    const startedAt = performance.now();
+    const response = await this.client.responses.parse({
+      model: this.model,
+      store: false,
+      reasoning: { effort: "low" },
+      max_output_tokens: 500,
+      input: [
+        {
+          role: "system",
+          content: drinkInfoSystemPrompt(request.locale),
+        },
+        {
+          role: "user",
+          content: JSON.stringify({
+            name: request.name,
+            description: request.description,
+            ingredients: request.ingredients,
+          }),
+        },
+      ],
+      text: {
+        verbosity: "low",
+        format: zodTextFormat(drinkInfoSuggestionSchema, "drink_info_suggestion"),
+      },
+    }, { timeout: request.timeoutMs });
+
+    const suggestion = drinkInfoSuggestionSchema.strict().parse(response.output_parsed);
+    return {
+      suggestion,
       metadata: {
         provider: this.id,
         model: this.model,

@@ -1,26 +1,27 @@
 import { useState, type ReactNode } from "react";
-import type { Locale, RestaurantError, RestaurantMatchResult, RestaurantPreferences } from "@vibetail/contracts";
-import { RestaurantClientError } from "../../../clients/http-restaurant-client.js";
+import type { Locale, VenueError, VenueMatchResult, VenuePreferences } from "@vibetail/contracts";
+import { VenueClientError } from "../../../clients/http-venue-client.js";
+import { FeedbackForm } from "./FeedbackForm.js";
 import { PreferenceForm } from "./PreferenceForm.js";
 
 interface MatchFlowProps {
   context: { kicker: string; title: string; description: string };
-  destination?(result: RestaurantMatchResult): { label: string; url: string };
+  destination?(result: VenueMatchResult): { label: string; url: string };
   headerAction?: ReactNode;
-  initialPreferences?: RestaurantPreferences;
-  initialResult?: RestaurantMatchResult;
+  initialPreferences?: VenuePreferences;
+  initialResult?: VenueMatchResult;
   locale: Locale;
-  match(preferences: RestaurantPreferences): Promise<RestaurantMatchResult>;
-  onDestination?(preferences: RestaurantPreferences, result: RestaurantMatchResult): void;
+  match(preferences: VenuePreferences): Promise<VenueMatchResult>;
+  onDestination?(preferences: VenuePreferences, result: VenueMatchResult): void;
 }
 
 export function MatchFlow({ context, destination, headerAction, initialPreferences, initialResult, locale, match, onDestination }: MatchFlowProps) {
-  const [preferences, setPreferences] = useState<RestaurantPreferences | undefined>(initialPreferences);
-  const [result, setResult] = useState<RestaurantMatchResult | undefined>(initialResult);
+  const [preferences, setPreferences] = useState<VenuePreferences | undefined>(initialPreferences);
+  const [result, setResult] = useState<VenueMatchResult | undefined>(initialResult);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<RestaurantError>();
+  const [error, setError] = useState<VenueError>();
 
-  async function submit(nextPreferences: RestaurantPreferences) {
+  async function submit(nextPreferences: VenuePreferences) {
     setPreferences(nextPreferences);
     setBusy(true);
     setError(undefined);
@@ -53,7 +54,7 @@ export function MatchFlow({ context, destination, headerAction, initialPreferenc
 function RecommendationCard({ destination, locale, result, onAgain, onDestination, onEdit }: {
   destination?: { label: string; url: string };
   locale: Locale;
-  result: RestaurantMatchResult;
+  result: VenueMatchResult;
   onAgain(): void;
   onDestination(): void;
   onEdit(): void;
@@ -62,7 +63,7 @@ function RecommendationCard({ destination, locale, result, onAgain, onDestinatio
   return <article className="vt-match-result" data-testid="match-result">
     <p className="vt-kicker">{locale === "zh" ? "今晚为你挑选" : "Your match for tonight"}</p>
     <h2>{result.item.name}</h2>
-    <p className="vt-at">{locale === "zh" ? "来自" : "at"} <strong>{result.restaurant.name}</strong> · {result.menu.name}</p>
+    <p className="vt-at">{locale === "zh" ? "来自" : "at"} <strong>{result.venue.name}</strong> · {result.menu.name}</p>
     <blockquote>{result.whyThisMatch}</blockquote>
     {result.item.description && <p className="vt-result-description">{result.item.description}</p>}
     {tags.length > 0 && <div className="vt-tags">{tags.map((tag) => <span key={tag}>{tag}</span>)}</div>}
@@ -76,6 +77,7 @@ function RecommendationCard({ destination, locale, result, onAgain, onDestinatio
       <button className={destination ? "vt-secondary" : "vt-primary"} type="button" onClick={onAgain}>{locale === "zh" ? "用相同偏好再匹配" : "Match again"}</button>
       <button className="vt-link-button" type="button" onClick={onEdit}>{locale === "zh" ? "修改偏好" : "Edit preferences"}</button>
     </div>
+    {result.matchId && <FeedbackForm key={result.matchId} matchId={result.matchId} locale={locale} />}
   </article>;
 }
 
@@ -87,7 +89,7 @@ function MatchLoading({ locale }: { locale: Locale }) {
   </section>;
 }
 
-function MatchError({ error, locale, onRetry, onEdit }: { error: RestaurantError; locale: Locale; onRetry(): void; onEdit(): void }) {
+function MatchError({ error, locale, onRetry, onEdit }: { error: VenueError; locale: Locale; onRetry(): void; onEdit(): void }) {
   return <section className="vt-match-state" data-testid="error-state" role="alert">
     <p className="vt-kicker">{error.code}</p>
     <h2>{locale === "zh" ? "这次没有匹配成功" : "That match didn’t land"}</h2>
@@ -96,7 +98,7 @@ function MatchError({ error, locale, onRetry, onEdit }: { error: RestaurantError
   </section>;
 }
 
-function toClientError(error: unknown): RestaurantError {
-  if (error instanceof RestaurantClientError) return error.detail;
-  return { code: "INTERNAL_ERROR", message: "We couldn't reach the restaurant service.", retryable: true };
+function toClientError(error: unknown): VenueError {
+  if (error instanceof VenueClientError) return error.detail;
+  return { code: "INTERNAL_ERROR", message: "We couldn't reach the venue service.", retryable: true };
 }

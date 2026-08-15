@@ -1,8 +1,16 @@
-import { modelMatchSelectionSchema } from "@vibetail/contracts";
+import { drinkInfoSuggestionSchema, modelMatchSelectionSchema } from "@vibetail/contracts";
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
-import type { ModelProvider, ModelProviderResult, RestaurantModelRequest } from "./index.js";
-import { restaurantMatchSystemPrompt } from "./restaurant-prompt.js";
+import type {
+  DrinkInfoModelRequest,
+  DrinkInfoProvider,
+  DrinkInfoResult,
+  ModelProvider,
+  ModelProviderResult,
+  VenueModelRequest,
+} from "./index.js";
+import { drinkInfoSystemPrompt } from "./drink-info-prompt.js";
+import { venueMatchSystemPrompt } from "./venue-prompt.js";
 
 // Keep the gateway URL inside this adapter so domain and UI code stay vendor-neutral.
 const openRouterBaseUrl = "https://openrouter.ai/api/v1";
@@ -27,7 +35,7 @@ export interface OpenRouterModelProviderOptions {
   client?: OpenRouterChatClient;
 }
 
-export class OpenRouterModelProvider implements ModelProvider {
+export class OpenRouterModelProvider implements ModelProvider, DrinkInfoProvider {
   readonly id = "openrouter";
   private readonly client: OpenRouterChatClient;
   private readonly model: string;
@@ -46,7 +54,7 @@ export class OpenRouterModelProvider implements ModelProvider {
     }) as unknown as OpenRouterChatClient);
   }
 
-  async selectRestaurantItem(request: RestaurantModelRequest): Promise<ModelProviderResult> {
+  async selectVenueItem(request: VenueModelRequest): Promise<ModelProviderResult> {
     if (request.allowedItems.length === 0) throw new Error("No allowed menu items were provided");
     const startedAt = performance.now();
     const response = await this.client.chat.completions.parse({
@@ -54,7 +62,7 @@ export class OpenRouterModelProvider implements ModelProvider {
       messages: [
         {
           role: "system",
-          content: restaurantMatchSystemPrompt(request.locale),
+          content: venueMatchSystemPrompt(request.locale),
         },
         {
           role: "user",
@@ -71,7 +79,7 @@ export class OpenRouterModelProvider implements ModelProvider {
       },
       response_format: zodResponseFormat(
         modelMatchSelectionSchema.strict(),
-        "restaurant_match_selection",
+        "venue_match_selection",
       ),
       provider: {
         require_parameters: true,
@@ -86,6 +94,55 @@ export class OpenRouterModelProvider implements ModelProvider {
     const selection = modelMatchSelectionSchema.strict().parse(message.parsed);
     return {
       selection,
+      metadata: {
+        provider: this.id,
+        model: this.model,
+        attempt: 1,
+        durationMs: Math.max(0, Math.round(performance.now() - startedAt)),
+      },
+    };
+  }
+
+  async suggestDrinkInfo(request: DrinkInfoModelRequest): Promise<DrinkInfoResult> {
+    const startedAt = performance.now();
+    const response = await this.client.chat.completions.parse({
+      model: this.model,
+      messages: [
+        {
+          role: "system",
+          content: drinkInfoSystemPrompt(request.locale),
+        },
+        {
+          role: "user",
+          content: JSON.stringify({
+            name: request.name,
+            description: request.description,
+            ingredients: request.ingredients,
+          }),
+        },
+      ],
+      max_completion_tokens: 800,
+      reasoning: {
+        effort: "minimal",
+        exclude: true,
+      },
+      response_format: zodResponseFormat(
+        drinkInfoSuggestionSchema.strict(),
+        "drink_info_suggestion",
+      ),
+      provider: {
+        require_parameters: true,
+        data_collection: "deny",
+      },
+    }, { timeout: request.timeoutMs });
+
+    const message = response.choices[0]?.message;
+    if (!message?.parsed) {
+      throw new Error(message?.refusal ? "OpenRouter model refused the drink info request" : "OpenRouter returned no parsed drink info");
+    }
+    const suggestion = drinkInfoSuggestionSchema.strict().parse(message.parsed);
+    return {
+      suggestion,
       metadata: {
         provider: this.id,
         model: this.model,

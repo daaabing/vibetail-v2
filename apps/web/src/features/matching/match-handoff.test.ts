@@ -8,7 +8,7 @@ const handoff = {
   path,
   preferences: { mood: "quietly curious", flavors: ["fresh"], alcoholPreference: "either", locale: "en" },
   result: {
-    restaurant: { id: "11111111-1111-4111-8111-111111111111", slug: "nightjar-demo", name: "Nightjar Demo", shortIntro: null, logoUrl: null, coverImageUrl: null },
+    venue: { id: "11111111-1111-4111-8111-111111111111", slug: "nightjar-demo", name: "Nightjar Demo", shortIntro: null, logoUrl: null, coverImageUrl: null },
     menu: { id: "22222222-2222-4222-8222-222222222222", slug: "cocktails", name: "Cocktails" },
     item: {
       id: "33333333-3333-4333-8333-333333333333", menuId: "22222222-2222-4222-8222-222222222222", name: "The Sparkler", description: "Bright and fresh", price: "$16", imageUrl: null,
@@ -19,8 +19,8 @@ const handoff = {
   },
 };
 
-describe("global-to-restaurant match handoff", () => {
-  it("accepts a fresh validated result for the same restaurant menu", () => {
+describe("global-to-venue match handoff", () => {
+  it("accepts a fresh validated result for the same venue menu", () => {
     expect(parseMatchHandoff(handoff, path, now)).toMatchObject({ result: { item: { name: "The Sparkler" } } });
   });
 

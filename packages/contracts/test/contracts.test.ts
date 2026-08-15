@@ -2,10 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   agentApprovalRequestSchema,
   globalMatchResultSchema,
+  managedMenuSchema,
   managedMenuItemSchema,
   modelMatchSelectionSchema,
-  restaurantMenuItemSchema,
-  restaurantPreferencesSchema,
+  updateMenuInputSchema,
+  venueErrorCodeSchema,
+  venueMatchResultSchema,
+  venueMenuItemSchema,
+  venuePreferencesSchema,
 } from "../src/index.js";
 
 const item = {
@@ -27,18 +31,18 @@ const item = {
   sortOrder: 10,
 };
 
-describe("restaurant contracts", () => {
+describe("venue contracts", () => {
   it("accepts a canonical active menu item", () => {
-    expect(restaurantMenuItemSchema.parse(item)).toEqual(item);
+    expect(venueMenuItemSchema.parse(item)).toEqual(item);
   });
 
   it("does not expose hidden as a public availability status", () => {
-    expect(() => restaurantMenuItemSchema.parse({ ...item, availabilityStatus: "hidden" })).toThrow();
+    expect(() => venueMenuItemSchema.parse({ ...item, availabilityStatus: "hidden" })).toThrow();
   });
 
   it("requires at least one preference signal", () => {
-    expect(() => restaurantPreferencesSchema.parse({ flavors: [] })).toThrow();
-    expect(restaurantPreferencesSchema.parse({ mood: "quiet celebration" }).locale).toBe("en");
+    expect(() => venuePreferencesSchema.parse({ flavors: [] })).toThrow();
+    expect(venuePreferencesSchema.parse({ mood: "quiet celebration" }).locale).toBe("en");
   });
 
   it("limits model output to an item id and explanation", () => {
@@ -51,14 +55,45 @@ describe("restaurant contracts", () => {
 
   it("requires a canonical deep link on global results", () => {
     expect(globalMatchResultSchema.parse({
-      restaurant: { id: item.menuId, slug: "nightjar-demo", name: "Nightjar", shortIntro: null, logoUrl: null, coverImageUrl: null },
+      venue: { id: item.menuId, slug: "nightjar-demo", name: "Nightjar", shortIntro: null, logoUrl: null, coverImageUrl: null },
       menu: { id: item.menuId, slug: "cocktails", name: "Cocktails" }, item,
-      whyThisMatch: "Bright.", traceId: "trace", restaurantSpecificUrl: "/m/nightjar-demo/cocktails",
-    }).restaurantSpecificUrl).toBe("/m/nightjar-demo/cocktails");
+      whyThisMatch: "Bright.", traceId: "trace", venueSpecificUrl: "/m/nightjar-demo/cocktails",
+    }).venueSpecificUrl).toBe("/m/nightjar-demo/cocktails");
   });
 
   it("keeps hidden available only inside management contracts", () => {
     expect(managedMenuItemSchema.parse({ ...item, availabilityStatus: "hidden" }).availabilityStatus).toBe("hidden");
+  });
+
+  it("treats matchId as optional on match results", () => {
+    const base = {
+      venue: { id: item.menuId, slug: "nightjar-demo", name: "Nightjar", shortIntro: null, logoUrl: null, coverImageUrl: null },
+      menu: { id: item.menuId, slug: "cocktails", name: "Cocktails" }, item,
+      whyThisMatch: "Bright.", traceId: "trace",
+    };
+    expect(venueMatchResultSchema.parse(base).matchId).toBeUndefined();
+    expect(venueMatchResultSchema.parse({ ...base, matchId: "10000000-0000-4000-8000-000000000009" }).matchId)
+      .toBe("10000000-0000-4000-8000-000000000009");
+  });
+
+  it("recognizes the feedback and current-menu error codes", () => {
+    expect(venueErrorCodeSchema.parse("MATCH_NOT_FOUND")).toBe("MATCH_NOT_FOUND");
+    expect(venueErrorCodeSchema.parse("NO_PUBLISHED_MENU")).toBe("NO_PUBLISHED_MENU");
+  });
+
+  it("accepts archived managed menus but rejects archived as an update input", () => {
+    const menu = {
+      id: item.menuId,
+      slug: "old-menu",
+      name: "Old Menu",
+      status: "archived" as const,
+      publishedVersionId: null,
+      shortIntro: null,
+      coverImageUrl: null,
+      items: [],
+    };
+    expect(managedMenuSchema.parse(menu).status).toBe("archived");
+    expect(() => updateMenuInputSchema.parse({ name: "x", slug: "old-menu", shortIntro: null, status: "archived" })).toThrow();
   });
 });
 
