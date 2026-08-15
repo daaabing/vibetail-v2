@@ -2,6 +2,9 @@ import {
   deleteDrinkResultSchema,
   drinkInfoSuggestionSchema,
   drinkUsageSchema,
+  importScannedMenuResultSchema,
+  menuPhotoScanResultSchema,
+  prepareDrinkPhotoResultSchema,
   venueAdminMenuSchema,
   venueDashboardStatsSchema,
   venueDrinkSchema,
@@ -15,6 +18,12 @@ import {
   type DrinkInfoSuggestion,
   type DrinkInput,
   type DrinkUsage,
+  type ImportScannedMenuInput,
+  type ImportScannedMenuResult,
+  type MenuPhotoScanInput,
+  type MenuPhotoScanResult,
+  type PrepareDrinkPhotoInput,
+  type PrepareDrinkPhotoResult,
   type UpdateVenueMenuInput,
   type VenueAdminMenu,
   type VenueDashboardRange,
@@ -78,6 +87,18 @@ export class HttpVenueManagementClient implements VenueManagementClient {
 
   suggestDrinkInfo(input: DrinkInfoRequestInput): Promise<DrinkInfoSuggestion> {
     return this.call("POST", "/v1/venue/drinks/suggest", input, drinkInfoSuggestionSchema.parse);
+  }
+
+  scanMenuPhoto(input: MenuPhotoScanInput): Promise<MenuPhotoScanResult> {
+    return this.call("POST", "/v1/venue/menus/scan-photo", input, menuPhotoScanResultSchema.parse);
+  }
+
+  importScannedMenu(input: ImportScannedMenuInput): Promise<ImportScannedMenuResult> {
+    return this.call("POST", "/v1/venue/menus/import-scan", input, importScannedMenuResultSchema.parse);
+  }
+
+  prepareDrinkPhoto(input: PrepareDrinkPhotoInput): Promise<PrepareDrinkPhotoResult> {
+    return this.call("POST", "/v1/venue/drinks/photo", input, prepareDrinkPhotoResultSchema.parse);
   }
 
   listMenus(): Promise<VenueAdminMenu[]> {

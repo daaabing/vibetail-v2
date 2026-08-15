@@ -64,3 +64,5 @@ export interface DrinkInfoProvider {
 export * from "./deterministic.js";
 export * from "./openai.js";
 export * from "./openrouter.js";
+export * from "./menu-photo.js";
+export * from "./drink-photo.js";

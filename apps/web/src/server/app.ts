@@ -6,8 +6,11 @@ import {
   drinkInputSchema,
   feedbackInputSchema,
   globalMatchRequestSchema,
+  importScannedMenuInputSchema,
   menuItemInputSchema,
   menuViewEventSchema,
+  menuPhotoScanInputSchema,
+  prepareDrinkPhotoInputSchema,
   updateVenueMenuInputSchema,
   venueDashboardRangeSchema,
   venueErrorSchema,
@@ -27,6 +30,7 @@ import {
   type DefaultVenueService,
   type ManagementService,
   type VenueManagementService,
+  type FixtureVenueMediaStorage,
 } from "@vibetail/venue-core";
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
 import { ZodError } from "zod";
@@ -38,12 +42,13 @@ export interface WebAppOptions {
   dataSource: "fixture" | "supabase";
   checkReadiness?: () => Promise<Array<{ name: string; ready: boolean; detail: string }>>;
   testFrontend?: boolean;
+  fixtureVenueMediaStorage?: FixtureVenueMediaStorage;
 }
 
 export function createWebApp(options: WebAppOptions): Express {
   const app = express();
   app.disable("x-powered-by");
-  app.use(express.json({ limit: "32kb" }));
+  app.use(express.json({ limit: "12mb" }));
 
   app.get("/health", (_request, response) => {
     response.json({ status: "ok", service: "web", timestamp: new Date().toISOString() });
@@ -282,6 +287,15 @@ export function createWebApp(options: WebAppOptions): Express {
     }),
   );
 
+  app.post(
+    "/v1/venue/drinks/photo",
+    asyncRoute(async (request, response) => {
+      response.json(await venueManagement.prepareDrinkPhoto(
+        readBearerToken(request), prepareDrinkPhotoInputSchema.parse(request.body),
+      ));
+    }),
+  );
+
   app.patch(
     "/v1/venue/drinks/:drinkId",
     asyncRoute(async (request, response) => {
@@ -315,6 +329,38 @@ export function createWebApp(options: WebAppOptions): Express {
       response.json(await venueManagement.listMenus(readBearerToken(request)));
     }),
   );
+
+  app.post(
+    "/v1/venue/menus/scan-photo",
+    asyncRoute(async (request, response) => {
+      response.json(await venueManagement.scanMenuPhoto(
+        readBearerToken(request), menuPhotoScanInputSchema.parse(request.body),
+      ));
+    }),
+  );
+
+  app.post(
+    "/v1/venue/menus/import-scan",
+    asyncRoute(async (request, response) => {
+      response.status(201).json(await venueManagement.importScannedMenu(
+        readBearerToken(request), importScannedMenuInputSchema.parse(request.body),
+      ));
+    }),
+  );
+
+  if (options.fixtureVenueMediaStorage) {
+    app.get("/v1/fixture-venue-media/*", (request, response) => {
+      const storagePath = (request.params as Record<string, string>)["0"] ?? "";
+      const object = options.fixtureVenueMediaStorage?.getObject(storagePath);
+      if (!object) {
+        response.status(404).end();
+        return;
+      }
+      response.setHeader("content-type", object.contentType);
+      response.setHeader("cache-control", "private, max-age=3600");
+      response.send(Buffer.from(object.bytes));
+    });
+  }
 
   app.post(
     "/v1/venue/menus",

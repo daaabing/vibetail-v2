@@ -111,6 +111,65 @@ export const drinkInfoSuggestionSchema = z.object({
 });
 export type DrinkInfoSuggestion = z.infer<typeof drinkInfoSuggestionSchema>;
 
+export const venueImageContentTypeSchema = z.enum(["image/png", "image/jpeg", "image/webp"]);
+export type VenueImageContentType = z.infer<typeof venueImageContentTypeSchema>;
+
+export const menuPhotoScanInputSchema = z.object({
+  imageBase64: z.string().min(1).max(12_000_000),
+  imageContentType: venueImageContentTypeSchema,
+  fileName: z.string().trim().min(1).max(255).optional(),
+});
+export type MenuPhotoScanInput = z.infer<typeof menuPhotoScanInputSchema>;
+
+// Kept transform-free so model-provider Structured Outputs can compile it directly.
+export const menuPhotoDrinkDraftSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(2_000).nullable(),
+  price: z.string().trim().max(100).nullable(),
+  imageUrl: z.null(),
+  ingredients: z.array(z.string().trim().min(1).max(200)).max(100),
+  flavorTags: z.array(z.string().trim().min(1).max(80)).max(30),
+  allergens: z.array(z.string().trim().min(1).max(100)).max(50),
+  baseSpirit: z.string().trim().max(100).nullable(),
+  strength: drinkStrengthSchema.nullable(),
+  recommendationNote: z.string().trim().max(500).nullable(),
+});
+export type MenuPhotoDrinkDraft = z.infer<typeof menuPhotoDrinkDraftSchema>;
+
+export const menuPhotoScanResultSchema = z.object({
+  suggestedMenuName: z.string().trim().min(1).max(200),
+  drinks: z.array(menuPhotoDrinkDraftSchema).min(1).max(100),
+  provider: z.string().min(1).max(100),
+});
+export type MenuPhotoScanResult = z.infer<typeof menuPhotoScanResultSchema>;
+
+export const importScannedMenuInputSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  drinks: z.array(drinkInputSchema).min(1).max(100),
+});
+export type ImportScannedMenuInput = z.infer<typeof importScannedMenuInputSchema>;
+
+export const importScannedMenuResultSchema = z.object({
+  menu: z.lazy(() => venueAdminMenuSchema),
+  drinks: z.array(venueDrinkSchema),
+});
+export type ImportScannedMenuResult = z.infer<typeof importScannedMenuResultSchema>;
+
+export const prepareDrinkPhotoInputSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(2_000).nullable().default(null),
+  imageBase64: z.string().min(1).max(12_000_000),
+  imageContentType: venueImageContentTypeSchema,
+});
+export type PrepareDrinkPhotoInput = z.infer<typeof prepareDrinkPhotoInputSchema>;
+
+export const prepareDrinkPhotoResultSchema = z.object({
+  imageUrl: z.string().url(),
+  backgroundRemoved: z.boolean(),
+  provider: z.string().min(1).max(100),
+});
+export type PrepareDrinkPhotoResult = z.infer<typeof prepareDrinkPhotoResultSchema>;
+
 export const venueAdminMenuSchema = z.object({
   id: z.string().uuid(),
   slug: slugSchema,
@@ -178,6 +237,9 @@ export interface VenueManagementClient {
   getDrinkUsage(drinkId: string): Promise<DrinkUsage>;
   deleteDrink(drinkId: string): Promise<DeleteDrinkResult>;
   suggestDrinkInfo(input: DrinkInfoRequestInput): Promise<DrinkInfoSuggestion>;
+  scanMenuPhoto(input: MenuPhotoScanInput): Promise<MenuPhotoScanResult>;
+  importScannedMenu(input: ImportScannedMenuInput): Promise<ImportScannedMenuResult>;
+  prepareDrinkPhoto(input: PrepareDrinkPhotoInput): Promise<PrepareDrinkPhotoResult>;
   listMenus(): Promise<VenueAdminMenu[]>;
   createMenu(input: CreateVenueMenuInput): Promise<VenueAdminMenu>;
   updateMenu(menuId: string, input: UpdateVenueMenuInput): Promise<VenueAdminMenu>;
@@ -194,7 +256,10 @@ export const VENUE_MANAGEMENT_API_V1 = {
   drink: "/v1/venue/drinks/:drinkId",
   drinkUsage: "/v1/venue/drinks/:drinkId/usage",
   drinkSuggest: "/v1/venue/drinks/suggest",
+  drinkPhoto: "/v1/venue/drinks/photo",
   menus: "/v1/venue/menus",
+  menuPhotoScan: "/v1/venue/menus/scan-photo",
+  menuPhotoImport: "/v1/venue/menus/import-scan",
   menu: "/v1/venue/menus/:menuId",
   publishMenu: "/v1/venue/menus/:menuId/publish",
   currentMenu: "/v1/venues/:merchantSlug/current-menu",

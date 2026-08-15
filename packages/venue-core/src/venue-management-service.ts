@@ -8,7 +8,13 @@ import {
   drinkInputSchema,
   drinkUsageSchema,
   feedbackInputSchema,
+  importScannedMenuInputSchema,
+  importScannedMenuResultSchema,
+  menuPhotoScanInputSchema,
+  menuPhotoScanResultSchema,
   menuViewEventSchema,
+  prepareDrinkPhotoInputSchema,
+  prepareDrinkPhotoResultSchema,
   updateVenueMenuInputSchema,
   venueAdminMenuSchema,
   venueDashboardStatsSchema,
@@ -26,7 +32,13 @@ import {
   type DrinkUsage,
   type FeedbackInput,
   type FeedbackReceipt,
+  type ImportScannedMenuInput,
+  type ImportScannedMenuResult,
   type MenuViewEvent,
+  type MenuPhotoScanInput,
+  type MenuPhotoScanResult,
+  type PrepareDrinkPhotoInput,
+  type PrepareDrinkPhotoResult,
   type UpdateVenueMenuInput,
   type VenueAdminMenu,
   type VenueDashboardRange,
@@ -38,15 +50,17 @@ import {
   type VenueQr,
   type VenueSessionInfo,
 } from "@vibetail/contracts";
-import type { DrinkInfoProvider } from "@vibetail/model-providers";
+import type { DrinkInfoProvider, DrinkPhotoProvider, MenuPhotoScanProvider } from "@vibetail/model-providers";
 import type {
   StoredFeedbackEntry,
   StoredMatchEvent,
   StoredVenueAccount,
   VenueManagementRepository,
 } from "./types.js";
+import type { VenueMediaStorage } from "./venue-media-storage.js";
 
 const DRINK_INFO_TIMEOUT_MS = 20_000;
+const MENU_PHOTO_TIMEOUT_MS = 45_000;
 const DASHBOARD_EVENT_LIMIT = 5_000;
 
 export class VenueManagementServiceError extends Error {
@@ -73,6 +87,9 @@ export interface VenueManagementService {
   getDrinkUsage(token: string, drinkId: string): Promise<DrinkUsage>;
   deleteDrink(token: string, drinkId: string): Promise<DeleteDrinkResult>;
   suggestDrinkInfo(token: string, input: DrinkInfoRequestInput): Promise<DrinkInfoSuggestion>;
+  scanMenuPhoto(token: string, input: MenuPhotoScanInput): Promise<MenuPhotoScanResult>;
+  importScannedMenu(token: string, input: ImportScannedMenuInput): Promise<ImportScannedMenuResult>;
+  prepareDrinkPhoto(token: string, input: PrepareDrinkPhotoInput): Promise<PrepareDrinkPhotoResult>;
   listMenus(token: string): Promise<VenueAdminMenu[]>;
   createMenu(token: string, input: CreateVenueMenuInput): Promise<VenueAdminMenu>;
   updateMenu(token: string, menuId: string, input: UpdateVenueMenuInput): Promise<VenueAdminMenu>;
@@ -86,6 +103,9 @@ export interface VenueManagementService {
 export interface VenueManagementServiceOptions {
   appUrl: string;
   drinkInfoProvider?: DrinkInfoProvider;
+  menuPhotoScanProvider?: MenuPhotoScanProvider;
+  drinkPhotoProvider?: DrinkPhotoProvider;
+  mediaStorage?: VenueMediaStorage;
   renderQrSvg?: (text: string) => Promise<string>;
 }
 
@@ -217,6 +237,78 @@ export class DefaultVenueManagementService implements VenueManagementService {
     } catch (error) {
       if (error instanceof VenueManagementServiceError) throw error;
       throw drinkInfoUnavailable();
+    }
+  }
+
+  async scanMenuPhoto(token: string, input: MenuPhotoScanInput): Promise<MenuPhotoScanResult> {
+    await this.requireVenue(token);
+    const provider = this.options.menuPhotoScanProvider;
+    if (!provider) throw mediaUnavailable("Menu photo scanning is not configured on this server.");
+    const parsed = menuPhotoScanInputSchema.parse(input);
+    try {
+      const scan = await provider.scanMenuPhoto({
+        image: { bytes: decodeBase64(parsed.imageBase64), contentType: parsed.imageContentType },
+        ...(parsed.fileName ? { fileName: parsed.fileName } : {}),
+        traceId: randomUUID(),
+        timeoutMs: MENU_PHOTO_TIMEOUT_MS,
+      });
+      return menuPhotoScanResultSchema.parse({ ...scan, provider: provider.id });
+    } catch (error) {
+      if (error instanceof VenueManagementServiceError) throw error;
+      throw mediaUnavailable("The menu photo could not be read. Try a clearer, well-lit photo.");
+    }
+  }
+
+  async importScannedMenu(token: string, input: ImportScannedMenuInput): Promise<ImportScannedMenuResult> {
+    const merchantId = await this.requireVenue(token);
+    const parsed = importScannedMenuInputSchema.parse(input);
+    const createdDrinks: VenueDrink[] = [];
+    const drinkIds: string[] = [];
+    for (const drink of parsed.drinks) {
+      const drinkId = await this.mutate(() => this.repository.createDrink(merchantId, drink));
+      drinkIds.push(drinkId);
+      createdDrinks.push(await this.readDrink(merchantId, drinkId));
+    }
+    const menuId = await this.mutate(() => this.repository.createVenueMenu(merchantId, {
+      name: parsed.name,
+      slugBase: slugify(parsed.name),
+      drinkIds,
+    }));
+    return importScannedMenuResultSchema.parse({
+      menu: await this.readMenu(merchantId, menuId),
+      drinks: createdDrinks,
+    });
+  }
+
+  async prepareDrinkPhoto(token: string, input: PrepareDrinkPhotoInput): Promise<PrepareDrinkPhotoResult> {
+    const merchantId = await this.requireVenue(token);
+    const provider = this.options.drinkPhotoProvider;
+    const storage = this.options.mediaStorage;
+    if (!provider || !storage) throw mediaUnavailable("Drink photo uploads are not configured on this server.");
+    const parsed = prepareDrinkPhotoInputSchema.parse(input);
+    try {
+      const prepared = await provider.prepareDrinkPhoto({
+        name: parsed.name,
+        description: parsed.description,
+        image: { bytes: decodeBase64(parsed.imageBase64), contentType: parsed.imageContentType },
+        traceId: randomUUID(),
+        timeoutMs: MENU_PHOTO_TIMEOUT_MS,
+      });
+      const stored = await storage.uploadDrinkPhoto({
+        merchantId,
+        objectId: randomUUID(),
+        drinkName: parsed.name,
+        bytes: prepared.bytes,
+        contentType: prepared.contentType,
+      });
+      return prepareDrinkPhotoResultSchema.parse({
+        imageUrl: stored.imageUrl,
+        backgroundRemoved: prepared.backgroundRemoved,
+        provider: provider.id,
+      });
+    } catch (error) {
+      if (error instanceof VenueManagementServiceError) throw error;
+      throw mediaUnavailable("The drink photo could not be prepared. Try a PNG, JPEG, or WebP under 8 MB.");
     }
   }
 
@@ -436,6 +528,24 @@ export class UnavailableVenueManagementService implements VenueManagementService
     return venueBackendUnavailable();
   }
 
+  async scanMenuPhoto(token: string, input: MenuPhotoScanInput): Promise<MenuPhotoScanResult> {
+    void token;
+    void input;
+    return venueBackendUnavailable();
+  }
+
+  async importScannedMenu(token: string, input: ImportScannedMenuInput): Promise<ImportScannedMenuResult> {
+    void token;
+    void input;
+    return venueBackendUnavailable();
+  }
+
+  async prepareDrinkPhoto(token: string, input: PrepareDrinkPhotoInput): Promise<PrepareDrinkPhotoResult> {
+    void token;
+    void input;
+    return venueBackendUnavailable();
+  }
+
   async listMenus(token: string): Promise<VenueAdminMenu[]> {
     void token;
     return venueBackendUnavailable();
@@ -588,6 +698,21 @@ function drinkInfoUnavailable(): never {
     },
     503,
   );
+}
+
+function mediaUnavailable(message: string): never {
+  throw new VenueManagementServiceError(
+    { code: "MATCH_PROVIDER_UNAVAILABLE", message, retryable: true },
+    503,
+  );
+}
+
+function decodeBase64(value: string): Uint8Array {
+  const bytes = Uint8Array.from(Buffer.from(value, "base64"));
+  if (bytes.length === 0 || bytes.length > 8_000_000) {
+    throw invalidRequest("Upload a PNG, JPEG, or WebP image under 8 MB.");
+  }
+  return bytes;
 }
 
 function venueBackendUnavailable(): never {

@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@vibetail/contracts": "workspace:*",
-    "openai": "^7.4.0"
+    "openai": "^7.4.0",
+    "sharp": "^0.35.3"
   }
 }
