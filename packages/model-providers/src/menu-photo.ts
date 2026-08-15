@@ -17,9 +17,16 @@ export interface MenuPhotoScanRequest {
   timeoutMs: number;
 }
 
+export interface MenuUrlScanRequest {
+  sourceUrl: string;
+  traceId: string;
+  timeoutMs: number;
+}
+
 export interface MenuPhotoScanProvider {
   readonly id: string;
   scanMenuPhoto(request: MenuPhotoScanRequest): Promise<ScannedMenu>;
+  scanMenuUrl(request: MenuUrlScanRequest): Promise<ScannedMenu>;
 }
 
 export class DeterministicMenuPhotoScanProvider implements MenuPhotoScanProvider {
@@ -62,6 +69,15 @@ export class DeterministicMenuPhotoScanProvider implements MenuPhotoScanProvider
         }),
       ],
     });
+  }
+
+  async scanMenuUrl(request: MenuUrlScanRequest): Promise<ScannedMenu> {
+    const scanned = await this.scanMenuPhoto({
+      image: { bytes: new Uint8Array([1]), contentType: "image/png" },
+      traceId: request.traceId,
+      timeoutMs: request.timeoutMs,
+    });
+    return { ...scanned, suggestedMenuName: "Imported from web" };
   }
 }
 
@@ -106,6 +122,19 @@ export class OpenRouterMenuPhotoScanProvider implements MenuPhotoScanProvider {
     }, { timeout: request.timeoutMs });
     return scannedMenuSchema.parse(response.choices[0]?.message.parsed);
   }
+
+  async scanMenuUrl(request: MenuUrlScanRequest): Promise<ScannedMenu> {
+    const response = await this.client.chat.completions.parse({
+      model: this.model,
+      messages: [
+        { role: "system", content: MENU_PHOTO_PROMPT },
+        { role: "user", content: `Extract every drink from this public menu URL: ${request.sourceUrl}` },
+      ],
+      max_completion_tokens: 4_000,
+      response_format: zodResponseFormat(scannedMenuSchema, "fetched_drink_menu"),
+    }, { timeout: request.timeoutMs });
+    return scannedMenuSchema.parse(response.choices[0]?.message.parsed);
+  }
 }
 
 export interface OpenAIMenuPhotoScanProviderOptions {
@@ -137,6 +166,20 @@ export class OpenAIMenuPhotoScanProvider implements MenuPhotoScanProvider {
       ],
       max_output_tokens: 4_000,
       text: { format: zodTextFormat(scannedMenuSchema, "scanned_drink_menu") },
+    }, { timeout: request.timeoutMs });
+    return scannedMenuSchema.parse(response.output_parsed);
+  }
+
+  async scanMenuUrl(request: MenuUrlScanRequest): Promise<ScannedMenu> {
+    const response = await this.client.responses.parse({
+      model: this.model,
+      store: false,
+      input: [
+        { role: "system", content: MENU_PHOTO_PROMPT },
+        { role: "user", content: `Extract every drink from this public menu URL: ${request.sourceUrl}` },
+      ],
+      max_output_tokens: 4_000,
+      text: { format: zodTextFormat(scannedMenuSchema, "fetched_drink_menu") },
     }, { timeout: request.timeoutMs });
     return scannedMenuSchema.parse(response.output_parsed);
   }

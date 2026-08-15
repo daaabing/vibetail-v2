@@ -237,6 +237,12 @@ describe("venue HTTP slice", () => {
     expect(scan.body).toMatchObject({ suggestedMenuName: "Imported drinks", provider: "deterministic" });
     expect(scan.body.drinks).toHaveLength(3);
 
+    const fetched = await request(instance).post("/v1/venue/menus/scan-url").set(auth).send({
+      sourceUrl: "https://example.com/menu",
+    }).expect(200);
+    expect(fetched.body).toMatchObject({ suggestedMenuName: "Imported from web", provider: "deterministic-url" });
+    expect(fetched.body.drinks).toHaveLength(3);
+
     const imported = await request(instance).post("/v1/venue/menus/import-scan").set(auth).send({
       name: "Scanned Summer Menu",
       drinks: scan.body.drinks,

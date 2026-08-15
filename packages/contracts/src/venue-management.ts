@@ -121,6 +121,11 @@ export const menuPhotoScanInputSchema = z.object({
 });
 export type MenuPhotoScanInput = z.infer<typeof menuPhotoScanInputSchema>;
 
+export const menuUrlScanInputSchema = z.object({
+  sourceUrl: z.string().trim().url().max(2_048),
+});
+export type MenuUrlScanInput = z.infer<typeof menuUrlScanInputSchema>;
+
 // Kept transform-free so model-provider Structured Outputs can compile it directly.
 export const menuPhotoDrinkDraftSchema = z.object({
   name: z.string().trim().min(1).max(200),
@@ -238,6 +243,7 @@ export interface VenueManagementClient {
   deleteDrink(drinkId: string): Promise<DeleteDrinkResult>;
   suggestDrinkInfo(input: DrinkInfoRequestInput): Promise<DrinkInfoSuggestion>;
   scanMenuPhoto(input: MenuPhotoScanInput): Promise<MenuPhotoScanResult>;
+  scanMenuUrl(input: MenuUrlScanInput): Promise<MenuPhotoScanResult>;
   importScannedMenu(input: ImportScannedMenuInput): Promise<ImportScannedMenuResult>;
   prepareDrinkPhoto(input: PrepareDrinkPhotoInput): Promise<PrepareDrinkPhotoResult>;
   listMenus(): Promise<VenueAdminMenu[]>;
@@ -259,6 +265,7 @@ export const VENUE_MANAGEMENT_API_V1 = {
   drinkPhoto: "/v1/venue/drinks/photo",
   menus: "/v1/venue/menus",
   menuPhotoScan: "/v1/venue/menus/scan-photo",
+  menuUrlScan: "/v1/venue/menus/scan-url",
   menuPhotoImport: "/v1/venue/menus/import-scan",
   menu: "/v1/venue/menus/:menuId",
   publishMenu: "/v1/venue/menus/:menuId/publish",

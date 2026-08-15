@@ -22,6 +22,7 @@ import {
   type ImportScannedMenuResult,
   type MenuPhotoScanInput,
   type MenuPhotoScanResult,
+  type MenuUrlScanInput,
   type PrepareDrinkPhotoInput,
   type PrepareDrinkPhotoResult,
   type UpdateVenueMenuInput,
@@ -91,6 +92,10 @@ export class HttpVenueManagementClient implements VenueManagementClient {
 
   scanMenuPhoto(input: MenuPhotoScanInput): Promise<MenuPhotoScanResult> {
     return this.call("POST", "/v1/venue/menus/scan-photo", input, menuPhotoScanResultSchema.parse);
+  }
+
+  scanMenuUrl(input: MenuUrlScanInput): Promise<MenuPhotoScanResult> {
+    return this.call("POST", "/v1/venue/menus/scan-url", input, menuPhotoScanResultSchema.parse);
   }
 
   importScannedMenu(input: ImportScannedMenuInput): Promise<ImportScannedMenuResult> {

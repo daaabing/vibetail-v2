@@ -10,6 +10,7 @@ import {
   menuItemInputSchema,
   menuViewEventSchema,
   menuPhotoScanInputSchema,
+  menuUrlScanInputSchema,
   prepareDrinkPhotoInputSchema,
   updateVenueMenuInputSchema,
   venueDashboardRangeSchema,
@@ -335,6 +336,15 @@ export function createWebApp(options: WebAppOptions): Express {
     asyncRoute(async (request, response) => {
       response.json(await venueManagement.scanMenuPhoto(
         readBearerToken(request), menuPhotoScanInputSchema.parse(request.body),
+      ));
+    }),
+  );
+
+  app.post(
+    "/v1/venue/menus/scan-url",
+    asyncRoute(async (request, response) => {
+      response.json(await venueManagement.scanMenuUrl(
+        readBearerToken(request), menuUrlScanInputSchema.parse(request.body),
       ));
     }),
   );
