@@ -17,7 +17,7 @@ describe("platform routes", () => {
     ["/match", { kind: "match" }],
     ["/venues", { kind: "venues" }],
     ["/venues/nightjar-demo", { kind: "venue_detail", merchantSlug: "nightjar-demo" }],
-    ["/manage", { kind: "management" }],
+    ["/manage", { kind: "redirect", to: "/venue" }],
     ["/for-bars", { kind: "for_bars" }],
     ["/manage/fixture-double-chicken-demo", { kind: "management", privateToken: "fixture-double-chicken-demo" }],
     ["/restaurants", { kind: "redirect", to: "/venues" }],

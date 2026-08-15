@@ -203,6 +203,15 @@ describe("venue HTTP slice", () => {
     expect(dashboard.body.recentFeedback[0]).toMatchObject({ rating: 5, comment: "Perfect pick." });
   });
 
+  it("creates a passwordless account from any non-empty name", async () => {
+    const login = await request(app()).post("/v1/venue/session").send({ name: "A" }).expect(201);
+    expect(login.body).toMatchObject({
+      token: expect.any(String),
+      session: { account: { name: "a", displayName: "A" }, venue: null },
+    });
+    await request(app()).post("/v1/venue/session").send({ name: "   " }).expect(400);
+  });
+
   it("deletes drinks with menu cleanup through the HTTP surface", async () => {
     const instance = app();
     const login = await request(instance).post("/v1/venue/session").send({ name: "Demo Bar" }).expect(201);

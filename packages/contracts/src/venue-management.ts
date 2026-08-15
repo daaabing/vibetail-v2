@@ -12,7 +12,7 @@ export type DrinkStrength = z.infer<typeof drinkStrengthSchema>;
 
 // Account-name login is intentionally passwordless for the MVP; the login page states this.
 export const venueLoginInputSchema = z.object({
-  name: z.string().trim().min(2).max(80),
+  name: z.string().trim().min(1).max(80),
 });
 export type VenueLoginInput = z.infer<typeof venueLoginInputSchema>;
 
