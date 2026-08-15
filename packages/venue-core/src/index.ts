@@ -7,3 +7,4 @@ export * from "./management-service.js";
 export * from "./service.js";
 export * from "./types.js";
 export * from "./venue-management-service.js";
+export * from "./venue-media-storage.js";

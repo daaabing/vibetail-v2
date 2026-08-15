@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import type { DrinkInput, VenueDrink } from "@vibetail/contracts";
 import type { HttpVenueManagementClient } from "../../clients/http-venue-management-client.js";
 import { errorMessage } from "./VenueShell.js";
+import { readVenueImage } from "./imageUpload.js";
 
 const STRENGTHS = [
   { value: "", label: "Not set" },
@@ -69,6 +70,10 @@ export function DrinkForm({ drink, client, submitLabel, onSubmit }: {
   const [fields, setFields] = useState<DrinkFormFields>(() => fieldsFrom(drink));
   const [suggesting, setSuggesting] = useState(false);
   const [suggestError, setSuggestError] = useState("");
+  const [photoFile, setPhotoFile] = useState<File>();
+  const [photoPreview, setPhotoPreview] = useState(drink?.imageUrl ?? "");
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoNotice, setPhotoNotice] = useState("");
 
   function set<K extends keyof DrinkFormFields>(key: K, value: string) {
     setFields((current) => ({ ...current, [key]: value }));
@@ -102,9 +107,44 @@ export function DrinkForm({ drink, client, submitLabel, onSubmit }: {
     }
   }
 
+  async function preparePhoto() {
+    if (!photoFile) return;
+    if (!fields.name.trim()) {
+      setSuggestError("Give the drink a name before preparing its photo.");
+      return;
+    }
+    setPhotoBusy(true);
+    setSuggestError("");
+    setPhotoNotice("");
+    try {
+      const image = await readVenueImage(photoFile);
+      const result = await client.prepareDrinkPhoto({
+        name: fields.name.trim(),
+        description: fields.description.trim() || null,
+        ...image,
+      });
+      set("imageUrl", result.imageUrl);
+      setPhotoPreview(result.imageUrl);
+      setPhotoNotice(result.backgroundRemoved
+        ? "Background removed. Review the cutout before saving."
+        : "Photo uploaded. Automatic background removal is not enabled on this server.");
+    } catch (caught) {
+      setSuggestError(errorMessage(caught));
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
+
+  function resetForm() {
+    setFields(fieldsFrom());
+    setPhotoFile(undefined);
+    setPhotoPreview("");
+    setPhotoNotice("");
+  }
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void onSubmit(toInput(fields), () => setFields(fieldsFrom()));
+    void onSubmit(toInput(fields), resetForm);
   }
 
   return (
@@ -113,7 +153,38 @@ export function DrinkForm({ drink, client, submitLabel, onSubmit }: {
       <label>Price<input value={fields.price} onChange={(event) => set("price", event.target.value)} maxLength={100} placeholder="$18" /></label>
       <label className="vt-span-2">Description<input value={fields.description} onChange={(event) => set("description", event.target.value)} maxLength={2000} placeholder="What the guest tastes" /></label>
       <label className="vt-span-2">Ingredients<input value={fields.ingredients} onChange={(event) => set("ingredients", event.target.value)} placeholder="rye whiskey, pear syrup, bitters" /></label>
-      <label className="vt-span-2">Image URL<input value={fields.imageUrl} onChange={(event) => set("imageUrl", event.target.value)} type="url" placeholder="https://…" /></label>
+      <section className="vt-span-2 vt-drink-photo-field" aria-labelledby={`drink-photo-${drink?.id ?? "new"}`}>
+        <div>
+          <p className="vt-kicker" id={`drink-photo-${drink?.id ?? "new"}`}>Drink photo</p>
+          <p>Upload one clear photo. Vibetail will prepare it for a clean menu cutout when image processing is configured.</p>
+        </div>
+        {photoPreview && <div className="vt-drink-photo-preview"><img src={photoPreview} alt={`${fields.name || "Drink"} preview`} /></div>}
+        <label className="vt-file-drop">
+          <span>{photoFile ? photoFile.name : "Choose or take a photo"}</span>
+          <small>PNG, JPEG, or WebP · up to 8 MB</small>
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              setPhotoFile(file);
+              setPhotoNotice("");
+              if (file) setPhotoPreview(URL.createObjectURL(file));
+            }}
+          />
+        </label>
+        {photoFile && <button className="vt-secondary" type="button" onClick={() => void preparePhoto()} disabled={photoBusy}>
+          {photoBusy ? "Preparing photo…" : "Upload & prepare photo"}
+        </button>}
+        {photoNotice && <small className="vt-photo-notice" role="status">{photoNotice}</small>}
+        <details className="vt-photo-url-fallback">
+          <summary>Use an image URL instead</summary>
+          <label>Image URL<input value={fields.imageUrl} onChange={(event) => {
+            set("imageUrl", event.target.value);
+            setPhotoPreview(event.target.value);
+          }} type="url" placeholder="https://…" /></label>
+        </details>
+      </section>
 
       <div className="vt-span-2 vt-venue-suggest">
         <button className="vt-secondary" type="button" onClick={() => void suggest()} disabled={suggesting}>

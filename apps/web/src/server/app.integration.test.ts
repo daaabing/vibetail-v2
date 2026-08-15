@@ -1,9 +1,15 @@
-import { DeterministicMatchingProvider, type ModelProvider } from "@vibetail/model-providers";
+import {
+  DeterministicMatchingProvider,
+  DeterministicMenuPhotoScanProvider,
+  OriginalDrinkPhotoProvider,
+  type ModelProvider,
+} from "@vibetail/model-providers";
 import {
   DefaultManagementService,
   DefaultVenueManagementService,
   DefaultVenueService,
   FixtureVenueRepository,
+  FixtureVenueMediaStorage,
   UnavailableVenueManagementService,
 } from "@vibetail/venue-core";
 import request from "supertest";
@@ -13,14 +19,19 @@ import { createWebApp } from "./app.js";
 function app(venueProvider?: ModelProvider) {
   const repository = new FixtureVenueRepository();
   const provider = new DeterministicMatchingProvider();
+  const mediaStorage = new FixtureVenueMediaStorage("http://127.0.0.1:3000");
   return createWebApp({
     venueService: new DefaultVenueService(repository, venueProvider ?? provider),
     managementService: new DefaultManagementService(repository),
     venueManagementService: new DefaultVenueManagementService(repository, {
       appUrl: "http://127.0.0.1:3000",
       drinkInfoProvider: provider,
+      menuPhotoScanProvider: new DeterministicMenuPhotoScanProvider(),
+      drinkPhotoProvider: new OriginalDrinkPhotoProvider(),
+      mediaStorage,
       renderQrSvg: async (text) => `<svg data-url="${text}"></svg>`,
     }),
+    fixtureVenueMediaStorage: mediaStorage,
     dataSource: "fixture",
     testFrontend: true,
   });
@@ -210,6 +221,38 @@ describe("venue HTTP slice", () => {
       session: { account: { name: "a", displayName: "A" }, venue: null },
     });
     await request(app()).post("/v1/venue/session").send({ name: "   " }).expect(400);
+  });
+
+  it("scans a menu photo, imports its drinks, and stores an individual drink photo", async () => {
+    const instance = app();
+    const login = await request(instance).post("/v1/venue/session").send({ name: "Demo Bar" }).expect(201);
+    const auth = { Authorization: `Bearer ${login.body.token as string}` };
+    const imageBase64 = Buffer.from("fixture-image").toString("base64");
+
+    const scan = await request(instance).post("/v1/venue/menus/scan-photo").set(auth).send({
+      imageBase64,
+      imageContentType: "image/jpeg",
+      fileName: "summer-menu.jpg",
+    }).expect(200);
+    expect(scan.body).toMatchObject({ suggestedMenuName: "Imported drinks", provider: "deterministic" });
+    expect(scan.body.drinks).toHaveLength(3);
+
+    const imported = await request(instance).post("/v1/venue/menus/import-scan").set(auth).send({
+      name: "Scanned Summer Menu",
+      drinks: scan.body.drinks,
+    }).expect(201);
+    expect(imported.body.menu).toMatchObject({ name: "Scanned Summer Menu", status: "draft" });
+    expect(imported.body.menu.drinkIds).toHaveLength(3);
+
+    const prepared = await request(instance).post("/v1/venue/drinks/photo").set(auth).send({
+      name: "Garden Highball",
+      description: "Bright",
+      imageBase64,
+      imageContentType: "image/jpeg",
+    }).expect(200);
+    expect(prepared.body).toMatchObject({ backgroundRemoved: false, provider: "original" });
+    const mediaPath = new URL(prepared.body.imageUrl as string).pathname;
+    expect((await request(instance).get(mediaPath).expect(200)).body).toEqual(Buffer.from("fixture-image"));
   });
 
   it("deletes drinks with menu cleanup through the HTTP surface", async () => {

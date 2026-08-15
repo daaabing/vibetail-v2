@@ -1,7 +1,12 @@
 import {
+  AlibabaDrinkPhotoProvider,
   DeterministicMatchingProvider,
+  DeterministicMenuPhotoScanProvider,
+  OpenAIMenuPhotoScanProvider,
   OpenAIModelProvider,
+  OpenRouterMenuPhotoScanProvider,
   OpenRouterModelProvider,
+  OriginalDrinkPhotoProvider,
   type DrinkInfoProvider,
   type ModelProvider,
 } from "@vibetail/model-providers";
@@ -10,9 +15,11 @@ import {
   DefaultVenueService,
   DefaultManagementService,
   FixtureVenueRepository,
+  FixtureVenueMediaStorage,
   SupabaseManagementRepository,
   SupabaseVenueManagementRepository,
   SupabaseVenueRepository,
+  SupabaseVenueMediaStorage,
   UnavailableManagementService,
   UnavailableVenueManagementService,
   type ManagementService,
@@ -31,6 +38,7 @@ export interface WebDependencies {
   venueService: DefaultVenueService;
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
+  fixtureVenueMediaStorage?: FixtureVenueMediaStorage;
   checkReadiness(): Promise<DependencyReadinessCheck[]>;
 }
 
@@ -42,14 +50,19 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
   if (env.VENUE_REPOSITORY === "fixture") {
     const repository = new FixtureVenueRepository();
     const provider = createModelProvider(env, repository.fixture.matchingFailureMenuIds);
+    const mediaStorage = new FixtureVenueMediaStorage(env.APP_URL);
     return {
       venueService: new DefaultVenueService(repository, provider),
       managementService: new DefaultManagementService(repository),
       venueManagementService: new DefaultVenueManagementService(repository, {
         appUrl: env.APP_URL,
         drinkInfoProvider: provider,
+        menuPhotoScanProvider: createMenuPhotoScanProvider(env),
+        drinkPhotoProvider: createDrinkPhotoProvider(env),
+        mediaStorage,
         renderQrSvg,
       }),
+      fixtureVenueMediaStorage: mediaStorage,
       checkReadiness: async () => [{
         name: "venue_repository",
         ready: true,
@@ -79,7 +92,17 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
           url: env.SUPABASE_URL,
           serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
         }),
-        { appUrl: env.APP_URL, drinkInfoProvider: provider, renderQrSvg },
+        {
+          appUrl: env.APP_URL,
+          drinkInfoProvider: provider,
+          menuPhotoScanProvider: createMenuPhotoScanProvider(env),
+          drinkPhotoProvider: createDrinkPhotoProvider(env),
+          mediaStorage: new SupabaseVenueMediaStorage({
+            url: env.SUPABASE_URL,
+            serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
+          }),
+          renderQrSvg,
+        },
       )
     : new UnavailableVenueManagementService();
   return {
@@ -103,6 +126,38 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
       }
     },
   };
+}
+
+function createMenuPhotoScanProvider(env: WebServerEnv) {
+  if (env.MODEL_PROVIDER === "openai") {
+    if (!env.MODEL_API_KEY || !env.MODEL_NAME) {
+      throw new Error("Validated OpenAI menu scan configuration is unavailable");
+    }
+    return new OpenAIMenuPhotoScanProvider({ apiKey: env.MODEL_API_KEY, model: env.MODEL_NAME });
+  }
+  if (env.MODEL_PROVIDER === "openrouter") {
+    if (!env.OPENROUTER_API_KEY || !env.MODEL_NAME) {
+      throw new Error("Validated OpenRouter menu scan configuration is unavailable");
+    }
+    return new OpenRouterMenuPhotoScanProvider({
+      apiKey: env.OPENROUTER_API_KEY,
+      model: env.MODEL_NAME,
+      siteUrl: env.APP_URL,
+    });
+  }
+  return new DeterministicMenuPhotoScanProvider();
+}
+
+function createDrinkPhotoProvider(env: WebServerEnv) {
+  if (env.IMAGE_CUTOUT_PROVIDER === "alibaba") {
+    if (!env.DASHSCOPE_API_KEY) throw new Error("DASHSCOPE_API_KEY is required for image cutout");
+    return new AlibabaDrinkPhotoProvider({
+      apiKey: env.DASHSCOPE_API_KEY,
+      ...(env.IMAGE_CUTOUT_MODEL ? { model: env.IMAGE_CUTOUT_MODEL } : {}),
+      ...(env.DASHSCOPE_IMAGE_ENDPOINT ? { endpoint: env.DASHSCOPE_IMAGE_ENDPOINT } : {}),
+    });
+  }
+  return new OriginalDrinkPhotoProvider();
 }
 
 function createModelProvider(
