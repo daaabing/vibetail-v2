@@ -30,14 +30,16 @@ export function VenueMenusPage() {
   if (!state) return <VenueAdminLoading />;
   const venue = state.session.venue;
 
-  async function run(operation: () => Promise<VenueAdminMenu[]>, success: string) {
+  async function run(operation: () => Promise<VenueAdminMenu[]>, success: string): Promise<boolean> {
     setError("");
     setNotice("");
     try {
       setMenus(await operation());
       setNotice(success);
+      return true;
     } catch (caught) {
       setError(errorMessage(caught));
+      return false;
     }
   }
 
@@ -51,7 +53,7 @@ export function VenueMenusPage() {
     void run(async () => {
       await state.client.createMenu({ name, drinkIds });
       return state.client.listMenus();
-    }, `Draft menu “${name}” created.`).then(() => form.reset());
+    }, `Draft menu “${name}” created.`).then((created) => { if (created) form.reset(); });
   }
 
   return (
@@ -123,19 +125,21 @@ function MenuEditor({ menu, drinks, venueSlug, client, run }: {
   drinks: VenueDrink[];
   venueSlug: string;
   client: HttpVenueManagementClient;
-  run: (operation: () => Promise<VenueAdminMenu[]>, success: string) => Promise<void>;
+  run: (operation: () => Promise<VenueAdminMenu[]>, success: string) => Promise<boolean>;
 }) {
+  const [editing, setEditing] = useState(false);
   const drinkNames = new Map(drinks.map((drink) => [drink.id, drink.name]));
 
-  function save(event: FormEvent<HTMLFormElement>) {
+  async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const name = String(data.get("name") ?? "").trim();
     const drinkIds = data.getAll("drinkIds").map(String);
-    void run(async () => {
+    const saved = await run(async () => {
       await client.updateMenu(menu.id, { name, drinkIds });
       return client.listMenus();
     }, `“${name}” saved.`);
+    if (saved) setEditing(false);
   }
 
   function remove() {
@@ -159,33 +163,49 @@ function MenuEditor({ menu, drinks, venueSlug, client, run }: {
         </div>
         <div className="vt-inline-actions">
           {menu.status === "published" && venueSlug && <a className="vt-link-button" href={`/m/${venueSlug}`}>Guest view</a>}
+          <button className="vt-secondary" type="button" aria-expanded={editing} onClick={() => setEditing((value) => !value)}>
+            {editing ? "Close editor" : "Edit menu"}
+          </button>
           {menu.status !== "published" && (
-            <button className="vt-primary" onClick={publish}>Publish</button>
+            <button className="vt-primary" type="button" onClick={publish}>Publish</button>
           )}
-          <button className="vt-link-button" onClick={remove}>Delete</button>
+          <button className="vt-link-button" type="button" onClick={remove}>Delete</button>
         </div>
       </div>
-      <form className="vt-admin-form" onSubmit={save}>
-        <label>Menu name<input name="name" defaultValue={menu.name} required maxLength={200} /></label>
-        <fieldset className="vt-venue-drink-picker">
-          <legend>Drinks on this menu ({menu.drinkIds.length})</legend>
-          {drinks.length === 0 && <p>No drinks in the library yet.</p>}
-          {drinks.map((drink) => (
-            <label key={drink.id} className="vt-check">
-              <input
-                type="checkbox"
-                name="drinkIds"
-                value={drink.id}
-                defaultChecked={menu.drinkIds.includes(drink.id)}
-              /> {drink.name}
-            </label>
-          ))}
-          {menu.drinkIds.filter((id) => !drinkNames.has(id)).length > 0 && (
-            <p><small>Some drinks on this menu were deleted from the library.</small></p>
-          )}
-        </fieldset>
-        <button className="vt-secondary" type="submit">Save menu</button>
-      </form>
+      {!editing && (
+        <div className="vt-venue-menu-summary">
+          <p className="vt-kicker">Drinks on this menu ({menu.drinkIds.length})</p>
+          <p>{menu.drinkIds.length === 0
+            ? "No drinks selected yet."
+            : menu.drinkIds.map((id) => drinkNames.get(id)).filter(Boolean).join(", ") || "Selected drinks are no longer in the library."}</p>
+        </div>
+      )}
+      {editing && (
+        <form className="vt-admin-form vt-venue-menu-editor-form" onSubmit={(event) => void save(event)}>
+          <label>Menu name<input name="name" defaultValue={menu.name} required maxLength={200} /></label>
+          <fieldset className="vt-venue-drink-picker">
+            <legend>Drinks on this menu ({menu.drinkIds.length})</legend>
+            {drinks.length === 0 && <p>No drinks in the library yet.</p>}
+            {drinks.map((drink) => (
+              <label key={drink.id} className="vt-check">
+                <input
+                  type="checkbox"
+                  name="drinkIds"
+                  value={drink.id}
+                  defaultChecked={menu.drinkIds.includes(drink.id)}
+                /> {drink.name}
+              </label>
+            ))}
+            {menu.drinkIds.filter((id) => !drinkNames.has(id)).length > 0 && (
+              <p><small>Some drinks on this menu were deleted from the library.</small></p>
+            )}
+          </fieldset>
+          <div className="vt-inline-actions">
+            <button className="vt-primary" type="submit">Save changes</button>
+            <button className="vt-secondary" type="button" onClick={() => setEditing(false)}>Cancel</button>
+          </div>
+        </form>
+      )}
     </article>
   );
 }
