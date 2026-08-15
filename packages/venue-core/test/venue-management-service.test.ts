@@ -56,6 +56,15 @@ describe("venue sessions", () => {
     });
   });
 
+  it("accepts any non-empty account name and creates a fresh account when it is new", async () => {
+    const { service } = createService();
+    const login = await service.login("A");
+    expect(login.session).toMatchObject({
+      account: { name: "a", displayName: "A" },
+      venue: null,
+    });
+  });
+
   it("rejects short and unknown tokens", async () => {
     const { service } = createService();
     await expect(service.getSession("short")).rejects.toMatchObject({ httpStatus: 401 });

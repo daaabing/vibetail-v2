@@ -66,7 +66,7 @@ export function VenueLoginPage() {
           <form className="vt-admin-form" onSubmit={submit}>
             <label>
               Account name
-              <input name="name" required minLength={2} maxLength={80} placeholder="e.g. Nightjar Team" autoComplete="username" />
+              <input name="name" required minLength={1} maxLength={80} placeholder="e.g. Nightjar Team" autoComplete="username" />
             </label>
             <button className="vt-primary" type="submit" disabled={pending}>
               {pending ? "Signing in…" : "Enter the backend"}

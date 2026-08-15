@@ -67,7 +67,7 @@ export function ForBarsPage() {
       <section id="launch" className="house-section house-paper"><div className="house-shell">
         <div className="house-section-head"><p className="house-eyebrow">Before the next service</p><h2>Send the menu.<br />We’ll help with <em>the rest.</em></h2><p>Simple menus can go live in approximately 30 minutes. Setup time depends on menu size and complexity.</p></div>
         <div className="house-ledger">{launchSteps.map(([no,title,body]) => <article key={no}><span>{no}</span><h3>{title}</h3><p>{body}</p></article>)}</div>
-        <div className="for-bars-action"><p>Already setting up a venue? Manage menus, availability and the guest preview directly.</p><a className="house-button" href="/manage">Open bar management <span>→</span></a></div>
+        <div className="for-bars-action"><p>Already setting up a venue? Manage menus, availability and the guest preview directly.</p><a className="house-button" href="/venue">Open bar management <span>→</span></a></div>
       </div></section>
 
       <section id="pricing" className="house-section house-ink"><div className="film-grain" /><div className="house-shell">

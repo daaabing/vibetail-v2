@@ -86,7 +86,7 @@ Manual state URLs:
 
 ## Venue backend (manage v2)
 
-The account-based venue backend at `/venue` covers the Venue MVP loop: sign in with an account name (passwordless MVP — the login page states this openly), create a venue, build a drink library (with AI-suggested flavor profile, base spirit, strength, and recommendation note that the venue reviews before saving), assemble menus from library drinks, publish (which auto-archives the previously published menu), and print a QR code. The QR encodes the stable `/m/<venue-slug>` URL, which always resolves to the currently published menu, so printed codes survive re-publishes.
+The account-based venue backend at `/venue` covers the Venue MVP loop; `/manage` redirects to this canonical entry while legacy `/manage/:token` links remain supported. Enter any non-empty account name (passwordless MVP — the login page states this openly): an existing name reopens its account and a new name creates a fresh account before venue setup. From there, teams can create a venue, build a drink library (with AI-suggested flavor profile, base spirit, strength, and recommendation note that the venue reviews before saving), assemble menus from library drinks, publish (which auto-archives the previously published menu), and print a QR code. The QR encodes the stable `/m/<venue-slug>` URL, which always resolves to the currently published menu, so printed codes survive re-publishes.
 
 Guests scanning the QR are counted as menu views; successful matches are recorded per drink; the match result card asks for a 1–5 star rating with an optional comment. The dashboard at `/venue/dashboard` aggregates usage, matches, feedback, most-matched drinks, and recent comments for Today / Last 7 days / Last 30 days.
 

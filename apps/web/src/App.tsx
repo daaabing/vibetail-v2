@@ -71,7 +71,7 @@ export function resolveAppRoute(pathname: string): AppRoute {
   if (normalized === "/venue") return { kind: "venue_admin", section: "login" };
   const admin = normalized.match(/^\/venue\/(setup|dashboard|drinks|menus|qr)$/);
   if (admin?.[1]) return { kind: "venue_admin", section: admin[1] as VenueAdminSection };
-  if (normalized === "/manage") return { kind: "management" };
+  if (normalized === "/manage") return { kind: "redirect", to: "/venue" };
   if (normalized === "/for-bars") return { kind: "for_bars" };
   const management = normalized.match(/^\/manage\/([^/]+)$/);
   if (management?.[1]) return { kind: "management", privateToken: decodeURIComponent(management[1]) };

@@ -102,7 +102,6 @@ export class DefaultVenueManagementService implements VenueManagementService {
   async login(name: string): Promise<VenueLoginResult> {
     const displayName = venueLoginInputSchema.parse({ name }).name;
     const normalized = normalizeAccountName(displayName);
-    if (normalized.length < 2) throw invalidRequest("Account name is too short.");
     const account = await this.repository.findOrCreateAccount(normalized, displayName);
     const token = randomBytes(32).toString("hex");
     await this.repository.createVenueSession(account.id, sha256Hex(token));
