@@ -1,4 +1,4 @@
-import { DeterministicMatchingProvider } from "@vibetail/model-providers";
+import { DeterministicMatchingProvider, type ModelProvider } from "@vibetail/model-providers";
 import {
   DefaultManagementService,
   DefaultVenueManagementService,
@@ -10,11 +10,11 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createWebApp } from "./app.js";
 
-function app() {
+function app(venueProvider?: ModelProvider) {
   const repository = new FixtureVenueRepository();
-  const provider = new DeterministicMatchingProvider({ failureMenuIds: repository.fixture.matchingFailureMenuIds });
+  const provider = new DeterministicMatchingProvider();
   return createWebApp({
-    venueService: new DefaultVenueService(repository, provider),
+    venueService: new DefaultVenueService(repository, venueProvider ?? provider),
     managementService: new DefaultManagementService(repository),
     venueManagementService: new DefaultVenueManagementService(repository, {
       appUrl: "http://127.0.0.1:3000",
@@ -54,6 +54,8 @@ describe("venue HTTP slice", () => {
     expect(directory.body.map((entry: { venue: { slug: string } }) => entry.venue.slug)).toEqual([
       "double-chicken-please", "nightjar-demo", "vibetail-taproom",
     ]);
+    expect(directory.body.flatMap((entry: { menus: Array<{ slug: string }> }) => entry.menus.map((menu) => menu.slug)))
+      .toEqual(["main", "cocktails", "signature"]);
   });
 
   it("completes a global match with a venue-specific URL", async () => {
@@ -91,8 +93,14 @@ describe("venue HTTP slice", () => {
   });
 
   it("returns a retryable matching provider failure", async () => {
-    const response = await request(app())
-      .post("/v1/venues/double-chicken-please/menus/matching-failure/match")
+    const unavailableProvider: ModelProvider = {
+      id: "unavailable",
+      async selectVenueItem() {
+        throw new Error("Provider unavailable");
+      },
+    };
+    const response = await request(app(unavailableProvider))
+      .post("/v1/venues/double-chicken-please/menus/main/match")
       .send({ preferences: { mood: "curious" } })
       .expect(503);
     expect(response.body).toMatchObject({ code: "MATCH_PROVIDER_UNAVAILABLE", retryable: true });
