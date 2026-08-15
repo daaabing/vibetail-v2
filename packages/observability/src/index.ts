@@ -29,3 +29,44 @@ export const FORBIDDEN_LOG_FIELDS = [
   "sandboxCredential",
   "systemPrompt",
 ] as const;
+
+const forbiddenLogFieldSet = new Set<string>(FORBIDDEN_LOG_FIELDS);
+
+export class JsonConsoleTelemetrySink implements TelemetrySink {
+  log(event: StructuredLogEvent): void {
+    assertSafeFields(event.fields);
+    console.log(JSON.stringify(event));
+  }
+
+  increment(metric: string, value: number, labels: Record<string, string> = {}): void {
+    this.log({
+      timestamp: new Date().toISOString(),
+      level: "info",
+      service: "web",
+      traceId: "metric",
+      event: "metric_incremented",
+      fields: { metric, value, ...labels },
+    });
+  }
+
+  duration(metric: string, durationMs: number, labels: Record<string, string> = {}): void {
+    this.log({
+      timestamp: new Date().toISOString(),
+      level: "info",
+      service: "web",
+      traceId: "metric",
+      event: "metric_duration_recorded",
+      durationMs,
+      fields: { metric, ...labels },
+    });
+  }
+}
+
+function assertSafeFields(fields: StructuredLogEvent["fields"]): void {
+  if (!fields) return;
+  for (const key of Object.keys(fields)) {
+    if (forbiddenLogFieldSet.has(key)) {
+      throw new Error(`Forbidden telemetry field: ${key}`);
+    }
+  }
+}

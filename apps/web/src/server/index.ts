@@ -42,6 +42,13 @@ const server = app.listen(serverEnv.PORT, serverEnv.HOST, () => {
       port: serverEnv.PORT,
       venue_data_source: serverEnv.VENUE_REPOSITORY,
       model_provider: serverEnv.MODEL_PROVIDER,
+      model_name: serverEnv.MODEL_NAME ?? null,
+      google_cloud_project: serverEnv.MODEL_PROVIDER === "vertex"
+        ? serverEnv.GOOGLE_CLOUD_PROJECT ?? null
+        : null,
+      google_cloud_location: serverEnv.MODEL_PROVIDER === "vertex"
+        ? serverEnv.GOOGLE_CLOUD_LOCATION ?? null
+        : null,
     }),
   );
 });

@@ -48,7 +48,23 @@ pnpm test
 pnpm build
 ```
 
-The checked-in defaults use fixture venue data, a deterministic model, and the local sandbox. Empty optional credentials are normalized as absent. Selecting `supabase`, `fc`, `e2b`, or a remote model provider makes that provider's required variables mandatory at startup. The preferred remote model selection is `MODEL_PROVIDER=openrouter`, `MODEL_NAME=openai/gpt-5-mini`, and a server-only `OPENROUTER_API_KEY`.
+The checked-in defaults use fixture venue data, a deterministic model, and the local sandbox. Empty optional credentials are normalized as absent. Selecting `supabase`, `fc`, `e2b`, or a remote model provider makes that provider's required variables mandatory at startup. The Build with Gemini XPRIZE path is the bounded **Tasting Agent** with `MODEL_PROVIDER=vertex`, a Gemini `MODEL_NAME`, and a server-only Vertex AI Express Mode key. OpenRouter and direct OpenAI remain explicit alternative adapters; production never silently falls back from Vertex to another provider.
+
+## Gemini Tasting Agent
+
+The Tasting Agent receives guest preferences and a server-built allowlist of currently active menu items. Gemini may return only an item ID and match explanation. The server then re-reads the selected item, verifies current menu ownership and availability, and reconstructs all names, ingredients, prices, allergens, images, and other facts from the venue repository.
+
+Local and automated tests remain credential-free with `MODEL_PROVIDER=deterministic`. The Vertex path requires:
+
+```text
+MODEL_PROVIDER=vertex
+MODEL_NAME=gemini-3.5-flash
+VERTEX_API_KEY=<server-only Express Mode key>
+GOOGLE_CLOUD_PROJECT=<evidence project id>
+GOOGLE_CLOUD_LOCATION=global
+```
+
+Every successful Vertex recommendation emits sanitized JSON metadata with its trace ID, model, latency, attempt, selected item ID, response metadata, and token counts when supplied. It never logs the key, full prompt, raw preferences, or provider response. Until a credentialed canary and public Railway smoke test succeed, the adapter is implemented and tested locally but must not be described as live in production.
 
 ## Local product walkthrough
 

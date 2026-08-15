@@ -6,10 +6,12 @@ import {
   OpenAIModelProvider,
   OpenRouterMenuPhotoScanProvider,
   OpenRouterModelProvider,
+  VertexGeminiModelProvider,
   OriginalDrinkPhotoProvider,
   type DrinkInfoProvider,
   type ModelProvider,
 } from "@vibetail/model-providers";
+import { JsonConsoleTelemetrySink } from "@vibetail/observability";
 import {
   DefaultVenueManagementService,
   DefaultVenueService,
@@ -180,6 +182,15 @@ function createModelProvider(
         apiKey: env.OPENROUTER_API_KEY,
         model: env.MODEL_NAME,
         siteUrl: env.APP_URL,
+      });
+    case "vertex":
+      if (!env.VERTEX_API_KEY || !env.MODEL_NAME) {
+        throw new Error("Validated Vertex Gemini provider configuration is unavailable");
+      }
+      return new VertexGeminiModelProvider({
+        apiKey: env.VERTEX_API_KEY,
+        model: env.MODEL_NAME,
+        telemetry: new JsonConsoleTelemetrySink(),
       });
     default:
       throw new Error(`MODEL_PROVIDER=${env.MODEL_PROVIDER} is not implemented`);

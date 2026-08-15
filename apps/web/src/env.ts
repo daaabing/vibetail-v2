@@ -31,7 +31,10 @@ const serverEnvSchema = z
     SUPABASE_SERVICE_ROLE_KEY: optionalString(),
     MODEL_API_KEY: optionalString(),
     OPENROUTER_API_KEY: optionalString(),
+    VERTEX_API_KEY: optionalString(),
     MODEL_NAME: optionalString(),
+    GOOGLE_CLOUD_PROJECT: optionalString(),
+    GOOGLE_CLOUD_LOCATION: optionalString(),
     IMAGE_CUTOUT_PROVIDER: z.enum(["original", "alibaba"]).default("original"),
     IMAGE_CUTOUT_MODEL: optionalString(),
     DASHSCOPE_API_KEY: optionalString(),
@@ -47,6 +50,13 @@ const serverEnvSchema = z
     }
     if (env.MODEL_PROVIDER === "openrouter") {
       requireFields(env, ["OPENROUTER_API_KEY", "MODEL_NAME"], context);
+    } else if (env.MODEL_PROVIDER === "vertex") {
+      requireFields(env, [
+        "VERTEX_API_KEY",
+        "MODEL_NAME",
+        "GOOGLE_CLOUD_PROJECT",
+        "GOOGLE_CLOUD_LOCATION",
+      ], context);
     } else if (env.MODEL_PROVIDER !== "deterministic") {
       requireFields(env, ["MODEL_API_KEY", "MODEL_NAME"], context);
     }

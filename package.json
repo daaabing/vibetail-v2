@@ -10,8 +10,8 @@
     "pnpm": ">=11.16.0"
   },
   "scripts": {
-    "build": "vite build --config apps/web/vite.config.ts && tsup apps/web/src/server/index.ts --format esm --platform node --external express --external vite --out-dir apps/web/dist/server --clean --sourcemap && tsc -p tsconfig.build.json",
-    "ci": "eslint apps packages --max-warnings=0 && tsc -p tsconfig.json --noEmit && vitest run && vitest run --config vitest.integration.config.ts && vite build --config apps/web/vite.config.ts && tsup apps/web/src/server/index.ts --format esm --platform node --external express --external vite --out-dir apps/web/dist/server --clean --sourcemap && tsc -p tsconfig.build.json && node scripts/check-forbidden-runtime.mjs && node scripts/check-client-bundle.mjs",
+    "build": "vite build --config apps/web/vite.config.ts && tsup apps/web/src/server/index.ts --format esm --platform node --external express --external vite --external @google/genai --external qrcode --out-dir apps/web/dist/server --clean --sourcemap && tsc -p tsconfig.build.json && node scripts/check-forbidden-runtime.mjs && node scripts/check-client-bundle.mjs",
+    "ci": "eslint apps packages --max-warnings=0 && tsc -p tsconfig.json --noEmit && vitest run && vitest run --config vitest.integration.config.ts && pnpm build",
     "dev": "node --env-file-if-exists=.env --import tsx apps/web/src/server/index.ts",
     "lint": "eslint apps packages --max-warnings=0",
     "start": "NODE_ENV=production node --env-file-if-exists=.env apps/web/dist/server/index.js",

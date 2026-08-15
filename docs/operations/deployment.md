@@ -45,6 +45,33 @@ The adapter uses OpenRouter's OpenAI-compatible Chat Completions endpoint with s
 
 The direct OpenAI adapter remains available with `MODEL_PROVIDER=openai`, `MODEL_NAME`, and `MODEL_API_KEY`. Do not reuse an OpenRouter key in `MODEL_API_KEY`; the separate names make provider selection and secret rotation explicit.
 
+## XPRIZE Vertex Tasting Agent preview
+
+Deploy the XPRIZE branch to a separate Railway preview environment/service so the existing healthy staging service remains recoverable. This action requires explicit deployment approval and does not include a production migration or DNS change.
+
+Configure:
+
+```text
+NODE_ENV=production
+APP_URL=https://<xprize-preview>.up.railway.app
+VENUE_REPOSITORY=supabase
+MODEL_PROVIDER=vertex
+MODEL_NAME=gemini-3.5-flash
+GOOGLE_CLOUD_PROJECT=<project-id>
+GOOGLE_CLOUD_LOCATION=global
+SANDBOX_PROVIDER=local
+LOG_LEVEL=info
+VERTEX_API_KEY=<sealed server-only Express Mode key>
+SUPABASE_URL=<approved existing value>
+SUPABASE_PUBLISHABLE_KEY=<approved existing value>
+```
+
+Do not add `VERTEX_API_KEY` to a `VITE_` variable, repository file, build log, screenshot, or browser runtime config. Seal it in the Railway service. The service starts without making a Gemini request; `/health` gates process activation and `/ready` checks the venue repository. Run the real Vertex canary only after both return 200.
+
+Release smoke tests must prove that the preview contains the current `/v1/venues` revision, not the older `/v1/restaurants` deployment. Record one global, one venue-specific English, and one venue-specific Chinese/different-preference match. Correlate each response trace ID with a sanitized Railway `tasting_agent_request_completed` event and the Vertex usage time window.
+
+Rollback on authentication failure, invalid selection, secret exposure, missing current routes, failed health/readiness, or unacceptable latency. Rotate the Vertex key first if exposure is suspected, then restore the previous successful Railway deployment or route evaluation back to the untouched staging service.
+
 Do not paste secrets into logs, commits, public variables, browser code, or deployment URLs. Before enabling management writes, verify the old schema, RLS, `published_version_id`, and SHA-256 private-token format using a dedicated test merchant.
 
 ## Release verification

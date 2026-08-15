@@ -23,8 +23,8 @@ export function VenueExperience({ client, initialPreferences, initialResult, men
     <MatchFlow
       context={{
         kicker: `${menu.venue.name} · ${menu.name}`,
-        title: locale === "zh" ? "从这张菜单找到今晚这一杯" : "Meet your drink from this menu",
-        description: locale === "zh" ? "告诉我们此刻的状态。匹配只会使用这家酒吧今晚真实可点的项目。" : "Tell us how tonight feels. This match only considers items this bar can actually serve from this menu.",
+        title: locale === "zh" ? "让品鉴智能体找到今晚这一杯" : "Ask the Tasting Agent",
+        description: locale === "zh" ? "告诉我们此刻的状态。智能体只会从这家酒吧今晚真实可点的项目中选择。" : "Tell us how tonight feels. The agent only considers items this bar can actually serve from this menu.",
       }}
       headerAction={<button className="vt-locale-toggle" type="button" onClick={() => setLocale((value) => value === "en" ? "zh" : "en")}>{locale === "en" ? "中文" : "EN"}</button>}
       {...(initialPreferences ? { initialPreferences } : {})}

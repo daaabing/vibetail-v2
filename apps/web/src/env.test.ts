@@ -47,6 +47,32 @@ describe("web environment", () => {
     expect("OPENROUTER_API_KEY" in parsed.publicEnv).toBe(false);
   });
 
+  it("requires complete Vertex Express Mode configuration", () => {
+    expect(() => parseWebEnv({
+      ...localEnv,
+      MODEL_PROVIDER: "vertex",
+      VERTEX_API_KEY: "server-secret",
+      MODEL_NAME: "gemini-2.5-flash",
+    })).toThrow(/GOOGLE_CLOUD_PROJECT/);
+
+    const parsed = parseWebEnv({
+      ...localEnv,
+      MODEL_PROVIDER: "vertex",
+      VERTEX_API_KEY: "server-secret",
+      MODEL_NAME: "gemini-2.5-flash",
+      GOOGLE_CLOUD_PROJECT: "vibetail-xprize",
+      GOOGLE_CLOUD_LOCATION: "global",
+    });
+    expect(parsed.serverEnv).toMatchObject({
+      MODEL_PROVIDER: "vertex",
+      MODEL_NAME: "gemini-2.5-flash",
+      GOOGLE_CLOUD_PROJECT: "vibetail-xprize",
+      GOOGLE_CLOUD_LOCATION: "global",
+    });
+    expect("VERTEX_API_KEY" in parsed.publicEnv).toBe(false);
+    expect("GOOGLE_CLOUD_PROJECT" in parsed.publicEnv).toBe(false);
+  });
+
   it("honors the deprecated RESTAURANT_REPOSITORY alias when VENUE_REPOSITORY is unset", () => {
     const parsed = parseWebEnv({
       APP_URL: localEnv.APP_URL,
@@ -76,9 +102,11 @@ describe("web environment", () => {
       ...localEnv,
       SUPABASE_SERVICE_ROLE_KEY: "server-secret",
       OPENROUTER_API_KEY: "openrouter-secret",
+      VERTEX_API_KEY: "vertex-secret",
     });
     expect("SUPABASE_SERVICE_ROLE_KEY" in parsed.publicEnv).toBe(false);
     expect("OPENROUTER_API_KEY" in parsed.publicEnv).toBe(false);
+    expect("VERTEX_API_KEY" in parsed.publicEnv).toBe(false);
   });
 });
 

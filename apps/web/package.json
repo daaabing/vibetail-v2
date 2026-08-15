@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@google/genai": "^2.17.1",
     "@vibetail/contracts": "workspace:*",
     "@vibetail/model-providers": "workspace:*",
+    "@vibetail/observability": "workspace:*",
     "@vibetail/venue-core": "workspace:*",
     "express": "^4.21.2",
     "qrcode": "^1.5.4",

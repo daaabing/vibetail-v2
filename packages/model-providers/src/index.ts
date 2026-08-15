@@ -25,6 +25,12 @@ export interface ModelInvocationMetadata {
   model: string;
   attempt: number;
   durationMs: number;
+  promptTokenCount?: number;
+  outputTokenCount?: number;
+  totalTokenCount?: number;
+  responseId?: string;
+  modelVersion?: string;
+  finishReason?: string;
 }
 
 export interface ModelProviderResult {
@@ -64,5 +70,6 @@ export interface DrinkInfoProvider {
 export * from "./deterministic.js";
 export * from "./openai.js";
 export * from "./openrouter.js";
+export * from "./vertex-gemini.js";
 export * from "./menu-photo.js";
 export * from "./drink-photo.js";

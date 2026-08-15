@@ -4,6 +4,8 @@
 
 本文记录仓库中**已经真实实现的能力**、**当前本地运行模式**以及**尚未接入的后端能力**。它用于避免把“已有 contract 或 adapter”误认为“已经连接生产服务”。如实现或部署状态改变，应同步更新本文。
 
+> XPRIZE branch note (2026-08-15): `codex/create-xprize-submission` now contains a locally implemented and mocked-tested Vertex AI Express Mode adapter for the bounded Tasting Agent, plus server-only environment validation and sanitized invocation telemetry. No credentialed Vertex canary or Railway XPRIZE preview deployment has occurred yet. The live-production claims below still describe the existing OpenRouter staging deployment until those gates pass.
+
 ## 结论
 
 当前系统不是静态前端。它有真实的 Node/Express 后端、HTTP API、服务层、repository boundary、服务端匹配校验和最小管理写入流程。
@@ -127,7 +129,7 @@ SANDBOX_PROVIDER=local
 | Supabase public read | `SupabaseVenueRepository`、generated database types | 已在 Railway staging 验证 2 个 published menus 和完整 public matching 流程；生产切换未执行 |
 | Supabase management write | server-only `SupabaseManagementRepository` | 未对 staging/production 执行写入，未验证真实 token/schema/RLS 兼容性 |
 | PostHog | `POSTHOG_KEY`、`POSTHOG_HOST` env schema | 没有 SDK、初始化、事件 taxonomy 或任何 `capture` 调用 |
-| Remote AI | OpenRouter Chat Completions + Structured Outputs、direct OpenAI Responses adapter、mock contract tests、web composition switch | Railway staging 已使用 `openai/gpt-5-mini` 完成真实 Global/venue match 验收；仍缺 usage/cost telemetry、rate limit、spend guardrails，Vertex/direct Gemini/Alibaba 尚未实现 |
+| Remote AI | OpenRouter Chat Completions + Structured Outputs、direct OpenAI Responses adapter、Vertex AI Express Mode Tasting Agent adapter、mock contract tests、web composition switch | Railway staging 已使用 `openai/gpt-5-mini` 完成真实 Global/venue match 验收；Vertex adapter 已在 XPRIZE branch 本地实现并覆盖 structured output、usage metadata、sanitized telemetry 和 fail-closed tests，但仍缺 credentialed canary 与 Railway live verification；direct Gemini Developer API/Alibaba 尚未实现 |
 | Agent worker | workspace、contracts、env validation、provider-neutral boundaries | 没有 Agent state machine、durable run store、queue、checkpoint、approval execution 或实际 worker loop |
 | Alibaba FC Sandbox | interface、config type、provider package skeleton | 没有 FC SDK、真实 execute/hibernate/wake/resume、SLS/trace 证据 |
 | E2B | interface、config type、provider package skeleton | 没有 live adapter 或 provider parity tests |
