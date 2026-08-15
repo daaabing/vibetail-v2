@@ -95,13 +95,14 @@ function MenuCreationStudio({ client, drinks, onChanged, onError, onNotice }: {
   onError: (message: string) => void;
   onNotice: (message: string) => void;
 }) {
-  const [mode, setMode] = useState<"photo" | "manual">("photo");
+  const [mode, setMode] = useState<"photo" | "url" | "manual">("photo");
   const [photo, setPhoto] = useState<File>();
   const [photoPreview, setPhotoPreview] = useState("");
   const [scan, setScan] = useState<MenuPhotoScanResult>();
   const [scanning, setScanning] = useState(false);
   const [importing, setImporting] = useState(false);
   const [menuName, setMenuName] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
 
   async function scanPhoto() {
     if (!photo) return;
@@ -130,12 +131,30 @@ function MenuCreationStudio({ client, drinks, onChanged, onError, onNotice }: {
       onNotice(`Draft “${result.menu.name}” created with ${result.drinks.length} new drinks.`);
       setPhoto(undefined);
       setPhotoPreview("");
+      setSourceUrl("");
       setScan(undefined);
       setMenuName("");
     } catch (caught) {
       onError(errorMessage(caught));
     } finally {
       setImporting(false);
+    }
+  }
+
+  async function fetchMenuUrl(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setScanning(true);
+    onError("");
+    onNotice("");
+    try {
+      const result = await client.scanMenuUrl({ sourceUrl: sourceUrl.trim() });
+      setScan(result);
+      setMenuName(result.suggestedMenuName);
+      onNotice(`${result.drinks.length} drinks fetched. Review them before creating the draft.`);
+    } catch (caught) {
+      onError(errorMessage(caught));
+    } finally {
+      setScanning(false);
     }
   }
 
@@ -171,6 +190,11 @@ function MenuCreationStudio({ client, drinks, onChanged, onError, onNotice }: {
           <strong>Scan a whole menu</strong>
           <small>Fastest — extract every drink, then review.</small>
         </button>
+        <button className={mode === "url" ? "is-active" : ""} type="button" role="tab" aria-selected={mode === "url"} onClick={() => setMode("url")}>
+          <span className="vt-path-mark">Public link</span>
+          <strong>Auto-fetch a menu</strong>
+          <small>Paste the venue's menu webpage and pull in every drink.</small>
+        </button>
         <button className={mode === "manual" ? "is-active" : ""} type="button" role="tab" aria-selected={mode === "manual"} onClick={() => setMode("manual")}>
           <span className="vt-path-mark">Drink by drink</span>
           <strong>Build it manually</strong>
@@ -198,26 +222,40 @@ function MenuCreationStudio({ client, drinks, onChanged, onError, onNotice }: {
           </button>
         </div>
 
-        {scan && <section className="vt-scan-review" aria-label="Scanned drinks review">
-          <div className="vt-scan-review-head">
-            <div><p className="vt-kicker">Review before import</p><h3>{scan.drinks.length} drinks found</h3></div>
-            <small>Source: {scan.provider}</small>
-          </div>
-          <label>Menu name<input value={menuName} required maxLength={200} onChange={(event) => setMenuName(event.target.value)} /></label>
-          <div className="vt-scanned-drinks">
-            {scan.drinks.map((drink, index) => <ScannedDrinkEditor
-              key={index}
-              drink={drink}
-              index={index}
-              onChange={(updates) => updateScannedDrink(index, updates)}
-              onRemove={() => setScan((current) => current && ({ ...current, drinks: current.drinks.filter((_, drinkIndex) => drinkIndex !== index) }))}
-            />)}
-          </div>
-          <button className="vt-primary vt-import-menu-button" type="button" disabled={importing || !menuName.trim() || scan.drinks.length === 0} onClick={() => void importScan()}>
-            {importing ? "Creating drinks and menu…" : `Create draft with ${scan.drinks.length} drinks`}
-          </button>
-        </section>}
       </div>}
+
+      {mode === "url" && <form className="vt-menu-url-flow" role="tabpanel" onSubmit={(event) => void fetchMenuUrl(event)}>
+        <div className="vt-menu-url-copy">
+          <p className="vt-kicker">Fetch from the web</p>
+          <h3>Paste the venue's menu page.</h3>
+          <p>Use a public webpage that lists the drinks. Photo-only menus work better with Scan a whole menu.</p>
+        </div>
+        <label>Menu webpage URL<input type="url" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} required maxLength={2048} placeholder="https://yourbar.com/menu" /></label>
+        <button className="vt-primary" type="submit" disabled={scanning || !sourceUrl.trim()}>
+          {scanning ? "Fetching every drink…" : "Fetch menu from link"}
+        </button>
+        <small>This uses the same editable review flow as a scanned menu. Automatic retrieval is handled behind the menu-import API.</small>
+      </form>}
+
+      {scan && mode !== "manual" && <section className="vt-scan-review" aria-label="Imported drinks review">
+        <div className="vt-scan-review-head">
+          <div><p className="vt-kicker">Review before import</p><h3>{scan.drinks.length} drinks found</h3></div>
+          <small>Source: {scan.provider}</small>
+        </div>
+        <label>Menu name<input value={menuName} required maxLength={200} onChange={(event) => setMenuName(event.target.value)} /></label>
+        <div className="vt-scanned-drinks">
+          {scan.drinks.map((drink, index) => <ScannedDrinkEditor
+            key={index}
+            drink={drink}
+            index={index}
+            onChange={(updates) => updateScannedDrink(index, updates)}
+            onRemove={() => setScan((current) => current && ({ ...current, drinks: current.drinks.filter((_, drinkIndex) => drinkIndex !== index) }))}
+          />)}
+        </div>
+        <button className="vt-primary vt-import-menu-button" type="button" disabled={importing || !menuName.trim() || scan.drinks.length === 0} onClick={() => void importScan()}>
+          {importing ? "Creating drinks and menu…" : `Create draft with ${scan.drinks.length} drinks`}
+        </button>
+      </section>}
 
       {mode === "manual" && <div className="vt-manual-menu-flow" role="tabpanel">
         <form className="vt-admin-form" onSubmit={(event) => void createManualMenu(event)}>

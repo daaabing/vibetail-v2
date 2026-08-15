@@ -12,6 +12,7 @@ import {
   importScannedMenuResultSchema,
   menuPhotoScanInputSchema,
   menuPhotoScanResultSchema,
+  menuUrlScanInputSchema,
   menuViewEventSchema,
   prepareDrinkPhotoInputSchema,
   prepareDrinkPhotoResultSchema,
@@ -37,6 +38,7 @@ import {
   type MenuViewEvent,
   type MenuPhotoScanInput,
   type MenuPhotoScanResult,
+  type MenuUrlScanInput,
   type PrepareDrinkPhotoInput,
   type PrepareDrinkPhotoResult,
   type UpdateVenueMenuInput,
@@ -88,6 +90,7 @@ export interface VenueManagementService {
   deleteDrink(token: string, drinkId: string): Promise<DeleteDrinkResult>;
   suggestDrinkInfo(token: string, input: DrinkInfoRequestInput): Promise<DrinkInfoSuggestion>;
   scanMenuPhoto(token: string, input: MenuPhotoScanInput): Promise<MenuPhotoScanResult>;
+  scanMenuUrl(token: string, input: MenuUrlScanInput): Promise<MenuPhotoScanResult>;
   importScannedMenu(token: string, input: ImportScannedMenuInput): Promise<ImportScannedMenuResult>;
   prepareDrinkPhoto(token: string, input: PrepareDrinkPhotoInput): Promise<PrepareDrinkPhotoResult>;
   listMenus(token: string): Promise<VenueAdminMenu[]>;
@@ -256,6 +259,24 @@ export class DefaultVenueManagementService implements VenueManagementService {
     } catch (error) {
       if (error instanceof VenueManagementServiceError) throw error;
       throw mediaUnavailable("The menu photo could not be read. Try a clearer, well-lit photo.");
+    }
+  }
+
+  async scanMenuUrl(token: string, input: MenuUrlScanInput): Promise<MenuPhotoScanResult> {
+    await this.requireVenue(token);
+    const provider = this.options.menuPhotoScanProvider;
+    if (!provider) throw mediaUnavailable("Automatic menu fetching is not configured on this server.");
+    const parsed = menuUrlScanInputSchema.parse(input);
+    try {
+      const scan = await provider.scanMenuUrl({
+        sourceUrl: parsed.sourceUrl,
+        traceId: randomUUID(),
+        timeoutMs: MENU_PHOTO_TIMEOUT_MS,
+      });
+      return menuPhotoScanResultSchema.parse({ ...scan, provider: `${provider.id}-url` });
+    } catch (error) {
+      if (error instanceof VenueManagementServiceError) throw error;
+      throw mediaUnavailable("The menu URL could not be imported.");
     }
   }
 
@@ -529,6 +550,12 @@ export class UnavailableVenueManagementService implements VenueManagementService
   }
 
   async scanMenuPhoto(token: string, input: MenuPhotoScanInput): Promise<MenuPhotoScanResult> {
+    void token;
+    void input;
+    return venueBackendUnavailable();
+  }
+
+  async scanMenuUrl(token: string, input: MenuUrlScanInput): Promise<MenuPhotoScanResult> {
     void token;
     void input;
     return venueBackendUnavailable();
