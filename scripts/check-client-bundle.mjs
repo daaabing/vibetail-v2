@@ -8,6 +8,7 @@ const forbidden = [
   "OPENROUTER_API_KEY",
   "FC_SANDBOX_API_KEY",
   "E2B_API_KEY",
+  "AGENTRUN_ACCESS_KEY_SECRET",
   "@lovable.dev/",
   "ai.gateway.lovable.dev",
   "LOVABLE_API_KEY",
