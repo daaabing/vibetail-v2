@@ -26,6 +26,11 @@ describe("DefaultVenueService", () => {
       "nightjar-demo",
       "vibetail-taproom",
     ]);
+    expect(directory.flatMap((entry) => entry.menus).map((menu) => menu.slug)).toEqual([
+      "main",
+      "cocktails",
+      "signature",
+    ]);
     expect(directory.flatMap((entry) => entry.menus).map((menu) => menu.slug)).not.toContain("unpublished");
   });
 
@@ -52,7 +57,6 @@ describe("DefaultVenueService", () => {
     const ids = selectVenueItem.mock.calls[0]![0].allowedItems.map((item) => item.id);
     expect(ids).not.toContain("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3");
     expect(ids).not.toContain("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4");
-    expect(ids).not.toContain("33333333-3333-4333-8333-333333333335");
   });
 
   it("fails closed when a global provider returns an ID outside the candidate allowlist", async () => {
@@ -80,9 +84,16 @@ describe("DefaultVenueService", () => {
   });
 
   it("distinguishes an empty menu from a menu with no active items", async () => {
-    await expect(fixtureService().matchVenueItem({ ...request, menuSlug: "empty" }))
+    const emptyRepository = new FixtureVenueRepository();
+    const emptyMenu = emptyRepository.fixture.merchants[0]!.menus.find((menu) => menu.slug === "main")!;
+    emptyMenu.items = [];
+    await expect(fixtureService(emptyRepository).matchVenueItem(request))
       .rejects.toMatchObject({ detail: { code: "MENU_EMPTY" } });
-    await expect(fixtureService().matchVenueItem({ ...request, menuSlug: "no-active" }))
+
+    const unavailableRepository = new FixtureVenueRepository();
+    const unavailableMenu = unavailableRepository.fixture.merchants[0]!.menus.find((menu) => menu.slug === "main")!;
+    for (const item of unavailableMenu.items) item.availabilityStatus = "sold_out";
+    await expect(fixtureService(unavailableRepository).matchVenueItem(request))
       .rejects.toMatchObject({ detail: { code: "NO_ACTIVE_ITEMS" } });
   });
 
@@ -104,7 +115,7 @@ describe("DefaultVenueService", () => {
   it("fails closed for unknown and cross-menu item IDs", async () => {
     for (const matchedItemId of [
       "99999999-9999-4999-8999-999999999999",
-      "33333333-3333-4333-8333-333333333338",
+      "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1",
     ]) {
       const provider = fixedProvider(matchedItemId, "Invented model text.");
       await expect(new DefaultVenueService(new FixtureVenueRepository(), provider).matchVenueItem(request))
@@ -196,16 +207,19 @@ describe("DeterministicMatchingProvider", () => {
   });
 
   it("surfaces configured provider failure as retryable", async () => {
-    await expect(fixtureService().matchVenueItem({ ...request, menuSlug: "matching-failure" }))
+    const unavailableProvider: ModelProvider = {
+      id: "unavailable",
+      async selectVenueItem() {
+        throw new Error("Provider unavailable");
+      },
+    };
+    await expect(new DefaultVenueService(new FixtureVenueRepository(), unavailableProvider).matchVenueItem(request))
       .rejects.toMatchObject({ detail: { code: "MATCH_PROVIDER_UNAVAILABLE", retryable: true } });
   });
 });
 
-function fixtureService(): DefaultVenueService {
-  const repository = new FixtureVenueRepository();
-  return new DefaultVenueService(repository, new DeterministicMatchingProvider({
-    failureMenuIds: repository.fixture.matchingFailureMenuIds,
-  }));
+function fixtureService(repository = new FixtureVenueRepository()): DefaultVenueService {
+  return new DefaultVenueService(repository, new DeterministicMatchingProvider());
 }
 
 function fixedProvider(matchedItemId: string, whyThisMatch: string): ModelProvider {
