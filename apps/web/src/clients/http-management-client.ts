@@ -11,7 +11,7 @@ import {
   type UpdateMerchantInput,
 } from "@vibetail/contracts";
 import { z } from "zod";
-import { parseResponse } from "./http-restaurant-client.js";
+import { parseResponse } from "./http-venue-client.js";
 
 export class HttpManagementClient implements ManagementClient {
   constructor(private readonly token: string, private readonly baseUrl = "") {}

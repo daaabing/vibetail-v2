@@ -2,17 +2,23 @@ import {
   DeterministicMatchingProvider,
   OpenAIModelProvider,
   OpenRouterModelProvider,
+  type DrinkInfoProvider,
   type ModelProvider,
 } from "@vibetail/model-providers";
 import {
-  DefaultRestaurantService,
+  DefaultVenueManagementService,
+  DefaultVenueService,
   DefaultManagementService,
-  FixtureRestaurantRepository,
+  FixtureVenueRepository,
   SupabaseManagementRepository,
-  SupabaseRestaurantRepository,
+  SupabaseVenueManagementRepository,
+  SupabaseVenueRepository,
   UnavailableManagementService,
+  UnavailableVenueManagementService,
   type ManagementService,
-} from "@vibetail/restaurant-core";
+  type VenueManagementService,
+} from "@vibetail/venue-core";
+import QRCode from "qrcode";
 import type { WebServerEnv } from "../env.js";
 
 export interface DependencyReadinessCheck {
@@ -22,20 +28,30 @@ export interface DependencyReadinessCheck {
 }
 
 export interface WebDependencies {
-  restaurantService: DefaultRestaurantService;
+  venueService: DefaultVenueService;
   managementService: ManagementService;
+  venueManagementService: VenueManagementService;
   checkReadiness(): Promise<DependencyReadinessCheck[]>;
 }
 
+function renderQrSvg(text: string): Promise<string> {
+  return QRCode.toString(text, { type: "svg", margin: 1, width: 256 });
+}
+
 export function createWebDependencies(env: WebServerEnv): WebDependencies {
-  if (env.RESTAURANT_REPOSITORY === "fixture") {
-    const repository = new FixtureRestaurantRepository();
+  if (env.VENUE_REPOSITORY === "fixture") {
+    const repository = new FixtureVenueRepository();
     const provider = createModelProvider(env, repository.fixture.matchingFailureMenuIds);
     return {
-      restaurantService: new DefaultRestaurantService(repository, provider),
+      venueService: new DefaultVenueService(repository, provider),
       managementService: new DefaultManagementService(repository),
+      venueManagementService: new DefaultVenueManagementService(repository, {
+        appUrl: env.APP_URL,
+        drinkInfoProvider: provider,
+        renderQrSvg,
+      }),
       checkReadiness: async () => [{
-        name: "restaurant_repository",
+        name: "venue_repository",
         ready: true,
         detail: "fixture loaded",
       }],
@@ -44,7 +60,7 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
   if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
     throw new Error("Validated Supabase configuration is unavailable");
   }
-  const repository = new SupabaseRestaurantRepository({
+  const repository = new SupabaseVenueRepository({
     url: env.SUPABASE_URL,
     publishableKey: env.SUPABASE_PUBLISHABLE_KEY,
   });
@@ -55,20 +71,32 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
         serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
       }))
     : new UnavailableManagementService();
+  // The venue backend needs the reviewed 0001_venue_mvp.sql migration applied;
+  // without the service-role key it fails closed like legacy management.
+  const venueManagementService = env.SUPABASE_SERVICE_ROLE_KEY
+    ? new DefaultVenueManagementService(
+        new SupabaseVenueManagementRepository({
+          url: env.SUPABASE_URL,
+          serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
+        }),
+        { appUrl: env.APP_URL, drinkInfoProvider: provider, renderQrSvg },
+      )
+    : new UnavailableVenueManagementService();
   return {
-    restaurantService: new DefaultRestaurantService(repository, provider),
+    venueService: new DefaultVenueService(repository, provider),
     managementService,
+    venueManagementService,
     checkReadiness: async () => {
       try {
-        const scopes = await repository.listPublishedRestaurantMenus();
+        const scopes = await repository.listPublishedVenueMenus();
         return [{
-          name: "restaurant_repository",
+          name: "venue_repository",
           ready: true,
           detail: `supabase reachable; ${scopes.length} published menu(s) visible`,
         }];
       } catch {
         return [{
-          name: "restaurant_repository",
+          name: "venue_repository",
           ready: false,
           detail: "supabase query failed",
         }];
@@ -80,7 +108,7 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
 function createModelProvider(
   env: WebServerEnv,
   deterministicFailureMenuIds: readonly string[] = [],
-): ModelProvider {
+): ModelProvider & DrinkInfoProvider {
   switch (env.MODEL_PROVIDER) {
     case "deterministic":
       return new DeterministicMatchingProvider({ failureMenuIds: deterministicFailureMenuIds });

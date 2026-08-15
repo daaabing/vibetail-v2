@@ -1,67 +1,80 @@
 import { DeterministicMatchingProvider } from "@vibetail/model-providers";
-import { DefaultManagementService, DefaultRestaurantService, FixtureRestaurantRepository } from "@vibetail/restaurant-core";
+import {
+  DefaultManagementService,
+  DefaultVenueManagementService,
+  DefaultVenueService,
+  FixtureVenueRepository,
+  UnavailableVenueManagementService,
+} from "@vibetail/venue-core";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createWebApp } from "./app.js";
 
 function app() {
-  const repository = new FixtureRestaurantRepository();
+  const repository = new FixtureVenueRepository();
+  const provider = new DeterministicMatchingProvider({ failureMenuIds: repository.fixture.matchingFailureMenuIds });
   return createWebApp({
-    restaurantService: new DefaultRestaurantService(repository, new DeterministicMatchingProvider({ failureMenuIds: repository.fixture.matchingFailureMenuIds })),
+    venueService: new DefaultVenueService(repository, provider),
     managementService: new DefaultManagementService(repository),
+    venueManagementService: new DefaultVenueManagementService(repository, {
+      appUrl: "http://127.0.0.1:3000",
+      drinkInfoProvider: provider,
+      renderQrSvg: async (text) => `<svg data-url="${text}"></svg>`,
+    }),
     dataSource: "fixture",
     testFrontend: true,
   });
 }
 
-describe("restaurant HTTP slice", () => {
+describe("venue HTTP slice", () => {
   it("reports liveness and dependency readiness", async () => {
     expect((await request(app()).get("/health").expect(200)).body.status).toBe("ok");
     expect((await request(app()).get("/ready").expect(200)).body).toMatchObject({
       status: "ready",
-      checks: [{ name: "restaurant_repository", ready: true, detail: "fixture" }],
+      checks: [{ name: "venue_repository", ready: true, detail: "fixture" }],
     });
   });
 
   it("fails readiness closed when a required dependency is unavailable", async () => {
-    const repository = new FixtureRestaurantRepository();
+    const repository = new FixtureVenueRepository();
     const unavailable = createWebApp({
-      restaurantService: new DefaultRestaurantService(repository, new DeterministicMatchingProvider()),
+      venueService: new DefaultVenueService(repository, new DeterministicMatchingProvider()),
       managementService: new DefaultManagementService(repository),
+      venueManagementService: new UnavailableVenueManagementService(),
       dataSource: "fixture",
-      checkReadiness: async () => [{ name: "restaurant_repository", ready: false, detail: "unavailable" }],
+      checkReadiness: async () => [{ name: "venue_repository", ready: false, detail: "unavailable" }],
       testFrontend: true,
     });
     expect((await request(unavailable).get("/ready").expect(503)).body.status).toBe("not_ready");
   });
 
-  it("serves the landing SPA route and active restaurant directory", async () => {
+  it("serves the landing SPA route and active venue directory", async () => {
     expect((await request(app()).get("/").expect(200)).text).toContain('<div id="root"></div>');
-    const directory = await request(app()).get("/v1/restaurants").expect(200);
-    expect(directory.body.map((entry: { restaurant: { slug: string } }) => entry.restaurant.slug)).toEqual([
-      "double-chicken-please", "nightjar-demo",
+    const directory = await request(app()).get("/v1/venues").expect(200);
+    expect(directory.body.map((entry: { venue: { slug: string } }) => entry.venue.slug)).toEqual([
+      "double-chicken-please", "nightjar-demo", "vibetail-taproom",
     ]);
   });
 
-  it("completes a global match with a restaurant-specific URL", async () => {
+  it("completes a global match with a venue-specific URL", async () => {
     const response = await request(app()).post("/v1/matches/global").send({
       preferences: { mood: "clear headed", flavors: ["fresh"], alcoholPreference: "non_alcoholic" },
     }).expect(200);
     expect(response.body).toMatchObject({
-      restaurant: { slug: "nightjar-demo" }, menu: { slug: "cocktails" },
-      item: { availabilityStatus: "active" }, restaurantSpecificUrl: "/m/nightjar-demo/cocktails",
+      venue: { slug: "nightjar-demo" }, menu: { slug: "cocktails" },
+      item: { availabilityStatus: "active" }, venueSpecificUrl: "/m/nightjar-demo/cocktails",
     });
   });
 
   it("loads the fixture menu without hidden items", async () => {
-    const response = await request(app()).get("/v1/restaurants/double-chicken-please/menus/main").expect(200);
-    expect(response.body.restaurant.name).toBe("Double Chicken Please");
+    const response = await request(app()).get("/v1/venues/double-chicken-please/menus/main").expect(200);
+    expect(response.body.venue.name).toBe("Double Chicken Please");
     expect(response.body.items.map((item: { name: string }) => item.name)).toEqual(["Holy Shishito", "Cuppa Sunshine", "Waldorf Salad"]);
   });
 
   it("matches from the active allowlist end to end", async () => {
     const response = await request(app())
-      .post("/v1/restaurants/double-chicken-please/menus/main/match")
+      .post("/v1/venues/double-chicken-please/menus/main/match")
       .send({ preferences: { mood: "adventurous", flavors: ["spicy"], locale: "en" } })
       .expect(200);
     expect(response.body.item).toMatchObject({ name: "Holy Shishito", availabilityStatus: "active" });
@@ -69,9 +82,9 @@ describe("restaurant HTTP slice", () => {
   });
 
   it.each([
-    ["/v1/restaurants/missing/menus/main", "MERCHANT_NOT_FOUND"],
-    ["/v1/restaurants/inactive-restaurant/menus/main", "MERCHANT_INACTIVE"],
-    ["/v1/restaurants/double-chicken-please/menus/unpublished", "MENU_UNPUBLISHED"],
+    ["/v1/venues/missing/menus/main", "MERCHANT_NOT_FOUND"],
+    ["/v1/venues/inactive-venue/menus/main", "MERCHANT_INACTIVE"],
+    ["/v1/venues/double-chicken-please/menus/unpublished", "MENU_UNPUBLISHED"],
   ])("returns structured errors for %s", async (url, code) => {
     const response = await request(app()).get(url).expect(404);
     expect(response.body).toMatchObject({ code, retryable: false });
@@ -79,13 +92,13 @@ describe("restaurant HTTP slice", () => {
 
   it("returns a retryable matching provider failure", async () => {
     const response = await request(app())
-      .post("/v1/restaurants/double-chicken-please/menus/matching-failure/match")
+      .post("/v1/venues/double-chicken-please/menus/matching-failure/match")
       .send({ preferences: { mood: "curious" } })
       .expect(503);
     expect(response.body).toMatchObject({ code: "MATCH_PROVIDER_UNAVAILABLE", retryable: true });
   });
 
-  it("serves the restaurant page route", async () => {
+  it("serves the venue page route", async () => {
     const response = await request(app()).get("/m/double-chicken-please/main").expect(200);
     expect(response.text).toContain('<div id="root"></div>');
   });
@@ -99,7 +112,106 @@ describe("restaurant HTTP slice", () => {
 
     await request(instance).patch("/v1/management/items/33333333-3333-4333-8333-333333333331/availability")
       .set(auth).send({ availabilityStatus: "sold_out" }).expect(200);
-    const publicMenu = await request(instance).get("/v1/restaurants/double-chicken-please/menus/main").expect(200);
+    const publicMenu = await request(instance).get("/v1/venues/double-chicken-please/menus/main").expect(200);
     expect(publicMenu.body.items.find((item: { id: string }) => item.id.endsWith("331"))).toMatchObject({ availabilityStatus: "sold_out" });
+  });
+
+  it("runs the venue backend journey from login to dashboard", async () => {
+    const instance = app();
+
+    await request(instance).get("/v1/venue/drinks").expect(401);
+    const login = await request(instance).post("/v1/venue/session").send({ name: "Journey Bar" }).expect(201);
+    expect(login.body.session.venue).toBeNull();
+    const auth = { Authorization: `Bearer ${login.body.token as string}` };
+
+    const created = await request(instance).post("/v1/venue").set(auth)
+      .send({ name: "Journey Bar", address: "42 Test Ave", venueType: "cocktail_bar" }).expect(201);
+    expect(created.body.venue).toMatchObject({ slug: "journey-bar", address: "42 Test Ave" });
+
+    await request(instance).get("/v1/venues/journey-bar/current-menu").expect(404)
+      .then((response) => expect(response.body.code).toBe("NO_PUBLISHED_MENU"));
+
+    const suggest = await request(instance).post("/v1/venue/drinks/suggest").set(auth)
+      .send({ name: "Mezcal Highball", ingredients: ["mezcal", "soda", "lime"] }).expect(200);
+    expect(suggest.body).toMatchObject({ baseSpirit: "tequila", strength: "light" });
+    expect(suggest.body.flavorTags).toContain("smoky");
+
+    const drink = await request(instance).post("/v1/venue/drinks").set(auth).send({
+      name: "Mezcal Highball",
+      description: "Long, smoky, and bright.",
+      price: "$15",
+      imageUrl: null,
+      ingredients: ["mezcal", "soda", "lime"],
+      flavorTags: suggest.body.flavorTags,
+      allergens: [],
+      baseSpirit: suggest.body.baseSpirit,
+      strength: suggest.body.strength,
+      recommendationNote: suggest.body.recommendationNote,
+    }).expect(201);
+
+    const menu = await request(instance).post("/v1/venue/menus").set(auth)
+      .send({ name: "Opening Menu", drinkIds: [drink.body.id] }).expect(201);
+    const published = await request(instance)
+      .post(`/v1/venue/menus/${menu.body.id as string}/publish`).set(auth).expect(200);
+    expect(published.body.find((entry: { id: string }) => entry.id === menu.body.id).status).toBe("published");
+
+    const second = await request(instance).post("/v1/venue/menus").set(auth)
+      .send({ name: "Second Menu", drinkIds: [drink.body.id] }).expect(201);
+    const republished = await request(instance)
+      .post(`/v1/venue/menus/${second.body.id as string}/publish`).set(auth).expect(200);
+    const statuses = new Map(republished.body.map((entry: { id: string; status: string }) => [entry.id, entry.status]));
+    expect(statuses.get(menu.body.id)).toBe("archived");
+    expect(statuses.get(second.body.id)).toBe("published");
+
+    const qr = await request(instance).get("/v1/venue/qr").set(auth).expect(200);
+    expect(qr.body.consumerUrl).toBe("http://127.0.0.1:3000/m/journey-bar");
+    expect(qr.body.qrSvg).toContain("journey-bar");
+
+    const current = await request(instance).get("/v1/venues/journey-bar/current-menu").expect(200);
+    expect(current.body.slug).toBe("second-menu");
+    expect(current.body.items).toHaveLength(1);
+
+    await request(instance).post("/v1/events/menu-views")
+      .send({ merchantSlug: "journey-bar", menuId: current.body.id }).expect(204);
+
+    const match = await request(instance).post("/v1/venues/journey-bar/menus/second-menu/match")
+      .send({ preferences: { mood: "smoky evening", flavors: ["smoky"] } }).expect(200);
+    expect(match.body.matchId).toEqual(expect.any(String));
+
+    await request(instance).post(`/v1/matches/${match.body.matchId as string}/feedback`)
+      .send({ rating: 5, comment: "Perfect pick." }).expect(201);
+    await request(instance).post(`/v1/matches/${match.body.matchId as string}/feedback`)
+      .send({ rating: 1 }).expect(409);
+    await request(instance).post("/v1/matches/00000000-0000-4000-8000-00000000dead/feedback")
+      .send({ rating: 3 }).expect(404);
+
+    const dashboard = await request(instance).get("/v1/venue/dashboard?range=today").set(auth).expect(200);
+    expect(dashboard.body).toMatchObject({
+      totalMatches: 1,
+      menuViews: 1,
+      feedback: { total: 1, averageRating: 5 },
+    });
+    expect(dashboard.body.topDrinks[0]).toMatchObject({ name: "Mezcal Highball", matches: 1 });
+    expect(dashboard.body.recentFeedback[0]).toMatchObject({ rating: 5, comment: "Perfect pick." });
+  });
+
+  it("deletes drinks with menu cleanup through the HTTP surface", async () => {
+    const instance = app();
+    const login = await request(instance).post("/v1/venue/session").send({ name: "Demo Bar" }).expect(201);
+    const auth = { Authorization: `Bearer ${login.body.token as string}` };
+    expect(login.body.session.venue.slug).toBe("vibetail-taproom");
+
+    const drinks = await request(instance).get("/v1/venue/drinks").set(auth).expect(200);
+    const espresso = drinks.body.find((entry: { name: string }) => entry.name === "Velvet Espresso Martini");
+    const usage = await request(instance)
+      .get(`/v1/venue/drinks/${espresso.id as string}/usage`).set(auth).expect(200);
+    expect(usage.body.menus).toHaveLength(2);
+
+    const deleted = await request(instance)
+      .delete(`/v1/venue/drinks/${espresso.id as string}`).set(auth).expect(200);
+    expect(deleted.body.removedFromMenus).toBe(2);
+
+    const publicMenu = await request(instance).get("/v1/venues/vibetail-taproom/current-menu").expect(200);
+    expect(publicMenu.body.items.some((item: { id: string }) => item.id === espresso.id)).toBe(false);
   });
 });

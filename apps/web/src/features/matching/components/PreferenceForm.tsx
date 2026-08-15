@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { restaurantPreferencesSchema, type Locale, type RestaurantPreferences } from "@vibetail/contracts";
+import { venuePreferencesSchema, type Locale, type VenuePreferences } from "@vibetail/contracts";
 
 const FLAVORS = ["bright", "citrusy", "fresh", "herbal", "spicy", "smoky", "rich"];
 const MOODS = {
@@ -9,16 +9,16 @@ const MOODS = {
 
 interface PreferenceFormProps {
   busy: boolean;
-  initial?: RestaurantPreferences;
+  initial?: VenuePreferences;
   locale: Locale;
-  onSubmit(preferences: RestaurantPreferences): void;
+  onSubmit(preferences: VenuePreferences): void;
 }
 
 export function PreferenceForm({ busy, initial, locale, onSubmit }: PreferenceFormProps) {
   const [step, setStep] = useState(0);
   const [mood, setMood] = useState(initial?.mood ?? "");
   const [flavors, setFlavors] = useState<string[]>(initial?.flavors ?? []);
-  const [alcoholPreference, setAlcoholPreference] = useState<RestaurantPreferences["alcoholPreference"]>(initial?.alcoholPreference ?? "either");
+  const [alcoholPreference, setAlcoholPreference] = useState<VenuePreferences["alcoholPreference"]>(initial?.alcoholPreference ?? "either");
   const [error, setError] = useState("");
 
   const copy = locale === "zh" ? {
@@ -41,7 +41,7 @@ export function PreferenceForm({ busy, initial, locale, onSubmit }: PreferenceFo
       setStep((value) => value + 1);
       return;
     }
-    const parsed = restaurantPreferencesSchema.safeParse({
+    const parsed = venuePreferencesSchema.safeParse({
       mood: mood.trim() || undefined,
       flavors,
       alcoholPreference,

@@ -2,7 +2,7 @@
 
 ## Rule
 
-Restaurant, Agent, and UI code depend on capabilities and typed results, never a vendor SDK or endpoint. Provider selection occurs only in the web/worker composition roots after validated environment loading.
+Venue, Agent, and UI code depend on capabilities and typed results, never a vendor SDK or endpoint. Provider selection occurs only in the web/worker composition roots after validated environment loading.
 
 ## SandboxProvider
 
@@ -46,7 +46,7 @@ execute → checkpoint → terminate
 
 ## ModelProvider
 
-The restaurant model port accepts bounded `RestaurantPreferences`, canonical candidate metadata, locale, timeout, and trace ID. It returns:
+The venue model port accepts bounded `VenuePreferences`, canonical candidate metadata, locale, timeout, and trace ID. It returns:
 
 ```json
 {
@@ -63,7 +63,7 @@ The restaurant model port accepts bounded `RestaurantPreferences`, canonical can
 }
 ```
 
-The restaurant service, not the provider, validates allowlist membership, merchant/menu ownership, active/visible status, and canonical facts. Invalid structured output fails closed. Provider adapters own timeout/retry mechanics and safe error mapping; retry must remain bounded and observable.
+The venue service, not the provider, validates allowlist membership, merchant/menu ownership, active/visible status, and canonical facts. Invalid structured output fails closed. Provider adapters own timeout/retry mechanics and safe error mapping; retry must remain bounded and observable.
 
 The preferred remote path is OpenRouter Chat Completions with strict Structured Outputs. It uses OpenRouter's OpenAI-compatible endpoint while keeping `openrouter` as a distinct adapter and provider identity. The request requires a route that supports every requested parameter and denies providers that may use prompts for training. A direct OpenAI Responses API adapter remains available. Vertex AI, direct Gemini, and Alibaba remain future adapters behind the same interface. `deterministic` is the credential-free test/demo fallback. Image generation is intentionally absent; a future `ImageProvider` would be a separate product decision and interface.
 
@@ -71,7 +71,7 @@ The preferred remote path is OpenRouter Chat Completions with strict Structured 
 
 | Selection | Variables required when selected | Exposure |
 | --- | --- | --- |
-| `RESTAURANT_REPOSITORY=supabase` | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | server only |
+| `VENUE_REPOSITORY=supabase` | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | server only |
 | privileged Supabase operations | `SUPABASE_SERVICE_ROLE_KEY` | server/worker only; never browser/sandbox by default |
 | `MODEL_PROVIDER=openrouter` | `OPENROUTER_API_KEY`, `MODEL_NAME` | server/worker only |
 | `MODEL_PROVIDER=openai` | `MODEL_API_KEY`, `MODEL_NAME` | server/worker only |

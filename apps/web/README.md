@@ -1,6 +1,6 @@
 # Web application
 
-React platform and restaurant UI plus the Express API composition root.
+React platform and venue UI plus the Express API composition root.
 
 ## Run locally
 
@@ -11,18 +11,21 @@ pnpm install --frozen-lockfile
 pnpm run dev
 ```
 
-Open `http://127.0.0.1:3000/`. The explicit IPv4 host matches the server bind and avoids colliding with unrelated services listening through `localhost`/IPv6. Defaults are `RESTAURANT_REPOSITORY=fixture` and `MODEL_PROVIDER=deterministic`, so no credentials are required.
+Open `http://127.0.0.1:3000/`. The explicit IPv4 host matches the server bind and avoids colliding with unrelated services listening through `localhost`/IPv6. Defaults are `VENUE_REPOSITORY=fixture` and `MODEL_PROVIDER=deterministic`, so no credentials are required.
 
 The API boundary is:
 
-- `GET /v1/restaurants/:merchantSlug/menus/:menuSlug`
-- `POST /v1/restaurants/:merchantSlug/menus/:menuSlug/match`
-- `GET /v1/restaurants`
-- `GET /v1/restaurants/:merchantSlug`
+- `GET /v1/venues/:merchantSlug/menus/:menuSlug`
+- `POST /v1/venues/:merchantSlug/menus/:menuSlug/match`
+- `GET /v1/venues`
+- `GET /v1/venues/:merchantSlug`
 - `POST /v1/matches/global`
-- `/v1/management/*` with a server-validated bearer token
+- `GET /v1/venues/:merchantSlug/current-menu` (stable QR target)
+- `POST /v1/events/menu-views` and `POST /v1/matches/:matchId/feedback` (public consumer events)
+- `/v1/venue/*` with a server-validated venue session bearer token (manage v2)
+- `/v1/management/*` with a server-validated legacy private token
 
-The guest-facing restaurant experience lives under `src/features/restaurant` and renders the canonical `RestaurantMatchResult` directly through `RestaurantClient`. The previous legacy view and compatibility mapper have been removed.
+The guest-facing venue experience lives under `src/features/venue` and renders the canonical `VenueMatchResult` directly through `VenueClient`. The previous legacy view and compatibility mapper have been removed.
 
 ## Manual fixture matrix
 
@@ -36,14 +39,16 @@ The guest-facing restaurant experience lives under `src/features/restaurant` and
 | Menu not found | `/m/double-chicken-please/missing` |
 | Menu unpublished | `/m/double-chicken-please/unpublished` |
 | Merchant not found | `/m/missing/main` |
-| Merchant inactive | `/m/inactive-restaurant/main` |
+| Merchant inactive | `/m/inactive-venue/main` |
 | Landing | `/` |
 | Global match | `/match` |
-| Active bar directory | `/restaurants` |
-| Second restaurant | `/m/nightjar-demo/cocktails` |
-| Management | `/manage/fixture-double-chicken-demo` |
+| Active bar directory | `/venues` |
+| Second venue | `/m/nightjar-demo/cocktails` |
+| Venue backend (sign in as `Demo Bar`) | `/venue` |
+| Stable QR target for the demo venue | `/m/vibetail-taproom` |
+| Legacy management | `/manage/fixture-double-chicken-demo` |
 | For bars | `/for-bars` |
 
 `fixture-double-chicken-demo` and `fixture-nightjar-demo-token` are public, local-only fixture tokens. Real private tokens belong only in private links and the request Authorization header; application logs must never contain them.
 
-`RESTAURANT_REPOSITORY=supabase` requires `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` for public reads. `SUPABASE_SERVICE_ROLE_KEY` is optional and enables the temporary legacy management boundary; without it, management fails closed with `503`. The preferred remote model path is `MODEL_PROVIDER=openrouter` with server-only `OPENROUTER_API_KEY` and `MODEL_NAME` (initial baseline: `openai/gpt-5-mini`). The direct `openai` adapter remains available with `MODEL_API_KEY`. Runtime validation fails at startup when selected-provider configuration is incomplete. Service-role and model secrets are imported only by the server composition tree and are never exposed to client code.
+`VENUE_REPOSITORY=supabase` requires `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` for public reads. `SUPABASE_SERVICE_ROLE_KEY` is optional and enables the temporary legacy management boundary; without it, management fails closed with `503`. The preferred remote model path is `MODEL_PROVIDER=openrouter` with server-only `OPENROUTER_API_KEY` and `MODEL_NAME` (initial baseline: `openai/gpt-5-mini`). The direct `openai` adapter remains available with `MODEL_API_KEY`. Runtime validation fails at startup when selected-provider configuration is incomplete. Service-role and model secrets are imported only by the server composition tree and are never exposed to client code.

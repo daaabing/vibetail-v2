@@ -1,10 +1,18 @@
-import type { ModelMenuCandidate, ModelProvider, ModelProviderResult, RestaurantModelRequest } from "./index.js";
+import type {
+  DrinkInfoModelRequest,
+  DrinkInfoProvider,
+  DrinkInfoResult,
+  ModelMenuCandidate,
+  ModelProvider,
+  ModelProviderResult,
+  VenueModelRequest,
+} from "./index.js";
 
 export interface DeterministicMatchingProviderOptions {
   failureMenuIds?: readonly string[];
 }
 
-export class DeterministicMatchingProvider implements ModelProvider {
+export class DeterministicMatchingProvider implements ModelProvider, DrinkInfoProvider {
   readonly id = "deterministic";
   private readonly failureMenuIds: ReadonlySet<string>;
 
@@ -12,7 +20,7 @@ export class DeterministicMatchingProvider implements ModelProvider {
     this.failureMenuIds = new Set(options.failureMenuIds ?? []);
   }
 
-  async selectRestaurantItem(request: RestaurantModelRequest): Promise<ModelProviderResult> {
+  async selectVenueItem(request: VenueModelRequest): Promise<ModelProviderResult> {
     const startedAt = performance.now();
     if (this.failureMenuIds.has(request.menuId)) {
       throw new Error("Deterministic fixture provider failure");
@@ -39,7 +47,7 @@ export class DeterministicMatchingProvider implements ModelProvider {
     const signalLabel = request.preferences.flavors[0] ?? request.preferences.mood;
     const whyThisMatch = isZh
       ? `${selected.name} 的风味和你${signalLabel ? `“${signalLabel}”` : "今晚"}的状态最贴近。菜单事实来自餐厅数据。`
-      : `${selected.name} best matches ${signalLabel ? `your “${signalLabel}” signal` : "tonight's vibe"}. Menu facts come from the restaurant record.`;
+      : `${selected.name} best matches ${signalLabel ? `your “${signalLabel}” signal` : "tonight's vibe"}. Menu facts come from the venue record.`;
 
     return {
       selection: { matchedItemId: selected.id, whyThisMatch },
@@ -51,12 +59,89 @@ export class DeterministicMatchingProvider implements ModelProvider {
       },
     };
   }
+
+  async suggestDrinkInfo(request: DrinkInfoModelRequest): Promise<DrinkInfoResult> {
+    const startedAt = performance.now();
+    const corpus = [request.name, request.description ?? "", ...request.ingredients]
+      .join(" ")
+      .toLowerCase();
+
+    const baseSpirit = detectBaseSpirit(corpus);
+    const strength = detectStrength(corpus, baseSpirit);
+    const flavorTags = detectFlavorTags(corpus);
+    const strengthWord = { zero: "alcohol-free", light: "easygoing", medium: "balanced", strong: "spirit-forward" }[strength];
+    const recommendationNote = request.locale === "zh"
+      ? `适合想要${strength === "zero" ? "无酒精" : ""}「${flavorTags[0] ?? "平衡"}」风味的客人，${request.name} 是稳妥的推荐。`
+      : `Suggest ${request.name} to guests looking for a ${strengthWord}, ${flavorTags[0] ?? "balanced"} pour tonight.`;
+
+    return {
+      suggestion: { flavorTags, baseSpirit, strength, recommendationNote },
+      metadata: {
+        provider: this.id,
+        model: "rules-v1",
+        attempt: 1,
+        durationMs: Math.max(0, Math.round(performance.now() - startedAt)),
+      },
+    };
+  }
+}
+
+const SPIRIT_KEYWORDS: ReadonlyArray<readonly [string, readonly string[]]> = [
+  ["gin", ["gin"]],
+  ["vodka", ["vodka"]],
+  ["rum", ["rum", "cachaca", "cachaça"]],
+  ["tequila", ["tequila", "mezcal"]],
+  ["whiskey", ["whiskey", "whisky", "bourbon", "rye", "scotch"]],
+  ["brandy", ["brandy", "cognac", "pisco"]],
+  ["wine", ["wine", "champagne", "prosecco", "sparkling wine", "vermouth", "sherry", "port"]],
+  ["sake", ["sake", "soju", "shochu"]],
+  ["beer", ["beer", "stout", "lager", "ale"]],
+  ["liqueur", ["liqueur", "amaro", "aperol", "campari", "chartreuse", "triple sec", "curacao", "curaçao"]],
+];
+
+const FLAVOR_KEYWORDS: ReadonlyArray<readonly [string, readonly string[]]> = [
+  ["citrusy", ["lemon", "lime", "yuzu", "citrus", "grapefruit", "orange"]],
+  ["smoky", ["smoke", "smoked", "mezcal", "peat"]],
+  ["bitter", ["coffee", "espresso", "amaro", "campari", "bitter"]],
+  ["sweet", ["honey", "syrup", "caramel", "vanilla"]],
+  ["fruity", ["berry", "strawberry", "peach", "pear", "apple", "passionfruit", "mango", "pineapple"]],
+  ["herbal", ["mint", "basil", "rosemary", "thyme", "sage", "herbal"]],
+  ["spicy", ["ginger", "chili", "jalapeno", "jalapeño", "pepper", "spice"]],
+  ["creamy", ["cream", "coconut", "egg white", "milk"]],
+  ["floral", ["elderflower", "rose", "lavender", "hibiscus", "floral"]],
+  ["aromatic", ["bitters", "angostura", "cardamom", "clove", "anise"]],
+];
+
+function detectBaseSpirit(corpus: string): string {
+  for (const [spirit, keywords] of SPIRIT_KEYWORDS) {
+    if (keywords.some((keyword) => corpus.includes(keyword))) return spirit;
+  }
+  return "none";
+}
+
+function detectStrength(corpus: string, baseSpirit: string): "zero" | "light" | "medium" | "strong" {
+  if (baseSpirit === "none") return "zero";
+  if (baseSpirit === "wine" || baseSpirit === "beer") return "light";
+  if (/martini|old fashioned|negroni|manhattan|sazerac|neat|overproof/.test(corpus)) return "strong";
+  if (/soda|spritz|highball|tonic|cooler|fizz/.test(corpus)) return "light";
+  const spiritHits = SPIRIT_KEYWORDS.filter(([spirit, keywords]) =>
+    spirit !== "wine" && spirit !== "beer" && keywords.some((keyword) => corpus.includes(keyword)),
+  ).length;
+  return spiritHits >= 2 ? "strong" : "medium";
+}
+
+function detectFlavorTags(corpus: string): string[] {
+  const tags = FLAVOR_KEYWORDS
+    .filter(([, keywords]) => keywords.some((keyword) => corpus.includes(keyword)))
+    .map(([tag]) => tag)
+    .slice(0, 8);
+  return tags.length > 0 ? tags : ["balanced"];
 }
 
 function score(
   candidate: ModelMenuCandidate,
   signals: ReadonlySet<string>,
-  request: RestaurantModelRequest,
+  request: VenueModelRequest,
 ): number {
   let total = 0;
   for (const tag of [...candidate.flavorTags, ...candidate.moodTags]) {

@@ -1,4 +1,4 @@
-import type { ModelMatchSelection, RestaurantPreferences } from "@vibetail/contracts";
+import type { DrinkInfoSuggestion, ModelMatchSelection, VenuePreferences } from "@vibetail/contracts";
 
 export interface ModelMenuCandidate {
   id: string;
@@ -10,10 +10,10 @@ export interface ModelMenuCandidate {
   alcoholic: boolean;
 }
 
-export interface RestaurantModelRequest {
+export interface VenueModelRequest {
   merchantId: string;
   menuId: string;
-  preferences: RestaurantPreferences;
+  preferences: VenuePreferences;
   allowedItems: readonly ModelMenuCandidate[];
   locale: "en" | "zh";
   traceId: string;
@@ -34,7 +34,28 @@ export interface ModelProviderResult {
 
 export interface ModelProvider {
   readonly id: string;
-  selectRestaurantItem(request: RestaurantModelRequest): Promise<ModelProviderResult>;
+  selectVenueItem(request: VenueModelRequest): Promise<ModelProviderResult>;
+}
+
+export interface DrinkInfoModelRequest {
+  name: string;
+  description: string | null;
+  ingredients: readonly string[];
+  locale: "en" | "zh";
+  traceId: string;
+  timeoutMs: number;
+}
+
+export interface DrinkInfoResult {
+  suggestion: DrinkInfoSuggestion;
+  metadata: ModelInvocationMetadata;
+}
+
+// Authoring-time assist only: suggestions are drafts the venue reviews and can
+// edit before saving. They never bypass the venue-owned drink record.
+export interface DrinkInfoProvider {
+  readonly id: string;
+  suggestDrinkInfo(request: DrinkInfoModelRequest): Promise<DrinkInfoResult>;
 }
 
 // Providers select only an allowlisted ID and explanation. They never return

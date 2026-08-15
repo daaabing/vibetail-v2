@@ -11,7 +11,7 @@ const { serverEnv } = parseWebEnv(process.env);
 const dependencies = createWebDependencies(serverEnv);
 const app = createWebApp({
   ...dependencies,
-  dataSource: serverEnv.RESTAURANT_REPOSITORY,
+  dataSource: serverEnv.VENUE_REPOSITORY,
 });
 
 if (serverEnv.NODE_ENV === "production") {
@@ -40,7 +40,7 @@ const server = app.listen(serverEnv.PORT, serverEnv.HOST, () => {
       event: "server_started",
       host: serverEnv.HOST,
       port: serverEnv.PORT,
-      restaurant_data_source: serverEnv.RESTAURANT_REPOSITORY,
+      venue_data_source: serverEnv.VENUE_REPOSITORY,
       model_provider: serverEnv.MODEL_PROVIDER,
     }),
   );

@@ -16,7 +16,7 @@ const serverEnvSchema = z
     LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
     HOST: z.string().min(1),
     PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
-    RESTAURANT_REPOSITORY: z.enum(["fixture", "supabase"]).default("fixture"),
+    VENUE_REPOSITORY: z.enum(["fixture", "supabase"]).default("fixture"),
     MODEL_PROVIDER: z.enum([
       "deterministic",
       "vertex",
@@ -38,7 +38,7 @@ const serverEnvSchema = z
     E2B_API_KEY: optionalString(),
   })
   .superRefine((env, context) => {
-    if (env.RESTAURANT_REPOSITORY === "supabase") {
+    if (env.VENUE_REPOSITORY === "supabase") {
       requireFields(env, ["SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY"], context);
     }
     if (env.MODEL_PROVIDER === "openrouter") {
@@ -62,7 +62,9 @@ export function parseWebEnv(source: NodeJS.ProcessEnv): {
   serverEnv: WebServerEnv;
 } {
   const nodeEnv = source.NODE_ENV ?? "development";
-  const inferredRestaurantRepository =
+  const inferredVenueRepository =
+    source.VENUE_REPOSITORY ??
+    // Deprecated alias kept so existing deployments keep working after the rename.
     source.RESTAURANT_REPOSITORY ??
     (source.SUPABASE_URL && source.SUPABASE_PUBLISHABLE_KEY ? "supabase" : undefined);
   return {
@@ -70,7 +72,7 @@ export function parseWebEnv(source: NodeJS.ProcessEnv): {
     serverEnv: serverEnvSchema.parse({
       ...source,
       HOST: source.HOST ?? (nodeEnv === "production" ? "0.0.0.0" : "127.0.0.1"),
-      RESTAURANT_REPOSITORY: inferredRestaurantRepository,
+      VENUE_REPOSITORY: inferredVenueRepository,
     }),
   };
 }
