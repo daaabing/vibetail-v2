@@ -43,14 +43,18 @@ export class DeterministicMatchingProvider implements ModelProvider, DrinkInfoPr
     const selected = ranked[0];
     if (!selected) throw new Error("No deterministic match was available");
 
-    const isZh = request.locale === "zh";
     const signalLabel = request.preferences.flavors[0] ?? request.preferences.mood;
-    const whyThisMatch = isZh
-      ? `${selected.name} 的风味和你${signalLabel ? `“${signalLabel}”` : "今晚"}的状态最贴近。菜单事实来自餐厅数据。`
-      : `${selected.name} best matches ${signalLabel ? `your “${signalLabel}” signal` : "tonight's vibe"}. Menu facts come from the venue record.`;
+    const whyThisMatch = `${selected.name} best matches ${signalLabel ? `your “${signalLabel}” signal` : "tonight's vibe"}. Menu facts come from the venue record.`;
+    // Rule-based stand-ins: the fixture provider keeps the shape honest without
+    // pretending to have the model's voice.
+    const moodLabel = request.preferences.mood ?? signalLabel ?? "tonight";
+    const vibeName = `A ${moodLabel} kind of night`;
+    const tastesLike = `${selected.ingredients.slice(0, 3).join(", ") || "This pour"} — right where the mood already is.`;
+    const flavorProfile = selected.flavorTags.slice(0, 4).join(", ") || "balanced, easy";
+    const roast = "Ordering this says more than you meant it to.";
 
     return {
-      selection: { matchedItemId: selected.id, whyThisMatch },
+      selection: { matchedItemId: selected.id, vibeName, tastesLike, flavorProfile, whyThisMatch, roast },
       metadata: {
         provider: this.id,
         model: "rules-v1",
@@ -70,9 +74,7 @@ export class DeterministicMatchingProvider implements ModelProvider, DrinkInfoPr
     const strength = detectStrength(corpus, baseSpirit);
     const flavorTags = detectFlavorTags(corpus);
     const strengthWord = { zero: "alcohol-free", light: "easygoing", medium: "balanced", strong: "spirit-forward" }[strength];
-    const recommendationNote = request.locale === "zh"
-      ? `适合想要${strength === "zero" ? "无酒精" : ""}「${flavorTags[0] ?? "平衡"}」风味的客人，${request.name} 是稳妥的推荐。`
-      : `Suggest ${request.name} to guests looking for a ${strengthWord}, ${flavorTags[0] ?? "balanced"} pour tonight.`;
+    const recommendationNote = `Suggest ${request.name} to guests looking for a ${strengthWord}, ${flavorTags[0] ?? "balanced"} pour tonight.`;
 
     return {
       suggestion: { flavorTags, baseSpirit, strength, recommendationNote },

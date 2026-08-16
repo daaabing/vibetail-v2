@@ -226,7 +226,6 @@ describe("drink library", () => {
       name: "Old Fashioned",
       description: null,
       ingredients: ["rye"],
-      locale: "en",
     });
     expect(suggestion.baseSpirit).toBe("whiskey");
   });
@@ -238,7 +237,6 @@ describe("drink library", () => {
       name: "Mystery",
       description: null,
       ingredients: [],
-      locale: "en",
     })).rejects.toMatchObject({ httpStatus: 503, detail: { code: "MATCH_PROVIDER_UNAVAILABLE" } });
   });
 });
@@ -393,7 +391,11 @@ describe("match recording and feedback", () => {
         section: null,
         sortOrder: 10,
       },
-      whyThisMatch: "Matches the requested mood.",
+      vibeName: "Slow Monday Smoke",
+      tastesLike: "Rye and pear, warm at the edges.",
+      flavorProfile: "smoky, warm, spirit-forward",
+      whyThisMatch: "Matches the smoky mood.",
+      roast: "You call this a quiet night in.",
       traceId: "trace-test",
     };
   }

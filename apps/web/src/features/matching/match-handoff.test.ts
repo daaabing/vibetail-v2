@@ -14,7 +14,11 @@ const handoff = {
       id: "33333333-3333-4333-8333-333333333333", menuId: "22222222-2222-4222-8222-222222222222", name: "The Sparkler", description: "Bright and fresh", price: "$16", imageUrl: null,
       alcoholic: true, baseSpirit: "Gin", flavorTags: ["fresh"], moodTags: ["curious"], ingredients: ["gin", "citrus"], allergens: [], recommendationPriority: 1, availabilityStatus: "active", section: "Cocktails", sortOrder: 1,
     },
+    vibeName: "Quietly Curious",
+    tastesLike: "Gin and citrus, kept deliberately light.",
+    flavorProfile: "fresh, citrusy, clean",
     whyThisMatch: "Fresh enough for the mood, with just enough lift.",
+    roast: "Curious, sure. Quiet, debatable.",
     traceId: "trace-1",
   },
 };

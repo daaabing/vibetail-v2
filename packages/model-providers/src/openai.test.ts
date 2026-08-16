@@ -15,7 +15,6 @@ function request(): VenueModelRequest {
       excludedAllergens: [],
       excludedIngredients: [],
       freeText: undefined,
-      locale: "en",
     },
     allowedItems: [{
       id: selectedId,
@@ -25,8 +24,11 @@ function request(): VenueModelRequest {
       flavorTags: ["bright", "herbal"],
       moodTags: ["playful"],
       alcoholic: true,
+      baseSpirit: "gin",
+      section: "Highballs",
+      allergens: [],
+      recommendationPriority: 0,
     }],
-    locale: "en",
     traceId: "trace-openai-test",
     timeoutMs: 8_000,
   };
@@ -44,7 +46,11 @@ describe("OpenAIModelProvider", () => {
           return {
             output_parsed: {
               matchedItemId: selectedId,
+              vibeName: "Paper Lantern Hour",
+              tastesLike: "Lemon and basil over a long, cold pour.",
+              flavorProfile: "bright, herbal, crisp",
               whyThisMatch: "Neon Garden turns your bright mood into a crisp lemon-and-basil lift with just enough playful edge for a celebratory night.",
+              roast: "Celebrating on a Tuesday, are we.",
             },
           };
         },
@@ -102,7 +108,6 @@ describe("OpenAIModelProvider", () => {
         name: "Garden Spritz",
         description: null,
         ingredients: ["gin", "tonic"],
-        locale: "en",
         traceId: "trace-openai-drink-info",
         timeoutMs: 8_000,
       });

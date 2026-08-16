@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { localeSchema } from "./venue.js";
 
 const slugSchema = z.string().min(1).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const nullableUrlInputSchema = z.union([z.string().url(), z.literal(""), z.null()]).transform((value) => value || null);
@@ -102,7 +101,6 @@ export const drinkInfoRequestSchema = z.object({
   name: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2_000).nullable().default(null),
   ingredients: z.array(z.string().trim().min(1).max(200)).max(100).default([]),
-  locale: localeSchema.default("en"),
 });
 export type DrinkInfoRequestInput = z.infer<typeof drinkInfoRequestSchema>;
 

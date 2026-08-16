@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { venuePreferencesSchema, type Locale, type VenueMenuItem, type VenuePreferences } from "@vibetail/contracts";
+import { venuePreferencesSchema, type VenueMenuItem, type VenuePreferences } from "@vibetail/contracts";
 
 import DrinkStage from "../../draw/DrinkStage.js";
 import OrderPanel from "../../mix/OrderPanel.js";
@@ -43,7 +43,6 @@ const STEP_SUBS: Record<StepId, string> = {
 interface PreferenceFormProps {
   busy: boolean;
   initial?: VenuePreferences;
-  locale: Locale;
   /** When present, the base-spirit shelf only shows what this menu pours. */
   menuItems?: VenueMenuItem[];
   onSubmit(preferences: VenuePreferences): void;
@@ -54,7 +53,7 @@ interface PreferenceFormProps {
  * drawing of the drink assembling itself as the guest answers. Right: five
  * questions on paper. Emits the platform's VenuePreferences contract.
  */
-export function PreferenceForm({ busy, initial, locale, menuItems, onSubmit }: PreferenceFormProps) {
+export function PreferenceForm({ busy, initial, menuItems, onSubmit }: PreferenceFormProps) {
   const availableSpiritKeys = useMemo(
     () => (menuItems ? deriveMenuBaseSpiritKeys(menuItems) : undefined),
     [menuItems],
@@ -123,7 +122,6 @@ export function PreferenceForm({ busy, initial, locale, menuItems, onSubmit }: P
       excludedAllergens: initial?.excludedAllergens ?? [],
       excludedIngredients: initial?.excludedIngredients ?? [],
       ...(customPreference ? { freeText: customPreference.slice(0, 500) } : {}),
-      locale,
     });
     if (!parsed.success) { setError("Tell us a mood or choose at least one flavour."); return; }
     setError("");

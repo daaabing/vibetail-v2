@@ -10,6 +10,7 @@ import {
   venuePreferencesSchema,
   venueSummarySchema,
   type GlobalMatchResult,
+  type ModelMatchSelection,
   type VenueDirectoryEntry,
   type VenueError,
   type VenueErrorCode,
@@ -150,7 +151,6 @@ export class DefaultVenueService implements VenueService {
         menuId: providerMenuId,
         preferences,
         allowedItems: candidates.map(({ item }) => toCandidate(item)),
-        locale: preferences.locale,
         traceId,
         timeoutMs: 20_000,
       });
@@ -174,7 +174,7 @@ export class DefaultVenueService implements VenueService {
       currentScope.venue,
       currentScope.menu,
       item,
-      selection.data.whyThisMatch,
+      selection.data,
       traceId,
     );
   }
@@ -184,14 +184,18 @@ export function canonicalizeRecommendation(
   venue: StoredVenue,
   menu: StoredMenu,
   item: VenueMenuItem,
-  modelExplanation: string,
+  modelCopy: ModelMatchSelection,
   traceId: string,
 ): VenueMatchResult {
   return venueMatchResultSchema.parse({
     venue: toVenueSummary(venue),
     menu: { id: menu.id, slug: menu.slug, name: menu.name },
     item,
-    whyThisMatch: modelExplanation,
+    vibeName: modelCopy.vibeName,
+    tastesLike: modelCopy.tastesLike,
+    flavorProfile: modelCopy.flavorProfile,
+    whyThisMatch: modelCopy.whyThisMatch,
+    roast: modelCopy.roast,
     traceId,
   });
 }
@@ -274,6 +278,10 @@ function toCandidate(item: StoredMenuItem): ModelMenuCandidate {
     flavorTags: item.flavorTags,
     moodTags: item.moodTags,
     alcoholic: item.alcoholic,
+    baseSpirit: item.baseSpirit,
+    section: item.section,
+    allergens: item.allergens,
+    recommendationPriority: item.recommendationPriority,
   };
 }
 

@@ -267,7 +267,6 @@ export class DefaultVenueManagementService implements VenueManagementService {
         name: parsed.name,
         description: parsed.description,
         ingredients: parsed.ingredients,
-        locale: parsed.locale,
         traceId: randomUUID(),
         timeoutMs: DRINK_INFO_TIMEOUT_MS,
       });
