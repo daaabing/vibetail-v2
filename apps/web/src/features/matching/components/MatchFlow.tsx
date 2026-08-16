@@ -61,7 +61,7 @@ function RecommendationCard({ destination, locale, result, onAgain, onDestinatio
 }) {
   const tags = [...result.item.flavorTags, ...result.item.moodTags].slice(0, 6);
   return <article className="vt-match-result" data-testid="match-result">
-    <p className="vt-kicker">{locale === "zh" ? "品鉴智能体今晚为你挑选" : "The Tasting Agent’s pick"}</p>
+    <p className="vt-kicker">{locale === "zh" ? "今晚为你挑选" : "Picked for you tonight"}</p>
     <h2>{result.item.name}</h2>
     <p className="vt-at">{locale === "zh" ? "来自" : "at"} <strong>{result.venue.name}</strong> · {result.menu.name}</p>
     <blockquote>{result.whyThisMatch}</blockquote>
@@ -84,7 +84,7 @@ function RecommendationCard({ destination, locale, result, onAgain, onDestinatio
 function MatchLoading({ locale }: { locale: Locale }) {
   return <section className="vt-match-state" role="status" aria-live="polite" data-testid="loading-state">
     <div className="loading-orbit" aria-hidden="true"><span /></div>
-    <h2>{locale === "zh" ? "品鉴智能体正在翻阅今晚的菜单……" : "The Tasting Agent is reading tonight’s menus…"}</h2>
+    <h2>{locale === "zh" ? "正在为你找今晚这一杯……" : "Finding your drink for tonight…"}</h2>
     <p>{locale === "zh" ? "只会从当前可点的项目中选择。" : "Choosing only from currently available items."}</p>
   </section>;
 }

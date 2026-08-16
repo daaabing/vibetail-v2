@@ -8,10 +8,10 @@ import { useSeo } from "../useSeo.js";
 const client = new HttpVenueClient();
 
 export function GlobalMatchPage() {
-  useSeo("Tasting Agent — Vibetail", "Ask Vibetail’s Tasting Agent to choose a currently available menu item for your mood.");
+  useSeo("Find your drink — Vibetail", "Tell Vibetail your mood and get a personalized pick from currently available menus.");
   return <div className="vt-page"><SiteHeader /><main className="vt-narrow">
     <MatchFlow
-      context={{ kicker: "All bars · all live menus", title: "Ask the Tasting Agent", description: "Tell us how the night should feel. The agent will choose one real bar and one item it can serve now." }}
+      context={{ kicker: "All bars · all live menus", title: "Find my drink", description: "Tell us how the night should feel. Vibetail will choose one real bar and one item it can serve now." }}
       destination={(result) => ({ label: `View at ${result.venue.name}`, url: venueUrl(result) })}
       locale="en"
       match={(preferences) => client.matchGlobal(preferences)}
