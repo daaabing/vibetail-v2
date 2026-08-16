@@ -3,4 +3,10 @@ packages:
   - "packages/*"
 
 allowBuilds:
+  # Transitive dependencies of @agentrun/sdk. Their install scripts stay
+  # blocked: no runtime path constructs the AgentRun adapter yet, so nothing
+  # needs them, and denying them keeps the install free of third-party
+  # postinstall execution. Revisit when the adapter is actually wired up.
+  '@alicloud/openapi-core': false
+  crc64-ecma182.js: false
   esbuild: true

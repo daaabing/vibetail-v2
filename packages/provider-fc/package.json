@@ -7,6 +7,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@agentrun/sdk": "^0.0.5",
     "@vibetail/sandbox-runtime": "workspace:*"
   }
 }
