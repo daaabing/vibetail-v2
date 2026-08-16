@@ -163,6 +163,54 @@ describe("VertexGeminiModelProvider", () => {
     });
   });
 
+  it.each([
+    [
+      "a Markdown JSON fence",
+      `\`\`\`json\n${JSON.stringify({
+        matchedItemId: selectedId,
+        whyThisMatch: "A bright, playful match.",
+      })}\n\`\`\``,
+    ],
+    [
+      "one JSON-string wrapper",
+      JSON.stringify(JSON.stringify({
+        matchedItemId: selectedId,
+        whyThisMatch: "A bright, playful match.",
+      })),
+    ],
+  ])("accepts structured output wrapped in %s", async (_name, text) => {
+    const client: VertexGeminiClient = {
+      models: { generateContent: async () => ({ text }) },
+    };
+
+    const result = await new VertexGeminiModelProvider({
+      apiKey: "test-key",
+      model: "gemini-3.5-flash",
+      client,
+    }).selectVenueItem(request());
+
+    expect(result.selection.matchedItemId).toBe(selectedId);
+  });
+
+  it("logs a sanitized invalid-response diagnostic", async () => {
+    const events: StructuredLogEvent[] = [];
+    const client: VertexGeminiClient = {
+      models: { generateContent: async () => ({ text: "not-json" }) },
+    };
+
+    await expect(new VertexGeminiModelProvider({
+      apiKey: "test-key",
+      model: "gemini-3.5-flash",
+      client,
+      telemetry: captureTelemetry(events),
+    }).selectVenueItem(request())).rejects.toMatchObject({ code: "invalid_response" });
+
+    expect(events.at(-1)).toMatchObject({
+      event: "tasting_agent_request_failed",
+      fields: { diagnostic: "invalid_json" },
+    });
+  });
+
   it("sanitizes provider failures and never repeats the underlying secret-bearing message", async () => {
     const client: VertexGeminiClient = {
       models: {

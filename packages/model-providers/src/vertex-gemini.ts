@@ -57,7 +57,10 @@ export interface VertexGeminiModelProviderOptions {
 export class VertexGeminiProviderError extends Error {
   override readonly name = "VertexGeminiProviderError";
 
-  constructor(readonly code: "invalid_response" | "provider_unavailable") {
+  constructor(
+    readonly code: "invalid_response" | "provider_unavailable",
+    readonly diagnostic?: "empty_text" | "invalid_json" | "schema_validation",
+  ) {
     super(code === "invalid_response" ? "Vertex Gemini returned an invalid response" : "Vertex Gemini request failed");
   }
 }
@@ -140,7 +143,12 @@ export class VertexGeminiModelProvider implements ModelProvider, DrinkInfoProvid
       const code = error instanceof VertexGeminiProviderError || isParseError(error)
         ? "invalid_response"
         : "provider_unavailable";
-      this.logFailed(request.traceId, durationMs, code);
+      const diagnostic = error instanceof VertexGeminiProviderError
+        ? error.diagnostic
+        : isParseError(error)
+          ? "schema_validation"
+          : undefined;
+      this.logFailed(request.traceId, durationMs, code, diagnostic);
       throw new VertexGeminiProviderError(code);
     }
   }
@@ -214,7 +222,12 @@ export class VertexGeminiModelProvider implements ModelProvider, DrinkInfoProvid
     });
   }
 
-  private logFailed(traceId: string, durationMs: number, errorCode: string): void {
+  private logFailed(
+    traceId: string,
+    durationMs: number,
+    errorCode: string,
+    diagnostic?: VertexGeminiProviderError["diagnostic"],
+  ): void {
     this.emit({
       timestamp: new Date().toISOString(),
       level: "warn",
@@ -224,7 +237,11 @@ export class VertexGeminiModelProvider implements ModelProvider, DrinkInfoProvid
       durationMs,
       errorCode,
       event: "tasting_agent_request_failed",
-      fields: { model: this.model, attempt: 1 },
+      fields: {
+        model: this.model,
+        attempt: 1,
+        ...(diagnostic ? { diagnostic } : {}),
+      },
     });
   }
 
@@ -239,12 +256,20 @@ export class VertexGeminiModelProvider implements ModelProvider, DrinkInfoProvid
 }
 
 function parseResponseJson(response: VertexGeminiResponse): unknown {
-  const text = response.text?.trim();
-  if (!text) throw new VertexGeminiProviderError("invalid_response");
+  let text = response.text?.trim();
+  if (!text) throw new VertexGeminiProviderError("invalid_response", "empty_text");
+
+  // Structured-output providers occasionally preserve a single Markdown JSON
+  // fence or JSON-string wrapper. Normalize only those transport wrappers;
+  // the parsed object still has to pass the strict application schema.
+  const fenced = /^```(?:json)?\s*([\s\S]*?)\s*```$/i.exec(text);
+  if (fenced?.[1]) text = fenced[1].trim();
   try {
-    return JSON.parse(text) as unknown;
+    const parsed = JSON.parse(text) as unknown;
+    if (typeof parsed !== "string") return parsed;
+    return JSON.parse(parsed) as unknown;
   } catch {
-    throw new VertexGeminiProviderError("invalid_response");
+    throw new VertexGeminiProviderError("invalid_response", "invalid_json");
   }
 }
 
