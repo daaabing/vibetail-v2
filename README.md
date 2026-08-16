@@ -69,6 +69,8 @@ Use these exact fixture-mode URLs:
 - Stable QR target for the demo venue: [http://127.0.0.1:3000/m/vibetail-taproom](http://127.0.0.1:3000/m/vibetail-taproom)
 - Legacy management demo: [http://127.0.0.1:3000/manage/fixture-double-chicken-demo](http://127.0.0.1:3000/manage/fixture-double-chicken-demo)
 
+Optional drink-photo cutouts with local SAM 2 (menu photo/URL scan still uses the venue UI on `/venue`): see [`services/sam2-cutout/README.md`](services/sam2-cutout/README.md), then set `IMAGE_CUTOUT_PROVIDER=sam2`, `SAM2_CUTOUT_URL=http://127.0.0.1:8091`, and run the sidecar beside `pnpm run dev`.
+
 The management token above is deliberately checked-in, non-sensitive fixture data. It cannot authorize a production merchant. The explicit IPv4 address matches the server bind and avoids accidentally reaching another local service through `localhost`/IPv6.
 
 The fixture uses the old seed's real `double-chicken-please` / `main` identity plus a second fictional bar, but it is a small deterministic test fixture—not a production export. Global matching searches active items across active merchants and published menus. Venue-specific matching searches only the route's merchant/menu.

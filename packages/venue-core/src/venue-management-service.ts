@@ -308,10 +308,16 @@ export class DefaultVenueManagementService implements VenueManagementService {
     if (!provider || !storage) throw mediaUnavailable("Drink photo uploads are not configured on this server.");
     const parsed = prepareDrinkPhotoInputSchema.parse(input);
     try {
+      const image = parsed.sourceImageUrl
+        ? await fetchDrinkPhotoFromUrl(parsed.sourceImageUrl, MENU_PHOTO_TIMEOUT_MS)
+        : {
+            bytes: decodeBase64(parsed.imageBase64!),
+            contentType: parsed.imageContentType!,
+          };
       const prepared = await provider.prepareDrinkPhoto({
         name: parsed.name,
         description: parsed.description,
-        image: { bytes: decodeBase64(parsed.imageBase64), contentType: parsed.imageContentType },
+        image,
         traceId: randomUUID(),
         timeoutMs: MENU_PHOTO_TIMEOUT_MS,
       });
@@ -740,6 +746,68 @@ function decodeBase64(value: string): Uint8Array {
     throw invalidRequest("Upload a PNG, JPEG, or WebP image under 8 MB.");
   }
   return bytes;
+}
+
+async function fetchDrinkPhotoFromUrl(
+  sourceUrl: string,
+  timeoutMs: number,
+): Promise<{ bytes: Uint8Array; contentType: "image/png" | "image/jpeg" | "image/webp" }> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(sourceUrl, {
+      redirect: "follow",
+      signal: controller.signal,
+      headers: {
+        // Some CDNs reject bare Node fetch; look like a normal browser download.
+        "user-agent": "Mozilla/5.0 (compatible; VibetailDrinkPhoto/1.0)",
+        accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+      },
+    });
+    if (!response.ok) {
+      throw invalidRequest(`Could not download the image URL (${response.status}).`);
+    }
+    const headerType = (response.headers.get("content-type") ?? "").split(";")[0]?.trim().toLowerCase() ?? "";
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    if (bytes.length === 0 || bytes.length > 8_000_000) {
+      throw invalidRequest("Image URL must point to a PNG, JPEG, or WebP under 8 MB.");
+    }
+    const sniffed = sniffImageContentType(bytes);
+    const contentType = normalizeVenueImageContentType(headerType) ?? sniffed;
+    if (!contentType) {
+      throw invalidRequest("Image URL must be a PNG, JPEG, or WebP.");
+    }
+    return { bytes, contentType };
+  } catch (error) {
+    if (error instanceof VenueManagementServiceError) throw error;
+    throw invalidRequest("Could not download the image URL. Check that it is a public PNG, JPEG, or WebP link.");
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function normalizeVenueImageContentType(
+  value: string,
+): "image/png" | "image/jpeg" | "image/webp" | undefined {
+  if (value === "image/png" || value === "image/jpeg" || value === "image/webp") return value;
+  if (value === "image/jpg") return "image/jpeg";
+  return undefined;
+}
+
+function sniffImageContentType(bytes: Uint8Array): "image/png" | "image/jpeg" | "image/webp" | undefined {
+  if (bytes.length >= 8
+    && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
+    return "image/png";
+  }
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return "image/jpeg";
+  }
+  if (bytes.length >= 12
+    && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46
+    && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) {
+    return "image/webp";
+  }
+  return undefined;
 }
 
 function venueBackendUnavailable(): never {

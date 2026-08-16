@@ -66,3 +66,4 @@ export * from "./openai.js";
 export * from "./openrouter.js";
 export * from "./menu-photo.js";
 export * from "./drink-photo.js";
+export * from "./sam2-drink-photo.js";

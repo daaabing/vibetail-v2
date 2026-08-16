@@ -1,0 +1,7 @@
+# Local SAM 2 cutout sidecar
+.venv/
+__pycache__/
+*.pyc
+checkpoints/*.pt
+checkpoints/*.pth
+.DS_Store

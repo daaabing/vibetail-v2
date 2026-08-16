@@ -33,6 +33,12 @@ describe("web environment", () => {
     expect(() => parseWebEnv({ ...localEnv, MODEL_PROVIDER: "openrouter" })).toThrow(
       /OPENROUTER_API_KEY/,
     );
+    expect(() => parseWebEnv({ ...localEnv, IMAGE_CUTOUT_PROVIDER: "alibaba" })).toThrow(
+      /DASHSCOPE_API_KEY/,
+    );
+    expect(() => parseWebEnv({ ...localEnv, IMAGE_CUTOUT_PROVIDER: "sam2" })).toThrow(
+      /SAM2_CUTOUT_URL/,
+    );
   });
 
   it("accepts OpenRouter with a server-only key and explicit model", () => {

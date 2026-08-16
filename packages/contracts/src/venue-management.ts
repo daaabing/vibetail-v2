@@ -163,8 +163,20 @@ export type ImportScannedMenuResult = z.infer<typeof importScannedMenuResultSche
 export const prepareDrinkPhotoInputSchema = z.object({
   name: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2_000).nullable().default(null),
-  imageBase64: z.string().min(1).max(12_000_000),
-  imageContentType: venueImageContentTypeSchema,
+  imageBase64: z.string().min(1).max(12_000_000).optional(),
+  imageContentType: venueImageContentTypeSchema.optional(),
+  /** Remote drink photo to download server-side, then cut out (avoids browser CORS). */
+  sourceImageUrl: z.string().trim().url().max(2_048).optional(),
+}).superRefine((value, context) => {
+  const hasUpload = Boolean(value.imageBase64 && value.imageContentType);
+  const hasUrl = Boolean(value.sourceImageUrl);
+  if (hasUpload === hasUrl) {
+    context.addIssue({
+      code: "custom",
+      message: "Provide either an uploaded image (imageBase64 + imageContentType) or sourceImageUrl",
+      path: hasUpload ? ["sourceImageUrl"] : ["imageBase64"],
+    });
+  }
 });
 export type PrepareDrinkPhotoInput = z.infer<typeof prepareDrinkPhotoInputSchema>;
 
