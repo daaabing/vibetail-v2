@@ -102,7 +102,8 @@ describe("VertexGeminiModelProvider", () => {
         },
         candidateCount: 1,
         temperature: 0.2,
-        maxOutputTokens: 500,
+        thinkingConfig: { thinkingLevel: "MINIMAL" },
+        maxOutputTokens: 2_048,
         httpOptions: { timeout: 8_000 },
       },
     });

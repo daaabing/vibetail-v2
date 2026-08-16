@@ -36,6 +36,7 @@ interface VertexGeminiGenerateRequest {
     responseJsonSchema: Record<string, unknown>;
     candidateCount: 1;
     temperature: number;
+    thinkingConfig: { thinkingLevel: "MINIMAL" };
     maxOutputTokens: number;
     httpOptions: { timeout: number };
   };
@@ -130,7 +131,8 @@ export class VertexGeminiModelProvider implements ModelProvider, DrinkInfoProvid
           responseJsonSchema: matchResponseJsonSchema,
           candidateCount: 1,
           temperature: 0.2,
-          maxOutputTokens: 500,
+          thinkingConfig: { thinkingLevel: "MINIMAL" },
+          maxOutputTokens: 2_048,
           httpOptions: { timeout: request.timeoutMs },
         },
       });
@@ -169,7 +171,8 @@ export class VertexGeminiModelProvider implements ModelProvider, DrinkInfoProvid
           responseJsonSchema: drinkInfoResponseJsonSchema,
           candidateCount: 1,
           temperature: 0.2,
-          maxOutputTokens: 500,
+          thinkingConfig: { thinkingLevel: "MINIMAL" },
+          maxOutputTokens: 2_048,
           httpOptions: { timeout: request.timeoutMs },
         },
       });
