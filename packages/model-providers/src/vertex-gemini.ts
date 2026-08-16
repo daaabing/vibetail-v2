@@ -265,12 +265,24 @@ function parseResponseJson(response: VertexGeminiResponse): unknown {
   const fenced = /^```(?:json)?\s*([\s\S]*?)\s*```$/i.exec(text);
   if (fenced?.[1]) text = fenced[1].trim();
   try {
-    const parsed = JSON.parse(text) as unknown;
-    if (typeof parsed !== "string") return parsed;
-    return JSON.parse(parsed) as unknown;
+    return parseJsonOrWrappedJson(text);
   } catch {
-    throw new VertexGeminiProviderError("invalid_response", "invalid_json");
+    const objectStart = text.indexOf("{");
+    const objectEnd = text.lastIndexOf("}");
+    if (objectStart >= 0 && objectEnd > objectStart) {
+      try {
+        return parseJsonOrWrappedJson(text.slice(objectStart, objectEnd + 1));
+      } catch {
+        // Fall through to the same sanitized provider error.
+      }
+    }
   }
+  throw new VertexGeminiProviderError("invalid_response", "invalid_json");
+}
+
+function parseJsonOrWrappedJson(text: string): unknown {
+  const parsed = JSON.parse(text) as unknown;
+  return typeof parsed === "string" ? JSON.parse(parsed) as unknown : parsed;
 }
 
 function invocationMetadata(

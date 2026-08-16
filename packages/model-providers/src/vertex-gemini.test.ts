@@ -178,6 +178,13 @@ describe("VertexGeminiModelProvider", () => {
         whyThisMatch: "A bright, playful match.",
       })),
     ],
+    [
+      "surrounding provider prose",
+      `Result:\n${JSON.stringify({
+        matchedItemId: selectedId,
+        whyThisMatch: "A bright, playful match.",
+      })}\nEnd of result.`,
+    ],
   ])("accepts structured output wrapped in %s", async (_name, text) => {
     const client: VertexGeminiClient = {
       models: { generateContent: async () => ({ text }) },
