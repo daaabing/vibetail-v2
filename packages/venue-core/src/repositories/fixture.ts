@@ -9,6 +9,7 @@ import type {
   VenueType,
 } from "@vibetail/contracts";
 import rawFixture from "../../../../fixtures/venue/menus.json";
+import type { VerifiedIdentity } from "../identity.js";
 import {
   venueFixtureSchema,
   type CreateFeedbackOutcome,
@@ -36,6 +37,7 @@ import {
 interface StoredFeedbackRecord extends StoredFeedbackEntry {
   matchId: string;
   merchantId: string;
+  accountId: string | null;
 }
 
 export class FixtureVenueRepository implements VenueRepository, ManagementRepository, VenueManagementRepository {
@@ -45,7 +47,7 @@ export class FixtureVenueRepository implements VenueRepository, ManagementReposi
   private readonly drinksById = new Map<string, { merchantId: string; drink: StoredDrink }>();
   private menuDrinks: Array<{ menuId: string; drinkId: string; sortOrder: number }>;
   private readonly sessions = new Map<string, string>();
-  private readonly matchEvents: Array<StoredMatchEvent & { merchantId: string }> = [];
+  private readonly matchEvents: Array<StoredMatchEvent & { merchantId: string; accountId: string | null }> = [];
   private readonly menuViews: Array<{ merchantId: string; menuId: string | null; createdAt: string }> = [];
   private readonly feedbackRecords: StoredFeedbackRecord[] = [];
 
@@ -69,6 +71,7 @@ export class FixtureVenueRepository implements VenueRepository, ManagementReposi
         itemId: event.itemId,
         itemName: event.itemName,
         traceId: event.traceId,
+        accountId: null,
         createdAt: new Date(now - event.minutesAgo * 60_000).toISOString(),
       });
     }
@@ -86,6 +89,7 @@ export class FixtureVenueRepository implements VenueRepository, ManagementReposi
         id: entry.id,
         matchId: entry.matchId,
         merchantId: match.merchantId,
+        accountId: null,
         rating: entry.rating,
         comment: entry.comment,
         itemName: match.itemName,
@@ -235,6 +239,28 @@ export class FixtureVenueRepository implements VenueRepository, ManagementReposi
       nameNormalized,
       displayName,
       merchantId: null,
+      authUserId: null,
+      email: null,
+    };
+    this.accounts.push(account);
+    return account;
+  }
+
+  async findOrCreateAccountByIdentity(identity: VerifiedIdentity): Promise<StoredVenueAccount> {
+    const existing = this.accounts.find((entry) => entry.authUserId === identity.authUserId);
+    if (existing) {
+      // Google profile edits should show up without a second sign-in.
+      existing.displayName = identity.displayName;
+      existing.email = identity.email;
+      return existing;
+    }
+    const account: StoredVenueAccount = {
+      id: randomUUID(),
+      nameNormalized: identity.email?.toLowerCase() ?? identity.authUserId,
+      displayName: identity.displayName,
+      merchantId: null,
+      authUserId: identity.authUserId,
+      email: identity.email,
     };
     this.accounts.push(account);
     return account;
@@ -415,12 +441,18 @@ export class FixtureVenueRepository implements VenueRepository, ManagementReposi
       itemId: event.itemId,
       itemName: event.itemName,
       traceId: event.traceId,
+      accountId: event.accountId ?? null,
       createdAt: new Date().toISOString(),
     });
     return id;
   }
 
-  async createFeedback(matchId: string, rating: number, comment: string | null): Promise<CreateFeedbackOutcome> {
+  async createFeedback(
+    matchId: string,
+    rating: number,
+    comment: string | null,
+    accountId: string | null = null,
+  ): Promise<CreateFeedbackOutcome> {
     const match = this.matchEvents.find((event) => event.id === matchId);
     if (!match) return "match_not_found";
     if (this.feedbackRecords.some((entry) => entry.matchId === matchId)) return "duplicate";
@@ -428,6 +460,7 @@ export class FixtureVenueRepository implements VenueRepository, ManagementReposi
       id: randomUUID(),
       matchId,
       merchantId: match.merchantId,
+      accountId,
       rating,
       comment,
       itemName: match.itemName,

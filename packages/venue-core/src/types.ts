@@ -10,6 +10,7 @@ import {
   type UpdateMerchantInput,
   type VenueType,
 } from "@vibetail/contracts";
+import type { VerifiedIdentity } from "./identity.js";
 
 const nullableUrlSchema = z.string().url().nullable();
 
@@ -79,6 +80,10 @@ export const storedVenueAccountSchema = z.object({
   nameNormalized: z.string().min(1),
   displayName: z.string().min(1),
   merchantId: z.string().uuid().nullable(),
+  // Set once the account is claimed by an identity provider (Supabase Auth).
+  // Legacy name-login rows keep both fields null.
+  authUserId: z.string().uuid().nullable().default(null),
+  email: z.string().nullable().default(null),
 });
 export type StoredVenueAccount = z.infer<typeof storedVenueAccountSchema>;
 
@@ -238,6 +243,8 @@ export interface RecordMatchEventInput {
   itemId: string;
   itemName: string;
   traceId: string;
+  // Null for anonymous guests; consumer sign-in is optional by design.
+  accountId?: string | null;
 }
 
 export type CreateFeedbackOutcome = "created" | "duplicate" | "match_not_found";
@@ -250,6 +257,12 @@ export type CreateFeedbackOutcome = "created" | "duplicate" | "match_not_found";
  */
 export interface VenueManagementRepository {
   findOrCreateAccount(nameNormalized: string, displayName: string): Promise<StoredVenueAccount>;
+  /**
+   * Resolves the account behind a verified external identity, creating it on
+   * first sign-in. Consumers and venue owners share one account row; owning a
+   * venue is just a non-null merchantId.
+   */
+  findOrCreateAccountByIdentity(identity: VerifiedIdentity): Promise<StoredVenueAccount>;
   createVenueSession(accountId: string, tokenHash: string): Promise<void>;
   verifyVenueSession(tokenHash: string): Promise<StoredVenueAccount | null>;
   revokeVenueSession(tokenHash: string): Promise<void>;
@@ -271,7 +284,12 @@ export interface VenueManagementRepository {
   publishVenueMenu(merchantId: string, menuId: string): Promise<void>;
   recordMenuView(merchantSlug: string, menuId: string | null): Promise<void>;
   recordMatchEvent(event: RecordMatchEventInput): Promise<string>;
-  createFeedback(matchId: string, rating: number, comment: string | null): Promise<CreateFeedbackOutcome>;
+  createFeedback(
+    matchId: string,
+    rating: number,
+    comment: string | null,
+    accountId?: string | null,
+  ): Promise<CreateFeedbackOutcome>;
   countMenuViews(merchantId: string, sinceIso: string): Promise<number>;
   listMatchEvents(merchantId: string, sinceIso: string, limit: number): Promise<StoredMatchEvent[]>;
   listFeedback(merchantId: string, sinceIso: string, limit: number): Promise<StoredFeedbackEntry[]>;

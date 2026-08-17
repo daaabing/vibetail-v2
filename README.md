@@ -88,7 +88,7 @@ Manual state URLs:
 
 ## Venue backend (manage v2)
 
-The account-based venue backend at `/venue` covers the Venue MVP loop; `/manage` redirects to this canonical entry while legacy `/manage/:token` links remain supported. Enter any non-empty account name (passwordless MVP — the login page states this openly): an existing name reopens its account and a new name creates a fresh account before venue setup. From there, teams can create a venue, build a drink library (with AI-suggested flavor profile, base spirit, strength, and recommendation note that the venue reviews before saving), assemble menus from library drinks, publish (which auto-archives the previously published menu), and print a QR code. The QR encodes the stable `/m/<venue-slug>` URL, which always resolves to the currently published menu, so printed codes survive re-publishes.
+The account-based venue backend at `/venue` covers the Venue MVP loop; `/manage` redirects to this canonical entry while legacy `/manage/:token` links remain supported. How you sign in depends on `AUTH_PROVIDER` (see [Authentication](#authentication)): with `none` (the local default) enter any non-empty account name — passwordless, as the login page states openly — where an existing name reopens its account and a new name creates a fresh one; with `supabase` you sign in with Google instead. Either way a new account lands on venue setup. From there, teams can create a venue, build a drink library (with AI-suggested flavor profile, base spirit, strength, and recommendation note that the venue reviews before saving), assemble menus from library drinks, publish (which auto-archives the previously published menu), and print a QR code. The QR encodes the stable `/m/<venue-slug>` URL, which always resolves to the currently published menu, so printed codes survive re-publishes.
 
 Guests scanning the QR are counted as menu views; successful matches are recorded per drink; the match result card asks for a 1–5 star rating with an optional comment. The dashboard at `/venue/dashboard` aggregates usage, matches, feedback, most-matched drinks, and recent comments for Today / Last 7 days / Last 30 days.
 
@@ -97,6 +97,21 @@ Drinks are venue-level entities: one drink can appear on several menus, edits pr
 In fixture mode everything above works in memory. In Supabase mode the venue backend needs the reviewed migration in [`infra/supabase/migrations/`](infra/supabase/migrations/) applied manually plus the server-only `SUPABASE_SERVICE_ROLE_KEY`; without them it fails closed with `503` while public reads keep working.
 
 Set `VENUE_REPOSITORY=supabase` with valid `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`. Public reads use the publishable client and continue to work without a privileged key. Add the server-only `SUPABASE_SERVICE_ROLE_KEY` only when the legacy management flow is intentionally enabled; otherwise management APIs fail closed with `503`. These adapters never run migrations or seeds. (`RESTAURANT_REPOSITORY` remains a deprecated alias for `VENUE_REPOSITORY`.)
+
+## Authentication
+
+`AUTH_PROVIDER` selects the identity scheme, independently of `VENUE_REPOSITORY`, so Google sign-in can be exercised against fixture data.
+
+| Value | Behaviour |
+| --- | --- |
+| `none` (default) | Passwordless account-name login at `/venue`. Guests stay anonymous. No credentials needed. |
+| `supabase` | Supabase Auth Google sign-in for **both** guests and venue owners. Requires `SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY`, the Google provider enabled in the Supabase dashboard, and `infra/supabase/migrations/0003_supabase_auth.sql` applied. `POST /v1/venue/session` (name login) then returns `400`. |
+
+Guests and venue owners share one account row: owning a venue is just a non-null `merchant_id`. Guest sign-in stays **optional** — anonymous scanning, matching, and feedback keep working, and a signed-in guest simply has `account_id` attached to their `match_events` and `match_feedback` rows.
+
+The browser reads publishable settings from `GET /v1/config` at runtime, so one client build works across environments; the Supabase JS SDK is loaded lazily and never ships in the main bundle. The browser sends the Supabase access token as `Authorization: Bearer`, and the server verifies it with `auth.getUser` behind a 60-second cache. `/auth/callback` is the fixed PKCE redirect target and must be on the Supabase redirect allowlist and the Google OAuth client's authorised redirect URIs.
+
+Setup steps for a fresh Supabase project and Google OAuth client are in [`docs/operations/google-auth-setup.md`](docs/operations/google-auth-setup.md).
 
 ## Domain and deployment sequence
 

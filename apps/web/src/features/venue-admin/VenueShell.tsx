@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { VenueSessionInfo } from "@vibetail/contracts";
 import { HttpVenueManagementClient } from "../../clients/http-venue-management-client.js";
 import { VenueClientError } from "../../clients/http-venue-client.js";
+import { getAccessToken, signOut } from "../auth/auth-session.js";
 import { SiteFooter, SiteHeader } from "../platform/components/SiteHeader.js";
-import { clearVenueToken, readVenueToken } from "./session-store.js";
+import { clearVenueToken } from "./session-store.js";
 
 export type VenueAdminSection = "dashboard" | "drinks" | "menus" | "qr";
 
@@ -18,41 +19,47 @@ export interface VenueSessionState {
  * /venue/setup (no venue yet) before rendering an admin page.
  */
 export function useVenueSession(): VenueSessionState | null {
-  const token = useMemo(() => readVenueToken(), []);
-  const client = useMemo(() => new HttpVenueManagementClient(token), [token]);
-  const [session, setSession] = useState<VenueSessionInfo>();
+  const [state, setState] = useState<{ client: HttpVenueManagementClient; session: VenueSessionInfo }>();
 
   useEffect(() => {
-    if (!token) {
-      window.location.replace("/venue");
-      return;
-    }
     let active = true;
-    client.getSession()
-      .then((loaded) => {
+    void (async () => {
+      // Supabase resolves (and refreshes) the token asynchronously, so the
+      // client can only be built once a token is in hand.
+      const token = await getAccessToken().catch(() => null);
+      if (!active) return;
+      if (!token) {
+        window.location.replace("/venue");
+        return;
+      }
+      const client = new HttpVenueManagementClient(token);
+      try {
+        const session = await client.getSession();
         if (!active) return;
-        if (!loaded.venue && window.location.pathname !== "/venue/setup") {
+        if (!session.venue && window.location.pathname !== "/venue/setup") {
           window.location.replace("/venue/setup");
           return;
         }
-        setSession(loaded);
-      })
-      .catch((error: unknown) => {
+        setState({ client, session });
+      } catch (error: unknown) {
         if (!active) return;
         if (error instanceof VenueClientError && error.status === 401) clearVenueToken();
         window.location.replace("/venue");
-      });
+      }
+    })();
     return () => {
       active = false;
     };
-  }, [client, token]);
+  }, []);
 
-  if (!session) return null;
+  if (!state) return null;
+  const { client } = state;
   return {
     client,
-    session,
+    session: state.session,
     refreshSession: async () => {
-      setSession(await client.getSession());
+      const session = await client.getSession();
+      setState({ client, session });
     },
   };
 }
@@ -73,9 +80,9 @@ export function VenueShell({ active, state, children }: {
     try {
       await state.client.logout();
     } catch {
-      // The local token is cleared regardless; a failed revoke only matters server-side.
+      // The local session is cleared regardless; a failed revoke only matters server-side.
     }
-    clearVenueToken();
+    await signOut().catch(() => undefined);
     window.location.assign("/venue");
   }
 

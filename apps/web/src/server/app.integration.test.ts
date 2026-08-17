@@ -16,6 +16,8 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createWebApp } from "./app.js";
 
+const NO_AUTH = { provider: "none", supabaseUrl: null, supabasePublishableKey: null } as const;
+
 function app(venueProvider?: ModelProvider) {
   const repository = new FixtureVenueRepository();
   const provider = new DeterministicMatchingProvider();
@@ -32,6 +34,7 @@ function app(venueProvider?: ModelProvider) {
       renderQrSvg: async (text) => `<svg data-url="${text}"></svg>`,
     }),
     fixtureVenueMediaStorage: mediaStorage,
+    authConfig: NO_AUTH,
     dataSource: "fixture",
     testFrontend: true,
   });
@@ -46,12 +49,20 @@ describe("venue HTTP slice", () => {
     });
   });
 
+  it("serves the publishable auth config and no secrets", async () => {
+    const body = (await request(app()).get("/v1/config").expect(200)).body;
+    expect(body).toEqual({
+      auth: { provider: "none", supabaseUrl: null, supabasePublishableKey: null },
+    });
+  });
+
   it("fails readiness closed when a required dependency is unavailable", async () => {
     const repository = new FixtureVenueRepository();
     const unavailable = createWebApp({
       venueService: new DefaultVenueService(repository, new DeterministicMatchingProvider()),
       managementService: new DefaultManagementService(repository),
       venueManagementService: new UnavailableVenueManagementService(),
+      authConfig: NO_AUTH,
       dataSource: "fixture",
       checkReadiness: async () => [{ name: "venue_repository", ready: false, detail: "unavailable" }],
       testFrontend: true,

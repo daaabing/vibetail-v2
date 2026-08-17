@@ -10,7 +10,8 @@ export type VenueType = z.infer<typeof venueTypeSchema>;
 export const drinkStrengthSchema = z.enum(["zero", "light", "medium", "strong"]);
 export type DrinkStrength = z.infer<typeof drinkStrengthSchema>;
 
-// Account-name login is intentionally passwordless for the MVP; the login page states this.
+// Legacy passwordless account-name login. Only reachable when AUTH_PROVIDER=none
+// (local fixture runs); Supabase deployments reject it in favour of Google sign-in.
 export const venueLoginInputSchema = z.object({
   name: z.string().trim().min(1).max(80),
 });
@@ -18,8 +19,10 @@ export type VenueLoginInput = z.infer<typeof venueLoginInputSchema>;
 
 export const venueAccountSchema = z.object({
   id: z.string().uuid(),
-  name: z.string().min(1).max(80),
-  displayName: z.string().min(1).max(80),
+  name: z.string().min(1).max(320),
+  displayName: z.string().min(1).max(200),
+  // Present once the account is backed by a verified identity provider.
+  email: z.string().max(320).nullable().default(null),
 });
 export type VenueAccount = z.infer<typeof venueAccountSchema>;
 

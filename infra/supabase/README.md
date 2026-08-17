@@ -20,3 +20,8 @@ editor or `psql`) after review.
 | File | Purpose |
 | --- | --- |
 | `migrations/0001_venue_mvp.sql` | Venue MVP: accounts, sessions, drink library, menu↔drink join, menu views, match events, feedback, `archived` menu status, merchant address/venue type. |
+| `migrations/0003_supabase_auth.sql` | Supabase Auth (Google) for guests and venue owners: links `venue_accounts` to `auth.users`, adds `email`, and adds optional `account_id` attribution on `match_events` / `match_feedback`. Includes the manual steps for handing an existing passwordless venue to a Google identity. |
+
+The gap at `0002` is deliberate: the in-flight local Supabase stack branch splits
+`0001_venue_mvp.sql` into `0001_venue_mvp_enum.sql` + `0002_venue_mvp.sql`, and
+`0003` is numbered to land after that split without a rename.
