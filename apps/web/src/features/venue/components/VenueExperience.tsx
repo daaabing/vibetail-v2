@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { VenueClient, VenueMatchResult, VenueMenu, VenuePreferences } from "@vibetail/contracts";
 import { MatchFlow } from "../../matching/components/MatchFlow.js";
 import { SiteFooter, SiteHeader } from "../../platform/components/SiteHeader.js";
@@ -12,30 +11,30 @@ interface VenueExperienceProps {
 }
 
 export function VenueExperience({ client, initialPreferences, initialResult, menu }: VenueExperienceProps) {
-  const [locale, setLocale] = useState<"en" | "zh">(initialPreferences?.locale ?? "en");
+  const locale = "en" as const;
   useSeo(`${menu.venue.name} · ${menu.name} — Vibetail`, menu.shortIntro ?? menu.venue.shortIntro ?? "Match your mood to this live menu.");
 
   const noVisibleItems = menu.items.length === 0;
   const noActiveItems = !noVisibleItems && menu.items.every((item) => item.availabilityStatus !== "active");
-  if (noVisibleItems || noActiveItems) return <UnavailableMenu menu={menu} locale={locale} onLocale={() => setLocale((value) => value === "en" ? "zh" : "en")} />;
+  if (noVisibleItems || noActiveItems) return <UnavailableMenu menu={menu} />;
 
-  return <div className="vt-page"><SiteHeader /><main className="vt-narrow">
+  return <div className="vt-page"><main className="vt-match-main">
     <MatchFlow
       context={{
         kicker: `${menu.venue.name} · ${menu.name}`,
-        title: locale === "zh" ? "从这张菜单找到今晚这一杯" : "Meet your drink from this menu",
-        description: locale === "zh" ? "告诉我们此刻的状态。匹配只会使用这家酒吧今晚真实可点的项目。" : "Tell us how tonight feels. This match only considers items this bar can actually serve from this menu.",
+        title: "Meet your drink from this menu",
+        description: "Tell us how tonight feels. This match only considers items this bar can actually serve from this menu.",
       }}
-      headerAction={<button className="vt-locale-toggle" type="button" onClick={() => setLocale((value) => value === "en" ? "zh" : "en")}>{locale === "en" ? "中文" : "EN"}</button>}
       {...(initialPreferences ? { initialPreferences } : {})}
       {...(initialResult ? { initialResult } : {})}
       locale={locale}
       match={(preferences) => client.matchItem(menu.venue.slug, menu.slug, preferences)}
+      menuItems={menu.items}
     />
   </main><SiteFooter /></div>;
 }
 
-function UnavailableMenu({ locale, menu, onLocale }: { locale: "en" | "zh"; menu: VenueMenu; onLocale(): void }) {
+function UnavailableMenu({ menu }: { menu: VenueMenu }) {
   const empty = menu.items.length === 0;
-  return <div className="vt-page"><SiteHeader /><main className="vt-narrow"><header className="vt-page-title vt-match-title"><div><p className="vt-kicker">{menu.venue.name} · {menu.name}</p><button className="vt-locale-toggle" type="button" onClick={onLocale}>{locale === "en" ? "中文" : "EN"}</button></div><h1>{empty ? (locale === "zh" ? "菜单还是空的" : "This menu is empty") : (locale === "zh" ? "目前没有可点项目" : "Nothing is available right now")}</h1><p>{locale === "zh" ? "请稍后再来，或向酒吧询问今晚的菜单。" : "Please check back later or ask the bar about tonight’s menu."}</p></header></main><SiteFooter /></div>;
+  return <div className="vt-page"><SiteHeader /><main className="vt-narrow"><header className="vt-page-title vt-match-title"><div><p className="vt-kicker">{menu.venue.name} · {menu.name}</p></div><h1>{empty ? "This menu is empty" : "Nothing is available right now"}</h1><p>Please check back later or ask the bar about tonight’s menu.</p></header></main><SiteFooter /></div>;
 }
