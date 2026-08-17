@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { beforeAll, describe, expect, it } from "vitest";
-import type { IdentityVerifier, VerifiedIdentity } from "../src/identity.js";
+import { SupabaseIdentityVerifier, type IdentityVerifier, type VerifiedIdentity } from "../src/identity.js";
 import {
   DefaultVenueManagementService,
   VenueManagementServiceError,
@@ -55,6 +55,11 @@ class StubVerifier implements IdentityVerifier {
     return this.tokens[token] ?? null;
   }
 }
+
+// Mirrors fixtures/venue/menus.json → venues.accounts[0].authUser. The seed
+// generator turns that block into the auth.users row these credentials unlock.
+const SEEDED_DEMO_EMAIL = "demo@vibetail.test";
+const SEEDED_DEMO_PASSWORD = "vibetail-demo";
 
 const VALID_TOKEN = "valid-token-with-enough-length";
 
@@ -172,4 +177,75 @@ describe("findOrCreateAccountByIdentity conflict fallback (23505)", () => {
     expect(rows.error).toBeNull();
     expect(rows.data).toHaveLength(1);
   });
+});
+
+// Everything above stubs the verifier. This block exercises the real one:
+// a genuine GoTrue access token verified through SupabaseIdentityVerifier's
+// auth.getUser call — the only path production actually takes.
+describe("SupabaseIdentityVerifier against real access tokens", () => {
+  const PASSWORD = "vibetail-test-password";
+
+  async function realTokenFor(email: string): Promise<string> {
+    const { url, publishableKey } = supabaseTestEnv();
+    const anon = createClient(url, publishableKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data, error } = await anon.auth.signInWithPassword({ email, password: PASSWORD });
+    if (error || !data.session) throw new Error(`Sign-in failed: ${error?.message ?? "no session"}`);
+    return data.session.access_token;
+  }
+
+  function realService() {
+    const { url, publishableKey } = supabaseTestEnv();
+    return new DefaultVenueManagementService(venueManagementRepository(), {
+      appUrl: "http://127.0.0.1:3000",
+      identityVerifier: new SupabaseIdentityVerifier({ url, publishableKey }),
+      renderQrSvg: async (text) => `<svg data-url="${text}"></svg>`,
+    });
+  }
+
+  it("resolves an account from an email/password access token", async () => {
+    const email = `${uniqueName("idauth-real")}@example.com`;
+    const created = await admin.auth.admin.createUser({
+      email,
+      password: PASSWORD,
+      email_confirm: true,
+      user_metadata: { full_name: "Real Token User" },
+    });
+    if (created.error) throw new Error(created.error.message);
+
+    const session = await realService().getSession(await realTokenFor(email));
+    expect(session.account.email).toBe(email);
+    expect(session.account.displayName).toBe("Real Token User");
+  });
+
+  it("rejects a syntactically valid but unissued token", async () => {
+    await expect(realService().getSession(`${"a".repeat(40)}.${"b".repeat(40)}.${"c".repeat(40)}`))
+      .rejects.toMatchObject({ httpStatus: 401 });
+  });
+
+  it("signs the seeded demo account in by email onto its existing venue", async () => {
+    // Guards the seed contract: the demo row is reachable by name login AND by
+    // email, and both resolve to the same account with its venue attached.
+    const session = await realService().getSession(await seededDemoToken());
+    expect(session.account.displayName).toBe("Demo Bar");
+    expect(session.account.email).toBe(SEEDED_DEMO_EMAIL);
+    expect(session.venue?.slug).toBe("vibetail-taproom");
+
+    const byName = await venueManagementRepository().findOrCreateAccount("demo bar", "Demo Bar");
+    expect(byName.id).toBe(session.account.id);
+  });
+
+  async function seededDemoToken(): Promise<string> {
+    const { url, publishableKey } = supabaseTestEnv();
+    const anon = createClient(url, publishableKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data, error } = await anon.auth.signInWithPassword({
+      email: SEEDED_DEMO_EMAIL,
+      password: SEEDED_DEMO_PASSWORD,
+    });
+    if (error || !data.session) throw new Error(`Seeded demo sign-in failed: ${error?.message}`);
+    return data.session.access_token;
+  }
 });

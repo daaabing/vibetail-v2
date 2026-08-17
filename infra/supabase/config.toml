@@ -29,6 +29,12 @@ enabled = true
 [auth]
 enabled = true
 
+[auth.email]
+enable_signup = true
+# local_smtp is off below, so a confirmation link could never be read here.
+# Production keeps confirmations on; the sign-up form handles the no-session case.
+enable_confirmations = false
+
 # Everything below is disabled purely to speed up `supabase start` for tests.
 [studio]
 enabled = false

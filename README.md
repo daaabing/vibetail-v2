@@ -122,10 +122,14 @@ The venue backend always runs on Supabase. Locally, `pnpm db:reset` (and the tes
 
 | Value | Behaviour |
 | --- | --- |
-| `none` (default) | Passwordless account-name login at `/venue`. Guests stay anonymous. No credentials needed. |
-| `supabase` | Supabase Auth Google sign-in for **both** guests and venue owners. Requires `SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY`, the Google provider enabled in the Supabase dashboard, and `infra/supabase/migrations/0003_supabase_auth.sql` applied. `POST /v1/venue/session` (name login) then returns `400`. |
+| `supabase` (default) | Supabase Auth on `/venue`: email/password always, plus Google when `AUTH_GOOGLE_ENABLED=true`. Requires `SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY` and `infra/supabase/migrations/0003_supabase_auth.sql` applied. `POST /v1/venue/session` (name login) then returns `400`. |
+| `none` | Legacy passwordless account-name login, kept because tests still cover it. Anyone who guesses an account name gets in — local use only. |
 
-Guests and venue owners share one account row: owning a venue is just a non-null `merchant_id`. Guest sign-in stays **optional** — anonymous scanning, matching, and feedback keep working, and a signed-in guest simply has `account_id` attached to their `match_events` and `match_feedback` rows.
+Email/password needs nothing beyond the Supabase project itself, so it is the path that works against a bare local stack and in tests. Google additionally needs an OAuth client in Google Cloud and the Supabase dashboard; until `AUTH_GOOGLE_ENABLED=true` the button is hidden rather than shown broken.
+
+The local seed ships one ready account — **`demo@vibetail.test` / `vibetail-demo`** — already attached to the Vibetail Taproom venue, so `/venue` lands straight on a populated dashboard after `pnpm db:reset`. It is the same `venue_accounts` row the `none` provider reaches as "Demo Bar". Credentials live in `fixtures/venue/menus.json` under `venues.accounts[].authUser`; the seed generator turns that block into the `auth.users` + `auth.identities` rows.
+
+Guests and venue owners share one account row: owning a venue is just a non-null `merchant_id`. Consumer surfaces have **no sign-in entry point** — anonymous scanning, matching, and feedback are the whole guest flow. The `account_id` columns on `match_events` / `match_feedback` are still written when a signed-in venue owner browses a menu, and a guest entry point can be added later without schema work.
 
 The browser reads publishable settings from `GET /v1/config` at runtime, so one client build works across environments; the Supabase JS SDK is loaded lazily and never ships in the main bundle. The browser sends the Supabase access token as `Authorization: Bearer`, and the server verifies it with `auth.getUser` behind a 60-second cache. `/auth/callback` is the fixed PKCE redirect target and must be on the Supabase redirect allowlist and the Google OAuth client's authorised redirect URIs.
 

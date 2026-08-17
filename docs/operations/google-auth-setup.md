@@ -1,7 +1,10 @@
 # Google sign-in via Supabase Auth
 
-One-time setup for `AUTH_PROVIDER=supabase`. Guests and venue owners share the
-same scheme; guest sign-in stays optional.
+**You only need this for Google.** `AUTH_PROVIDER=supabase` already gives the
+venue backend working email/password sign-in with no external setup at all —
+including the seeded `demo@vibetail.test` / `vibetail-demo` account on the local
+stack. Follow this document only when you also want the Google button, which
+is hidden until `AUTH_GOOGLE_ENABLED=true`.
 
 Everything below happens in the Supabase and Google consoles — the app cannot
 create these for you.
@@ -62,6 +65,7 @@ automatically. Run its verification checklist against staging first.
 
 ```
 AUTH_PROVIDER=supabase
+AUTH_GOOGLE_ENABLED=true
 SUPABASE_URL=https://<project-ref>.supabase.co
 SUPABASE_PUBLISHABLE_KEY=<publishable key>
 SUPABASE_SERVICE_ROLE_KEY=<service role key>

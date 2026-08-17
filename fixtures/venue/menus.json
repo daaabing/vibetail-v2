@@ -358,7 +358,12 @@
         "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
         "nameNormalized": "demo bar",
         "displayName": "Demo Bar",
-        "merchantId": "99999999-9999-4999-8999-999999999999"
+        "merchantId": "99999999-9999-4999-8999-999999999999",
+        "authUser": {
+          "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+          "email": "demo@vibetail.test",
+          "password": "vibetail-demo"
+        }
       }
     ],
     "profiles": [

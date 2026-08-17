@@ -37,6 +37,11 @@ fixtures/venue/menus.json  --(scripts/generate-seed.mjs)-->  infra/supabase/seed
 - Keep verbatim: token values `fixture-double-chicken-demo` /
   `fixture-nightjar-demo-token` and the `Demo Bar` account name — tests and the
   demo links depend on their sha256 hashes landing in the seed.
+- The `authUser` block on an account (`demo@vibetail.test` / `vibetail-demo`)
+  becomes `auth.users` + `auth.identities` rows, so email/password sign-in works
+  right after a reset. Keep those two values verbatim too — identity-auth.test.ts
+  signs in with them. Emitted before `venue_accounts` because `auth_user_id` has
+  an FK to `auth.users`; pgcrypto is schema-qualified (`extensions.crypt`).
 
 ## Migrations (`infra/supabase/migrations/`)
 

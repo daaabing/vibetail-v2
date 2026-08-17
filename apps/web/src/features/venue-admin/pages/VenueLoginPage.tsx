@@ -1,7 +1,13 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { AuthConfig } from "@vibetail/contracts";
 import { HttpVenueManagementClient } from "../../../clients/http-venue-management-client.js";
-import { getAccessToken, loadAuthConfig, signInWithGoogle } from "../../auth/auth-session.js";
+import {
+  getAccessToken,
+  loadAuthConfig,
+  signInWithEmail,
+  signInWithGoogle,
+  signUpWithEmail,
+} from "../../auth/auth-session.js";
 import { SiteFooter, SiteHeader } from "../../platform/components/SiteHeader.js";
 import { useSeo } from "../../platform/useSeo.js";
 import { errorMessage } from "../VenueShell.js";
@@ -17,6 +23,8 @@ export function VenueLoginPage() {
   const [checking, setChecking] = useState(true);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [notice, setNotice] = useState("");
 
   // An existing session skips the form entirely, whichever provider issued it.
   useEffect(() => {
@@ -58,6 +66,37 @@ export function VenueLoginPage() {
     }
   }
 
+  async function submitEmail(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const email = String(form.get("email") ?? "").trim();
+    const password = String(form.get("password") ?? "");
+    if (!email || !password) return;
+    setPending(true);
+    setError("");
+    setNotice("");
+    try {
+      if (mode === "signup") {
+        const signedIn = await signUpWithEmail(email, password);
+        if (!signedIn) {
+          // Projects with email confirmation on issue no session yet.
+          setNotice("Check your inbox and confirm the address, then sign in.");
+          setMode("signin");
+          setPending(false);
+          return;
+        }
+      } else {
+        await signInWithEmail(email, password);
+      }
+      // The session decides the landing page; a fresh account has no venue yet.
+      const session = await new HttpVenueManagementClient(await getAccessToken()).getSession();
+      window.location.assign(destinationFor(Boolean(session.venue)));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : errorMessage(caught));
+      setPending(false);
+    }
+  }
+
   async function submitGoogle() {
     setPending(true);
     setError("");
@@ -86,13 +125,44 @@ export function VenueLoginPage() {
         <section className="vt-management-entry">
           {config?.provider === "supabase" ? (
             <>
-              <p>Sign in with your Google account</p>
-              <button className="vt-primary" type="button" disabled={pending} onClick={() => void submitGoogle()}>
-                {pending ? "Redirecting…" : "Continue with Google"}
+              <p>{mode === "signup" ? "Create your venue account" : "Sign in to your venue account"}</p>
+              <form className="vt-admin-form" onSubmit={submitEmail}>
+                <label>
+                  Email
+                  <input name="email" type="email" required maxLength={320} autoComplete="username" />
+                </label>
+                <label>
+                  Password
+                  <input
+                    name="password"
+                    type="password"
+                    required
+                    minLength={6}
+                    maxLength={200}
+                    autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                  />
+                </label>
+                <button className="vt-primary" type="submit" disabled={pending}>
+                  {pending ? "Working…" : mode === "signup" ? "Create account" : "Sign in"}
+                </button>
+              </form>
+              <button
+                className="vt-link-button"
+                type="button"
+                disabled={pending}
+                onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setError(""); setNotice(""); }}
+              >
+                {mode === "signup" ? "I already have an account" : "Create a new account"}
               </button>
+              {config.googleEnabled && (
+                <button className="vt-secondary" type="button" disabled={pending} onClick={() => void submitGoogle()}>
+                  {pending ? "Redirecting…" : "Continue with Google"}
+                </button>
+              )}
+              {notice && <div className="vt-notice">{notice}</div>}
               <small>
-                Guests and venue owners share one Vibetail account. Signing in here also
-                signs you in on the guest side; you become a venue owner once you create a venue.
+                Guests and venue owners share one Vibetail account. You become a venue
+                owner once you create a venue.
               </small>
             </>
           ) : (

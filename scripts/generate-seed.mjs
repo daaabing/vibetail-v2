@@ -212,17 +212,63 @@ for (const entry of fixture.managementTokens ?? []) {
   ]);
 }
 
-// --- venue accounts ---------------------------------------------------------
-emitSection("Venue accounts (passwordless MVP login rows)");
+// --- auth users -------------------------------------------------------------
+// Accounts carrying an `authUser` get a real GoTrue row so email/password
+// sign-in works against a freshly reset local stack with no external provider.
+// Must precede venue_accounts: venue_accounts.auth_user_id has an FK to auth.users.
+// pgcrypto lives in the `extensions` schema on Supabase, hence the qualified calls.
+emitSection("Auth users for seeded email/password sign-in (local stack only)");
 for (const account of accounts) {
-  // auth_user_id/email (in database.types.ts) are deliberately not written:
-  // the local migrations (0002_venue_mvp) do not have those columns yet and every
-  // fixture account is a legacy name-login row where both would be null.
+  const authUser = account.authUser;
+  if (!authUser) continue;
+  emitInsert("auth.users", [
+    ["instance_id", sqlString("00000000-0000-0000-0000-000000000000")],
+    ["id", sqlString(authUser.id)],
+    ["aud", sqlString("authenticated")],
+    ["role", sqlString("authenticated")],
+    ["email", sqlString(authUser.email)],
+    ["encrypted_password", `extensions.crypt(${sqlString(authUser.password)}, extensions.gen_salt('bf'))`],
+    ["email_confirmed_at", "now()"],
+    ["raw_app_meta_data", sqlJsonb({ provider: "email", providers: ["email"] })],
+    ["raw_user_meta_data", sqlJsonb({ full_name: account.displayName })],
+    ["created_at", "now()"],
+    ["updated_at", "now()"],
+    // GoTrue treats these as empty strings, not nulls, on a confirmed user.
+    ["confirmation_token", sqlString("")],
+    ["recovery_token", sqlString("")],
+    ["email_change_token_new", sqlString("")],
+    ["email_change", sqlString("")],
+  ]);
+  // Password logins still resolve through an identity row.
+  emitInsert("auth.identities", [
+    ["id", "gen_random_uuid()"],
+    ["user_id", sqlString(authUser.id)],
+    ["provider_id", sqlString(authUser.id)],
+    ["provider", sqlString("email")],
+    ["identity_data", sqlJsonb({
+      sub: authUser.id,
+      email: authUser.email,
+      email_verified: true,
+      phone_verified: false,
+    })],
+    ["last_sign_in_at", "now()"],
+    ["created_at", "now()"],
+    ["updated_at", "now()"],
+  ]);
+}
+
+// --- venue accounts ---------------------------------------------------------
+emitSection("Venue accounts (name login; auth_user_id set when seeded with an identity)");
+for (const account of accounts) {
+  // An account with an authUser is reachable both ways: by name under
+  // AUTH_PROVIDER=none, and by email/password under AUTH_PROVIDER=supabase.
   emitInsert("public.venue_accounts", [
     ["id", sqlString(account.id)],
     ["name_normalized", sqlString(account.nameNormalized)],
     ["display_name", sqlString(account.displayName)],
     ["merchant_id", sqlString(account.merchantId)],
+    ["auth_user_id", sqlString(account.authUser?.id ?? null)],
+    ["email", sqlString(account.authUser?.email ?? null)],
   ]);
 }
 

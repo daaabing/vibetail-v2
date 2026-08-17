@@ -55,9 +55,37 @@ export async function getAccessToken(): Promise<string | null> {
   return data.session?.access_token ?? null;
 }
 
-export async function signInWithGoogle(next: string): Promise<void> {
+/** Every sign-in path needs a configured client; fail with one shared message. */
+async function requireClient(): Promise<SupabaseClient> {
   const client = await getSupabaseClient();
-  if (!client) throw new Error("Google sign-in is not configured on this deployment.");
+  if (!client) throw new Error("Sign-in is not configured on this deployment.");
+  return client;
+}
+
+/**
+ * Email/password sign-in. Needs no external OAuth client, so it is the path
+ * that works against a bare local Supabase stack and in tests.
+ */
+export async function signInWithEmail(email: string, password: string): Promise<void> {
+  const client = await requireClient();
+  const { error } = await client.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(error.message);
+}
+
+/**
+ * Registers a new email account. Returns false when the project has email
+ * confirmation switched on and no session was issued — the caller must then
+ * tell the user to click the link rather than pretend they are signed in.
+ */
+export async function signUpWithEmail(email: string, password: string): Promise<boolean> {
+  const client = await requireClient();
+  const { data, error } = await client.auth.signUp({ email, password });
+  if (error) throw new Error(error.message);
+  return Boolean(data.session);
+}
+
+export async function signInWithGoogle(next: string): Promise<void> {
+  const client = await requireClient();
   const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeNext(next))}`;
   const { error } = await client.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
   if (error) throw new Error(error.message);
@@ -79,8 +107,7 @@ export async function completeOAuthRedirect(search: string): Promise<string> {
   if (providerError) throw new Error(providerError);
   const code = params.get("code");
   if (!code) throw new Error("This sign-in link is incomplete. Start again from the sign-in page.");
-  const client = await getSupabaseClient();
-  if (!client) throw new Error("Google sign-in is not configured on this deployment.");
+  const client = await requireClient();
   const { error } = await client.auth.exchangeCodeForSession(code);
   if (error) throw new Error(error.message);
   return safeNext(params.get("next") ?? "/");
