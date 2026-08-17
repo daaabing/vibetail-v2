@@ -44,11 +44,6 @@ async function getSupabaseClient(): Promise<SupabaseClient | null> {
   return clientPromise;
 }
 
-export interface AuthAccount {
-  email: string | null;
-  displayName: string;
-}
-
 /**
  * The bearer token for API calls. Supabase refreshes an expiring access token
  * here, so callers should fetch it per request rather than hold onto it.
@@ -58,17 +53,6 @@ export async function getAccessToken(): Promise<string | null> {
   if (!client) return readVenueToken();
   const { data } = await client.auth.getSession();
   return data.session?.access_token ?? null;
-}
-
-export async function getSignedInAccount(): Promise<AuthAccount | null> {
-  const client = await getSupabaseClient();
-  if (!client) return null;
-  const { data } = await client.auth.getSession();
-  const user = data.session?.user;
-  if (!user) return null;
-  const metadata = user.user_metadata ?? {};
-  const name = typeof metadata.full_name === "string" ? metadata.full_name : null;
-  return { email: user.email ?? null, displayName: name || user.email || "Signed in" };
 }
 
 export async function signInWithGoogle(next: string): Promise<void> {
