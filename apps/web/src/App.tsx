@@ -1,3 +1,4 @@
+import { AuthCallbackPage } from "./features/auth/AuthCallbackPage.js";
 import { CurrentMenuRoute } from "./routes/CurrentMenuRoute.js";
 import { VenueRoute } from "./routes/VenueRoute.js";
 import { GlobalMatchPage } from "./features/platform/pages/GlobalMatchPage.js";
@@ -28,6 +29,7 @@ export function App() {
   const route = resolveAppRoute(window.location.pathname);
   if (route.kind === "landing") return <LandingPage />;
   if (route.kind === "match") return <GlobalMatchPage />;
+  if (route.kind === "auth_callback") return <AuthCallbackPage />;
   if (route.kind === "venues") return <VenuesPage />;
   if (route.kind === "venue_detail") return <VenueDetailPage merchantSlug={route.merchantSlug} />;
   if (route.kind === "management") return <ManagementPage {...(route.privateToken ? { privateToken: route.privateToken } : {})} />;
@@ -48,6 +50,7 @@ export function App() {
 export type AppRoute =
   | { kind: "landing" }
   | { kind: "match" }
+  | { kind: "auth_callback" }
   | { kind: "venues" }
   | { kind: "venue_detail"; merchantSlug: string }
   | { kind: "management"; privateToken?: string }
@@ -62,6 +65,8 @@ export function resolveAppRoute(pathname: string): AppRoute {
   const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   if (normalized === "/") return { kind: "landing" };
   if (normalized === "/match") return { kind: "match" };
+  // Fixed OAuth redirect target; must match the Supabase + Google redirect allowlists.
+  if (normalized === "/auth/callback") return { kind: "auth_callback" };
   if (normalized === "/venues") return { kind: "venues" };
   const detail = normalized.match(/^\/venues\/([^/]+)$/);
   if (detail?.[1]) return { kind: "venue_detail", merchantSlug: decodeURIComponent(detail[1]) };

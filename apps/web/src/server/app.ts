@@ -12,6 +12,7 @@ import {
   menuPhotoScanInputSchema,
   menuUrlScanInputSchema,
   prepareDrinkPhotoInputSchema,
+  runtimeConfigSchema,
   updateVenueMenuInputSchema,
   venueDashboardRangeSchema,
   venueErrorSchema,
@@ -20,6 +21,7 @@ import {
   updateAvailabilityInputSchema,
   updateMenuInputSchema,
   updateMerchantInputSchema,
+  type AuthConfig,
   type VenueError,
   type VenueMatchResult,
 } from "@vibetail/contracts";
@@ -40,6 +42,7 @@ export interface WebAppOptions {
   venueService: DefaultVenueService;
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
+  authConfig: AuthConfig;
   dataSource: "fixture" | "supabase";
   checkReadiness?: () => Promise<Array<{ name: string; ready: boolean; detail: string }>>;
   testFrontend?: boolean;
@@ -71,6 +74,12 @@ export function createWebApp(options: WebAppOptions): Express {
     }),
   );
 
+  // Runtime config keeps a single build deployable across environments; it is
+  // publishable-only by construction (see authConfigSchema).
+  app.get("/v1/config", (_request, response) => {
+    response.json(runtimeConfigSchema.parse({ auth: options.authConfig }));
+  });
+
   app.get(
     "/v1/venues",
     asyncRoute(async (_request, response) => {
@@ -90,7 +99,7 @@ export function createWebApp(options: WebAppOptions): Express {
     asyncRoute(async (request, response) => {
       const { preferences } = globalMatchRequestSchema.parse(request.body);
       const result = await options.venueService.matchGlobalItem(preferences);
-      response.json(await withMatchId(options.venueManagementService, result));
+      response.json(await withMatchId(options.venueManagementService, result, request));
     }),
   );
 
@@ -210,7 +219,7 @@ export function createWebApp(options: WebAppOptions): Express {
         menuSlug: request.params.menuSlug ?? "",
         preferences,
       });
-      response.json(await withMatchId(options.venueManagementService, result));
+      response.json(await withMatchId(options.venueManagementService, result, request));
     }),
   );
 
@@ -421,7 +430,9 @@ export function createWebApp(options: WebAppOptions): Express {
     "/v1/matches/:matchId/feedback",
     asyncRoute(async (request, response) => {
       response.status(201).json(await venueManagement.submitFeedback(
-        request.params.matchId ?? "", feedbackInputSchema.parse(request.body),
+        request.params.matchId ?? "",
+        feedbackInputSchema.parse(request.body),
+        await venueManagement.resolveAccountId(readBearerToken(request)),
       ));
     }),
   );
@@ -462,9 +473,12 @@ function asyncRoute(
 async function withMatchId(
   service: VenueManagementService,
   result: VenueMatchResult,
+  request: Request,
 ): Promise<VenueMatchResult> {
   try {
-    const matchId = await service.recordMatch(result);
+    // Consumer sign-in is optional, so an unusable token just means anonymous.
+    const accountId = await service.resolveAccountId(readBearerToken(request));
+    const matchId = await service.recordMatch(result, accountId);
     return matchId ? { ...result, matchId } : result;
   } catch {
     return result;

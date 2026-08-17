@@ -26,6 +26,9 @@ const serverEnvSchema = z
       "alibaba",
     ]).default("deterministic"),
     SANDBOX_PROVIDER: z.enum(["local", "fc", "e2b"]).default("local"),
+    // `none` keeps the passwordless account-name login used by local fixture
+    // runs; `supabase` switches every surface to Supabase Auth (Google) tokens.
+    AUTH_PROVIDER: z.enum(["none", "supabase"]).default("none"),
     SUPABASE_URL: optionalString(z.string().url()),
     SUPABASE_PUBLISHABLE_KEY: optionalString(),
     SUPABASE_SERVICE_ROLE_KEY: optionalString(),
@@ -42,7 +45,7 @@ const serverEnvSchema = z
     E2B_API_KEY: optionalString(),
   })
   .superRefine((env, context) => {
-    if (env.VENUE_REPOSITORY === "supabase") {
+    if (env.VENUE_REPOSITORY === "supabase" || env.AUTH_PROVIDER === "supabase") {
       requireFields(env, ["SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY"], context);
     }
     if (env.MODEL_PROVIDER === "openrouter") {

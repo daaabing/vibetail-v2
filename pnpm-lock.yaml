@@ -65,6 +65,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.112.2
+        version: 2.112.2
       '@vibetail/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts

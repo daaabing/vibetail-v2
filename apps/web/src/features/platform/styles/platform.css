@@ -25,6 +25,8 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .house-header nav a, .house-header-cta { color: inherit; font-size: 10px; font-weight: 500; letter-spacing: .17em; text-decoration: none; text-transform: uppercase; }
 .house-header nav a { opacity: .72; }.house-header nav a:hover { opacity: 1; }
 .house-header-cta { padding-bottom: 4px; border-bottom: 1px solid currentColor; }
+.house-header-auth { display: inline-flex; align-items: center; gap: 10px; border: 0; color: inherit; background: none; cursor: pointer; font-size: 10px; font-weight: 500; letter-spacing: .17em; text-transform: uppercase; opacity: .72; }
+.house-header-auth:hover { opacity: 1; }.house-header-auth span { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .house-menu-button { display: none; border: 0; padding: 8px; color: inherit; background: none; }.house-menu-button span { display: block; width: 21px; height: 1px; margin: 5px; background: currentColor; }
 .house-section { position: relative; padding: clamp(90px,11vw,150px) 0; overflow: hidden; }
 .house-paper { background: var(--paper); }.house-paper-warm { background: var(--paper-warm); }.house-ink { color: var(--paper); background: var(--night); }

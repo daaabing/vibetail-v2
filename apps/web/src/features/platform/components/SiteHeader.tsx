@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { GuestAuthControl } from "../../auth/GuestAuthControl.js";
 
 export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
   const [open, setOpen] = useState(false);
@@ -14,6 +15,7 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
           <a href="/venues">Explore bars</a>
           <a href="/for-bars">For bars</a>
           <a href="/venue">Management</a>
+          <GuestAuthControl />
         </nav>
         <a className="house-header-cta" href="/match">Meet your drink</a>
       </div>

@@ -17,6 +17,7 @@ import {
   type VenuePreferences,
 } from "@vibetail/contracts";
 import { z } from "zod";
+import { getAccessToken } from "../features/auth/auth-session.js";
 
 export class VenueClientError extends Error {
   override readonly name = "VenueClientError";
@@ -24,7 +25,14 @@ export class VenueClientError extends Error {
 }
 
 export class HttpVenueClient implements VenueClient {
-  constructor(private readonly baseUrl = "") {}
+  /**
+   * `getAccessToken` is optional on purpose: guest matching works signed out,
+   * and a token only adds account attribution to matches and feedback.
+   */
+  constructor(
+    private readonly baseUrl = "",
+    private readonly readAccessToken: () => Promise<string | null> = getAccessToken,
+  ) {}
 
   async listActiveVenues(): Promise<VenueDirectoryEntry[]> {
     return this.get("/v1/venues", z.array(venueDirectoryEntrySchema).parse);
@@ -69,8 +77,14 @@ export class HttpVenueClient implements VenueClient {
   }
 
   private async post<T>(path: string, body: unknown, parse: (value: unknown) => T): Promise<T> {
+    const token = await this.readAccessToken().catch(() => null);
     const response = await fetch(`${this.baseUrl}${path}`, {
-      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(body),
     });
     return parseResponse(response, parse);
   }

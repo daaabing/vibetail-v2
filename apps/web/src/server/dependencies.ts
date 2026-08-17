@@ -20,11 +20,14 @@ import {
   SupabaseVenueManagementRepository,
   SupabaseVenueRepository,
   SupabaseVenueMediaStorage,
+  SupabaseIdentityVerifier,
   UnavailableManagementService,
   UnavailableVenueManagementService,
+  type IdentityVerifier,
   type ManagementService,
   type VenueManagementService,
 } from "@vibetail/venue-core";
+import type { AuthConfig } from "@vibetail/contracts";
 import QRCode from "qrcode";
 import type { WebServerEnv } from "../env.js";
 
@@ -38,6 +41,7 @@ export interface WebDependencies {
   venueService: DefaultVenueService;
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
+  authConfig: AuthConfig;
   fixtureVenueMediaStorage?: FixtureVenueMediaStorage;
   checkReadiness(): Promise<DependencyReadinessCheck[]>;
 }
@@ -46,7 +50,39 @@ function renderQrSvg(text: string): Promise<string> {
   return QRCode.toString(text, { type: "svg", margin: 1, width: 256 });
 }
 
+/** Publishable auth settings the browser needs to start a sign-in. */
+function createAuthConfig(env: WebServerEnv): AuthConfig {
+  if (env.AUTH_PROVIDER !== "supabase") {
+    return { provider: "none", supabaseUrl: null, supabasePublishableKey: null };
+  }
+  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
+    throw new Error("Validated Supabase auth configuration is unavailable");
+  }
+  return {
+    provider: "supabase",
+    supabaseUrl: env.SUPABASE_URL,
+    supabasePublishableKey: env.SUPABASE_PUBLISHABLE_KEY,
+  };
+}
+
+/**
+ * Auth is chosen independently of the data source, so Google sign-in can be
+ * exercised against fixture data before a Supabase database is populated.
+ */
+function createIdentityVerifier(env: WebServerEnv): IdentityVerifier | undefined {
+  if (env.AUTH_PROVIDER !== "supabase") return undefined;
+  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
+    throw new Error("Validated Supabase auth configuration is unavailable");
+  }
+  return new SupabaseIdentityVerifier({
+    url: env.SUPABASE_URL,
+    publishableKey: env.SUPABASE_PUBLISHABLE_KEY,
+  });
+}
+
 export function createWebDependencies(env: WebServerEnv): WebDependencies {
+  const authConfig = createAuthConfig(env);
+  const identityVerifier = createIdentityVerifier(env);
   if (env.VENUE_REPOSITORY === "fixture") {
     const repository = new FixtureVenueRepository();
     const provider = createModelProvider(env, repository.fixture.matchingFailureMenuIds);
@@ -61,7 +97,9 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
         drinkPhotoProvider: createDrinkPhotoProvider(env),
         mediaStorage,
         renderQrSvg,
+        ...(identityVerifier ? { identityVerifier } : {}),
       }),
+      authConfig,
       fixtureVenueMediaStorage: mediaStorage,
       checkReadiness: async () => [{
         name: "venue_repository",
@@ -102,6 +140,7 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
             serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
           }),
           renderQrSvg,
+          ...(identityVerifier ? { identityVerifier } : {}),
         },
       )
     : new UnavailableVenueManagementService();
@@ -109,6 +148,7 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
     venueService: new DefaultVenueService(repository, provider),
     managementService,
     venueManagementService,
+    authConfig,
     checkReadiness: async () => {
       try {
         const scopes = await repository.listPublishedVenueMenus();
