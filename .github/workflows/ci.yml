@@ -15,7 +15,8 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Includes pulling/booting the local Supabase Docker stack before tests.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -29,6 +30,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
+      # All tests (unit + integration) require the local Supabase stack; the
+      # vitest globalSetup only runs `db reset`, so start the stack explicitly.
+      # ubuntu-latest ships with Docker preinstalled.
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase --workdir infra start
       - run: pnpm test
       - run: pnpm build
       - run: pnpm audit:forbidden
