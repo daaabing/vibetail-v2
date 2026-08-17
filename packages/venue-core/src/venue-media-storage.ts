@@ -13,34 +13,8 @@ export interface VenueDrinkPhotoStored {
   storagePath: string;
 }
 
-export interface StoredVenueMediaObject {
-  bytes: Uint8Array;
-  contentType: string;
-}
-
 export interface VenueMediaStorage {
   uploadDrinkPhoto(input: VenueDrinkPhotoUpload): Promise<VenueDrinkPhotoStored>;
-}
-
-/** In-memory uploads for fixture mode; the web server exposes them read-only. */
-export class FixtureVenueMediaStorage implements VenueMediaStorage {
-  private readonly objects = new Map<string, StoredVenueMediaObject>();
-
-  constructor(private readonly publicBaseUrl = "http://127.0.0.1:3000") {}
-
-  async uploadDrinkPhoto(input: VenueDrinkPhotoUpload): Promise<VenueDrinkPhotoStored> {
-    const extension = extensionFor(input.contentType);
-    const storagePath = `${input.merchantId}/drinks/${input.objectId}-${sanitizeName(input.drinkName)}.${extension}`;
-    this.objects.set(storagePath, { bytes: Uint8Array.from(input.bytes), contentType: input.contentType });
-    return {
-      storagePath,
-      imageUrl: `${this.publicBaseUrl.replace(/\/$/, "")}/v1/fixture-venue-media/${storagePath}`,
-    };
-  }
-
-  getObject(storagePath: string): StoredVenueMediaObject | null {
-    return this.objects.get(storagePath) ?? null;
-  }
 }
 
 export interface SupabaseVenueMediaStorageConfig {

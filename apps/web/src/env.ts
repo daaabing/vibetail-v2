@@ -3,6 +3,12 @@ import { z } from "zod";
 const optionalString = (schema: z.ZodString = z.string().min(1)) =>
   z.preprocess((value) => (value === "" ? undefined : value), schema.optional());
 
+// Supabase is the only data path, so its connection settings are always
+// required. For local development: run `pnpm db:start`, then copy the values
+// from `pnpm db:status` into the repo root .env.
+const supabaseSetupHint = (name: string) =>
+  `${name} is required. Local development: run \`pnpm db:start\`, then copy the values from \`pnpm db:status\` into .env.`;
+
 const publicEnvSchema = z.object({
   APP_URL: z.string().url().default("http://127.0.0.1:3000"),
   POSTHOG_KEY: optionalString(),
@@ -16,7 +22,6 @@ const serverEnvSchema = z
     LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
     HOST: z.string().min(1),
     PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
-    VENUE_REPOSITORY: z.enum(["fixture", "supabase"]).default("fixture"),
     MODEL_PROVIDER: z.enum([
       "deterministic",
       "vertex",
@@ -26,11 +31,17 @@ const serverEnvSchema = z
       "alibaba",
     ]).default("deterministic"),
     SANDBOX_PROVIDER: z.enum(["local", "fc", "e2b"]).default("local"),
-    // `none` keeps the passwordless account-name login used by local fixture
+    // `none` keeps the passwordless account-name login used by seeded local
     // runs; `supabase` switches every surface to Supabase Auth (Google) tokens.
     AUTH_PROVIDER: z.enum(["none", "supabase"]).default("none"),
-    SUPABASE_URL: optionalString(z.string().url()),
-    SUPABASE_PUBLISHABLE_KEY: optionalString(),
+    SUPABASE_URL: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string({ error: supabaseSetupHint("SUPABASE_URL") }).url(),
+    ),
+    SUPABASE_PUBLISHABLE_KEY: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string({ error: supabaseSetupHint("SUPABASE_PUBLISHABLE_KEY") }).min(1),
+    ),
     SUPABASE_SERVICE_ROLE_KEY: optionalString(),
     MODEL_API_KEY: optionalString(),
     OPENROUTER_API_KEY: optionalString(),
@@ -46,9 +57,6 @@ const serverEnvSchema = z
     E2B_API_KEY: optionalString(),
   })
   .superRefine((env, context) => {
-    if (env.VENUE_REPOSITORY === "supabase" || env.AUTH_PROVIDER === "supabase") {
-      requireFields(env, ["SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY"], context);
-    }
     if (env.MODEL_PROVIDER === "openrouter") {
       requireFields(env, ["OPENROUTER_API_KEY", "MODEL_NAME"], context);
     } else if (env.MODEL_PROVIDER !== "deterministic") {
@@ -76,17 +84,11 @@ export function parseWebEnv(source: NodeJS.ProcessEnv): {
   serverEnv: WebServerEnv;
 } {
   const nodeEnv = source.NODE_ENV ?? "development";
-  const inferredVenueRepository =
-    source.VENUE_REPOSITORY ??
-    // Deprecated alias kept so existing deployments keep working after the rename.
-    source.RESTAURANT_REPOSITORY ??
-    (source.SUPABASE_URL && source.SUPABASE_PUBLISHABLE_KEY ? "supabase" : undefined);
   return {
     publicEnv: publicEnvSchema.parse(source),
     serverEnv: serverEnvSchema.parse({
       ...source,
       HOST: source.HOST ?? (nodeEnv === "production" ? "0.0.0.0" : "127.0.0.1"),
-      VENUE_REPOSITORY: inferredVenueRepository,
     }),
   };
 }

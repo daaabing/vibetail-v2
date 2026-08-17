@@ -88,10 +88,14 @@ export class SupabaseVenueRepository implements VenueRepository {
   }
 
   async listPublishedVenueMenus(): Promise<PublishedMenuScope[]> {
+    // Without an explicit order Postgres returns rows in arbitrary order, so
+    // the public directory would reshuffle between requests. Slug order is
+    // stable and human-predictable.
     const merchantsResult = await this.client
       .from("merchants")
       .select("id, slug, name, short_intro, logo_url, cover_image_url, is_active")
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .order("slug", { ascending: true });
     if (merchantsResult.error) throw unavailable(merchantsResult.error.message);
     const merchantRows = z.array(merchantRowSchema).parse(merchantsResult.data ?? []);
     const scopes = await Promise.all(merchantRows.map(async (merchant) => {
@@ -100,7 +104,8 @@ export class SupabaseVenueRepository implements VenueRepository {
         .select("slug")
         .eq("merchant_id", merchant.id)
         .eq("status", "published")
-        .not("published_version_id", "is", null);
+        .not("published_version_id", "is", null)
+        .order("slug", { ascending: true });
       if (menusResult.error) throw unavailable(menusResult.error.message);
       const menuSlugs = z.array(z.object({ slug: z.string() })).parse(menusResult.data ?? []);
       return Promise.all(menuSlugs.map(({ slug }) => this.lookupMenu(merchant.slug, slug)));

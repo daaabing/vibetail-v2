@@ -13,8 +13,7 @@ flowchart LR
   Browser["Guest / operator browser"] --> Web["apps/web: UI + HTTP API"]
   Web --> Venue["packages/venue-core"]
   Venue --> Repo["VenueRepository"]
-  Repo --> Fixture["Deterministic fixtures"]
-  Repo --> Supabase["Existing Supabase project"]
+  Repo --> Supabase["Supabase (local stack or shared project)"]
   Venue --> Model["ModelProvider"]
   Model --> Deterministic["Deterministic matcher"]
   Model --> RemoteModels["Vertex / Gemini / OpenAI / Alibaba adapters"]
@@ -58,7 +57,7 @@ Public entry remains `/m/:merchantSlug/:menuSlug`. The stable APIs are:
 
 Global and venue-specific matching are two scopes over that same pipeline. Global returns canonical merchant/menu/item facts plus the route to the selected venue experience. Inactive merchants, unpublished menus, sold-out items, hidden items, and provider IDs outside the allowlist fail closed.
 
-Phase 2.5 adds a minimal `ManagementService`/`ManagementRepository` boundary for merchant/menu/item editing and publishing. Fixture mode uses public local demo tokens. The Supabase adapter hashes real private tokens and uses the service role only in the server dependency tree. This is an explicit compatibility step toward Supabase Auth plus merchant membership/RBAC, not the long-term authorization model.
+Phase 2.5 adds a minimal `ManagementService`/`ManagementRepository` boundary for merchant/menu/item editing and publishing. The local seed provides public demo tokens (stored as hashes). The Supabase adapter hashes real private tokens and uses the service role only in the server dependency tree. This is an explicit compatibility step toward Supabase Auth plus merchant membership/RBAC, not the long-term authorization model.
 
 Supabase remains the initial database but not a second product source of truth. Existing data is reused through a new repository adapter. Generated database types will be regenerated when credentials and the Phase 2 adapter are authorized. Old migrations and seeds are historical evidence, not replay instructions.
 
@@ -82,8 +81,8 @@ Model adapters receive bounded preferences and canonical candidate metadata. The
 
 - `.env.example` documents no real values.
 - Zod validates configuration at composition-root startup.
-- Fixture/deterministic/local defaults allow credential-free builds and tests.
-- Selecting Supabase, FC, E2B, or a remote model makes its endpoint/key fields mandatory.
+- Deterministic/local model and sandbox defaults require no credentials; venue data always uses Supabase (the local stack for development and tests).
+- The Supabase endpoint/key fields are always mandatory; selecting FC, E2B, or a remote model makes that provider's endpoint/key fields mandatory too.
 - Public config contains only `APP_URL` and optional PostHog public configuration.
 - Service role, model, and sandbox credentials are server/worker-only and are never injected wholesale into a sandbox.
 - Structured logs use trace IDs and an explicit safe field set; authorization, cookies, prompts, and credentials are forbidden.
@@ -96,7 +95,7 @@ The web foundation contains testable health/readiness response builders. Phase 2
 
 | Concern | Demo path | Long-term path |
 | --- | --- | --- |
-| Venue data | deterministic fixture fallback; existing Supabase adapter in Phase 2 | repository adapter can evolve without UI changes |
+| Venue data | Supabase repository adapter (local stack in dev/test, shared project in staging) | repository adapter can evolve without UI changes |
 | Venue UI | optional isolated legacy subset | parallel new UI replaces the entire legacy feature |
 | Matching | deterministic provider fallback | selectable model adapters behind one contract |
 | Sandbox | local tests plus real FC demo path | FC, E2B, or another provider by configuration/capability |
@@ -104,4 +103,4 @@ The web foundation contains testable health/readiness response builders. Phase 2
 | Workflow state | durable store/checkpoint design | queue/event-driven horizontally scalable workers |
 | Observability | trace/log/timing evidence and SLS integration | provider-neutral telemetry sinks and production alerting |
 
-The demo is a thin deployment of the long-term boundaries, not a separate code path. Only deterministic fallbacks may substitute external data/model availability; real command execution, hibernate, wake, resume, approval lifecycle, persistence, and trace evidence must not be simulated in the hackathon proof.
+The demo is a thin deployment of the long-term boundaries, not a separate code path. Only deterministic fallbacks may substitute external model availability; real command execution, hibernate, wake, resume, approval lifecycle, persistence, and trace evidence must not be simulated in the hackathon proof.

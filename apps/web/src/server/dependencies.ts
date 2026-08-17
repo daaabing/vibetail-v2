@@ -15,8 +15,6 @@ import {
   DefaultVenueManagementService,
   DefaultVenueService,
   DefaultManagementService,
-  FixtureVenueRepository,
-  FixtureVenueMediaStorage,
   SupabaseManagementRepository,
   SupabaseVenueManagementRepository,
   SupabaseVenueRepository,
@@ -43,7 +41,6 @@ export interface WebDependencies {
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
   authConfig: AuthConfig;
-  fixtureVenueMediaStorage?: FixtureVenueMediaStorage;
   checkReadiness(): Promise<DependencyReadinessCheck[]>;
 }
 
@@ -67,8 +64,8 @@ function createAuthConfig(env: WebServerEnv): AuthConfig {
 }
 
 /**
- * Auth is chosen independently of the data source, so Google sign-in can be
- * exercised against fixture data before a Supabase database is populated.
+ * Auth is configured independently of the data path, so Google sign-in can be
+ * enabled per environment (e.g. exercised against locally seeded data first).
  */
 function createIdentityVerifier(env: WebServerEnv): IdentityVerifier | undefined {
   if (env.AUTH_PROVIDER !== "supabase") return undefined;
@@ -84,34 +81,6 @@ function createIdentityVerifier(env: WebServerEnv): IdentityVerifier | undefined
 export function createWebDependencies(env: WebServerEnv): WebDependencies {
   const authConfig = createAuthConfig(env);
   const identityVerifier = createIdentityVerifier(env);
-  if (env.VENUE_REPOSITORY === "fixture") {
-    const repository = new FixtureVenueRepository();
-    const provider = createModelProvider(env, repository.fixture.matchingFailureMenuIds);
-    const mediaStorage = new FixtureVenueMediaStorage(env.APP_URL);
-    return {
-      venueService: new DefaultVenueService(repository, provider),
-      managementService: new DefaultManagementService(repository),
-      venueManagementService: new DefaultVenueManagementService(repository, {
-        appUrl: env.APP_URL,
-        drinkInfoProvider: provider,
-        menuPhotoScanProvider: createMenuPhotoScanProvider(env),
-        drinkPhotoProvider: createDrinkPhotoProvider(env),
-        mediaStorage,
-        renderQrSvg,
-        ...(identityVerifier ? { identityVerifier } : {}),
-      }),
-      authConfig,
-      fixtureVenueMediaStorage: mediaStorage,
-      checkReadiness: async () => [{
-        name: "venue_repository",
-        ready: true,
-        detail: "fixture loaded",
-      }],
-    };
-  }
-  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
-    throw new Error("Validated Supabase configuration is unavailable");
-  }
   const repository = new SupabaseVenueRepository({
     url: env.SUPABASE_URL,
     publishableKey: env.SUPABASE_PUBLISHABLE_KEY,
@@ -123,7 +92,8 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
         serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
       }))
     : new UnavailableManagementService();
-  // The venue backend needs the reviewed 0001_venue_mvp.sql migration applied;
+  // The venue backend needs the reviewed Venue MVP migrations applied
+  // (infra/supabase/migrations/0001_venue_mvp_enum.sql + 0002_venue_mvp.sql);
   // without the service-role key it fails closed like legacy management.
   const venueManagementService = env.SUPABASE_SERVICE_ROLE_KEY
     ? new DefaultVenueManagementService(
@@ -207,13 +177,10 @@ function createDrinkPhotoProvider(env: WebServerEnv) {
   return new OriginalDrinkPhotoProvider();
 }
 
-function createModelProvider(
-  env: WebServerEnv,
-  deterministicFailureMenuIds: readonly string[] = [],
-): ModelProvider & DrinkInfoProvider {
+function createModelProvider(env: WebServerEnv): ModelProvider & DrinkInfoProvider {
   switch (env.MODEL_PROVIDER) {
     case "deterministic":
-      return new DeterministicMatchingProvider({ failureMenuIds: deterministicFailureMenuIds });
+      return new DeterministicMatchingProvider();
     case "openai":
       if (!env.MODEL_API_KEY || !env.MODEL_NAME) {
         throw new Error("Validated OpenAI model configuration is unavailable");

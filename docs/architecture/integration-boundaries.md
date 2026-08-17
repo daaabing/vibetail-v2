@@ -18,7 +18,7 @@
 | `packages/model-providers/` | provider-neutral model port and adapters | contracts; provider SDKs only in adapter modules | canonical menu ownership decisions |
 | `packages/observability/` | structured telemetry contracts/sinks | platform-neutral telemetry APIs | product analytics behavior or secrets |
 | `infra/` | reviewed deploy templates/configuration | deployment tooling | domain logic or production credentials |
-| `fixtures/` | deterministic shared contract/demo inputs | versioned contracts | production exports or personal data |
+| `fixtures/` | deterministic seed-data source for the generated Supabase seed | versioned contracts | production exports or personal data |
 
 ## Stable change surface
 
@@ -46,7 +46,7 @@ The venue flow provides approved preferences to `VenueClient.matchItem` and rend
 
 `VenueClient.matchGlobal` and `VenueClient.matchItem` converge on one venue service implementation. Global scope supplies every eligible published menu; venue scope supplies exactly one menu. Both paths filter availability/preferences before provider invocation, accept only `matchedItemId`, re-read the selected menu/item, and canonicalize facts from the repository.
 
-`ManagementClient` calls `/v1/management/*`. The browser supplies a temporary bearer token but never imports Supabase or service-role configuration. `ManagementService` verifies the token, derives merchant ownership server-side, and delegates to a separate `ManagementRepository`. Public read, matching, and management APIs remain distinct even when fixture mode shares one in-memory repository instance.
+`ManagementClient` calls `/v1/management/*`. The browser supplies a temporary bearer token but never imports Supabase or service-role configuration. `ManagementService` verifies the token, derives merchant ownership server-side, and delegates to a separate `ManagementRepository`. Public read, matching, and management APIs remain distinct even though they read and write the same Supabase database.
 
 The token adapter is temporary. Its deletion condition is Supabase Auth plus `merchant_memberships`/RBAC covering the same management service contract. Token values must not appear in structured logs, analytics events, query strings, or API response bodies.
 

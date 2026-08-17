@@ -71,13 +71,13 @@ The preferred remote path is OpenRouter Chat Completions with strict Structured 
 
 | Selection | Variables required when selected | Exposure |
 | --- | --- | --- |
-| `VENUE_REPOSITORY=supabase` | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | server only |
+| Supabase venue data (always required) | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | server only |
 | privileged Supabase operations | `SUPABASE_SERVICE_ROLE_KEY` | server/worker only; never browser/sandbox by default |
 | `MODEL_PROVIDER=openrouter` | `OPENROUTER_API_KEY`, `MODEL_NAME` | server/worker only |
 | `MODEL_PROVIDER=openai` | `MODEL_API_KEY`, `MODEL_NAME` | server/worker only |
 | `SANDBOX_PROVIDER=fc` | `FC_SANDBOX_ENDPOINT`, `FC_SANDBOX_API_KEY` | worker/server only |
 | `SANDBOX_PROVIDER=e2b` | `E2B_ENDPOINT`, `E2B_API_KEY` | worker/server only |
-| `deterministic` / `local` / `fixture` | none | local and CI safe defaults |
+| `deterministic` / `local` | none | local and CI safe defaults |
 
 Sandbox task environments use an explicit per-task allowlist and scoped credentials. Production Supabase service role, deployment/DNS credentials, GitHub write tokens, and unrelated model/provider keys are not injected.
 

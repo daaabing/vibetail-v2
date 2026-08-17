@@ -609,7 +609,7 @@ function drinkWrite(input: DrinkInput) {
     base_spirit: input.baseSpirit,
     strength: input.strength,
     // Unknown strength stays alcoholic so it can never satisfy a
-    // non-alcoholic preference by accident (mirrors the fixture adapter).
+    // non-alcoholic preference by accident.
     alcoholic: input.strength !== "zero",
     recommendation_note: input.recommendationNote,
   };

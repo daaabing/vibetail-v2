@@ -11,7 +11,7 @@ export const drinkStrengthSchema = z.enum(["zero", "light", "medium", "strong"])
 export type DrinkStrength = z.infer<typeof drinkStrengthSchema>;
 
 // Legacy passwordless account-name login. Only reachable when AUTH_PROVIDER=none
-// (local fixture runs); Supabase deployments reject it in favour of Google sign-in.
+// (local development); Supabase deployments reject it in favour of Google sign-in.
 export const venueLoginInputSchema = z.object({
   name: z.string().trim().min(1).max(80),
 });
