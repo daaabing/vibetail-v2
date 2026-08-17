@@ -1,19 +1,12 @@
--- 0001_venue_mvp.sql
--- Venue MVP: account login, drink library, menu↔drink join, analytics events.
--- Review + apply manually; never auto-applied (see AGENTS.md and infra/supabase/README.md).
+-- 0002_venue_mvp.sql
+-- Venue MVP, step 2 of 2: account login, drink library, menu↔drink join,
+-- analytics events. Requires 0001_venue_mvp_enum.sql to be committed first
+-- (it adds the 'archived' menu_status value).
+-- Review + apply manually; never auto-applied (see AGENTS.md and
+-- infra/supabase/README.md).
 --
--- NOTE: `alter type ... add value` cannot run inside the same transaction as
--- statements that use the new value. Run STEP 1 alone (autocommit), then STEP 2.
-
--- ---------------------------------------------------------------------------
--- STEP 1: enum extension (run alone)
--- ---------------------------------------------------------------------------
-
-alter type public.menu_status add value if not exists 'archived';
-
--- ---------------------------------------------------------------------------
--- STEP 2: tables, columns, indexes, RLS (run after step 1 committed)
--- ---------------------------------------------------------------------------
+-- The shared project already ran this content manually as STEP 2 of the
+-- original 0001_venue_mvp.sql; this file is semantically identical.
 
 create type public.venue_type as enum ('cocktail_bar', 'restaurant', 'event', 'other');
 

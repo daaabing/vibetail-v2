@@ -55,9 +55,8 @@ In the Supabase dashboard:
 ## 4. Database
 
 Apply [`infra/supabase/migrations/0003_supabase_auth.sql`](../../infra/supabase/migrations/0003_supabase_auth.sql)
-manually, after the Venue MVP migration that creates `venue_accounts`,
-`match_events`, and `match_feedback`. Per `AGENTS.md`, migrations are never
-applied automatically. Run its verification checklist against staging first.
+manually, after `0002_venue_mvp.sql`. Per `AGENTS.md`, migrations are never applied
+automatically. Run its verification checklist against staging first.
 
 ## 5. App environment
 
@@ -72,8 +71,8 @@ APP_URL=http://127.0.0.1:3000
 `APP_URL` must match the origin you browse, because the callback redirect is
 built from `window.location.origin` and has to be on the allowlist above.
 
-Leave `VENUE_REPOSITORY=fixture` to try Google sign-in against in-memory data,
-or set it to `supabase` for real persistence.
+Venue data always persists to the Supabase project that `SUPABASE_URL` points
+at; there is no separate in-memory mode.
 
 ## 6. Verify
 

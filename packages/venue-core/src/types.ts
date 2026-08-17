@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
   drinkStrengthSchema,
-  venueTypeSchema,
   type CreateMenuInput,
   type DrinkInput,
   type MenuItemInput,
@@ -121,68 +120,6 @@ export interface StoredFeedbackEntry {
   itemName: string;
   createdAt: string;
 }
-
-// Seed timestamps are relative so fixture dashboards stay populated over time.
-const seedMinutesAgoSchema = z.number().int().min(0).max(60 * 24 * 365);
-
-export const venueFixtureSeedSchema = z.object({
-  accounts: z.array(storedVenueAccountSchema).default([]),
-  profiles: z.array(z.object({
-    merchantId: z.string().uuid(),
-    address: z.string().nullable(),
-    venueType: venueTypeSchema.nullable(),
-  })).default([]),
-  drinks: z.array(z.object({
-    merchantId: z.string().uuid(),
-    drink: storedDrinkSchema,
-  })).default([]),
-  menuDrinks: z.array(z.object({
-    menuId: z.string().uuid(),
-    drinkId: z.string().uuid(),
-    sortOrder: z.number().int(),
-  })).default([]),
-  matchEvents: z.array(z.object({
-    id: z.string().uuid(),
-    merchantId: z.string().uuid(),
-    menuId: z.string().uuid().nullable(),
-    itemId: z.string().uuid(),
-    itemName: z.string().min(1),
-    traceId: z.string().min(1),
-    minutesAgo: seedMinutesAgoSchema,
-  })).default([]),
-  menuViews: z.array(z.object({
-    merchantId: z.string().uuid(),
-    menuId: z.string().uuid().nullable(),
-    minutesAgo: seedMinutesAgoSchema,
-  })).default([]),
-  feedback: z.array(z.object({
-    id: z.string().uuid(),
-    matchId: z.string().uuid(),
-    rating: z.number().int().min(1).max(5),
-    comment: z.string().nullable(),
-    minutesAgo: seedMinutesAgoSchema,
-  })).default([]),
-});
-export type VenueFixtureSeed = z.infer<typeof venueFixtureSeedSchema>;
-
-export const venueFixtureSchema = z.object({
-  merchants: z.array(storedVenueSchema),
-  matchingFailureMenuIds: z.array(z.string().uuid()).default([]),
-  managementTokens: z.array(z.object({
-    token: z.string().min(16),
-    merchantId: z.string().uuid(),
-  })).default([]),
-  venues: venueFixtureSeedSchema.default({
-    accounts: [],
-    profiles: [],
-    drinks: [],
-    menuDrinks: [],
-    matchEvents: [],
-    menuViews: [],
-    feedback: [],
-  }),
-});
-export type VenueFixture = z.infer<typeof venueFixtureSchema>;
 
 export type VenueMenuLookup =
   | { kind: "ok"; venue: StoredVenue; menu: StoredMenu }

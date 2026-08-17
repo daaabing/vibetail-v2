@@ -4,15 +4,18 @@ import { readinessResponse } from "./health.js";
 
 const localEnv = {
   APP_URL: "http://127.0.0.1:3000",
-  VENUE_REPOSITORY: "fixture",
+  SUPABASE_URL: "http://127.0.0.1:54321",
+  SUPABASE_PUBLISHABLE_KEY: "publishable-key",
   MODEL_PROVIDER: "deterministic",
   SANDBOX_PROVIDER: "local",
 };
 
 describe("web environment", () => {
-  it("accepts credential-free deterministic local mode", () => {
+  it("accepts the local Supabase development configuration", () => {
     const parsed = parseWebEnv(localEnv);
-    expect(parsed.serverEnv.VENUE_REPOSITORY).toBe("fixture");
+    expect(parsed.serverEnv.SUPABASE_URL).toBe("http://127.0.0.1:54321");
+    expect(parsed.serverEnv.SUPABASE_PUBLISHABLE_KEY).toBe("publishable-key");
+    expect(parsed.serverEnv.SUPABASE_SERVICE_ROLE_KEY).toBeUndefined();
     expect(parsed.serverEnv.MODEL_PROVIDER).toBe("deterministic");
     expect(parsed.serverEnv.HOST).toBe("127.0.0.1");
   });
@@ -23,12 +26,22 @@ describe("web environment", () => {
       .toBe("127.0.0.1");
   });
 
+  it("always requires the Supabase connection settings, with setup guidance", () => {
+    expect(() => parseWebEnv({ ...localEnv, SUPABASE_URL: undefined })).toThrow(
+      /SUPABASE_URL is required.*pnpm db:start/,
+    );
+    expect(() => parseWebEnv({ ...localEnv, SUPABASE_URL: "" })).toThrow(
+      /SUPABASE_URL is required.*pnpm db:start/,
+    );
+    expect(() => parseWebEnv({ ...localEnv, SUPABASE_PUBLISHABLE_KEY: undefined })).toThrow(
+      /SUPABASE_PUBLISHABLE_KEY is required.*pnpm db:start/,
+    );
+    expect(() => parseWebEnv({ ...localEnv, SUPABASE_URL: "not-a-url" })).toThrow();
+  });
+
   it("fails clearly when a selected provider lacks credentials", () => {
     expect(() => parseWebEnv({ ...localEnv, SANDBOX_PROVIDER: "fc" })).toThrow(
       /FC_SANDBOX_ENDPOINT/,
-    );
-    expect(() => parseWebEnv({ ...localEnv, VENUE_REPOSITORY: "supabase" })).toThrow(
-      /SUPABASE_URL/,
     );
     expect(() => parseWebEnv({ ...localEnv, MODEL_PROVIDER: "openrouter" })).toThrow(
       /OPENROUTER_API_KEY/,
@@ -47,30 +60,6 @@ describe("web environment", () => {
     expect("OPENROUTER_API_KEY" in parsed.publicEnv).toBe(false);
   });
 
-  it("honors the deprecated RESTAURANT_REPOSITORY alias when VENUE_REPOSITORY is unset", () => {
-    const parsed = parseWebEnv({
-      APP_URL: localEnv.APP_URL,
-      MODEL_PROVIDER: localEnv.MODEL_PROVIDER,
-      SANDBOX_PROVIDER: localEnv.SANDBOX_PROVIDER,
-      RESTAURANT_REPOSITORY: "fixture",
-      SUPABASE_URL: "https://example.supabase.co",
-      SUPABASE_PUBLISHABLE_KEY: "publishable-key",
-    });
-    expect(parsed.serverEnv.VENUE_REPOSITORY).toBe("fixture");
-  });
-
-  it("selects Supabase automatically when the existing public credentials are present", () => {
-    const parsed = parseWebEnv({
-      APP_URL: localEnv.APP_URL,
-      MODEL_PROVIDER: localEnv.MODEL_PROVIDER,
-      SANDBOX_PROVIDER: localEnv.SANDBOX_PROVIDER,
-      SUPABASE_URL: "https://example.supabase.co",
-      SUPABASE_PUBLISHABLE_KEY: "publishable-key",
-    });
-    expect(parsed.serverEnv.VENUE_REPOSITORY).toBe("supabase");
-    expect(parsed.serverEnv.SUPABASE_SERVICE_ROLE_KEY).toBeUndefined();
-  });
-
   it("does not expose server secrets through public config", () => {
     const parsed = parseWebEnv({
       ...localEnv,
@@ -84,7 +73,7 @@ describe("web environment", () => {
 
 describe("readiness response", () => {
   it("returns 503 when any required dependency is unavailable", () => {
-    const response = readinessResponse([{ name: "fixture", ready: true }, { name: "worker", ready: false }]);
+    const response = readinessResponse([{ name: "database", ready: true }, { name: "worker", ready: false }]);
     expect(response.status).toBe(503);
   });
 });

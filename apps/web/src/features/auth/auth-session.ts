@@ -7,7 +7,7 @@ let clientPromise: Promise<SupabaseClient> | null = null;
 
 /**
  * Auth settings come from the server at runtime so one client build works in
- * fixture, staging, and production. A failed load is not cached: falling back
+ * local, staging, and production. A failed load is not cached: falling back
  * to the passwordless path on a transient network blip would be misleading.
  */
 export function loadAuthConfig(): Promise<AuthConfig> {

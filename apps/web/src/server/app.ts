@@ -33,7 +33,6 @@ import {
   type DefaultVenueService,
   type ManagementService,
   type VenueManagementService,
-  type FixtureVenueMediaStorage,
 } from "@vibetail/venue-core";
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
 import { ZodError } from "zod";
@@ -43,10 +42,8 @@ export interface WebAppOptions {
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
   authConfig: AuthConfig;
-  dataSource: "fixture" | "supabase";
   checkReadiness?: () => Promise<Array<{ name: string; ready: boolean; detail: string }>>;
   testFrontend?: boolean;
-  fixtureVenueMediaStorage?: FixtureVenueMediaStorage;
 }
 
 export function createWebApp(options: WebAppOptions): Express {
@@ -63,7 +60,7 @@ export function createWebApp(options: WebAppOptions): Express {
     asyncRoute(async (_request, response) => {
       const checks = options.checkReadiness
         ? await options.checkReadiness()
-        : [{ name: "venue_repository", ready: true, detail: options.dataSource }];
+        : [{ name: "venue_repository", ready: true, detail: "supabase" }];
       const ready = checks.every((check) => check.ready);
       response.status(ready ? 200 : 503).json({
         status: ready ? "ready" : "not_ready",
@@ -366,20 +363,6 @@ export function createWebApp(options: WebAppOptions): Express {
       ));
     }),
   );
-
-  if (options.fixtureVenueMediaStorage) {
-    app.get("/v1/fixture-venue-media/*", (request, response) => {
-      const storagePath = (request.params as Record<string, string>)["0"] ?? "";
-      const object = options.fixtureVenueMediaStorage?.getObject(storagePath);
-      if (!object) {
-        response.status(404).end();
-        return;
-      }
-      response.setHeader("content-type", object.contentType);
-      response.setHeader("cache-control", "private, max-age=3600");
-      response.send(Buffer.from(object.bytes));
-    });
-  }
 
   app.post(
     "/v1/venue/menus",

@@ -110,7 +110,7 @@ export function VenueLoginPage() {
               <small>
                 Local sign-in is passwordless: anyone who knows the account name can open it.
                 A returning name reopens its venue; a new name starts a fresh account.
-                Try the fixture demo with “Demo Bar”.
+                Try the demo with “Demo Bar”.
               </small>
             </>
           )}

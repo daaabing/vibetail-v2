@@ -1,4 +1,3 @@
-export * from "./repositories/fixture.js";
 export * from "./repositories/supabase.js";
 export * from "./repositories/supabase-management.js";
 export * from "./repositories/supabase-venue-management.js";

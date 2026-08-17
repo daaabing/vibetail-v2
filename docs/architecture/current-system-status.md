@@ -1,6 +1,6 @@
 # 当前系统状态
 
-最后核对：2026-08-12（Railway staging 完成 OpenRouter 真实调用验收后）
+最后核对：2026-08-16（移除 fixture 模式、统一为单一 Supabase 数据路径后）
 
 本文记录仓库中**已经真实实现的能力**、**当前本地运行模式**以及**尚未接入的后端能力**。它用于避免把“已有 contract 或 adapter”误认为“已经连接生产服务”。如实现或部署状态改变，应同步更新本文。
 
@@ -8,17 +8,17 @@
 
 当前系统不是静态前端。它有真实的 Node/Express 后端、HTTP API、服务层、repository boundary、服务端匹配校验和最小管理写入流程。
 
-但当前默认运行链路是：
+当前运行链路是：
 
 ```text
 React browser
   → Express HTTP API
   → VenueService / ManagementService
-  → 内存 FixtureVenueRepository
-  → DeterministicMatchingProvider
+  → SupabaseVenueRepository（本地开发/测试连本地 Supabase 栈，staging 连共享项目）
+  → DeterministicMatchingProvider（本地默认；staging 为 OpenRouter）
 ```
 
-因此，当前可以称为“已上线的真实 API 后端 + 已验证的旧 Supabase public read + 已连接 OpenRouter 的 staging AI matching”。Railway staging 当前选择 `openrouter`，并已完成 Global Match 与 venue-specific match 的真实模型调用验收；它仍不能称为“完整 Supabase management 或生产后端”。fixture 数据和 fixture 管理修改只存在于当前服务进程内，重启服务后会恢复。
+数据层只有这一条 Supabase 路径：内存 fixture 模式已移除，`fixtures/venue/menus.json` 现在是 `scripts/generate-seed.mjs` 的 seed 数据源，由 `supabase db reset` 连同迁移一起写入数据库。因此，当前可以称为“已上线的真实 API 后端 + 已验证的旧 Supabase public read + 已连接 OpenRouter 的 staging AI matching”。Railway staging 当前选择 `openrouter`，并已完成 Global Match 与 venue-specific match 的真实模型调用验收；它仍不能称为“完整共享项目 management 或生产后端”。本地数据持久化在本地栈中，`pnpm db:reset`（以及每次 `pnpm test`）会从 seed 重置。
 
 ## 已经完成的产品链路
 
@@ -95,14 +95,16 @@ Bar Management /manage/:privateToken
 - 稳定消费者入口 `/m/:venueSlug` 始终解析当前 published menu，QR code（服务端 `qrcode` SVG）编码该 URL；
 - 事件闭环：menu view beacon、match event（best-effort，绝不影响匹配成功）、1–5 星 feedback（matchId 为能力凭证，`UNIQUE(match_id)` 幂等）；
 - dashboard 聚合（today/7d/30d）：usage、matches、feedback 均值、top drinks、recent comments；
-- Supabase 侧：`infra/supabase/migrations/0001_venue_mvp.sql` 仅供人工审核执行；无 service-role key 时管理端 503 fail closed，公共事件降级为 no-op；
+- Supabase 侧：`infra/supabase/migrations/0001_venue_mvp_enum.sql` + `0002_venue_mvp.sql` 对共享项目仅供人工审核执行（本地栈由 `supabase db reset` 自动重放）；无 service-role key 时管理端 503 fail closed，公共事件降级为 no-op；
 - 旧 `/manage/:token` 私链流保持原样，作为过渡期兼容层。
 
-### Fixture 与验证
+### Seed 数据与验证
 
+- seed 源为 `fixtures/venue/menus.json`，经 `scripts/generate-seed.mjs` 确定性生成 `infra/supabase/seed.sql`；
 - 三个 active demo venues（含 drink-backed 的 `vibetail-taproom` 与 `Demo Bar` 账号、种子 match/feedback 事件）；
 - published/draft、active/sold-out/hidden 等覆盖；
-- local-only fixture management tokens；
+- 公开的 legacy management 测试 token（seed 只存 SHA-256 哈希）；
+- 全部测试直连本地 Supabase 栈，`pnpm test` 自动 regenerate seed 并 `db reset`；
 - lint、strict typecheck、unit/integration tests、production build；
 - client bundle secret scan 和 Lovable dependency/runtime scan。
 
@@ -111,21 +113,22 @@ Bar Management /manage/:privateToken
 仓库默认配置为：
 
 ```text
-VENUE_REPOSITORY=fixture
 MODEL_PROVIDER=deterministic
 SANDBOX_PROVIDER=local
 ```
 
-当前工作区已在 gitignored `.env` 中配置旧 Supabase 的 URL 和 publishable key。Railway 项目 `vibetail-staging` / 环境 `staging` 已部署到 `https://vibetailweb-production.up.railway.app`，真实浏览器和公网 smoke 已验证 Landing、Global Match、venue directory、Double Chicken Please deep link、venue-specific match、`/health` 和 `/ready`。没有配置 service-role key，因此真实 management API 安全返回 `503`，未执行数据库写入。Railway 已配置 server-only OpenRouter key、`MODEL_PROVIDER=openrouter` 和 `MODEL_NAME=openai/gpt-5-mini`；真实 Global Match 返回约 4.2 秒，页面端 venue-specific match 也成功显示非模板 AI 文案。PostHog、FC 和 E2B 仍未连接。
+数据层没有开关：venue 数据始终走 Supabase。本地开发需先 `pnpm db:start`，再把 `pnpm db:status` 输出的 `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SERVICE_ROLE_KEY` 填入 `.env`；测试不读 `.env`，由 vitest globalSetup 自动注入本地栈凭证。
 
-本地 fixture management token 是公开测试字符串，不是生产凭证。fixture repository 在服务端内存中可变，用于验证管理修改会影响匹配；重启 dev server 会恢复 `fixtures/venue/menus.json`。
+本地工作区的 gitignored `.env` 指向本地 Supabase 栈（此前也曾用旧共享项目的 publishable key 做只读验证）。Railway 项目 `vibetail-staging` / 环境 `staging` 已部署到 `https://vibetailweb-production.up.railway.app`，真实浏览器和公网 smoke 已验证 Landing、Global Match、venue directory、Double Chicken Please deep link、venue-specific match、`/health` 和 `/ready`。没有配置 service-role key，因此真实 management API 安全返回 `503`，未执行数据库写入。Railway 已配置 server-only OpenRouter key、`MODEL_PROVIDER=openrouter` 和 `MODEL_NAME=openai/gpt-5-mini`；真实 Global Match 返回约 4.2 秒，页面端 venue-specific match 也成功显示非模板 AI 文案。PostHog、FC 和 E2B 仍未连接。
+
+本地 legacy management token 是公开测试字符串，不是生产凭证。本地数据持久化在本地 Supabase 栈中，管理修改会立即影响匹配并在重启 dev server 后保留；`pnpm db:reset` 会从 `fixtures/venue/menus.json` 重新生成 seed 并重置数据库。
 
 ## 已有边界，但尚未真正接入
 
 | 能力 | 仓库中已有 | 当前没有完成 |
 | --- | --- | --- |
 | Supabase public read | `SupabaseVenueRepository`、generated database types | 已在 Railway staging 验证 2 个 published menus 和完整 public matching 流程；生产切换未执行 |
-| Supabase management write | server-only `SupabaseManagementRepository` | 未对 staging/production 执行写入，未验证真实 token/schema/RLS 兼容性 |
+| Supabase management write | server-only `SupabaseManagementRepository`（本地栈上已被完整测试套件覆盖） | 未对共享 staging/production 执行写入，未验证共享项目真实 token/schema/RLS 兼容性 |
 | PostHog | `POSTHOG_KEY`、`POSTHOG_HOST` env schema | 没有 SDK、初始化、事件 taxonomy 或任何 `capture` 调用 |
 | Remote AI | OpenRouter Chat Completions + Structured Outputs、direct OpenAI Responses adapter、mock contract tests、web composition switch | Railway staging 已使用 `openai/gpt-5-mini` 完成真实 Global/venue match 验收；仍缺 usage/cost telemetry、rate limit、spend guardrails，Vertex/direct Gemini/Alibaba 尚未实现 |
 | Agent worker | workspace、contracts、env validation、provider-neutral boundaries | 没有 Agent state machine、durable run store、queue、checkpoint、approval execution 或实际 worker loop |
@@ -144,8 +147,7 @@ SANDBOX_PROVIDER=local
 - 审核后的 additive migration；
 - Supabase Auth；
 - merchant membership 和 RBAC；
-- 多成员、角色、邀请和完整权限；
-- durable persistence；当前 fixture 修改重启即丢失。
+- 多成员、角色、邀请和完整权限。
 
 ### AI 与 matching provider
 

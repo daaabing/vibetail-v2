@@ -3,7 +3,7 @@ import { z } from "zod";
 /**
  * Runtime auth configuration served to the browser at `GET /v1/config`.
  * Only publishable values appear here; the service-role key never leaves the server.
- * `none` keeps the passwordless account-name login used by local fixture runs.
+ * `none` keeps the passwordless account-name login used by local development runs.
  */
 export const authConfigSchema = z.object({
   provider: z.enum(["none", "supabase"]),

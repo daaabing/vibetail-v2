@@ -9,10 +9,7 @@ import { createWebDependencies } from "./dependencies.js";
 const webRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const { serverEnv } = parseWebEnv(process.env);
 const dependencies = createWebDependencies(serverEnv);
-const app = createWebApp({
-  ...dependencies,
-  dataSource: serverEnv.VENUE_REPOSITORY,
-});
+const app = createWebApp(dependencies);
 
 if (serverEnv.NODE_ENV === "production") {
   const clientRoot = resolve(webRoot, "dist/client");
@@ -40,7 +37,6 @@ const server = app.listen(serverEnv.PORT, serverEnv.HOST, () => {
       event: "server_started",
       host: serverEnv.HOST,
       port: serverEnv.PORT,
-      venue_data_source: serverEnv.VENUE_REPOSITORY,
       model_provider: serverEnv.MODEL_PROVIDER,
     }),
   );
