@@ -11,7 +11,6 @@ interface VenueExperienceProps {
 }
 
 export function VenueExperience({ client, initialPreferences, initialResult, menu }: VenueExperienceProps) {
-  const locale = "en" as const;
   useSeo(`${menu.venue.name} · ${menu.name} — Vibetail`, menu.shortIntro ?? menu.venue.shortIntro ?? "Match your mood to this live menu.");
 
   const noVisibleItems = menu.items.length === 0;
@@ -27,7 +26,6 @@ export function VenueExperience({ client, initialPreferences, initialResult, men
       }}
       {...(initialPreferences ? { initialPreferences } : {})}
       {...(initialResult ? { initialResult } : {})}
-      locale={locale}
       match={(preferences) => client.matchItem(menu.venue.slug, menu.slug, preferences)}
       menuItems={menu.items}
     />

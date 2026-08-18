@@ -19,7 +19,6 @@ function request(): VenueModelRequest {
       excludedAllergens: [],
       excludedIngredients: [],
       freeText: undefined,
-      locale: "en",
     },
     allowedItems: [{
       id: selectedId,
@@ -29,8 +28,11 @@ function request(): VenueModelRequest {
       flavorTags: ["bright", "herbal"],
       moodTags: ["playful"],
       alcoholic: true,
+      baseSpirit: "gin",
+      section: "Highballs",
+      allergens: [],
+      recommendationPriority: 0,
     }],
-    locale: "en",
     traceId: "trace-openrouter-test",
     timeoutMs: 8_000,
   };
@@ -51,7 +53,11 @@ describe("OpenRouterModelProvider", () => {
                 message: {
                   parsed: {
                     matchedItemId: selectedId,
+                    vibeName: "Paper Lantern Hour",
+                    tastesLike: "Lemon and basil over a long, cold pour.",
+                    flavorProfile: "bright, herbal, crisp",
                     whyThisMatch: "Neon Garden turns bright citrus and basil into a crisp, playful lift for your celebratory mood.",
+                    roast: "Celebrating on a Tuesday, are we.",
                   },
                 },
               }],
@@ -75,8 +81,8 @@ describe("OpenRouterModelProvider", () => {
     });
     expect(capturedRequest).toMatchObject({
       model: "openai/gpt-5-mini",
-      max_completion_tokens: 800,
-      reasoning: { effort: "minimal", exclude: true },
+      max_completion_tokens: 1_200,
+      reasoning: { effort: "low", exclude: true },
       provider: { require_parameters: true, data_collection: "deny" },
       response_format: { type: "json_schema" },
     });
@@ -146,7 +152,6 @@ describe("OpenRouterModelProvider", () => {
       name: "Smoked Pear Old Fashioned",
       description: "Slow-smoked pear syrup folded into rye.",
       ingredients: ["rye whiskey", "pear syrup"],
-      locale: "en",
       traceId: "trace-drink-info-test",
       timeoutMs: 8_000,
     });
@@ -179,7 +184,6 @@ describe("OpenRouterModelProvider", () => {
       name: "Mystery",
       description: null,
       ingredients: [],
-      locale: "en",
       traceId: "trace-drink-info-bad",
       timeoutMs: 8_000,
     })).rejects.toThrow();

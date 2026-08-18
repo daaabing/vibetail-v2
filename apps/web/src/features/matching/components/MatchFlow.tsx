@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import type { Locale, VenueError, VenueMatchResult, VenueMenuItem, VenuePreferences } from "@vibetail/contracts";
+import type { VenueError, VenueMatchResult, VenueMenuItem, VenuePreferences } from "@vibetail/contracts";
 import { VenueClientError } from "../../../clients/http-venue-client.js";
 import { FeedbackForm } from "./FeedbackForm.js";
 import { PreferenceForm } from "./PreferenceForm.js";
@@ -13,14 +13,13 @@ interface MatchFlowProps {
   headerAction?: ReactNode;
   initialPreferences?: VenuePreferences;
   initialResult?: VenueMatchResult;
-  locale: Locale;
   match(preferences: VenuePreferences): Promise<VenueMatchResult>;
   /** Venue flow: restrict the base-spirit shelf to what this menu pours. */
   menuItems?: VenueMenuItem[];
   onDestination?(preferences: VenuePreferences, result: VenueMatchResult): void;
 }
 
-export function MatchFlow({ context, destination, headerAction, initialPreferences, initialResult, locale, match, menuItems, onDestination }: MatchFlowProps) {
+export function MatchFlow({ context, destination, headerAction, initialPreferences, initialResult, match, menuItems, onDestination }: MatchFlowProps) {
   const [preferences, setPreferences] = useState<VenuePreferences | undefined>(initialPreferences);
   const [result, setResult] = useState<VenueMatchResult | undefined>(initialResult);
   const [busy, setBusy] = useState(false);
@@ -31,7 +30,7 @@ export function MatchFlow({ context, destination, headerAction, initialPreferenc
     setBusy(true);
     setError(undefined);
     setResult(undefined);
-    try { setResult(await match({ ...nextPreferences, locale })); }
+    try { setResult(await match(nextPreferences)); }
     catch (caught) { setError(toClientError(caught)); }
     finally { setBusy(false); }
   }
@@ -44,11 +43,10 @@ export function MatchFlow({ context, destination, headerAction, initialPreferenc
       <p>{context.description}</p>
     </header>}
     <MixingOverlay open={busy} lines={loadingLines("en", Boolean(menuItems))} />
-    {building && <PreferenceForm busy={busy} {...(preferences ? { initial: preferences } : {})} locale={locale} {...(menuItems ? { menuItems } : {})} onSubmit={(value) => void submit(value)} />}
-    {!busy && error && <MatchError error={error} locale={locale} onRetry={() => preferences && void submit(preferences)} onEdit={() => setError(undefined)} />}
+    {building && <PreferenceForm busy={busy} {...(preferences ? { initial: preferences } : {})} {...(menuItems ? { menuItems } : {})} onSubmit={(value) => void submit(value)} />}
+    {!busy && error && <MatchError error={error} onRetry={() => preferences && void submit(preferences)} onEdit={() => setError(undefined)} />}
     {!busy && result && <RecommendationCard
       {...(destination ? { destination: destination(result) } : {})}
-      locale={locale}
       result={result}
       onAgain={() => preferences && void submit(preferences)}
       onDestination={() => preferences && onDestination?.(preferences, result)}
@@ -74,10 +72,11 @@ function guestForSerial(serial: string) {
 }
 
 /** The result — an editorial poster: masthead, uppercase title stack, the
- *  drink with a house guest drawn onto it, and a colophon. */
-function RecommendationCard({ destination, locale, result, onAgain, onDestination, onEdit }: {
+ *  drink with a house guest drawn onto it, and a colophon. The headline is
+ *  the model's vibeName — the guest's night, not the menu's label — and the
+ *  orderable item name sits right under it as the order line. */
+function RecommendationCard({ destination, result, onAgain, onDestination, onEdit }: {
   destination?: { label: string; url: string };
-  locale: Locale;
   result: VenueMatchResult;
   onAgain(): void;
   onDestination(): void;
@@ -93,8 +92,8 @@ function RecommendationCard({ destination, locale, result, onAgain, onDestinatio
       {/* Masthead */}
       <div className="relative px-9 pt-10 text-center">
         <div className="mono-sm" style={{ letterSpacing: "0.3em" }}>{result.venue.name.toUpperCase()} — {result.menu.name.toUpperCase()}</div>
-        <h1 className="display mx-auto mt-6 max-w-[22ch] text-[clamp(30px,5vw,42px)] leading-[1.06]" style={{ textTransform: "uppercase", letterSpacing: "0.03em" }}>{result.item.name}</h1>
-        {result.item.price && <p className="mono-sm mt-3">{result.item.price}</p>}
+        <h1 className="display mx-auto mt-6 max-w-[22ch] text-[clamp(30px,5vw,42px)] leading-[1.06]" style={{ textTransform: "uppercase", letterSpacing: "0.03em" }}>{result.vibeName}</h1>
+        <p className="mono-sm mt-3" data-testid="order-line">ORDER: {result.item.name}{result.item.price ? ` · ${result.item.price}` : ""}</p>
       </div>
 
       {/* The drink, with the house guest drawn onto it */}
@@ -112,11 +111,12 @@ function RecommendationCard({ destination, locale, result, onAgain, onDestinatio
         <span className="mx-auto block h-px w-12" aria-hidden style={{ background: "var(--line-strong)" }} />
         <p className="accent-italic mx-auto mt-6 max-w-[34ch] text-center text-[21px] leading-snug" style={{ color: "var(--ink-soft)" }}>{result.whyThisMatch}</p>
         <div className="mt-6 grid grid-cols-[1.4fr_0.9fr] items-start gap-8">
-          <p className="note text-left text-[13.5px] leading-relaxed" style={{ maxWidth: "36ch" }}>{result.item.description ?? ""}</p>
+          <p className="note text-left text-[13.5px] leading-relaxed" style={{ maxWidth: "36ch" }}>{result.tastesLike}</p>
           <div className="flex flex-col items-end gap-1.5">
             {tags.map((f) => <span key={f} className="scrawl-sm" style={{ letterSpacing: "0.24em", textAlign: "right" }}>{f}</span>)}
           </div>
         </div>
+        <p className="note mt-5 text-center text-[13px] italic" style={{ color: "var(--ink-mute)" }} data-testid="roast">{result.roast}</p>
         <div className="mt-8 flex items-end justify-between">
           <span className="specimen-no">No. {serial}</span>
           <span className="signature text-[25px]" style={{ color: "var(--ink-mute)" }}>Vibetail</span>
@@ -126,17 +126,18 @@ function RecommendationCard({ destination, locale, result, onAgain, onDestinatio
 
     <div className="vt-actions poster-actions">
       {destination && <a className="btn btn-solid" href={destination.url} onClick={onDestination}>{destination.label}</a>}
-      <button className={destination ? "btn btn-outline" : "btn btn-solid"} type="button" onClick={onAgain}>{locale === "zh" ? "用相同偏好再匹配" : "Match again"}</button>
-      <button className="mono-sm underline underline-offset-4" type="button" onClick={onEdit}>{locale === "zh" ? "修改偏好" : "Edit preferences"}</button>
+      <button className={destination ? "btn btn-outline" : "btn btn-solid"} type="button" onClick={onAgain}>Match again</button>
+      <button className="mono-sm underline underline-offset-4" type="button" onClick={onEdit}>Edit preferences</button>
     </div>
 
     {/* Dossier — what's actually in it */}
     <div className="drink-dossier">
+      <section><span className="mono-sm">Flavor</span><p>{result.flavorProfile}</p></section>
       {result.item.baseSpirit && <section><span className="mono-sm">Base</span><p>{result.item.baseSpirit}</p></section>}
       {result.item.ingredients.length > 0 && <section><span className="mono-sm">Ingredients</span><ol>{result.item.ingredients.map((ing, i) => <li key={i}><span className="specimen-no">{String(i + 1).padStart(2, "0")}</span><span>{ing}</span></li>)}</ol></section>}
     </div>
 
-    {result.matchId && <FeedbackForm key={result.matchId} matchId={result.matchId} locale={locale} />}
+    {result.matchId && <FeedbackForm key={result.matchId} matchId={result.matchId} />}
   </div>;
 }
 
@@ -149,12 +150,12 @@ function makeSerial(key: string): string {
   return h.toString(36).toUpperCase().padStart(4, "0").slice(-4);
 }
 
-function MatchError({ error, locale, onRetry, onEdit }: { error: VenueError; locale: Locale; onRetry(): void; onEdit(): void }) {
+function MatchError({ error, onRetry, onEdit }: { error: VenueError; onRetry(): void; onEdit(): void }) {
   return <section className="vt-match-state" data-testid="error-state" role="alert">
     <p className="vt-kicker">{error.code}</p>
-    <h2>{locale === "zh" ? "这次没有匹配成功" : "That match didn’t land"}</h2>
+    <h2>That match didn’t land</h2>
     <p>{error.message}</p>
-    <div className="vt-actions">{error.retryable && <button className="vt-primary" type="button" onClick={onRetry}>{locale === "zh" ? "重试" : "Try again"}</button>}<button className="vt-secondary" type="button" onClick={onEdit}>{locale === "zh" ? "修改偏好" : "Edit preferences"}</button></div>
+    <div className="vt-actions">{error.retryable && <button className="vt-primary" type="button" onClick={onRetry}>Try again</button>}<button className="vt-secondary" type="button" onClick={onEdit}>Edit preferences</button></div>
   </section>;
 }
 

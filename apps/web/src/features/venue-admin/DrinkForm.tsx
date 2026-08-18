@@ -91,7 +91,6 @@ export function DrinkForm({ drink, client, submitLabel, onSubmit }: {
         name: fields.name.trim(),
         description: fields.description.trim() || null,
         ingredients: splitTags(fields.ingredients),
-        locale: "en",
       });
       setFields((current) => ({
         ...current,

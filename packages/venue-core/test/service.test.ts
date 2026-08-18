@@ -27,7 +27,6 @@ const request: VenueMatchRequest = {
     alcoholPreference: "either",
     excludedAllergens: [],
     excludedIngredients: [],
-    locale: "en",
   },
 };
 
@@ -50,7 +49,7 @@ describe("DefaultVenueService", () => {
     const provider = fixedProvider("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1", "Bright, botanical and zero proof.");
     const result = await new DefaultVenueService(anonVenueRepository(), provider).matchGlobalItem({
       mood: "clear headed", flavors: ["fresh"], alcoholPreference: "non_alcoholic",
-      excludedAllergens: [], excludedIngredients: [], locale: "en",
+      excludedAllergens: [], excludedIngredients: [],
     });
     expect(result).toMatchObject({
       venue: { slug: "nightjar-demo" }, menu: { slug: "cocktails" },
@@ -61,7 +60,7 @@ describe("DefaultVenueService", () => {
 
   it("never sends inactive merchants, unpublished menus, sold-out or hidden items to global matching", async () => {
     const selectVenueItem = vi.fn(async (modelRequest: VenueModelRequest) => ({
-      selection: { matchedItemId: modelRequest.allowedItems[0]!.id, whyThisMatch: "Valid." },
+      selection: modelSelection(modelRequest.allowedItems[0]!.id, "Valid."),
       metadata: { provider: "spy", model: "spy", attempt: 1, durationMs: 0 },
     }));
     const service = new DefaultVenueService(anonVenueRepository(), { id: "spy", selectVenueItem });
@@ -164,7 +163,7 @@ describe("DefaultVenueService", () => {
 
   it("sends only active, preference-eligible IDs to the provider", async () => {
     const selectVenueItem = vi.fn(async (modelRequest: VenueModelRequest) => ({
-      selection: { matchedItemId: modelRequest.allowedItems[0]!.id, whyThisMatch: "Allowed." },
+      selection: modelSelection(modelRequest.allowedItems[0]!.id, "Allowed."),
       metadata: { provider: "spy", model: "spy", attempt: 1, durationMs: 0 },
     }));
     const provider: ModelProvider = { id: "spy", selectVenueItem };
@@ -281,15 +280,13 @@ describe("DefaultManagementService", () => {
 });
 
 describe("DeterministicMatchingProvider", () => {
-  it("returns deterministic and bilingual explanations", async () => {
+  it("returns deterministic explanations", async () => {
     const service = venueService();
-    const english = await service.matchVenueItem(request);
+    const first = await service.matchVenueItem(request);
     const repeated = await service.matchVenueItem(request);
-    const chinese = await service.matchVenueItem({ ...request, preferences: { ...request.preferences, locale: "zh" } });
-    expect(english.item.id).toBe(repeated.item.id);
-    expect(english.item.name).toBe("Holy Shishito");
-    expect(english.whyThisMatch).toContain("best matches");
-    expect(chinese.whyThisMatch).toContain("最贴近");
+    expect(first.item.id).toBe(repeated.item.id);
+    expect(first.item.name).toBe("Holy Shishito");
+    expect(first.whyThisMatch).toContain("best matches");
   });
 
   it("surfaces configured provider failure as retryable", async () => {
@@ -308,12 +305,23 @@ function venueService(repository = anonVenueRepository()): DefaultVenueService {
   return new DefaultVenueService(repository, new DeterministicMatchingProvider());
 }
 
+function modelSelection(matchedItemId: string, whyThisMatch: string) {
+  return {
+    matchedItemId,
+    vibeName: "Model Authored Title",
+    tastesLike: "Bright, clean, and easy to keep drinking.",
+    flavorProfile: "bright, clean, crisp",
+    whyThisMatch,
+    roast: "You knew exactly what you wanted.",
+  };
+}
+
 function fixedProvider(matchedItemId: string, whyThisMatch: string): ModelProvider {
   return {
     id: "fixed",
     async selectVenueItem() {
       return {
-        selection: { matchedItemId, whyThisMatch },
+        selection: modelSelection(matchedItemId, whyThisMatch),
         metadata: { provider: "fixed", model: "fixed", attempt: 1, durationMs: 0 },
       };
     },

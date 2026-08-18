@@ -4,7 +4,9 @@ import {
   globalMatchResultSchema,
   managedMenuSchema,
   managedMenuItemSchema,
+  matchSelectionSchemaFor,
   modelMatchSelectionSchema,
+  MAX_ALLOWLISTED_MATCH_IDS,
   updateMenuInputSchema,
   venueErrorCodeSchema,
   venueMatchResultSchema,
@@ -42,22 +44,50 @@ describe("venue contracts", () => {
 
   it("requires at least one preference signal", () => {
     expect(() => venuePreferencesSchema.parse({ flavors: [] })).toThrow();
-    expect(venuePreferencesSchema.parse({ mood: "quiet celebration" }).locale).toBe("en");
+    expect(venuePreferencesSchema.parse({ mood: "quiet celebration" }).mood).toBe("quiet celebration");
   });
 
-  it("limits model output to an item id and explanation", () => {
-    const parsed = modelMatchSelectionSchema.strict().parse({
-      matchedItemId: item.id,
-      whyThisMatch: "It matches the requested bright, celebratory mood.",
-    });
-    expect(Object.keys(parsed)).toEqual(["matchedItemId", "whyThisMatch"]);
+  const modelCopy = {
+    vibeName: "Paper Moon",
+    tastesLike: "Citrus and basil over a long, cold pour.",
+    flavorProfile: "bright, herbal, crisp",
+    whyThisMatch: "It matches the requested bright, celebratory mood.",
+    roast: "Celebrating alone again, are we.",
+  };
+
+  it("limits model output to an item id and its own copy", () => {
+    const parsed = modelMatchSelectionSchema.strict().parse({ matchedItemId: item.id, ...modelCopy });
+    expect(Object.keys(parsed)).toEqual([
+      "matchedItemId", "vibeName", "tastesLike", "flavorProfile", "whyThisMatch", "roast",
+    ]);
+  });
+
+  it("rejects model-supplied menu facts", () => {
+    expect(() => modelMatchSelectionSchema.strict().parse({
+      matchedItemId: item.id, ...modelCopy, price: "$18", ingredients: ["gin"],
+    })).toThrow();
+  });
+
+  it("pins matchedItemId to the candidate allowlist when the menu is small enough", () => {
+    const allowed = matchSelectionSchemaFor([item.id]);
+    expect(allowed.parse({ matchedItemId: item.id, ...modelCopy }).matchedItemId).toBe(item.id);
+    expect(() => allowed.parse({ matchedItemId: "10000000-0000-4000-8000-00000000000f", ...modelCopy }))
+      .toThrow();
+  });
+
+  it("falls back to a plain uuid when the candidate list exceeds the enum budget", () => {
+    const ids = Array.from({ length: MAX_ALLOWLISTED_MATCH_IDS + 1 }, (_, index) =>
+      `10000000-0000-4000-8000-${String(index).padStart(12, "0")}`);
+    const unlisted = "20000000-0000-4000-8000-000000000000";
+    expect(matchSelectionSchemaFor(ids).parse({ matchedItemId: unlisted, ...modelCopy }).matchedItemId)
+      .toBe(unlisted);
   });
 
   it("requires a canonical deep link on global results", () => {
     expect(globalMatchResultSchema.parse({
       venue: { id: item.menuId, slug: "nightjar-demo", name: "Nightjar", shortIntro: null, logoUrl: null, coverImageUrl: null },
       menu: { id: item.menuId, slug: "cocktails", name: "Cocktails" }, item,
-      whyThisMatch: "Bright.", traceId: "trace", venueSpecificUrl: "/m/nightjar-demo/cocktails",
+      ...modelCopy, traceId: "trace", venueSpecificUrl: "/m/nightjar-demo/cocktails",
     }).venueSpecificUrl).toBe("/m/nightjar-demo/cocktails");
   });
 
@@ -69,7 +99,7 @@ describe("venue contracts", () => {
     const base = {
       venue: { id: item.menuId, slug: "nightjar-demo", name: "Nightjar", shortIntro: null, logoUrl: null, coverImageUrl: null },
       menu: { id: item.menuId, slug: "cocktails", name: "Cocktails" }, item,
-      whyThisMatch: "Bright.", traceId: "trace",
+      ...modelCopy, traceId: "trace",
     };
     expect(venueMatchResultSchema.parse(base).matchId).toBeUndefined();
     expect(venueMatchResultSchema.parse({ ...base, matchId: "10000000-0000-4000-8000-000000000009" }).matchId)

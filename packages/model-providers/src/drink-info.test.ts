@@ -8,7 +8,6 @@ function request(overrides: Partial<DrinkInfoModelRequest> = {}): DrinkInfoModel
     name: "Smoked Pear Old Fashioned",
     description: "Slow-smoked pear syrup folded into rye and bitters.",
     ingredients: ["rye whiskey", "pear syrup", "angostura bitters"],
-    locale: "en",
     traceId: "trace-deterministic-drink-info",
     timeoutMs: 1_000,
     ...overrides,
@@ -54,8 +53,4 @@ describe("DeterministicMatchingProvider drink info", () => {
     expect(unknown.suggestion.strength).toBe("medium");
   });
 
-  it("writes the recommendation note in Chinese for zh locale", async () => {
-    const result = await new DeterministicMatchingProvider().suggestDrinkInfo(request({ locale: "zh" }));
-    expect(result.suggestion.recommendationNote).toMatch(/[一-鿿]/);
-  });
 });

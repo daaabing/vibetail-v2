@@ -8,6 +8,10 @@ export interface ModelMenuCandidate {
   flavorTags: readonly string[];
   moodTags: readonly string[];
   alcoholic: boolean;
+  baseSpirit: string | null;
+  section: string | null;
+  allergens: readonly string[];
+  recommendationPriority: number;
 }
 
 export interface VenueModelRequest {
@@ -15,7 +19,6 @@ export interface VenueModelRequest {
   menuId: string;
   preferences: VenuePreferences;
   allowedItems: readonly ModelMenuCandidate[];
-  locale: "en" | "zh";
   traceId: string;
   timeoutMs: number;
 }
@@ -41,7 +44,6 @@ export interface DrinkInfoModelRequest {
   name: string;
   description: string | null;
   ingredients: readonly string[];
-  locale: "en" | "zh";
   traceId: string;
   timeoutMs: number;
 }
@@ -62,6 +64,7 @@ export interface DrinkInfoProvider {
 // canonical menu facts and cannot make an unavailable item eligible.
 
 export * from "./deterministic.js";
+export * from "./venue-prompt.js";
 export * from "./openai.js";
 export * from "./openrouter.js";
 export * from "./menu-photo.js";

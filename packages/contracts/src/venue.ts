@@ -3,8 +3,6 @@ import { z } from "zod";
 const slugSchema = z.string().min(1).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const nullableUrlSchema = z.string().url().nullable();
 
-export const localeSchema = z.enum(["en", "zh"]);
-export type Locale = z.infer<typeof localeSchema>;
 
 export const venueSummarySchema = z.object({
   id: z.string().uuid(),
@@ -75,7 +73,6 @@ export const venuePreferencesSchema = z
     excludedAllergens: z.array(z.string().trim().min(1).max(100)).max(20).default([]),
     excludedIngredients: z.array(z.string().trim().min(1).max(100)).max(20).default([]),
     freeText: z.string().trim().min(1).max(500).optional(),
-    locale: localeSchema.default("en"),
   })
   .refine(
     (value) => Boolean(value.mood || value.occasion || value.freeText || value.flavors.length > 0),
@@ -95,11 +92,37 @@ export const globalMatchRequestSchema = z.object({
 });
 export type GlobalMatchRequest = z.infer<typeof globalMatchRequestSchema>;
 
+// Field order matters: the model decides WHICH item first, then writes the
+// copy for the item it already committed to.
 export const modelMatchSelectionSchema = z.object({
   matchedItemId: z.string().uuid(),
+  vibeName: z.string().trim().min(1).max(120),
+  tastesLike: z.string().trim().min(1).max(600),
+  flavorProfile: z.string().trim().min(1).max(200),
   whyThisMatch: z.string().trim().min(1).max(1_000),
+  roast: z.string().trim().min(1).max(300),
 });
 export type ModelMatchSelection = z.infer<typeof modelMatchSelectionSchema>;
+
+/**
+ * Structured-output providers cap the total string length across enum values,
+ * so we only inline the allowlist for menus small enough to fit. Larger menus
+ * fall back to a plain UUID and rely on server-side validation of the pick.
+ */
+export const MAX_ALLOWLISTED_MATCH_IDS = 100;
+
+/**
+ * Constrain matchedItemId to the exact candidate IDs at the decoding layer, so
+ * a hallucinated-but-well-formed UUID cannot reach the service at all.
+ */
+export function matchSelectionSchemaFor(allowedIds: readonly string[]) {
+  const inlineAllowlist = allowedIds.length > 0 && allowedIds.length <= MAX_ALLOWLISTED_MATCH_IDS;
+  return modelMatchSelectionSchema.extend({
+    matchedItemId: inlineAllowlist
+      ? z.enum(allowedIds as [string, ...string[]])
+      : z.string().uuid(),
+  }).strict();
+}
 
 export const venueMatchResultSchema = z.object({
   venue: venueSummarySchema,
@@ -109,7 +132,12 @@ export const venueMatchResultSchema = z.object({
     name: z.string().min(1).max(200),
   }),
   item: venueMenuItemSchema,
+  // Model-authored copy. Canonical drink facts always come from `item`.
+  vibeName: z.string().trim().min(1).max(120),
+  tastesLike: z.string().trim().min(1).max(600),
+  flavorProfile: z.string().trim().min(1).max(200),
   whyThisMatch: z.string().trim().min(1).max(1_000),
+  roast: z.string().trim().min(1).max(300),
   traceId: z.string().min(1).max(200),
   // Present when the server recorded the match for venue analytics; feedback needs it.
   matchId: z.string().uuid().optional(),

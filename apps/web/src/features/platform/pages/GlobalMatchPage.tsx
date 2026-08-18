@@ -13,7 +13,6 @@ export function GlobalMatchPage() {
     <MatchFlow
       context={{ kicker: "All bars · all live menus", title: "Match your vibe", description: "Tell us how the night should feel. We’ll return one real bar and one item it can serve now." }}
       destination={(result) => ({ label: `View at ${result.venue.name}`, url: venueUrl(result) })}
-      locale="en"
       match={(preferences) => client.matchGlobal(preferences)}
       onDestination={(preferences, result) => saveMatchHandoff(venueUrl(result), preferences, result)}
     />

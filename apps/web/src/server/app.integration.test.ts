@@ -184,7 +184,7 @@ describe("venue HTTP slice (local supabase)", () => {
   it("matches from the active allowlist end to end", async () => {
     const response = await request(app())
       .post("/v1/venues/double-chicken-please/menus/main/match")
-      .send({ preferences: { mood: "adventurous", flavors: ["spicy"], locale: "en" } })
+      .send({ preferences: { mood: "adventurous", flavors: ["spicy"] } })
       .expect(200);
     expect(response.body.item).toMatchObject({ name: "Holy Shishito", availabilityStatus: "active" });
     expect(response.body.traceId).toEqual(expect.any(String));

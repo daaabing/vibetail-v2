@@ -1,4 +1,4 @@
-import { drinkInfoSuggestionSchema, modelMatchSelectionSchema } from "@vibetail/contracts";
+import { drinkInfoSuggestionSchema, matchSelectionSchemaFor, modelMatchSelectionSchema } from "@vibetail/contracts";
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import type {
@@ -10,7 +10,7 @@ import type {
   VenueModelRequest,
 } from "./index.js";
 import { drinkInfoSystemPrompt } from "./drink-info-prompt.js";
-import { venueMatchSystemPrompt } from "./venue-prompt.js";
+import { buildVenueMatchPrompt } from "./venue-prompt.js";
 
 // Keep the gateway URL inside this adapter so domain and UI code stay vendor-neutral.
 const openRouterBaseUrl = "https://openrouter.ai/api/v1";
@@ -57,28 +57,22 @@ export class OpenRouterModelProvider implements ModelProvider, DrinkInfoProvider
   async selectVenueItem(request: VenueModelRequest): Promise<ModelProviderResult> {
     if (request.allowedItems.length === 0) throw new Error("No allowed menu items were provided");
     const startedAt = performance.now();
+    const prompt = buildVenueMatchPrompt(request);
     const response = await this.client.chat.completions.parse({
       model: this.model,
       messages: [
-        {
-          role: "system",
-          content: venueMatchSystemPrompt(request.locale),
-        },
-        {
-          role: "user",
-          content: JSON.stringify({
-            preferences: request.preferences,
-            allowedItems: request.allowedItems,
-          }),
-        },
+        { role: "system", content: prompt.system },
+        { role: "user", content: prompt.user },
       ],
-      max_completion_tokens: 800,
+      max_completion_tokens: 1_200,
+      // The scoring rules in the prompt need room to be applied; "minimal"
+      // reduced this to a first-plausible-pick scan.
       reasoning: {
-        effort: "minimal",
+        effort: "low",
         exclude: true,
       },
       response_format: zodResponseFormat(
-        modelMatchSelectionSchema.strict(),
+        matchSelectionSchemaFor(prompt.allowedIds),
         "venue_match_selection",
       ),
       provider: {
@@ -110,7 +104,7 @@ export class OpenRouterModelProvider implements ModelProvider, DrinkInfoProvider
       messages: [
         {
           role: "system",
-          content: drinkInfoSystemPrompt(request.locale),
+          content: drinkInfoSystemPrompt(),
         },
         {
           role: "user",
