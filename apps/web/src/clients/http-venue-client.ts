@@ -15,8 +15,14 @@ import {
   type VenueMatchResult,
   type VenueMenu,
   type VenuePreferences,
+  savedDrinkSchema,
+  sharedMatchSchema,
+  type SavedDrink,
+  type SharedMatch,
 } from "@vibetail/contracts";
 import { z } from "zod";
+
+const saveOutcomeSchema = z.object({ status: z.enum(["created", "duplicate"]) });
 import { getAccessToken } from "../features/auth/auth-session.js";
 
 export class VenueClientError extends Error {
@@ -56,6 +62,22 @@ export class HttpVenueClient implements VenueClient {
 
   async getCurrentMenu(merchantSlug: string): Promise<VenueMenu> {
     return this.get(`/v1/venues/${encodeURIComponent(merchantSlug)}/current-menu`, venueMenuSchema.parse);
+  }
+
+  async getSharedMatch(matchId: string): Promise<SharedMatch> {
+    return this.get(`/v1/matches/${encodeURIComponent(matchId)}`, sharedMatchSchema.parse);
+  }
+
+  async saveToVibeBar(matchId: string): Promise<{ status: "created" | "duplicate" }> {
+    return this.post("/v1/vibe-bar", { matchId }, saveOutcomeSchema.parse);
+  }
+
+  async listVibeBar(): Promise<SavedDrink[]> {
+    const token = await this.readAccessToken().catch(() => null);
+    const response = await fetch(`${this.baseUrl}/v1/vibe-bar`, {
+      headers: token ? { authorization: `Bearer ${token}` } : {},
+    });
+    return parseResponse(response, z.array(savedDrinkSchema).parse);
   }
 
   recordMenuView(event: MenuViewEvent): void {
