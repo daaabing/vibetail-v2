@@ -1,6 +1,8 @@
 import { z } from "zod";
 import {
   drinkStrengthSchema,
+  type SavedDrink,
+  type SharedMatch,
   type CreateMenuInput,
   type DrinkInput,
   type MenuItemInput,
@@ -182,6 +184,19 @@ export interface RecordMatchEventInput {
   traceId: string;
   // Null for anonymous guests; consumer sign-in is optional by design.
   accountId?: string | null;
+  // Snapshot of the model-authored copy plus display names, so a shared
+  // /r/{matchId} link keeps rendering after the menu changes.
+  snapshot: {
+    vibeName: string;
+    tastesLike: string;
+    flavorProfile: string;
+    whyThisMatch: string;
+    roast: string;
+    venueName: string;
+    venueSlug: string;
+    menuName: string | null;
+    menuSlug: string | null;
+  };
 }
 
 export type CreateFeedbackOutcome = "created" | "duplicate" | "match_not_found";
@@ -221,6 +236,9 @@ export interface VenueManagementRepository {
   publishVenueMenu(merchantId: string, menuId: string): Promise<void>;
   recordMenuView(merchantSlug: string, menuId: string | null): Promise<void>;
   recordMatchEvent(event: RecordMatchEventInput): Promise<string>;
+  getMatchSnapshot(matchId: string): Promise<SharedMatch | null>;
+  saveDrink(accountId: string, matchId: string): Promise<"created" | "duplicate" | "match_not_found">;
+  listSavedDrinks(accountId: string, limit: number): Promise<SavedDrink[]>;
   createFeedback(
     matchId: string,
     rating: number,

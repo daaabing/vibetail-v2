@@ -7,162 +7,254 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
-      cocktails: {
+      drinks: {
         Row: {
-          category: string
-          cocktail_name: string
+          alcoholic: boolean
+          allergens: string[]
+          availability_status: Database["public"]["Enums"]["menu_item_availability"]
+          base_spirit: string | null
           created_at: string
-          custom_preference: string
-          flavor_profile: string
-          id: number
-          image_data: string | null
+          description: string | null
+          flavor_tags: string[]
+          id: string
           image_url: string | null
           ingredients: string[]
-          lang: string
-          original_mood: string
-          public_id: string
-          recipe: string
-          roast: string
-          selected_flavors: string[]
-          tastes_like: string
+          merchant_id: string
+          name: string
+          price: string | null
+          recommendation_note: string | null
+          strength: string | null
           updated_at: string
-          user_id: string | null
         }
         Insert: {
-          category?: string
-          cocktail_name: string
+          alcoholic?: boolean
+          allergens?: string[]
+          availability_status?: Database["public"]["Enums"]["menu_item_availability"]
+          base_spirit?: string | null
           created_at?: string
-          custom_preference?: string
-          flavor_profile?: string
-          id?: number
-          image_data?: string | null
+          description?: string | null
+          flavor_tags?: string[]
+          id?: string
           image_url?: string | null
           ingredients?: string[]
-          lang?: string
-          original_mood?: string
-          public_id?: string
-          recipe?: string
-          roast?: string
-          selected_flavors?: string[]
-          tastes_like?: string
+          merchant_id: string
+          name: string
+          price?: string | null
+          recommendation_note?: string | null
+          strength?: string | null
           updated_at?: string
-          user_id?: string | null
         }
         Update: {
-          category?: string
-          cocktail_name?: string
+          alcoholic?: boolean
+          allergens?: string[]
+          availability_status?: Database["public"]["Enums"]["menu_item_availability"]
+          base_spirit?: string | null
           created_at?: string
-          custom_preference?: string
-          flavor_profile?: string
-          id?: number
-          image_data?: string | null
+          description?: string | null
+          flavor_tags?: string[]
+          id?: string
           image_url?: string | null
           ingredients?: string[]
-          lang?: string
-          original_mood?: string
-          public_id?: string
-          recipe?: string
-          roast?: string
-          selected_flavors?: string[]
-          tastes_like?: string
+          merchant_id?: string
+          name?: string
+          price?: string | null
+          recommendation_note?: string | null
+          strength?: string | null
           updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      game_results: {
-        Row: {
-          created_at: string
-          display_result: Json
-          game_session_id: string
-          id: string
-          match_profile: Json
-        }
-        Insert: {
-          created_at?: string
-          display_result?: Json
-          game_session_id: string
-          id?: string
-          match_profile?: Json
-        }
-        Update: {
-          created_at?: string
-          display_result?: Json
-          game_session_id?: string
-          id?: string
-          match_profile?: Json
         }
         Relationships: [
           {
-            foreignKeyName: "game_results_game_session_id_fkey"
-            columns: ["game_session_id"]
+            foreignKeyName: "drinks_merchant_id_fkey"
+            columns: ["merchant_id"]
             isOneToOne: false
-            referencedRelation: "game_sessions"
+            referencedRelation: "merchants"
             referencedColumns: ["id"]
           },
         ]
       }
-      game_sessions: {
+      match_events: {
         Row: {
-          anonymous_session_id: string
+          account_id: string | null
           created_at: string
-          game_id: string
-          game_version: string
+          flavor_profile: string | null
           id: string
-          is_preview: boolean
+          item_id: string
+          item_name: string
           menu_id: string | null
-          menu_version_id: string | null
-          merchant_id: string | null
+          menu_name: string | null
+          menu_slug: string | null
+          merchant_id: string
+          roast: string | null
+          tastes_like: string | null
+          trace_id: string
+          venue_name: string | null
+          venue_slug: string | null
+          vibe_name: string | null
+          why_this_match: string | null
         }
         Insert: {
-          anonymous_session_id: string
+          account_id?: string | null
           created_at?: string
-          game_id: string
-          game_version: string
+          flavor_profile?: string | null
           id?: string
-          is_preview?: boolean
+          item_id: string
+          item_name: string
           menu_id?: string | null
-          menu_version_id?: string | null
-          merchant_id?: string | null
+          menu_name?: string | null
+          menu_slug?: string | null
+          merchant_id: string
+          roast?: string | null
+          tastes_like?: string | null
+          trace_id: string
+          venue_name?: string | null
+          venue_slug?: string | null
+          vibe_name?: string | null
+          why_this_match?: string | null
         }
         Update: {
-          anonymous_session_id?: string
+          account_id?: string | null
           created_at?: string
-          game_id?: string
-          game_version?: string
+          flavor_profile?: string | null
           id?: string
-          is_preview?: boolean
+          item_id?: string
+          item_name?: string
           menu_id?: string | null
-          menu_version_id?: string | null
-          merchant_id?: string | null
+          menu_name?: string | null
+          menu_slug?: string | null
+          merchant_id?: string
+          roast?: string | null
+          tastes_like?: string | null
+          trace_id?: string
+          venue_name?: string | null
+          venue_slug?: string | null
+          vibe_name?: string | null
+          why_this_match?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "game_sessions_menu_id_fkey"
-            columns: ["menu_id"]
+            foreignKeyName: "match_events_account_id_fkey"
+            columns: ["account_id"]
             isOneToOne: false
-            referencedRelation: "menus"
+            referencedRelation: "venue_accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "game_sessions_menu_version_id_fkey"
-            columns: ["menu_version_id"]
-            isOneToOne: false
-            referencedRelation: "menu_versions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "game_sessions_merchant_id_fkey"
+            foreignKeyName: "match_events_merchant_id_fkey"
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_feedback: {
+        Row: {
+          account_id: string | null
+          comment: string | null
+          created_at: string
+          id: string
+          match_id: string
+          merchant_id: string
+          rating: number
+        }
+        Insert: {
+          account_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          match_id: string
+          merchant_id: string
+          rating: number
+        }
+        Update: {
+          account_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          match_id?: string
+          merchant_id?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_feedback_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "venue_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_feedback_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: true
+            referencedRelation: "match_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_feedback_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_drinks: {
+        Row: {
+          drink_id: string
+          menu_id: string
+          sort_order: number
+        }
+        Insert: {
+          drink_id: string
+          menu_id: string
+          sort_order?: number
+        }
+        Update: {
+          drink_id?: string
+          menu_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_drinks_drink_id_fkey"
+            columns: ["drink_id"]
+            isOneToOne: false
+            referencedRelation: "drinks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_drinks_menu_id_fkey"
+            columns: ["menu_id"]
+            isOneToOne: false
+            referencedRelation: "menus"
             referencedColumns: ["id"]
           },
         ]
@@ -276,6 +368,35 @@ export type Database = {
           },
         ]
       }
+      menu_views: {
+        Row: {
+          created_at: string
+          id: number
+          menu_id: string | null
+          merchant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          menu_id?: string | null
+          merchant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          menu_id?: string | null
+          merchant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_views_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menus: {
         Row: {
           cover_image_url: string | null
@@ -297,8 +418,8 @@ export type Database = {
         Insert: {
           cover_image_url?: string | null
           created_at?: string
-          enabled_game_ids?: string[]
-          game_display_order?: string[]
+          enabled_game_ids: string[]
+          game_display_order: string[]
           id?: string
           menu_file_type?: string | null
           menu_file_url?: string | null
@@ -422,213 +543,38 @@ export type Database = {
         }
         Relationships: []
       }
-      drinks: {
+      saved_drinks: {
         Row: {
-          alcoholic: boolean
-          allergens: string[]
-          availability_status: Database["public"]["Enums"]["menu_item_availability"]
-          base_spirit: string | null
-          created_at: string
-          description: string | null
-          flavor_tags: string[]
-          id: string
-          image_url: string | null
-          ingredients: string[]
-          merchant_id: string
-          name: string
-          price: string | null
-          recommendation_note: string | null
-          strength: string | null
-          updated_at: string
-        }
-        Insert: {
-          alcoholic?: boolean
-          allergens?: string[]
-          availability_status?: Database["public"]["Enums"]["menu_item_availability"]
-          base_spirit?: string | null
-          created_at?: string
-          description?: string | null
-          flavor_tags?: string[]
-          id?: string
-          image_url?: string | null
-          ingredients?: string[]
-          merchant_id: string
-          name: string
-          price?: string | null
-          recommendation_note?: string | null
-          strength?: string | null
-          updated_at?: string
-        }
-        Update: {
-          alcoholic?: boolean
-          allergens?: string[]
-          availability_status?: Database["public"]["Enums"]["menu_item_availability"]
-          base_spirit?: string | null
-          created_at?: string
-          description?: string | null
-          flavor_tags?: string[]
-          id?: string
-          image_url?: string | null
-          ingredients?: string[]
-          merchant_id?: string
-          name?: string
-          price?: string | null
-          recommendation_note?: string | null
-          strength?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "drinks_merchant_id_fkey"
-            columns: ["merchant_id"]
-            isOneToOne: false
-            referencedRelation: "merchants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      menu_drinks: {
-        Row: {
-          drink_id: string
-          menu_id: string
-          sort_order: number
-        }
-        Insert: {
-          drink_id: string
-          menu_id: string
-          sort_order?: number
-        }
-        Update: {
-          drink_id?: string
-          menu_id?: string
-          sort_order?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "menu_drinks_menu_id_fkey"
-            columns: ["menu_id"]
-            isOneToOne: false
-            referencedRelation: "menus"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "menu_drinks_drink_id_fkey"
-            columns: ["drink_id"]
-            isOneToOne: false
-            referencedRelation: "drinks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      menu_views: {
-        Row: {
-          created_at: string
-          id: number
-          menu_id: string | null
-          merchant_id: string
-        }
-        Insert: {
-          created_at?: string
-          menu_id?: string | null
-          merchant_id: string
-        }
-        Update: {
-          created_at?: string
-          menu_id?: string | null
-          merchant_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "menu_views_merchant_id_fkey"
-            columns: ["merchant_id"]
-            isOneToOne: false
-            referencedRelation: "merchants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      match_events: {
-        Row: {
-          account_id: string | null
-          created_at: string
-          id: string
-          item_id: string
-          item_name: string
-          menu_id: string | null
-          merchant_id: string
-          trace_id: string
-        }
-        Insert: {
-          account_id?: string | null
-          created_at?: string
-          id?: string
-          item_id: string
-          item_name: string
-          menu_id?: string | null
-          merchant_id: string
-          trace_id: string
-        }
-        Update: {
-          account_id?: string | null
-          created_at?: string
-          id?: string
-          item_id?: string
-          item_name?: string
-          menu_id?: string | null
-          merchant_id?: string
-          trace_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "match_events_merchant_id_fkey"
-            columns: ["merchant_id"]
-            isOneToOne: false
-            referencedRelation: "merchants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      match_feedback: {
-        Row: {
-          account_id: string | null
-          comment: string | null
+          account_id: string
           created_at: string
           id: string
           match_id: string
-          merchant_id: string
-          rating: number
         }
         Insert: {
-          account_id?: string | null
-          comment?: string | null
+          account_id: string
           created_at?: string
           id?: string
           match_id: string
-          merchant_id: string
-          rating: number
         }
         Update: {
-          account_id?: string | null
-          comment?: string | null
+          account_id?: string
           created_at?: string
           id?: string
           match_id?: string
-          merchant_id?: string
-          rating?: number
         }
         Relationships: [
           {
-            foreignKeyName: "match_feedback_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: true
-            referencedRelation: "match_events"
+            foreignKeyName: "saved_drinks_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "venue_accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "match_feedback_merchant_id_fkey"
-            columns: ["merchant_id"]
+            foreignKeyName: "saved_drinks_match_id_fkey"
+            columns: ["match_id"]
             isOneToOne: false
-            referencedRelation: "merchants"
+            referencedRelation: "match_events"
             referencedColumns: ["id"]
           },
         ]
@@ -703,125 +649,12 @@ export type Database = {
           },
         ]
       }
-      newsletter_subscribers: {
-        Row: {
-          created_at: string
-          email: string
-          id: number
-          source: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: number
-          source?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: number
-          source?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          display_name: string | null
-          id: string
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          display_name?: string | null
-          id: string
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          display_name?: string | null
-          id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      recommendations: {
-        Row: {
-          created_at: string
-          game_result_id: string
-          id: string
-          matched_menu_item_id: string | null
-          menu_id: string
-          menu_version_id: string | null
-          no_match_reason: string | null
-          recommendation_reason: string | null
-          score: number | null
-          score_breakdown: Json | null
-        }
-        Insert: {
-          created_at?: string
-          game_result_id: string
-          id?: string
-          matched_menu_item_id?: string | null
-          menu_id: string
-          menu_version_id?: string | null
-          no_match_reason?: string | null
-          recommendation_reason?: string | null
-          score?: number | null
-          score_breakdown?: Json | null
-        }
-        Update: {
-          created_at?: string
-          game_result_id?: string
-          id?: string
-          matched_menu_item_id?: string | null
-          menu_id?: string
-          menu_version_id?: string | null
-          no_match_reason?: string | null
-          recommendation_reason?: string | null
-          score?: number | null
-          score_breakdown?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "recommendations_game_result_id_fkey"
-            columns: ["game_result_id"]
-            isOneToOne: false
-            referencedRelation: "game_results"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "recommendations_matched_menu_item_id_fkey"
-            columns: ["matched_menu_item_id"]
-            isOneToOne: false
-            referencedRelation: "menu_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "recommendations_menu_id_fkey"
-            columns: ["menu_id"]
-            isOneToOne: false
-            referencedRelation: "menus"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "recommendations_menu_version_id_fkey"
-            columns: ["menu_version_id"]
-            isOneToOne: false
-            referencedRelation: "menu_versions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      gen_cocktail_public_id: { Args: never; Returns: string }
+      [_ in never]: never
     }
     Enums: {
       menu_item_availability: "active" | "sold_out" | "hidden"
@@ -952,6 +785,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       menu_item_availability: ["active", "sold_out", "hidden"],
@@ -960,3 +796,4 @@ export const Constants = {
     },
   },
 } as const
+

@@ -6,6 +6,7 @@ import {
   drinkInputSchema,
   feedbackInputSchema,
   globalMatchRequestSchema,
+  saveToVibeBarInputSchema,
   importScannedMenuInputSchema,
   menuItemInputSchema,
   menuViewEventSchema,
@@ -97,6 +98,31 @@ export function createWebApp(options: WebAppOptions): Express {
       const { preferences } = globalMatchRequestSchema.parse(request.body);
       const result = await options.venueService.matchGlobalItem(preferences);
       response.json(await withMatchId(options.venueManagementService, result, request));
+    }),
+  );
+
+  // Public replay of a shared result card. IDs are unguessable uuids and the
+  // guest's own words are never stored, so no auth is required to view one.
+  app.get(
+    "/v1/matches/:matchId",
+    asyncRoute(async (request, response) => {
+      response.json(await options.venueManagementService.getSharedMatch(request.params.matchId ?? ""));
+    }),
+  );
+
+  app.post(
+    "/v1/vibe-bar",
+    asyncRoute(async (request, response) => {
+      const { matchId } = saveToVibeBarInputSchema.parse(request.body);
+      const outcome = await options.venueManagementService.saveToVibeBar(readBearerToken(request), matchId);
+      response.status(outcome.status === "created" ? 201 : 200).json(outcome);
+    }),
+  );
+
+  app.get(
+    "/v1/vibe-bar",
+    asyncRoute(async (request, response) => {
+      response.json(await options.venueManagementService.listVibeBar(readBearerToken(request)));
     }),
   );
 
