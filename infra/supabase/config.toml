@@ -35,6 +35,17 @@ enable_signup = true
 # Production keeps confirmations on; the sign-up form handles the no-session case.
 enable_confirmations = false
 
+# To exercise Google locally: create the OAuth client per
+# docs/operations/google-auth-setup.md, export the two env vars, uncomment,
+# restart the stack (pnpm db:stop && pnpm db:start), and set
+# AUTH_GOOGLE_ENABLED=true for the app server.
+# [auth.external.google]
+# enabled = true
+# client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+# secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+# redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
+# skip_nonce_check = true
+
 # Everything below is disabled purely to speed up `supabase start` for tests.
 [studio]
 enabled = false
