@@ -115,6 +115,15 @@ export type ModelMatchSelection = z.infer<typeof modelMatchSelectionSchema>;
 export const MAX_ALLOWLISTED_MATCH_IDS = 100;
 
 /**
+ * How many candidates a single model call may see. Below the enum budget on
+ * purpose: past this size the allowlist would stop fitting (degrading the
+ * decoding-layer guarantee) and long menus mostly dilute the model's
+ * attention anyway. The service pre-filters with the local scorer before the
+ * call when a scope exceeds this.
+ */
+export const MAX_MODEL_CANDIDATES = 60;
+
+/**
  * Constrain matchedItemId to the exact candidate IDs at the decoding layer, so
  * a hallucinated-but-well-formed UUID cannot reach the service at all.
  */

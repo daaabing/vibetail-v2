@@ -2,11 +2,11 @@ import type {
   DrinkInfoModelRequest,
   DrinkInfoProvider,
   DrinkInfoResult,
-  ModelMenuCandidate,
   ModelProvider,
   ModelProviderResult,
   VenueModelRequest,
 } from "./index.js";
+import { candidateSignals, scoreCandidate } from "./candidate-prefilter.js";
 
 export interface DeterministicMatchingProviderOptions {
   failureMenuIds?: readonly string[];
@@ -29,14 +29,10 @@ export class DeterministicMatchingProvider implements ModelProvider, DrinkInfoPr
       throw new Error("No allowed menu items were provided");
     }
 
-    const signals = normalize([
-      request.preferences.mood,
-      request.preferences.occasion,
-      request.preferences.freeText,
-      ...request.preferences.flavors,
-    ]);
+    const signals = candidateSignals(request.preferences);
     const ranked = [...request.allowedItems].sort((left, right) => {
-      const scoreDelta = score(right, signals, request) - score(left, signals, request);
+      const scoreDelta = scoreCandidate(right, signals, request.preferences.alcoholPreference)
+        - scoreCandidate(left, signals, request.preferences.alcoholPreference);
       if (scoreDelta !== 0) return scoreDelta;
       return left.id.localeCompare(right.id);
     });
@@ -140,29 +136,3 @@ function detectFlavorTags(corpus: string): string[] {
   return tags.length > 0 ? tags : ["balanced"];
 }
 
-function score(
-  candidate: ModelMenuCandidate,
-  signals: ReadonlySet<string>,
-  request: VenueModelRequest,
-): number {
-  let total = 0;
-  for (const tag of [...candidate.flavorTags, ...candidate.moodTags]) {
-    const normalizedTag = tag.toLowerCase();
-    if (signals.has(normalizedTag)) total += 10;
-    for (const signal of signals) {
-      if (signal.includes(normalizedTag) || normalizedTag.includes(signal)) total += 3;
-    }
-  }
-  const preference = request.preferences.alcoholPreference;
-  if (preference === "alcoholic" && candidate.alcoholic) total += 5;
-  if (preference === "non_alcoholic" && !candidate.alcoholic) total += 5;
-  return total;
-}
-
-function normalize(values: readonly (string | undefined)[]): ReadonlySet<string> {
-  const tokens = values
-    .filter((value): value is string => Boolean(value))
-    .flatMap((value) => value.toLowerCase().split(/[^\p{L}\p{N}_-]+/u))
-    .filter(Boolean);
-  return new Set(tokens);
-}

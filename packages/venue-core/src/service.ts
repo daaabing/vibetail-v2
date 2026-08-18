@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import {
+  MAX_MODEL_CANDIDATES,
   globalMatchResultSchema,
   modelMatchSelectionSchema,
   venueDirectoryEntrySchema,
@@ -20,7 +21,7 @@ import {
   type VenueMenuItem,
   type VenuePreferences,
 } from "@vibetail/contracts";
-import type { ModelMenuCandidate, ModelProvider } from "@vibetail/model-providers";
+import { topCandidates, type ModelMenuCandidate, type ModelProvider } from "@vibetail/model-providers";
 import type {
   PublishedMenuScope,
   VenueLookup,
@@ -141,9 +142,10 @@ export class DefaultVenueService implements VenueService {
     providerMenuId: string,
   ): Promise<VenueMatchResult> {
     const traceId = randomUUID();
-    const candidates = scopes.flatMap((scope) =>
-      scope.menu.items.map((item) => ({ scope, item })),
+    const allCandidates = scopes.flatMap((scope) =>
+      scope.menu.items.map((item) => ({ scope, item, ...toCandidate(item) })),
     );
+    const candidates = topCandidates(allCandidates, preferences, MAX_MODEL_CANDIDATES);
 
     let providerResult;
     try {

@@ -63,6 +63,7 @@ export interface DrinkInfoProvider {
 // Providers select only an allowlisted ID and explanation. They never return
 // canonical menu facts and cannot make an unavailable item eligible.
 
+export * from "./candidate-prefilter.js";
 export * from "./deterministic.js";
 export * from "./venue-prompt.js";
 export * from "./openai.js";

@@ -360,3 +360,84 @@ function fixedProvider(matchedItemId: string, whyThisMatch: string): ModelProvid
     },
   };
 }
+
+describe("model candidate cap", () => {
+  // 120 items across two venues; ids are padded so every uuid is valid.
+  const itemId = (n: number) => `44444444-4444-4444-8444-${String(n).padStart(12, "0")}`;
+
+  function bigScope(venueNo: number, itemCount: number, offset: number) {
+    const venueId = `55555555-5555-4555-8555-${String(venueNo).padStart(12, "0")}`;
+    const menuId = `66666666-6666-4666-8666-${String(venueNo).padStart(12, "0")}`;
+    const versionId = `77777777-7777-4777-8777-${String(venueNo).padStart(12, "0")}`;
+    const items = Array.from({ length: itemCount }, (_, index) => ({
+      id: itemId(offset + index),
+      name: `Big Menu Drink ${offset + index}`,
+      description: null,
+      price: null,
+      imageUrl: null,
+      alcoholic: true,
+      baseSpirit: null,
+      // One item in the middle carries the guest's flavor so the cap must keep it.
+      flavorTags: offset + index === 77 ? ["spicy"] : [],
+      moodTags: [],
+      ingredients: [],
+      allergens: [],
+      recommendationPriority: 0,
+      availabilityStatus: "active" as const,
+      section: null,
+      sortOrder: offset + index,
+    }));
+    return {
+      venue: {
+        id: venueId,
+        slug: `big-venue-${venueNo}`,
+        name: `Big Venue ${venueNo}`,
+        shortIntro: null,
+        logoUrl: null,
+        coverImageUrl: null,
+        isActive: true,
+        menus: [],
+      },
+      menu: {
+        id: menuId,
+        slug: "big",
+        name: "Big Menu",
+        status: "published" as const,
+        publishedVersionId: versionId,
+        shortIntro: null,
+        coverImageUrl: null,
+        fullMenuUrl: null,
+        fullMenuType: null,
+        items,
+      },
+    };
+  }
+
+  it("caps global candidates at MAX_MODEL_CANDIDATES and keeps the best scorer", async () => {
+    const scopes = [bigScope(1, 60, 0), bigScope(2, 60, 60)];
+    const repository = {
+      listPublishedVenueMenus: async () => scopes,
+      lookupVenue: async () => ({ kind: "ok" as const, venue: scopes[0]!.venue, menus: [scopes[0]!.menu] }),
+      lookupMenu: async (merchantSlug: string) => {
+        const scope = scopes.find((entry) => entry.venue.slug === merchantSlug)!;
+        return { kind: "ok" as const, venue: scope.venue, menu: scope.menu };
+      },
+      getCurrentMenuItem: async (menuId: string, targetId: string) =>
+        scopes.flatMap((scope) => (scope.menu.id === menuId ? scope.menu.items : []))
+          .find((item) => item.id === targetId) ?? null,
+    };
+    const selectVenueItem = vi.fn(async (modelRequest: VenueModelRequest) => ({
+      selection: modelSelection(
+        modelRequest.allowedItems.find((item) => item.flavorTags.includes("spicy"))!.id,
+        "Kept the scorer.",
+      ),
+      metadata: { provider: "spy", model: "spy", attempt: 1, durationMs: 0 },
+    }));
+    const service = new DefaultVenueService(repository, { id: "spy", selectVenueItem });
+    const result = await service.matchGlobalItem(request.preferences);
+    const allowed = selectVenueItem.mock.calls[0]![0].allowedItems;
+    expect(allowed.length).toBe(60);
+    expect(allowed.some((item) => item.flavorTags.includes("spicy"))).toBe(true);
+    expect(result.item.id).toBe(itemId(77));
+  });
+});
