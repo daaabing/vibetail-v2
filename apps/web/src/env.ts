@@ -31,9 +31,10 @@ const serverEnvSchema = z
       "alibaba",
     ]).default("deterministic"),
     SANDBOX_PROVIDER: z.enum(["local", "fc", "e2b"]).default("local"),
-    // `none` keeps the passwordless account-name login used by seeded local
-    // runs; `supabase` switches every surface to Supabase Auth (Google) tokens.
-    AUTH_PROVIDER: z.enum(["none", "supabase"]).default("none"),
+    // Supabase Auth (email/password, plus Google when enabled below) is the
+    // default so merchant sign-in surfaces without configuration; `none` is
+    // the legacy passwordless name login, opt-in only.
+    AUTH_PROVIDER: z.enum(["none", "supabase"]).default("supabase"),
     // Opt-in: Google needs an OAuth client registered in Google Cloud and the
     // Supabase dashboard. Email/password needs neither, so it is always on.
     AUTH_GOOGLE_ENABLED: z
