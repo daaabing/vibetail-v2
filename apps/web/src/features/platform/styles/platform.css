@@ -125,3 +125,23 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .drink-dossier section p { margin: 10px 0 0; color: var(--ink-soft); font-size: 15px; line-height: 1.6; }
 .drink-dossier ol { margin: 10px 0 0; padding: 0; list-style: none; }
 .drink-dossier ol li { display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line-soft); font-size: 15px; }
+
+/* Landing additions from ui-polish: rotating house card, FAQ, closing */
+.landing-hero-copy { animation: none; }
+.specimen-card-rotating { position: relative; aspect-ratio: 3/4; max-width: 440px; overflow: hidden; background: var(--night); }
+.specimen-card-rotating > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.specimen-card-foot { position: absolute; inset: auto 0 0; display: flex; align-items: baseline; justify-content: space-between; padding: 0 20px 16px; background: none; }
+.specimen-card-foot span { color: rgba(244,243,240,.85); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; }
+.specimen-card-foot .signature { color: rgba(244,243,240,.85); font-family: var(--font-script); font-style: normal; font-size: 20px; }
+.faq-grid { display: grid; gap: 48px; }
+@media (min-width: 1000px) { .faq-grid { grid-template-columns: .8fr 1.2fr; } }
+.faq-row { border-bottom: 1px solid var(--line); }.faq-row[data-first="true"] { border-top: 1px solid var(--line); }
+.faq-row button { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 24px; padding: 18px 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; }
+.faq-row button span { font-size: 19px; font-weight: 400; letter-spacing: -.03em; line-height: 1.3; }
+.faq-row button b { font-family: var(--font-script); font-size: 30px; font-weight: 400; line-height: 1; transition: transform .2s; }.faq-row button b[data-open="true"] { transform: rotate(45deg); }
+.faq-row p { max-width: 640px; margin: 0; padding: 0 40px 22px 0; color: var(--ink-mute); font-size: 16px; line-height: 1.7; }
+.closing p:not(.house-eyebrow) { max-width: 560px; margin: 24px 0 0; color: rgba(244,243,240,.72); font-size: 16px; line-height: 1.75; }
+.closing h2 { margin: 18px 0 0; font-size: clamp(36px,4.6vw,64px); font-weight: 400; letter-spacing: -.055em; line-height: .98; }
+.closing h2 em { font-family: var(--font-script); font-weight: 400; letter-spacing: 0; }
+.closing-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 28px; margin-top: 36px; }
+.house-text-link.on-dark { color: rgba(244,243,240,.85); }
