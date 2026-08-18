@@ -60,8 +60,33 @@ export class SupabaseIdentityVerifier implements IdentityVerifier {
     // Whole-map eviction keeps the cache bounded without tracking access order;
     // the cost is one extra round trip for callers active at the moment it trips.
     if (this.cache.size >= CACHE_MAX_ENTRIES) this.cache.clear();
-    this.cache.set(token, { identity, expiresAt: now + this.cacheTtlMs });
+    // The cache entry must never outlive the token: cap at the JWT's own exp so
+    // a token presented near expiry is not honoured past it.
+    const tokenExpiry = jwtExpiryMs(token);
+    const expiresAt = tokenExpiry === null
+      ? now + this.cacheTtlMs
+      : Math.min(now + this.cacheTtlMs, tokenExpiry);
+    if (expiresAt > now) this.cache.set(token, { identity, expiresAt });
     return identity;
+  }
+}
+
+/**
+ * Reads the exp claim (ms) from a JWT without verifying it — verification
+ * already happened upstream in auth.getUser; this only bounds the cache.
+ */
+function jwtExpiryMs(token: string): number | null {
+  const payload = token.split(".")[1];
+  if (!payload) return null;
+  try {
+    const decoded: unknown = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (typeof decoded === "object" && decoded !== null && "exp" in decoded) {
+      const exp = (decoded as { exp: unknown }).exp;
+      if (typeof exp === "number" && Number.isFinite(exp)) return exp * 1000;
+    }
+    return null;
+  } catch {
+    return null;
   }
 }
 

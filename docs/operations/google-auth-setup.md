@@ -78,6 +78,14 @@ built from `window.location.origin` and has to be on the allowlist above.
 Venue data always persists to the Supabase project that `SUPABASE_URL` points
 at; there is no separate in-memory mode.
 
+## Local stack variant
+
+The same OAuth client also works against `pnpm db:start`: uncomment the
+`[auth.external.google]` block in `infra/supabase/config.toml`, export
+`SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` / `..._SECRET`, restart the stack,
+and add `http://127.0.0.1:54321/auth/v1/callback` to the Google client's
+authorised redirect URIs alongside the hosted one.
+
 ## 6. Verify
 
 ```bash

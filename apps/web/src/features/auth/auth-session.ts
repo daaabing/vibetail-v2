@@ -31,16 +31,23 @@ async function getSupabaseClient(): Promise<SupabaseClient | null> {
   const { supabaseUrl, supabasePublishableKey } = config;
   if (!supabaseUrl || !supabasePublishableKey) return null;
   // Loaded on demand so anonymous guests never download the auth SDK.
-  clientPromise ??= import("@supabase/supabase-js").then(({ createClient }) =>
-    createClient(supabaseUrl, supabasePublishableKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        // The callback route exchanges the code explicitly; see completeOAuthRedirect.
-        detectSessionInUrl: false,
-        flowType: "pkce",
-      },
-    }));
+  clientPromise ??= import("@supabase/supabase-js")
+    .then(({ createClient }) =>
+      createClient(supabaseUrl, supabasePublishableKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          // The callback route exchanges the code explicitly; see completeOAuthRedirect.
+          detectSessionInUrl: false,
+          flowType: "pkce",
+        },
+      }))
+    .catch((error: unknown) => {
+      // Like configPromise above: a failed chunk load must not be cached, or
+      // every later sign-in attempt replays the same rejection until a reload.
+      clientPromise = null;
+      throw error;
+    });
   return clientPromise;
 }
 
@@ -72,16 +79,22 @@ export async function signInWithEmail(email: string, password: string): Promise<
   if (error) throw new Error(error.message);
 }
 
+export type SignUpOutcome = "signed_in" | "confirm_email" | "already_registered";
+
 /**
- * Registers a new email account. Returns false when the project has email
- * confirmation switched on and no session was issued — the caller must then
- * tell the user to click the link rather than pretend they are signed in.
+ * Registers a new email account. `confirm_email` means the project has email
+ * confirmation on and a link is on its way; `already_registered` is Supabase's
+ * anti-enumeration reply for an existing confirmed address (an obfuscated user
+ * with no identities and no session — and no email coming), which the caller
+ * must not present as "check your inbox".
  */
-export async function signUpWithEmail(email: string, password: string): Promise<boolean> {
+export async function signUpWithEmail(email: string, password: string): Promise<SignUpOutcome> {
   const client = await requireClient();
   const { data, error } = await client.auth.signUp({ email, password });
   if (error) throw new Error(error.message);
-  return Boolean(data.session);
+  if (data.session) return "signed_in";
+  if (data.user && (data.user.identities?.length ?? 0) === 0) return "already_registered";
+  return "confirm_email";
 }
 
 export async function signInWithGoogle(next: string): Promise<void> {
@@ -113,7 +126,17 @@ export async function completeOAuthRedirect(search: string): Promise<string> {
   return safeNext(params.get("next") ?? "/");
 }
 
-/** Blocks open redirects: only same-origin, single-slash paths are honoured. */
+/** Blocks open redirects: only same-origin paths are honoured. */
 export function safeNext(next: string): string {
-  return next.startsWith("/") && !next.startsWith("//") ? next : "/";
+  if (!next.startsWith("/")) return "/";
+  // Delegate to the URL parser so every browser normalization — tab/CR/LF
+  // stripping, backslash folding — happens BEFORE the origin check. A regex
+  // cannot keep up with those rules; "/\t/evil.example" defeats a lookahead.
+  try {
+    const resolved = new URL(next, "http://internal");
+    if (resolved.origin !== "http://internal") return "/";
+    return resolved.pathname + resolved.search + resolved.hash;
+  } catch {
+    return "/";
+  }
 }

@@ -10,6 +10,7 @@ import {
 } from "../../auth/auth-session.js";
 import { SiteFooter, SiteHeader } from "../../platform/components/SiteHeader.js";
 import { useSeo } from "../../platform/useSeo.js";
+import { VenueClientError } from "../../../clients/http-venue-client.js";
 import { errorMessage } from "../VenueShell.js";
 import { clearVenueToken, saveVenueToken } from "../session-store.js";
 
@@ -21,10 +22,14 @@ export function VenueLoginPage() {
   useSeo("Venue sign in — Vibetail", "Enter the Vibetail venue backend.", true);
   const [config, setConfig] = useState<AuthConfig>();
   const [checking, setChecking] = useState(true);
-  const [pending, setPending] = useState(false);
+  // Which submit is in flight. One flag disables every control, but labels
+  // must only animate on the button that was actually pressed.
+  const [pendingAction, setPendingAction] = useState<null | "name" | "email" | "google">(null);
+  const pending = pendingAction !== null;
   const [error, setError] = useState("");
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [notice, setNotice] = useState("");
+  const [configFailed, setConfigFailed] = useState(false);
 
   // An existing session skips the form entirely, whichever provider issued it.
   useEffect(() => {
@@ -33,6 +38,17 @@ export function VenueLoginPage() {
       try {
         const loaded = await loadAuthConfig();
         if (active) setConfig(loaded);
+      } catch {
+        // Without the config we cannot know which form applies; rendering the
+        // name form on a Supabase deployment would 400 on submit, so fail
+        // visibly instead of guessing.
+        if (active) {
+          setConfigFailed(true);
+          setChecking(false);
+        }
+        return;
+      }
+      try {
         const token = await getAccessToken();
         if (!token) {
           if (active) setChecking(false);
@@ -40,8 +56,10 @@ export function VenueLoginPage() {
         }
         const session = await new HttpVenueManagementClient(token).getSession();
         if (active) window.location.replace(destinationFor(Boolean(session.venue)));
-      } catch {
-        clearVenueToken();
+      } catch (caught) {
+        // Only a definitive 401 may wipe the stored credential; a network blip
+        // or 5xx shows the form again without signing the merchant out.
+        if (caught instanceof VenueClientError && caught.status === 401) clearVenueToken();
         if (active) setChecking(false);
       }
     })();
@@ -54,7 +72,7 @@ export function VenueLoginPage() {
     event.preventDefault();
     const name = String(new FormData(event.currentTarget).get("name") ?? "").trim();
     if (!name) return;
-    setPending(true);
+    setPendingAction("name");
     setError("");
     try {
       const result = await new HttpVenueManagementClient().login({ name });
@@ -62,7 +80,7 @@ export function VenueLoginPage() {
       window.location.assign(destinationFor(Boolean(result.session.venue)));
     } catch (caught) {
       setError(errorMessage(caught));
-      setPending(false);
+      setPendingAction(null);
     }
   }
 
@@ -72,17 +90,24 @@ export function VenueLoginPage() {
     const email = String(form.get("email") ?? "").trim();
     const password = String(form.get("password") ?? "");
     if (!email || !password) return;
-    setPending(true);
+    setPendingAction("email");
     setError("");
     setNotice("");
     try {
       if (mode === "signup") {
-        const signedIn = await signUpWithEmail(email, password);
-        if (!signedIn) {
-          // Projects with email confirmation on issue no session yet.
+        const outcome = await signUpWithEmail(email, password);
+        if (outcome === "already_registered") {
+          // No confirmation email is coming for an existing address; saying
+          // "check your inbox" would strand the merchant.
+          setError("This email already has an account. Sign in with your password instead.");
+          setMode("signin");
+          setPendingAction(null);
+          return;
+        }
+        if (outcome === "confirm_email") {
           setNotice("Check your inbox and confirm the address, then sign in.");
           setMode("signin");
-          setPending(false);
+          setPendingAction(null);
           return;
         }
       } else {
@@ -93,19 +118,20 @@ export function VenueLoginPage() {
       window.location.assign(destinationFor(Boolean(session.venue)));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : errorMessage(caught));
-      setPending(false);
+      setPendingAction(null);
     }
   }
 
   async function submitGoogle() {
-    setPending(true);
+    setPendingAction("google");
     setError("");
+    setNotice("");
     try {
       // Redirects away; control only returns here if the handshake failed to start.
       await signInWithGoogle("/venue/dashboard");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Google sign-in could not be started.");
-      setPending(false);
+      setPendingAction(null);
     }
   }
 
@@ -122,6 +148,12 @@ export function VenueLoginPage() {
           <h1>Run your bar on Vibetail.</h1>
           <p>Build your drink library, publish a menu, print one QR code, and watch matches and feedback arrive.</p>
         </header>
+        {configFailed ? (
+          <section className="vt-management-entry">
+            <div className="vt-alert" role="alert">Sign-in options could not be loaded. Check your connection and retry.</div>
+            <button className="vt-primary" type="button" onClick={() => window.location.reload()}>Retry</button>
+          </section>
+        ) : (
         <section className="vt-management-entry">
           {config?.provider === "supabase" ? (
             <>
@@ -143,7 +175,7 @@ export function VenueLoginPage() {
                   />
                 </label>
                 <button className="vt-primary" type="submit" disabled={pending}>
-                  {pending ? "Working…" : mode === "signup" ? "Create account" : "Sign in"}
+                  {pendingAction === "email" ? "Working…" : mode === "signup" ? "Create account" : "Sign in"}
                 </button>
               </form>
               <button
@@ -156,7 +188,7 @@ export function VenueLoginPage() {
               </button>
               {config.googleEnabled && (
                 <button className="vt-secondary" type="button" disabled={pending} onClick={() => void submitGoogle()}>
-                  {pending ? "Redirecting…" : "Continue with Google"}
+                  {pendingAction === "google" ? "Redirecting…" : "Continue with Google"}
                 </button>
               )}
               {notice && <div className="vt-notice">{notice}</div>}
@@ -174,7 +206,7 @@ export function VenueLoginPage() {
                   <input name="name" required minLength={1} maxLength={80} placeholder="e.g. Nightjar Team" autoComplete="username" />
                 </label>
                 <button className="vt-primary" type="submit" disabled={pending}>
-                  {pending ? "Signing in…" : "Enter the backend"}
+                  {pendingAction === "name" ? "Signing in…" : "Enter the backend"}
                 </button>
               </form>
               <small>
@@ -186,6 +218,7 @@ export function VenueLoginPage() {
           )}
           {error && <div className="vt-alert" role="alert">{error}</div>}
         </section>
+        )}
       </main>
       <SiteFooter />
     </div>
