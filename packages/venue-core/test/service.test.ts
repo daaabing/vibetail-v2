@@ -27,6 +27,7 @@ const request: VenueMatchRequest = {
     alcoholPreference: "either",
     excludedAllergens: [],
     excludedIngredients: [],
+    excludeItemIds: [],
   },
 };
 
@@ -49,7 +50,7 @@ describe("DefaultVenueService", () => {
     const provider = fixedProvider("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1", "Bright, botanical and zero proof.");
     const result = await new DefaultVenueService(anonVenueRepository(), provider).matchGlobalItem({
       mood: "clear headed", flavors: ["fresh"], alcoholPreference: "non_alcoholic",
-      excludedAllergens: [], excludedIngredients: [],
+      excludedAllergens: [], excludedIngredients: [], excludeItemIds: [],
     });
     expect(result).toMatchObject({
       venue: { slug: "nightjar-demo" }, menu: { slug: "cocktails" },
@@ -174,6 +175,38 @@ describe("DefaultVenueService", () => {
       "33333333-3333-4333-8333-333333333331",
       "33333333-3333-4333-8333-333333333332",
     ]);
+  });
+
+  it("skips soft-excluded items on match-again while other candidates remain", async () => {
+    const selectVenueItem = vi.fn(async (modelRequest: VenueModelRequest) => ({
+      selection: modelSelection(modelRequest.allowedItems[0]!.id, "Next best."),
+      metadata: { provider: "spy", model: "spy", attempt: 1, durationMs: 0 },
+    }));
+    const service = new DefaultVenueService(anonVenueRepository(), { id: "spy", selectVenueItem });
+    await service.matchVenueItem({
+      ...request,
+      preferences: { ...request.preferences, excludeItemIds: ["33333333-3333-4333-8333-333333333331"] },
+    });
+    expect(selectVenueItem.mock.calls[0]![0].allowedItems.map((item) => item.id)).toEqual([
+      "33333333-3333-4333-8333-333333333332",
+    ]);
+  });
+
+  it("ignores soft exclusion instead of failing when it would empty the menu", async () => {
+    const selectVenueItem = vi.fn(async (modelRequest: VenueModelRequest) => ({
+      selection: modelSelection(modelRequest.allowedItems[0]!.id, "Only option left."),
+      metadata: { provider: "spy", model: "spy", attempt: 1, durationMs: 0 },
+    }));
+    const service = new DefaultVenueService(anonVenueRepository(), { id: "spy", selectVenueItem });
+    const result = await service.matchVenueItem({
+      ...request,
+      preferences: {
+        ...request.preferences,
+        excludeItemIds: ["33333333-3333-4333-8333-333333333331", "33333333-3333-4333-8333-333333333332"],
+      },
+    });
+    expect(selectVenueItem.mock.calls[0]![0].allowedItems.length).toBe(2);
+    expect(result.item.availabilityStatus).toBe("active");
   });
 
   it("fails closed for unknown and cross-menu item IDs", async () => {
