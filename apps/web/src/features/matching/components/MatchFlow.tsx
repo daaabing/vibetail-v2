@@ -47,6 +47,7 @@ export function MatchFlow({ context, destination, headerAction, initialPreferenc
     {!busy && error && <MatchError error={error} onRetry={() => preferences && void submit(preferences)} onEdit={() => setError(undefined)} />}
     {!busy && result && <RecommendationCard
       {...(destination ? { destination: destination(result) } : {})}
+      originalVibe={preferences?.mood ?? preferences?.freeText ?? ""}
       result={result}
       onAgain={() => { setResult(undefined); setPreferences(undefined); }}
       onDestination={() => preferences && onDestination?.(preferences, result)}
@@ -75,16 +76,49 @@ function guestForSerial(serial: string) {
  *  drink with a house guest drawn onto it, and a colophon. The headline is
  *  the model's vibeName — the guest's night, not the menu's label — and the
  *  orderable item name sits right under it as the order line. */
-function RecommendationCard({ destination, result, onAgain, onDestination, onEdit }: {
+function RecommendationCard({ destination, originalVibe, result, onAgain, onDestination, onEdit }: {
   destination?: { label: string; url: string };
+  originalVibe: string;
   result: VenueMatchResult;
   onAgain(): void;
   onDestination(): void;
   onEdit(): void;
 }) {
+  const [cardState, setCardState] = useState<"idle" | "working" | "done" | "error">("idle");
+  const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
   const tags = [...result.item.flavorTags, ...result.item.moodTags].slice(0, 5);
   const serial = makeSerial(result.matchId ?? result.traceId);
   const guest = guestForSerial(serial);
+
+  async function saveCard() {
+    setCardState("working");
+    try {
+      const { shareCardFile, deliverShareCard } = await import("../share-card.js");
+      await deliverShareCard(await shareCardFile(result, originalVibe));
+      setCardState("done");
+    } catch (caught) {
+      setCardState((caught as Error).name === "AbortError" ? "idle" : "error");
+    }
+  }
+
+  async function shareLink() {
+    const url = new URL(`/m/${result.venue.slug}/${result.menu.slug}`, window.location.origin).toString();
+    const nav = navigator as Navigator & { share?: (data: { title: string; url: string }) => Promise<void> };
+    const isTouch = window.matchMedia?.("(pointer: coarse)").matches
+      || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    try {
+      if (isTouch && nav.share) {
+        await nav.share({ title: result.vibeName, url });
+        setShareState("shared");
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShareState("copied");
+    } catch (caught) {
+      if ((caught as Error).name !== "AbortError") setShareState("idle");
+    }
+  }
+
   return <div className="poster-wrap" data-testid="match-result">
     <article className="paper-pocket pocket-card frame-gilt relative" style={{ background: "var(--paper-card)" }}>
       <div className="grain-layer" aria-hidden style={{ opacity: 0.32 }} />
@@ -109,7 +143,8 @@ function RecommendationCard({ destination, result, onAgain, onDestination, onEdi
       {/* Colophon */}
       <div className="relative px-10 pb-9 pt-2">
         <span className="mx-auto block h-px w-12" aria-hidden style={{ background: "var(--line-strong)" }} />
-        <p className="accent-italic mx-auto mt-6 max-w-[34ch] text-center text-[21px] leading-snug" style={{ color: "var(--ink-soft)" }}>{result.whyThisMatch}</p>
+        {originalVibe.trim() && <p className="mono-sm mt-5 text-center" data-testid="original-vibe" style={{ color: "var(--ink-mute)" }}>“{originalVibe.trim()}”</p>}
+        <p className="accent-italic mx-auto mt-4 max-w-[34ch] text-center text-[21px] leading-snug" style={{ color: "var(--ink-soft)" }}>{result.whyThisMatch}</p>
         <div className="mt-6 grid grid-cols-[1.4fr_0.9fr] items-start gap-8">
           <p className="note text-left text-[13.5px] leading-relaxed" style={{ maxWidth: "36ch" }}>{result.tastesLike}</p>
           <div className="flex flex-col items-end gap-1.5">
@@ -126,7 +161,16 @@ function RecommendationCard({ destination, result, onAgain, onDestination, onEdi
 
     <div className="vt-actions poster-actions">
       {destination && <a className="btn btn-solid" href={destination.url} onClick={onDestination}>{destination.label}</a>}
-      <button className={destination ? "btn btn-outline" : "btn btn-solid"} type="button" onClick={onAgain}>Match again</button>
+      <button className={destination ? "btn btn-outline" : "btn btn-solid"} data-testid="save-card" disabled={cardState === "working"} type="button" onClick={() => void saveCard()}>
+        {cardState === "working" ? "Rendering card…"
+          : cardState === "done" ? "Saved ✓"
+          : cardState === "error" ? "Retry save card"
+          : "Save card"}
+      </button>
+      <button className="btn btn-outline" data-testid="share-link" type="button" onClick={() => void shareLink()}>
+        {shareState === "copied" ? "Link copied ✓" : shareState === "shared" ? "Shared ✓" : "Share"}
+      </button>
+      <button className="btn btn-outline" type="button" onClick={onAgain}>Match again</button>
       <button className="mono-sm underline underline-offset-4" type="button" onClick={onEdit}>Edit preferences</button>
     </div>
 
@@ -135,6 +179,7 @@ function RecommendationCard({ destination, result, onAgain, onDestination, onEdi
       <section><span className="mono-sm">Flavor</span><p>{result.flavorProfile}</p></section>
       {result.item.baseSpirit && <section><span className="mono-sm">Base</span><p>{result.item.baseSpirit}</p></section>}
       {result.item.ingredients.length > 0 && <section><span className="mono-sm">Ingredients</span><ol>{result.item.ingredients.map((ing, i) => <li key={i}><span className="specimen-no">{String(i + 1).padStart(2, "0")}</span><span>{ing}</span></li>)}</ol></section>}
+      <p className="note text-[12px]" style={{ color: "var(--ink-mute)" }}>Final interpretation &amp; execution reserved by the bar</p>
     </div>
 
     {result.matchId && <FeedbackForm key={result.matchId} matchId={result.matchId} />}

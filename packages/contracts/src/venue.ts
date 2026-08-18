@@ -72,6 +72,9 @@ export const venuePreferencesSchema = z
     alcoholPreference: z.enum(["alcoholic", "non_alcoholic", "either"]).default("either"),
     excludedAllergens: z.array(z.string().trim().min(1).max(100)).max(20).default([]),
     excludedIngredients: z.array(z.string().trim().min(1).max(100)).max(20).default([]),
+    // Soft exclusion for "match again": these items are skipped when other
+    // candidates remain, but never at the cost of having nothing to match.
+    excludeItemIds: z.array(z.string().uuid()).max(20).default([]),
     freeText: z.string().trim().min(1).max(500).optional(),
   })
   .refine(
