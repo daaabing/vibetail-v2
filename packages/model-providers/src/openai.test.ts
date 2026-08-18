@@ -14,6 +14,7 @@ function request(): VenueModelRequest {
       alcoholPreference: "either",
       excludedAllergens: [],
       excludedIngredients: [],
+      excludeItemIds: [],
       freeText: undefined,
     },
     allowedItems: [{

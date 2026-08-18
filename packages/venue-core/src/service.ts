@@ -98,7 +98,10 @@ export class DefaultVenueService implements VenueService {
     if (scopes.length === 0) {
       throw serviceError("GLOBAL_NO_CANDIDATES", "No currently available drinks match these preferences.", false, 409);
     }
-    const result = await this.matchFromScopes(scopes, parsedPreferences, "global", "global");
+    const narrowed = scopes
+      .map((scope) => ({ ...scope, menu: { ...scope.menu, items: applySoftExclusion(scope.menu.items, parsedPreferences) } }))
+      .filter((scope) => scope.menu.items.length > 0);
+    const result = await this.matchFromScopes(narrowed.length > 0 ? narrowed : scopes, parsedPreferences, "global", "global");
     return globalMatchResultSchema.parse({
       ...result,
       venueSpecificUrl: `/m/${result.venue.slug}/${result.menu.slug}`,
@@ -112,15 +115,13 @@ export class DefaultVenueService implements VenueService {
     if (menu.items.length === 0) {
       throw serviceError("MENU_EMPTY", "This published menu does not contain any items yet.", false, 409);
     }
-    const eligibleMenu = {
-      ...menu,
-      items: menu.items.filter((item) => isEligible(item, parsedInput.preferences)),
-    };
-    if (eligibleMenu.items.length === 0) {
+    const eligibleItems = menu.items.filter((item) => isEligible(item, parsedInput.preferences));
+    if (eligibleItems.length === 0) {
       throw serviceError("NO_ACTIVE_ITEMS", "This menu has no items matching the current availability and preferences.", false, 409);
     }
+    const remainingItems = applySoftExclusion(eligibleItems, parsedInput.preferences);
     return this.matchFromScopes(
-      [{ venue, menu: eligibleMenu }],
+      [{ venue, menu: { ...menu, items: remainingItems.length > 0 ? remainingItems : eligibleItems } }],
       parsedInput.preferences,
       venue.id,
       menu.id,
@@ -283,6 +284,17 @@ function toCandidate(item: StoredMenuItem): ModelMenuCandidate {
     allergens: item.allergens,
     recommendationPriority: item.recommendationPriority,
   };
+}
+
+// Pure filter for the "match again" soft exclusion. Callers decide the
+// fallback: a venue menu falls back to its own eligible items, while global
+// matching falls back only when every scope has been emptied — per-scope
+// fallback would sneak the excluded item back in while other venues still
+// have candidates.
+function applySoftExclusion<T extends { id: string }>(items: T[], preferences: VenuePreferences): T[] {
+  if (preferences.excludeItemIds.length === 0) return items;
+  const excluded = new Set(preferences.excludeItemIds);
+  return items.filter((item) => !excluded.has(item.id));
 }
 
 function isEligible(item: StoredMenuItem, preferences: VenuePreferences): boolean {
