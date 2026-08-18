@@ -1,5 +1,5 @@
 # Fixtures
 
-Deterministic, non-production venue and agent-run fixtures live here. Never commit production exports, credentials, or personal data.
+Deterministic, non-production seed and test inputs live here. Never commit production exports, credentials, or personal data.
 
-`venue/menus.json` includes two active demo bars, published/draft menus, active/sold-out/hidden items, and two deliberately public local management tokens. Fixture repositories are mutable in memory so browser QA can verify management changes immediately; restarting the dev server resets the fixture.
+`venue/menus.json` is the seed-data source for the Supabase database: `scripts/generate-seed.mjs` converts it into `infra/supabase/seed.sql`, which `supabase db reset` applies after the migrations — via `pnpm db:reset` and automatically before every `pnpm test` run. See [`venue/README.md`](venue/README.md) for its contents and the checked-in demo tokens.

@@ -13,7 +13,10 @@ import type {
   VenueManagementRepository,
   VenueMenuRecordInput,
 } from "../types.js";
+import type { VerifiedIdentity } from "../identity.js";
 import type { Database, Tables } from "./database.types.js";
+
+const ACCOUNT_COLUMNS = "id, name_normalized, display_name, merchant_id, auth_user_id, email";
 
 export interface SupabaseVenueManagementRepositoryConfig {
   url: string;
@@ -58,6 +61,78 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
       throw new Error(inserted.error.message);
     }
     return mapAccount(inserted.data);
+  }
+
+  async findOrCreateAccountByIdentity(identity: VerifiedIdentity): Promise<StoredVenueAccount> {
+    const existing = await this.client
+      .from("venue_accounts")
+      .select(ACCOUNT_COLUMNS)
+      .eq("auth_user_id", identity.authUserId)
+      .maybeSingle();
+    if (existing.error) throw new Error(existing.error.message);
+    if (existing.data) return this.refreshProfile(existing.data, identity);
+
+    // name_normalized stays NOT NULL for legacy rows, so identity accounts fill
+    // it with their email and fall back to the auth id if that name is taken.
+    const inserted = await this.insertIdentityAccount(
+      identity,
+      identity.email?.toLowerCase() ?? identity.authUserId,
+    );
+    if (inserted) return inserted;
+
+    // A 23505 means either a concurrent first sign-in or a legacy row already
+    // holding that name. Re-read first; only the name case still needs an insert.
+    const raced = await this.client
+      .from("venue_accounts")
+      .select(ACCOUNT_COLUMNS)
+      .eq("auth_user_id", identity.authUserId)
+      .maybeSingle();
+    if (raced.error) throw new Error(raced.error.message);
+    if (raced.data) return this.refreshProfile(raced.data, identity);
+
+    const fallback = await this.insertIdentityAccount(identity, identity.authUserId);
+    if (!fallback) throw new Error("Could not create an account for this identity");
+    return fallback;
+  }
+
+  private async insertIdentityAccount(
+    identity: VerifiedIdentity,
+    nameNormalized: string,
+  ): Promise<StoredVenueAccount | null> {
+    const inserted = await this.client
+      .from("venue_accounts")
+      .insert({
+        auth_user_id: identity.authUserId,
+        email: identity.email,
+        display_name: identity.displayName,
+        name_normalized: nameNormalized,
+      })
+      .select(ACCOUNT_COLUMNS)
+      .single();
+    if (inserted.error) {
+      if (inserted.error.code === "23505") return null;
+      throw new Error(inserted.error.message);
+    }
+    return mapAccount(inserted.data);
+  }
+
+  /** Keeps the stored profile in step with the provider on every sign-in. */
+  private async refreshProfile(
+    row: AccountRow,
+    identity: VerifiedIdentity,
+  ): Promise<StoredVenueAccount> {
+    const account = mapAccount(row);
+    if (account.displayName === identity.displayName && account.email === identity.email) {
+      return account;
+    }
+    const updated = await this.client
+      .from("venue_accounts")
+      .update({ display_name: identity.displayName, email: identity.email })
+      .eq("id", account.id)
+      .select(ACCOUNT_COLUMNS)
+      .single();
+    // A failed refresh is cosmetic: the caller still has a usable account.
+    return updated.error ? account : mapAccount(updated.data);
   }
 
   async createVenueSession(accountId: string, tokenHash: string): Promise<void> {
@@ -339,6 +414,7 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
         item_id: event.itemId,
         item_name: event.itemName,
         trace_id: event.traceId,
+        account_id: event.accountId ?? null,
       })
       .select("id")
       .single();
@@ -346,7 +422,12 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
     return String(result.data.id);
   }
 
-  async createFeedback(matchId: string, rating: number, comment: string | null): Promise<CreateFeedbackOutcome> {
+  async createFeedback(
+    matchId: string,
+    rating: number,
+    comment: string | null,
+    accountId: string | null = null,
+  ): Promise<CreateFeedbackOutcome> {
     const match = await this.client
       .from("match_events")
       .select("id, merchant_id")
@@ -357,7 +438,13 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
 
     const result = await this.client
       .from("match_feedback")
-      .insert({ match_id: matchId, merchant_id: match.data.merchant_id, rating, comment });
+      .insert({
+        match_id: matchId,
+        merchant_id: match.data.merchant_id,
+        rating,
+        comment,
+        account_id: accountId,
+      });
     if (result.error) {
       if (result.error.code === "23505") return "duplicate";
       throw new Error(result.error.message);
@@ -477,12 +564,19 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
 const DRINK_COLUMNS =
   "id, name, description, price, image_url, ingredients, flavor_tags, allergens, base_spirit, strength, alcoholic, recommendation_note, availability_status";
 
-function mapAccount(row: Pick<Tables<"venue_accounts">, "id" | "name_normalized" | "display_name" | "merchant_id">): StoredVenueAccount {
+type AccountRow = Pick<
+  Tables<"venue_accounts">,
+  "id" | "name_normalized" | "display_name" | "merchant_id"
+> & Partial<Pick<Tables<"venue_accounts">, "auth_user_id" | "email">>;
+
+function mapAccount(row: AccountRow): StoredVenueAccount {
   return {
     id: String(row.id),
     nameNormalized: String(row.name_normalized),
     displayName: String(row.display_name),
     merchantId: row.merchant_id ? String(row.merchant_id) : null,
+    authUserId: row.auth_user_id ? String(row.auth_user_id) : null,
+    email: row.email ? String(row.email) : null,
   };
 }
 
@@ -515,7 +609,7 @@ function drinkWrite(input: DrinkInput) {
     base_spirit: input.baseSpirit,
     strength: input.strength,
     // Unknown strength stays alcoholic so it can never satisfy a
-    // non-alcoholic preference by accident (mirrors the fixture adapter).
+    // non-alcoholic preference by accident.
     alcoholic: input.strength !== "zero",
     recommendation_note: input.recommendationNote,
   };

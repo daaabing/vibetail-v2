@@ -1,12 +1,14 @@
-# Venue fixtures
+# Venue seed data
 
-`menus.json` is a small deterministic demo/test fixture. It borrows the public seed identity `double-chicken-please/main` and a few menu names for realistic compatibility testing; it is not a production export and contains no personal data.
+`menus.json` is the seed-data source for the Supabase database. `scripts/generate-seed.mjs` deterministically converts it into `infra/supabase/seed.sql` (same JSON in, byte-identical SQL out), and `supabase db reset` loads that seed after the migrations — via `pnpm db:reset` and automatically before every `pnpm test` run. It borrows the public identity `double-chicken-please/main` and a few menu names for realism; it is not a production export and contains no personal data.
 
-It covers two active demo venues plus inactive, unpublished, missing, empty, no-active, sold-out, hidden, cross-menu, and provider-failure paths. `matchingFailureMenuIds` configures the deterministic provider's explicit retryable failure case.
+It covers active and inactive merchants, published and draft menus, active/sold-out/hidden items, the drink-library-backed `vibetail-taproom` venue with its `Demo Bar` account, and seeded menu-view/match/feedback events. Event timestamps are stored as relative `minutesAgo` offsets, so dashboards stay populated no matter when the seed runs.
 
-Local-only management tokens:
+Legacy management tokens:
 
 - `fixture-double-chicken-demo`
 - `fixture-nightjar-demo-token`
 
-They are public test strings, not credentials. Fixture writes stay in server memory and reset on restart.
+They are deliberately public test strings, not credentials; the generated seed stores only their SHA-256 hashes. Do not rename them (or the `Demo Bar` account) — tests and demo links depend on the exact values.
+
+To change seed data, edit `menus.json` and run `pnpm db:reset`. Never commit production exports, credentials, or personal data.

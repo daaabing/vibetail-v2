@@ -53,6 +53,7 @@ import {
   type VenueSessionInfo,
 } from "@vibetail/contracts";
 import type { DrinkInfoProvider, DrinkPhotoProvider, MenuPhotoScanProvider } from "@vibetail/model-providers";
+import type { IdentityVerifier } from "./identity.js";
 import type {
   StoredFeedbackEntry,
   StoredMatchEvent,
@@ -80,6 +81,12 @@ export interface VenueManagementService {
   login(name: string): Promise<VenueLoginResult>;
   getSession(token: string): Promise<VenueSessionInfo>;
   logout(token: string): Promise<void>;
+  /**
+   * Best-effort account lookup for public consumer routes, where signing in is
+   * optional. Anonymous, invalid, and expired tokens all resolve to null so the
+   * guest flow never fails on an auth problem.
+   */
+  resolveAccountId(token: string): Promise<string | null>;
   createVenue(token: string, input: CreateVenueInput): Promise<VenueSessionInfo>;
   getDashboard(token: string, range: VenueDashboardRange, now?: Date): Promise<VenueDashboardStats>;
   getQr(token: string): Promise<VenueQr>;
@@ -99,12 +106,17 @@ export interface VenueManagementService {
   deleteMenu(token: string, menuId: string): Promise<void>;
   publishMenu(token: string, menuId: string): Promise<VenueAdminMenu[]>;
   recordMenuView(event: MenuViewEvent): Promise<void>;
-  recordMatch(result: VenueMatchResult): Promise<string | null>;
-  submitFeedback(matchId: string, input: FeedbackInput): Promise<FeedbackReceipt>;
+  recordMatch(result: VenueMatchResult, accountId?: string | null): Promise<string | null>;
+  submitFeedback(matchId: string, input: FeedbackInput, accountId?: string | null): Promise<FeedbackReceipt>;
 }
 
 export interface VenueManagementServiceOptions {
   appUrl: string;
+  /**
+   * When set, bearer tokens are provider-issued JWTs and the legacy
+   * account-name login is refused. Absent means passwordless local mode.
+   */
+  identityVerifier?: IdentityVerifier;
   drinkInfoProvider?: DrinkInfoProvider;
   menuPhotoScanProvider?: MenuPhotoScanProvider;
   drinkPhotoProvider?: DrinkPhotoProvider;
@@ -123,6 +135,16 @@ export class DefaultVenueManagementService implements VenueManagementService {
   }
 
   async login(name: string): Promise<VenueLoginResult> {
+    if (this.options.identityVerifier) {
+      throw new VenueManagementServiceError(
+        {
+          code: "INVALID_REQUEST",
+          message: "This deployment signs in with Google. Use the Google button instead.",
+          retryable: false,
+        },
+        400,
+      );
+    }
     const displayName = venueLoginInputSchema.parse({ name }).name;
     const normalized = normalizeAccountName(displayName);
     const account = await this.repository.findOrCreateAccount(normalized, displayName);
@@ -137,8 +159,21 @@ export class DefaultVenueManagementService implements VenueManagementService {
   }
 
   async logout(token: string): Promise<void> {
+    // Provider-issued tokens are revoked by the identity provider on the client;
+    // there is no server-side session row to retire.
+    if (this.options.identityVerifier) return;
     if (token.length < 16) return;
     await this.repository.revokeVenueSession(sha256Hex(token));
+  }
+
+  async resolveAccountId(token: string): Promise<string | null> {
+    if (!token) return null;
+    try {
+      const account = await this.authorize(token);
+      return account.id;
+    } catch {
+      return null;
+    }
   }
 
   async createVenue(token: string, input: CreateVenueInput): Promise<VenueSessionInfo> {
@@ -388,7 +423,7 @@ export class DefaultVenueManagementService implements VenueManagementService {
     }
   }
 
-  async recordMatch(result: VenueMatchResult): Promise<string | null> {
+  async recordMatch(result: VenueMatchResult, accountId: string | null = null): Promise<string | null> {
     try {
       return await this.repository.recordMatchEvent({
         merchantId: result.venue.id,
@@ -396,18 +431,28 @@ export class DefaultVenueManagementService implements VenueManagementService {
         itemId: result.item.id,
         itemName: result.item.name,
         traceId: result.traceId,
+        accountId,
       });
     } catch {
       return null;
     }
   }
 
-  async submitFeedback(matchId: string, input: FeedbackInput): Promise<FeedbackReceipt> {
+  async submitFeedback(
+    matchId: string,
+    input: FeedbackInput,
+    accountId: string | null = null,
+  ): Promise<FeedbackReceipt> {
     const parsed = feedbackInputSchema.parse(input);
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(matchId)) {
       throw matchNotFound();
     }
-    const outcome = await this.repository.createFeedback(matchId, parsed.rating, parsed.comment ?? null);
+    const outcome = await this.repository.createFeedback(
+      matchId,
+      parsed.rating,
+      parsed.comment ?? null,
+      accountId,
+    );
     if (outcome === "match_not_found") throw matchNotFound();
     if (outcome === "duplicate") {
       throw new VenueManagementServiceError(
@@ -420,6 +465,12 @@ export class DefaultVenueManagementService implements VenueManagementService {
 
   private async authorize(token: string): Promise<StoredVenueAccount> {
     if (token.length < 16) throw unauthorized();
+    const verifier = this.options.identityVerifier;
+    if (verifier) {
+      const identity = await verifier.verify(token);
+      if (!identity) throw unauthorized();
+      return this.repository.findOrCreateAccountByIdentity(identity);
+    }
     const account = await this.repository.verifyVenueSession(sha256Hex(token));
     if (!account) throw unauthorized();
     return account;
@@ -441,7 +492,12 @@ export class DefaultVenueManagementService implements VenueManagementService {
       ? await this.repository.getVenueProfile(account.merchantId)
       : null;
     return venueSessionInfoSchema.parse({
-      account: { id: account.id, name: account.nameNormalized, displayName: account.displayName },
+      account: {
+        id: account.id,
+        name: account.nameNormalized,
+        displayName: account.displayName,
+        email: account.email,
+      },
       venue: profile ? venueProfileSchema.parse(profile) : null,
     });
   }
@@ -499,6 +555,11 @@ export class UnavailableVenueManagementService implements VenueManagementService
   async logout(token: string): Promise<void> {
     void token;
     venueBackendUnavailable();
+  }
+
+  async resolveAccountId(token: string): Promise<string | null> {
+    void token;
+    return null;
   }
 
   async createVenue(token: string, input: CreateVenueInput): Promise<VenueSessionInfo> {
@@ -614,14 +675,20 @@ export class UnavailableVenueManagementService implements VenueManagementService
     void event;
   }
 
-  async recordMatch(result: VenueMatchResult): Promise<string | null> {
+  async recordMatch(result: VenueMatchResult, accountId?: string | null): Promise<string | null> {
     void result;
+    void accountId;
     return null;
   }
 
-  async submitFeedback(matchId: string, input: FeedbackInput): Promise<FeedbackReceipt> {
+  async submitFeedback(
+    matchId: string,
+    input: FeedbackInput,
+    accountId?: string | null,
+  ): Promise<FeedbackReceipt> {
     void matchId;
     void input;
+    void accountId;
     return venueBackendUnavailable();
   }
 }

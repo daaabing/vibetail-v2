@@ -4,16 +4,17 @@
 
 Vibetail currently deploys as one standard Node web/API service. Railway Railpack installs the pinned pnpm toolchain, runs `pnpm build`, and starts `node apps/web/dist/server/index.js`. The server listens on Railway's injected `PORT` and defaults to `0.0.0.0` in production.
 
-`GET /health` is a process liveness check and is the Railway deployment healthcheck. `GET /ready` checks the selected venue repository. In Supabase mode it performs a public repository query and returns `503` without leaking provider errors if the dependency is unavailable.
+`GET /health` is a process liveness check and is the Railway deployment healthcheck. `GET /ready` performs a public Supabase repository query and returns `503` without leaking provider errors if the dependency is unavailable.
 
 ## Staging variables
 
-Start with the deterministic fixture deployment:
+Venue data always lives in Supabase, so every deployment must configure the `SUPABASE_*` variables — there is no fixture fallback:
 
 ```text
 NODE_ENV=production
 APP_URL=https://<generated-domain>
-VENUE_REPOSITORY=fixture
+SUPABASE_URL=<project URL>
+SUPABASE_PUBLISHABLE_KEY=<publishable or legacy anon key>
 MODEL_PROVIDER=deterministic
 SANDBOX_PROVIDER=local
 LOG_LEVEL=info
@@ -21,17 +22,7 @@ LOG_LEVEL=info
 
 Railway supplies `PORT`. `HOST` may be omitted because production defaults to `0.0.0.0`.
 
-`RESTAURANT_REPOSITORY` is a deprecated alias for `VENUE_REPOSITORY`; existing Railway configurations that still set it keep working, but new configurations should use `VENUE_REPOSITORY`.
-
-After fixture verification, Supabase public-read staging requires these Railway Variables:
-
-```text
-VENUE_REPOSITORY=supabase
-SUPABASE_URL=<project URL>
-SUPABASE_PUBLISHABLE_KEY=<publishable or legacy anon key>
-```
-
-To enable the temporary legacy management flow, additionally configure `SUPABASE_SERVICE_ROLE_KEY` with a server-only secret or legacy `service_role` key. Without it, public reads remain available while all management operations fail closed with `503`.
+To enable the venue backend and the temporary legacy management flow, additionally configure `SUPABASE_SERVICE_ROLE_KEY` with a server-only secret or legacy `service_role` key. Without it, public reads remain available while all management operations fail closed with `503`.
 
 To enable AI-written match copy through OpenRouter, configure the server-only variables below and redeploy:
 
@@ -55,7 +46,7 @@ For every generated staging URL verify:
 2. `/ready` returns `200` and identifies the expected repository.
 3. `/`, `/match`, and `/venues` render without console errors.
 4. `/m/double-chicken-please/main` renders and completes a match.
-5. The fixture management page authorizes only with the documented fixture token.
+5. The legacy management page authorizes only with a valid private token.
 6. Unknown API routes return structured JSON rather than the SPA.
 7. Logs contain no authorization header or secret.
 8. When a remote model provider is selected, a result has non-template match copy and still resolves to a current allowlisted item.

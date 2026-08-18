@@ -549,6 +549,7 @@ export type Database = {
       }
       match_events: {
         Row: {
+          account_id: string | null
           created_at: string
           id: string
           item_id: string
@@ -558,6 +559,7 @@ export type Database = {
           trace_id: string
         }
         Insert: {
+          account_id?: string | null
           created_at?: string
           id?: string
           item_id: string
@@ -567,6 +569,7 @@ export type Database = {
           trace_id: string
         }
         Update: {
+          account_id?: string | null
           created_at?: string
           id?: string
           item_id?: string
@@ -587,6 +590,7 @@ export type Database = {
       }
       match_feedback: {
         Row: {
+          account_id: string | null
           comment: string | null
           created_at: string
           id: string
@@ -595,6 +599,7 @@ export type Database = {
           rating: number
         }
         Insert: {
+          account_id?: string | null
           comment?: string | null
           created_at?: string
           id?: string
@@ -603,6 +608,7 @@ export type Database = {
           rating: number
         }
         Update: {
+          account_id?: string | null
           comment?: string | null
           created_at?: string
           id?: string
@@ -629,22 +635,28 @@ export type Database = {
       }
       venue_accounts: {
         Row: {
+          auth_user_id: string | null
           created_at: string
           display_name: string
+          email: string | null
           id: string
           merchant_id: string | null
           name_normalized: string
         }
         Insert: {
+          auth_user_id?: string | null
           created_at?: string
           display_name: string
+          email?: string | null
           id?: string
           merchant_id?: string | null
           name_normalized: string
         }
         Update: {
+          auth_user_id?: string | null
           created_at?: string
           display_name?: string
+          email?: string | null
           id?: string
           merchant_id?: string | null
           name_normalized?: string

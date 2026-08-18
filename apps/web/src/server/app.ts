@@ -12,6 +12,7 @@ import {
   menuPhotoScanInputSchema,
   menuUrlScanInputSchema,
   prepareDrinkPhotoInputSchema,
+  runtimeConfigSchema,
   updateVenueMenuInputSchema,
   venueDashboardRangeSchema,
   venueErrorSchema,
@@ -20,6 +21,7 @@ import {
   updateAvailabilityInputSchema,
   updateMenuInputSchema,
   updateMerchantInputSchema,
+  type AuthConfig,
   type VenueError,
   type VenueMatchResult,
 } from "@vibetail/contracts";
@@ -31,7 +33,6 @@ import {
   type DefaultVenueService,
   type ManagementService,
   type VenueManagementService,
-  type FixtureVenueMediaStorage,
 } from "@vibetail/venue-core";
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
 import { ZodError } from "zod";
@@ -40,10 +41,9 @@ export interface WebAppOptions {
   venueService: DefaultVenueService;
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
-  dataSource: "fixture" | "supabase";
+  authConfig: AuthConfig;
   checkReadiness?: () => Promise<Array<{ name: string; ready: boolean; detail: string }>>;
   testFrontend?: boolean;
-  fixtureVenueMediaStorage?: FixtureVenueMediaStorage;
 }
 
 export function createWebApp(options: WebAppOptions): Express {
@@ -60,7 +60,7 @@ export function createWebApp(options: WebAppOptions): Express {
     asyncRoute(async (_request, response) => {
       const checks = options.checkReadiness
         ? await options.checkReadiness()
-        : [{ name: "venue_repository", ready: true, detail: options.dataSource }];
+        : [{ name: "venue_repository", ready: true, detail: "supabase" }];
       const ready = checks.every((check) => check.ready);
       response.status(ready ? 200 : 503).json({
         status: ready ? "ready" : "not_ready",
@@ -70,6 +70,12 @@ export function createWebApp(options: WebAppOptions): Express {
       });
     }),
   );
+
+  // Runtime config keeps a single build deployable across environments; it is
+  // publishable-only by construction (see authConfigSchema).
+  app.get("/v1/config", (_request, response) => {
+    response.json(runtimeConfigSchema.parse({ auth: options.authConfig }));
+  });
 
   app.get(
     "/v1/venues",
@@ -90,7 +96,7 @@ export function createWebApp(options: WebAppOptions): Express {
     asyncRoute(async (request, response) => {
       const { preferences } = globalMatchRequestSchema.parse(request.body);
       const result = await options.venueService.matchGlobalItem(preferences);
-      response.json(await withMatchId(options.venueManagementService, result));
+      response.json(await withMatchId(options.venueManagementService, result, request));
     }),
   );
 
@@ -210,7 +216,7 @@ export function createWebApp(options: WebAppOptions): Express {
         menuSlug: request.params.menuSlug ?? "",
         preferences,
       });
-      response.json(await withMatchId(options.venueManagementService, result));
+      response.json(await withMatchId(options.venueManagementService, result, request));
     }),
   );
 
@@ -358,20 +364,6 @@ export function createWebApp(options: WebAppOptions): Express {
     }),
   );
 
-  if (options.fixtureVenueMediaStorage) {
-    app.get("/v1/fixture-venue-media/*", (request, response) => {
-      const storagePath = (request.params as Record<string, string>)["0"] ?? "";
-      const object = options.fixtureVenueMediaStorage?.getObject(storagePath);
-      if (!object) {
-        response.status(404).end();
-        return;
-      }
-      response.setHeader("content-type", object.contentType);
-      response.setHeader("cache-control", "private, max-age=3600");
-      response.send(Buffer.from(object.bytes));
-    });
-  }
-
   app.post(
     "/v1/venue/menus",
     asyncRoute(async (request, response) => {
@@ -421,7 +413,9 @@ export function createWebApp(options: WebAppOptions): Express {
     "/v1/matches/:matchId/feedback",
     asyncRoute(async (request, response) => {
       response.status(201).json(await venueManagement.submitFeedback(
-        request.params.matchId ?? "", feedbackInputSchema.parse(request.body),
+        request.params.matchId ?? "",
+        feedbackInputSchema.parse(request.body),
+        await venueManagement.resolveAccountId(readBearerToken(request)),
       ));
     }),
   );
@@ -462,9 +456,12 @@ function asyncRoute(
 async function withMatchId(
   service: VenueManagementService,
   result: VenueMatchResult,
+  request: Request,
 ): Promise<VenueMatchResult> {
   try {
-    const matchId = await service.recordMatch(result);
+    // Consumer sign-in is optional, so an unusable token just means anonymous.
+    const accountId = await service.resolveAccountId(readBearerToken(request));
+    const matchId = await service.recordMatch(result, accountId);
     return matchId ? { ...result, matchId } : result;
   } catch {
     return result;

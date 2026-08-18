@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
   drinkStrengthSchema,
-  venueTypeSchema,
   type CreateMenuInput,
   type DrinkInput,
   type MenuItemInput,
@@ -10,6 +9,7 @@ import {
   type UpdateMerchantInput,
   type VenueType,
 } from "@vibetail/contracts";
+import type { VerifiedIdentity } from "./identity.js";
 
 const nullableUrlSchema = z.string().url().nullable();
 
@@ -79,6 +79,10 @@ export const storedVenueAccountSchema = z.object({
   nameNormalized: z.string().min(1),
   displayName: z.string().min(1),
   merchantId: z.string().uuid().nullable(),
+  // Set once the account is claimed by an identity provider (Supabase Auth).
+  // Legacy name-login rows keep both fields null.
+  authUserId: z.string().uuid().nullable().default(null),
+  email: z.string().nullable().default(null),
 });
 export type StoredVenueAccount = z.infer<typeof storedVenueAccountSchema>;
 
@@ -116,68 +120,6 @@ export interface StoredFeedbackEntry {
   itemName: string;
   createdAt: string;
 }
-
-// Seed timestamps are relative so fixture dashboards stay populated over time.
-const seedMinutesAgoSchema = z.number().int().min(0).max(60 * 24 * 365);
-
-export const venueFixtureSeedSchema = z.object({
-  accounts: z.array(storedVenueAccountSchema).default([]),
-  profiles: z.array(z.object({
-    merchantId: z.string().uuid(),
-    address: z.string().nullable(),
-    venueType: venueTypeSchema.nullable(),
-  })).default([]),
-  drinks: z.array(z.object({
-    merchantId: z.string().uuid(),
-    drink: storedDrinkSchema,
-  })).default([]),
-  menuDrinks: z.array(z.object({
-    menuId: z.string().uuid(),
-    drinkId: z.string().uuid(),
-    sortOrder: z.number().int(),
-  })).default([]),
-  matchEvents: z.array(z.object({
-    id: z.string().uuid(),
-    merchantId: z.string().uuid(),
-    menuId: z.string().uuid().nullable(),
-    itemId: z.string().uuid(),
-    itemName: z.string().min(1),
-    traceId: z.string().min(1),
-    minutesAgo: seedMinutesAgoSchema,
-  })).default([]),
-  menuViews: z.array(z.object({
-    merchantId: z.string().uuid(),
-    menuId: z.string().uuid().nullable(),
-    minutesAgo: seedMinutesAgoSchema,
-  })).default([]),
-  feedback: z.array(z.object({
-    id: z.string().uuid(),
-    matchId: z.string().uuid(),
-    rating: z.number().int().min(1).max(5),
-    comment: z.string().nullable(),
-    minutesAgo: seedMinutesAgoSchema,
-  })).default([]),
-});
-export type VenueFixtureSeed = z.infer<typeof venueFixtureSeedSchema>;
-
-export const venueFixtureSchema = z.object({
-  merchants: z.array(storedVenueSchema),
-  matchingFailureMenuIds: z.array(z.string().uuid()).default([]),
-  managementTokens: z.array(z.object({
-    token: z.string().min(16),
-    merchantId: z.string().uuid(),
-  })).default([]),
-  venues: venueFixtureSeedSchema.default({
-    accounts: [],
-    profiles: [],
-    drinks: [],
-    menuDrinks: [],
-    matchEvents: [],
-    menuViews: [],
-    feedback: [],
-  }),
-});
-export type VenueFixture = z.infer<typeof venueFixtureSchema>;
 
 export type VenueMenuLookup =
   | { kind: "ok"; venue: StoredVenue; menu: StoredMenu }
@@ -238,6 +180,8 @@ export interface RecordMatchEventInput {
   itemId: string;
   itemName: string;
   traceId: string;
+  // Null for anonymous guests; consumer sign-in is optional by design.
+  accountId?: string | null;
 }
 
 export type CreateFeedbackOutcome = "created" | "duplicate" | "match_not_found";
@@ -250,6 +194,12 @@ export type CreateFeedbackOutcome = "created" | "duplicate" | "match_not_found";
  */
 export interface VenueManagementRepository {
   findOrCreateAccount(nameNormalized: string, displayName: string): Promise<StoredVenueAccount>;
+  /**
+   * Resolves the account behind a verified external identity, creating it on
+   * first sign-in. Consumers and venue owners share one account row; owning a
+   * venue is just a non-null merchantId.
+   */
+  findOrCreateAccountByIdentity(identity: VerifiedIdentity): Promise<StoredVenueAccount>;
   createVenueSession(accountId: string, tokenHash: string): Promise<void>;
   verifyVenueSession(tokenHash: string): Promise<StoredVenueAccount | null>;
   revokeVenueSession(tokenHash: string): Promise<void>;
@@ -271,7 +221,12 @@ export interface VenueManagementRepository {
   publishVenueMenu(merchantId: string, menuId: string): Promise<void>;
   recordMenuView(merchantSlug: string, menuId: string | null): Promise<void>;
   recordMatchEvent(event: RecordMatchEventInput): Promise<string>;
-  createFeedback(matchId: string, rating: number, comment: string | null): Promise<CreateFeedbackOutcome>;
+  createFeedback(
+    matchId: string,
+    rating: number,
+    comment: string | null,
+    accountId?: string | null,
+  ): Promise<CreateFeedbackOutcome>;
   countMenuViews(merchantId: string, sinceIso: string): Promise<number>;
   listMatchEvents(merchantId: string, sinceIso: string, limit: number): Promise<StoredMatchEvent[]>;
   listFeedback(merchantId: string, sinceIso: string, limit: number): Promise<StoredFeedbackEntry[]>;
