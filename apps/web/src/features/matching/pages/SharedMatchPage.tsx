@@ -12,6 +12,7 @@ const client = new HttpVenueClient();
 export function SharedMatchPage({ matchId }: { matchId: string }) {
   const [match, setMatch] = useState<SharedMatch>();
   const [failed, setFailed] = useState(false);
+  const [copied, setCopied] = useState(false);
   useSeo("A Vibetail match", "Someone matched their night to a drink.");
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export function SharedMatchPage({ matchId }: { matchId: string }) {
       </article>
       <div className="vt-actions poster-actions">
         <a className="btn btn-solid" href={menuUrl}>Order it at {match.venueName} →</a>
+        <button className="btn btn-outline" data-testid="copy-link" type="button" onClick={() => { void navigator.clipboard.writeText(window.location.href).then(() => setCopied(true)).catch(() => undefined); }}>{copied ? "Link copied ✓" : "Copy link"}</button>
         <a className="btn btn-outline" href="/match">Match your own vibe</a>
       </div>
     </div>

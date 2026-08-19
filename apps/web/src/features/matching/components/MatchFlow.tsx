@@ -89,7 +89,7 @@ function RecommendationCard({ destination, originalVibe, result, onAgain, onDest
   const [cardState, setCardState] = useState<"idle" | "working" | "done" | "error">("idle");
   const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
   const [barState, setBarState] = useState<"idle" | "working" | "saved" | "error">("idle");
-  const [signInOpen, setSignInOpen] = useState(false);
+  const [signInFor, setSignInFor] = useState<"save" | "share" | null>(null);
   const tags = [...result.item.flavorTags, ...result.item.moodTags].slice(0, 5);
   const serial = makeSerial(result.matchId ?? result.traceId);
   const guest = guestForSerial(serial);
@@ -119,7 +119,7 @@ function RecommendationCard({ destination, originalVibe, result, onAgain, onDest
           // unannounced reads as a bug. The confirmed intent completes on
           // /vibe-bar after the round trip.
           setBarState("idle");
-          setSignInOpen(true);
+          setSignInFor("save");
           return;
         }
         throw caught;
@@ -130,6 +130,11 @@ function RecommendationCard({ destination, originalVibe, result, onAgain, onDest
   }
 
   async function shareLink() {
+    const { getAccessToken } = await import("../../auth/auth-session.js");
+    if (!(await getAccessToken().catch(() => null))) {
+      setSignInFor("share");
+      return;
+    }
     const path = result.matchId ? `/r/${result.matchId}` : `/m/${result.venue.slug}/${result.menu.slug}`;
     const url = new URL(path, window.location.origin).toString();
     const nav = navigator as Navigator & { share?: (data: { title: string; url: string }) => Promise<void> };
@@ -148,15 +153,36 @@ function RecommendationCard({ destination, originalVibe, result, onAgain, onDest
     }
   }
 
-  async function confirmSignIn() {
+  async function confirmGoogle() {
     if (!result.matchId) return;
     const { signInWithGoogle } = await import("../../auth/auth-session.js");
-    rememberVibeBarIntent(result.matchId);
-    await signInWithGoogle("/vibe-bar");
+    if (signInFor === "save") {
+      // Completed by /vibe-bar after the round trip.
+      rememberVibeBarIntent(result.matchId);
+      await signInWithGoogle("/vibe-bar");
+      return;
+    }
+    // Share: land on the very page being shared; its Copy link button is there.
+    await signInWithGoogle(`/r/${result.matchId}`);
+  }
+
+  function resumeAfterEmailSignIn() {
+    const intent = signInFor;
+    setSignInFor(null);
+    if (intent === "save") void saveToVibeBar();
+    else if (intent === "share") void shareLink();
   }
 
   return <div className="poster-wrap" data-testid="match-result">
-    {signInOpen && <SignInDialog onConfirm={() => void confirmSignIn()} onCancel={() => setSignInOpen(false)} />}
+    {signInFor && <SignInDialog
+      title={signInFor === "save" ? "Sign in to keep this drink" : "Sign in to share this match"}
+      description={signInFor === "save"
+        ? "Your Vibe Bar follows your account, so tonight’s match is still there next time."
+        : "Sharing links your card to you, so the person on the other end sees whose night this was."}
+      onGoogle={() => void confirmGoogle()}
+      onSignedIn={resumeAfterEmailSignIn}
+      onCancel={() => setSignInFor(null)}
+    />}
     <article className="paper-pocket pocket-card frame-gilt relative" style={{ background: "var(--paper-card)" }}>
       <div className="grain-layer" aria-hidden style={{ opacity: 0.32 }} />
 
