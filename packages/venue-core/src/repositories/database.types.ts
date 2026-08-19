@@ -111,6 +111,7 @@ export type Database = {
           menu_name: string | null
           menu_slug: string | null
           merchant_id: string
+          original_vibe: string | null
           roast: string | null
           tastes_like: string | null
           trace_id: string
@@ -130,6 +131,7 @@ export type Database = {
           menu_name?: string | null
           menu_slug?: string | null
           merchant_id: string
+          original_vibe?: string | null
           roast?: string | null
           tastes_like?: string | null
           trace_id: string
@@ -149,6 +151,7 @@ export type Database = {
           menu_name?: string | null
           menu_slug?: string | null
           merchant_id?: string
+          original_vibe?: string | null
           roast?: string | null
           tastes_like?: string | null
           trace_id?: string

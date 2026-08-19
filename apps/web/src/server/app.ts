@@ -97,7 +97,7 @@ export function createWebApp(options: WebAppOptions): Express {
     asyncRoute(async (request, response) => {
       const { preferences } = globalMatchRequestSchema.parse(request.body);
       const result = await options.venueService.matchGlobalItem(preferences);
-      response.json(await withMatchId(options.venueManagementService, result, request));
+      response.json(await withMatchId(options.venueManagementService, result, request, preferences.mood ?? preferences.freeText ?? null));
     }),
   );
 
@@ -242,7 +242,7 @@ export function createWebApp(options: WebAppOptions): Express {
         menuSlug: request.params.menuSlug ?? "",
         preferences,
       });
-      response.json(await withMatchId(options.venueManagementService, result, request));
+      response.json(await withMatchId(options.venueManagementService, result, request, preferences.mood ?? preferences.freeText ?? null));
     }),
   );
 
@@ -483,11 +483,12 @@ async function withMatchId(
   service: VenueManagementService,
   result: VenueMatchResult,
   request: Request,
+  originalVibe: string | null = null,
 ): Promise<VenueMatchResult> {
   try {
     // Consumer sign-in is optional, so an unusable token just means anonymous.
     const accountId = await service.resolveAccountId(readBearerToken(request));
-    const matchId = await service.recordMatch(result, accountId);
+    const matchId = await service.recordMatch(result, accountId, originalVibe);
     return matchId ? { ...result, matchId } : result;
   } catch {
     return result;

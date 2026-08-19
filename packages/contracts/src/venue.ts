@@ -202,6 +202,7 @@ export const sharedMatchSchema = z.object({
   menuName: z.string().min(1).max(200).nullable(),
   menuSlug: z.string().min(1).max(100).nullable(),
   itemName: z.string().min(1).max(200),
+  originalVibe: z.string().max(500).nullable(),
   vibeName: z.string().min(1).max(120),
   tastesLike: z.string().min(1).max(600),
   flavorProfile: z.string().min(1).max(200),

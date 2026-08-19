@@ -187,6 +187,7 @@ export interface RecordMatchEventInput {
   // Snapshot of the model-authored copy plus display names, so a shared
   // /r/{matchId} link keeps rendering after the menu changes.
   snapshot: {
+    originalVibe: string | null;
     vibeName: string;
     tastesLike: string;
     flavorProfile: string;
