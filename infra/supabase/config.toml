@@ -35,10 +35,9 @@ enable_signup = true
 # Production keeps confirmations on; the sign-up form handles the no-session case.
 enable_confirmations = false
 
-# To exercise Google locally: create the OAuth client per
+# To make the Google button complete locally: create the OAuth client per
 # docs/operations/google-auth-setup.md, export the two env vars, uncomment,
-# restart the stack (pnpm db:stop && pnpm db:start), and set
-# AUTH_GOOGLE_ENABLED=true for the app server.
+# and restart the stack (pnpm db:stop && pnpm db:start).
 # [auth.external.google]
 # enabled = true
 # client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"

@@ -51,7 +51,7 @@ function renderQrSvg(text: string): Promise<string> {
 /** Publishable auth settings the browser needs to start a sign-in. */
 function createAuthConfig(env: WebServerEnv): AuthConfig {
   if (env.AUTH_PROVIDER !== "supabase") {
-    return { provider: "none", supabaseUrl: null, supabasePublishableKey: null, googleEnabled: false };
+    return { provider: "none", supabaseUrl: null, supabasePublishableKey: null };
   }
   if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
     throw new Error("Validated Supabase auth configuration is unavailable");
@@ -60,7 +60,6 @@ function createAuthConfig(env: WebServerEnv): AuthConfig {
     provider: "supabase",
     supabaseUrl: env.SUPABASE_URL,
     supabasePublishableKey: env.SUPABASE_PUBLISHABLE_KEY,
-    googleEnabled: env.AUTH_GOOGLE_ENABLED,
   };
 }
 

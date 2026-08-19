@@ -100,9 +100,32 @@ export async function signUpWithEmail(email: string, password: string): Promise<
 export async function signInWithGoogle(next: string): Promise<void> {
   const client = await requireClient();
   const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeNext(next))}`;
-  const { error } = await client.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
+  const { data, error } = await client.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo, skipBrowserRedirect: true },
+  });
   if (error) throw new Error(error.message);
+  if (!data.url) throw new Error("Google sign-in could not be started.");
+  // The button renders regardless of deployment readiness, so probe GoTrue
+  // before leaving the page: an enabled provider answers with a redirect
+  // (opaque under CORS, status 0), a missing OAuth client answers 4xx JSON.
+  // Probe failures (network, CORS) fall through to the normal redirect.
+  try {
+    const probe = await fetch(data.url, { redirect: "manual" });
+    if (probe.status >= 400) {
+      throw new GoogleNotConfiguredError();
+    }
+  } catch (caught) {
+    if (caught instanceof GoogleNotConfiguredError) {
+      throw new Error(
+        "Google sign-in is not set up on this deployment yet. Use email and password, or ask the operator to finish the Google configuration.",
+      );
+    }
+  }
+  window.location.assign(data.url);
 }
+
+class GoogleNotConfiguredError extends Error {}
 
 export async function signOut(): Promise<void> {
   const client = await getSupabaseClient();
