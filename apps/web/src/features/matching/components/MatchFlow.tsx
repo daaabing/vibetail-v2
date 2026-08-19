@@ -7,6 +7,7 @@ import Draw from "../../draw/art.js";
 import MixingOverlay from "../../mix/MixingOverlay.js";
 import { loadingLines } from "../../../lib/vibeflow.js";
 import { rememberVibeBarIntent } from "../vibe-bar-intent.js";
+import { SignInDialog } from "./SignInDialog.js";
 
 interface MatchFlowProps {
   context: { kicker: string; title: string; description: string };
@@ -88,6 +89,7 @@ function RecommendationCard({ destination, originalVibe, result, onAgain, onDest
   const [cardState, setCardState] = useState<"idle" | "working" | "done" | "error">("idle");
   const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
   const [barState, setBarState] = useState<"idle" | "working" | "saved" | "error">("idle");
+  const [signInOpen, setSignInOpen] = useState(false);
   const tags = [...result.item.flavorTags, ...result.item.moodTags].slice(0, 5);
   const serial = makeSerial(result.matchId ?? result.traceId);
   const guest = guestForSerial(serial);
@@ -113,11 +115,11 @@ function RecommendationCard({ destination, originalVibe, result, onAgain, onDest
         setBarState("saved");
       } catch (caught) {
         if (caught instanceof VenueClientError && caught.status === 401) {
-          // Not signed in: round-trip through Google and come back to this
-          // page; the pending intent is completed after the redirect.
-          const { signInWithGoogle } = await import("../../auth/auth-session.js");
-          rememberVibeBarIntent(result.matchId);
-          await signInWithGoogle("/vibe-bar");
+          // Not signed in: ask before redirecting — being thrown to Google
+          // unannounced reads as a bug. The confirmed intent completes on
+          // /vibe-bar after the round trip.
+          setBarState("idle");
+          setSignInOpen(true);
           return;
         }
         throw caught;
@@ -146,7 +148,15 @@ function RecommendationCard({ destination, originalVibe, result, onAgain, onDest
     }
   }
 
+  async function confirmSignIn() {
+    if (!result.matchId) return;
+    const { signInWithGoogle } = await import("../../auth/auth-session.js");
+    rememberVibeBarIntent(result.matchId);
+    await signInWithGoogle("/vibe-bar");
+  }
+
   return <div className="poster-wrap" data-testid="match-result">
+    {signInOpen && <SignInDialog onConfirm={() => void confirmSignIn()} onCancel={() => setSignInOpen(false)} />}
     <article className="paper-pocket pocket-card frame-gilt relative" style={{ background: "var(--paper-card)" }}>
       <div className="grain-layer" aria-hidden style={{ opacity: 0.32 }} />
 

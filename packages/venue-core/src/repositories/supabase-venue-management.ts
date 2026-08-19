@@ -428,7 +428,7 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
   async getMatchSnapshot(matchId: string): Promise<SharedMatch | null> {
     const result = await this.client
       .from("match_events")
-      .select("id, item_name, created_at, vibe_name, tastes_like, flavor_profile, why_this_match, roast, venue_name, venue_slug, menu_name, menu_slug")
+      .select("id, item_name, created_at, original_vibe, vibe_name, tastes_like, flavor_profile, why_this_match, roast, venue_name, venue_slug, menu_name, menu_slug")
       .eq("id", matchId)
       .maybeSingle();
     if (result.error) throw new Error(result.error.message);
@@ -470,6 +470,7 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
         item_name: event.itemName,
         trace_id: event.traceId,
         account_id: event.accountId ?? null,
+        original_vibe: event.snapshot.originalVibe,
         vibe_name: event.snapshot.vibeName,
         tastes_like: event.snapshot.tastesLike,
         flavor_profile: event.snapshot.flavorProfile,
@@ -702,6 +703,7 @@ function toSharedMatch(row: Record<string, unknown> | null | undefined): SharedM
     menuName: row["menu_name"] === null ? null : String(row["menu_name"]),
     menuSlug: row["menu_slug"] === null ? null : String(row["menu_slug"]),
     itemName: String(row["item_name"]),
+    originalVibe: row["original_vibe"] == null ? null : String(row["original_vibe"]),
     vibeName: String(row["vibe_name"]),
     tastesLike: String(row["tastes_like"]),
     flavorProfile: String(row["flavor_profile"]),

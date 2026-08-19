@@ -5,11 +5,12 @@
 -- ---------------------------------------------------------------------------
 -- Match snapshot: the model-authored copy that makes a result card worth
 -- sharing. Snapshotted at record time so a shared link keeps rendering after
--- the menu changes. The guest's own words are deliberately NOT stored — the
--- share page shows the card, not the guest's private mood text.
+-- the menu changes. The guest's mood line ("original vibe") is part of the
+-- card and shares with it by design.
 -- ---------------------------------------------------------------------------
 
 alter table public.match_events
+  add column if not exists original_vibe text,
   add column if not exists vibe_name text,
   add column if not exists tastes_like text,
   add column if not exists flavor_profile text,

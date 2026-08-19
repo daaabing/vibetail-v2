@@ -115,7 +115,7 @@ export interface VenueManagementService {
   deleteMenu(token: string, menuId: string): Promise<void>;
   publishMenu(token: string, menuId: string): Promise<VenueAdminMenu[]>;
   recordMenuView(event: MenuViewEvent): Promise<void>;
-  recordMatch(result: VenueMatchResult, accountId?: string | null): Promise<string | null>;
+  recordMatch(result: VenueMatchResult, accountId?: string | null, originalVibe?: string | null): Promise<string | null>;
   submitFeedback(matchId: string, input: FeedbackInput, accountId?: string | null): Promise<FeedbackReceipt>;
 }
 
@@ -465,7 +465,7 @@ export class DefaultVenueManagementService implements VenueManagementService {
     }
   }
 
-  async recordMatch(result: VenueMatchResult, accountId: string | null = null): Promise<string | null> {
+  async recordMatch(result: VenueMatchResult, accountId: string | null = null, originalVibe: string | null = null): Promise<string | null> {
     try {
       return await this.repository.recordMatchEvent({
         merchantId: result.venue.id,
@@ -475,6 +475,7 @@ export class DefaultVenueManagementService implements VenueManagementService {
         traceId: result.traceId,
         accountId,
         snapshot: {
+          originalVibe: originalVibe?.trim().slice(0, 500) || null,
           vibeName: result.vibeName,
           tastesLike: result.tastesLike,
           flavorProfile: result.flavorProfile,
@@ -750,7 +751,8 @@ export class UnavailableVenueManagementService implements VenueManagementService
     void event;
   }
 
-  async recordMatch(result: VenueMatchResult, accountId?: string | null): Promise<string | null> {
+  async recordMatch(result: VenueMatchResult, accountId?: string | null, originalVibe?: string | null): Promise<string | null> {
+    void originalVibe;
     void result;
     void accountId;
     return null;

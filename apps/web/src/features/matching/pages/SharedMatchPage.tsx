@@ -37,6 +37,7 @@ export function SharedMatchPage({ matchId }: { matchId: string }) {
         </div>
         <div className="relative px-10 pb-9 pt-6">
           <span className="mx-auto block h-px w-12" aria-hidden style={{ background: "var(--line-strong)" }} />
+          {match.originalVibe && <p className="mono-sm mt-5 text-center" data-testid="original-vibe" style={{ color: "var(--ink-mute)" }}>“{match.originalVibe}”</p>}
           <p className="accent-italic mx-auto mt-6 max-w-[34ch] text-center text-[21px] leading-snug" style={{ color: "var(--ink-soft)" }}>{match.whyThisMatch}</p>
           <p className="note mx-auto mt-5 max-w-[40ch] text-center text-[13.5px] leading-relaxed">{match.tastesLike}</p>
           <p className="note mt-5 text-center text-[13px] italic" style={{ color: "var(--ink-mute)" }}>{match.roast}</p>
