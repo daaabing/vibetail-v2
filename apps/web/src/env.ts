@@ -35,11 +35,6 @@ const serverEnvSchema = z
     // default so merchant sign-in surfaces without configuration; `none` is
     // the legacy passwordless name login, opt-in only.
     AUTH_PROVIDER: z.enum(["none", "supabase"]).default("supabase"),
-    // Opt-in: Google needs an OAuth client registered in Google Cloud and the
-    // Supabase dashboard. Email/password needs neither, so it is always on.
-    AUTH_GOOGLE_ENABLED: z
-      .preprocess((value) => (value === "" ? undefined : value), z.enum(["true", "false"]).default("false"))
-      .transform((value) => value === "true"),
     SUPABASE_URL: z.preprocess(
       (value) => (value === "" ? undefined : value),
       z.string({ error: supabaseSetupHint("SUPABASE_URL") }).url(),

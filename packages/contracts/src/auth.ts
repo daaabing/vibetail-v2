@@ -9,10 +9,6 @@ export const authConfigSchema = z.object({
   provider: z.enum(["none", "supabase"]),
   supabaseUrl: z.string().url().nullable().default(null),
   supabasePublishableKey: z.string().min(1).nullable().default(null),
-  // Email/password is always available under `supabase`; Google needs an OAuth
-  // client configured in the Supabase dashboard, so the button is opt-in and
-  // stays hidden locally instead of failing on click.
-  googleEnabled: z.boolean().default(false),
 });
 export type AuthConfig = z.infer<typeof authConfigSchema>;
 

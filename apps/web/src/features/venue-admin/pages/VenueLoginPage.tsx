@@ -186,11 +186,9 @@ export function VenueLoginPage() {
               >
                 {mode === "signup" ? "I already have an account" : "Create a new account"}
               </button>
-              {config.googleEnabled && (
-                <button className="vt-secondary" type="button" disabled={pending} onClick={() => void submitGoogle()}>
-                  {pendingAction === "google" ? "Redirecting…" : "Continue with Google"}
-                </button>
-              )}
+              <button className="vt-secondary" type="button" disabled={pending} onClick={() => void submitGoogle()}>
+                {pendingAction === "google" ? "Redirecting…" : "Continue with Google"}
+              </button>
               {notice && <div className="vt-notice">{notice}</div>}
               <small>
                 Guests and venue owners share one Vibetail account. You become a venue

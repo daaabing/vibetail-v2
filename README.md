@@ -122,10 +122,10 @@ The venue backend always runs on Supabase. Locally, `pnpm db:reset` (and the tes
 
 | Value | Behaviour |
 | --- | --- |
-| `supabase` (default) | Supabase Auth on `/venue`: email/password always, plus Google when `AUTH_GOOGLE_ENABLED=true`. Requires `SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY` and `infra/supabase/migrations/0003_supabase_auth.sql` applied. `POST /v1/venue/session` (name login) then returns `400`. |
+| `supabase` (default) | Supabase Auth on `/venue`: email/password and Google are both offered. Requires `SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY` and `infra/supabase/migrations/0003_supabase_auth.sql` applied. `POST /v1/venue/session` (name login) then returns `400`. |
 | `none` | Legacy passwordless account-name login, kept because tests still cover it. Anyone who guesses an account name gets in — local use only. |
 
-Email/password needs nothing beyond the Supabase project itself, so it is the path that works against a bare local stack and in tests. Google additionally needs an OAuth client in Google Cloud and the Supabase dashboard; until `AUTH_GOOGLE_ENABLED=true` the button is hidden rather than shown broken.
+Email/password needs nothing beyond the Supabase project itself, so it is the path that works against a bare local stack and in tests. Google additionally needs an OAuth client in Google Cloud and the Supabase dashboard; until that is configured, clicking the (always visible) Google button shows an in-app notice instead of leaving the page.
 
 The local seed ships one ready account — **`demo@vibetail.test` / `vibetail-demo`** — already attached to the Vibetail Taproom venue, so `/venue` lands straight on a populated dashboard after `pnpm db:reset`. It is the same `venue_accounts` row the `none` provider reaches as "Demo Bar". Credentials live in `fixtures/venue/menus.json` under `venues.accounts[].authUser`; the seed generator turns that block into the `auth.users` + `auth.identities` rows.
 
