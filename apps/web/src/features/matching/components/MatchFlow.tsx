@@ -6,6 +6,8 @@ import { PreferenceForm } from "./PreferenceForm.js";
 import Draw from "../../draw/art.js";
 import MixingOverlay from "../../mix/MixingOverlay.js";
 import { loadingLines } from "../../../lib/vibeflow.js";
+import { rememberVibeBarIntent } from "../vibe-bar-intent.js";
+import { SignInDialog } from "./SignInDialog.js";
 
 interface MatchFlowProps {
   context: { kicker: string; title: string; description: string };
@@ -86,6 +88,8 @@ function RecommendationCard({ destination, originalVibe, result, onAgain, onDest
 }) {
   const [cardState, setCardState] = useState<"idle" | "working" | "done" | "error">("idle");
   const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
+  const [barState, setBarState] = useState<"idle" | "working" | "saved" | "error">("idle");
+  const [signInFor, setSignInFor] = useState<"save" | "share" | null>(null);
   const tags = [...result.item.flavorTags, ...result.item.moodTags].slice(0, 5);
   const serial = makeSerial(result.matchId ?? result.traceId);
   const guest = guestForSerial(serial);
@@ -101,8 +105,38 @@ function RecommendationCard({ destination, originalVibe, result, onAgain, onDest
     }
   }
 
+  async function saveToVibeBar() {
+    if (!result.matchId) return;
+    setBarState("working");
+    try {
+      const { HttpVenueClient, VenueClientError } = await import("../../../clients/http-venue-client.js");
+      try {
+        await new HttpVenueClient().saveToVibeBar(result.matchId);
+        setBarState("saved");
+      } catch (caught) {
+        if (caught instanceof VenueClientError && caught.status === 401) {
+          // Not signed in: ask before redirecting — being thrown to Google
+          // unannounced reads as a bug. The confirmed intent completes on
+          // /vibe-bar after the round trip.
+          setBarState("idle");
+          setSignInFor("save");
+          return;
+        }
+        throw caught;
+      }
+    } catch {
+      setBarState("error");
+    }
+  }
+
   async function shareLink() {
-    const url = new URL(`/m/${result.venue.slug}/${result.menu.slug}`, window.location.origin).toString();
+    const { getAccessToken } = await import("../../auth/auth-session.js");
+    if (!(await getAccessToken().catch(() => null))) {
+      setSignInFor("share");
+      return;
+    }
+    const path = result.matchId ? `/r/${result.matchId}` : `/m/${result.venue.slug}/${result.menu.slug}`;
+    const url = new URL(path, window.location.origin).toString();
     const nav = navigator as Navigator & { share?: (data: { title: string; url: string }) => Promise<void> };
     const isTouch = window.matchMedia?.("(pointer: coarse)").matches
       || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
@@ -119,7 +153,36 @@ function RecommendationCard({ destination, originalVibe, result, onAgain, onDest
     }
   }
 
+  async function confirmGoogle() {
+    if (!result.matchId) return;
+    const { signInWithGoogle } = await import("../../auth/auth-session.js");
+    if (signInFor === "save") {
+      // Completed by /vibe-bar after the round trip.
+      rememberVibeBarIntent(result.matchId);
+      await signInWithGoogle("/vibe-bar");
+      return;
+    }
+    // Share: land on the very page being shared; its Copy link button is there.
+    await signInWithGoogle(`/r/${result.matchId}`);
+  }
+
+  function resumeAfterEmailSignIn() {
+    const intent = signInFor;
+    setSignInFor(null);
+    if (intent === "save") void saveToVibeBar();
+    else if (intent === "share") void shareLink();
+  }
+
   return <div className="poster-wrap" data-testid="match-result">
+    {signInFor && <SignInDialog
+      title={signInFor === "save" ? "Sign in to keep this drink" : "Sign in to share this match"}
+      description={signInFor === "save"
+        ? "Your Vibe Bar follows your account, so tonight’s match is still there next time."
+        : "Sharing links your card to you, so the person on the other end sees whose night this was."}
+      onGoogle={() => void confirmGoogle()}
+      onSignedIn={resumeAfterEmailSignIn}
+      onCancel={() => setSignInFor(null)}
+    />}
     <article className="paper-pocket pocket-card frame-gilt relative" style={{ background: "var(--paper-card)" }}>
       <div className="grain-layer" aria-hidden style={{ opacity: 0.32 }} />
 
@@ -167,6 +230,12 @@ function RecommendationCard({ destination, originalVibe, result, onAgain, onDest
           : cardState === "error" ? "Retry save card"
           : "Save card"}
       </button>
+      {result.matchId && <button className="btn btn-outline" data-testid="save-vibe-bar" disabled={barState === "working"} type="button" onClick={() => void saveToVibeBar()}>
+        {barState === "working" ? "Saving…"
+          : barState === "saved" ? "In your Vibe Bar ✓"
+          : barState === "error" ? "Retry Vibe Bar"
+          : "Save to Vibe Bar"}
+      </button>}
       <button className="btn btn-outline" data-testid="share-link" type="button" onClick={() => void shareLink()}>
         {shareState === "copied" ? "Link copied ✓" : shareState === "shared" ? "Shared ✓" : "Share"}
       </button>

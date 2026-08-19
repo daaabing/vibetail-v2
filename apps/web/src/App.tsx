@@ -1,5 +1,7 @@
 import { AuthCallbackPage } from "./features/auth/AuthCallbackPage.js";
 import { CurrentMenuRoute } from "./routes/CurrentMenuRoute.js";
+import { SharedMatchPage } from "./features/matching/pages/SharedMatchPage.js";
+import { VibeBarPage } from "./features/matching/pages/VibeBarPage.js";
 import { VenueRoute } from "./routes/VenueRoute.js";
 import { GlobalMatchPage } from "./features/platform/pages/GlobalMatchPage.js";
 import { LandingPage } from "./features/platform/pages/LandingPage.js";
@@ -29,6 +31,8 @@ export function App() {
   const route = resolveAppRoute(window.location.pathname);
   if (route.kind === "landing") return <LandingPage />;
   if (route.kind === "match") return <GlobalMatchPage />;
+  if (route.kind === "shared_match") return <SharedMatchPage matchId={route.matchId} />;
+  if (route.kind === "vibe_bar") return <VibeBarPage />;
   if (route.kind === "auth_callback") return <AuthCallbackPage />;
   if (route.kind === "venues") return <VenuesPage />;
   if (route.kind === "venue_detail") return <VenueDetailPage merchantSlug={route.merchantSlug} />;
@@ -50,6 +54,8 @@ export function App() {
 export type AppRoute =
   | { kind: "landing" }
   | { kind: "match" }
+  | { kind: "shared_match"; matchId: string }
+  | { kind: "vibe_bar" }
   | { kind: "auth_callback" }
   | { kind: "venues" }
   | { kind: "venue_detail"; merchantSlug: string }
@@ -65,6 +71,9 @@ export function resolveAppRoute(pathname: string): AppRoute {
   const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   if (normalized === "/") return { kind: "landing" };
   if (normalized === "/match") return { kind: "match" };
+  const shared = normalized.match(/^\/r\/([0-9a-f-]{36})$/i);
+  if (shared?.[1]) return { kind: "shared_match", matchId: shared[1].toLowerCase() };
+  if (normalized === "/vibe-bar") return { kind: "vibe_bar" };
   // Fixed OAuth redirect target; must match the Supabase + Google redirect allowlists.
   if (normalized === "/auth/callback") return { kind: "auth_callback" };
   if (normalized === "/venues") return { kind: "venues" };

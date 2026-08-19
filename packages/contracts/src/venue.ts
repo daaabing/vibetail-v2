@@ -193,6 +193,35 @@ export const feedbackInputSchema = z.object({
 });
 export type FeedbackInput = z.infer<typeof feedbackInputSchema>;
 
+// A shared match result: the snapshot a /r/{matchId} link renders. Item facts
+// are the snapshot taken at match time; the live menu may have moved on.
+export const sharedMatchSchema = z.object({
+  matchId: z.string().uuid(),
+  venueName: z.string().min(1).max(200),
+  venueSlug: z.string().min(1).max(100),
+  menuName: z.string().min(1).max(200).nullable(),
+  menuSlug: z.string().min(1).max(100).nullable(),
+  itemName: z.string().min(1).max(200),
+  originalVibe: z.string().max(500).nullable(),
+  vibeName: z.string().min(1).max(120),
+  tastesLike: z.string().min(1).max(600),
+  flavorProfile: z.string().min(1).max(200),
+  whyThisMatch: z.string().min(1).max(1_000),
+  roast: z.string().min(1).max(300),
+  createdAt: z.string().min(1),
+});
+export type SharedMatch = z.infer<typeof sharedMatchSchema>;
+
+export const savedDrinkSchema = z.object({
+  id: z.string().uuid(),
+  savedAt: z.string().min(1),
+  match: sharedMatchSchema,
+});
+export type SavedDrink = z.infer<typeof savedDrinkSchema>;
+
+export const saveToVibeBarInputSchema = z.object({ matchId: z.string().uuid() });
+export type SaveToVibeBarInput = z.infer<typeof saveToVibeBarInputSchema>;
+
 export const feedbackReceiptSchema = z.object({
   matchId: z.string().uuid(),
   status: z.literal("recorded"),

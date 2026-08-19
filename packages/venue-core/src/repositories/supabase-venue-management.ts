@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { DrinkInput, VenueType } from "@vibetail/contracts";
+import { sharedMatchSchema, type DrinkInput, type SavedDrink, type SharedMatch, type VenueType } from "@vibetail/contracts";
 import type {
   CreateFeedbackOutcome,
   CreateVenueRecord,
@@ -405,6 +405,42 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
     if (result.error) throw new Error(result.error.message);
   }
 
+
+  async getMatchSnapshot(matchId: string): Promise<SharedMatch | null> {
+    const result = await this.client
+      .from("match_events")
+      .select("id, item_name, created_at, original_vibe, vibe_name, tastes_like, flavor_profile, why_this_match, roast, venue_name, venue_slug, menu_name, menu_slug")
+      .eq("id", matchId)
+      .maybeSingle();
+    if (result.error) throw new Error(result.error.message);
+    return toSharedMatch(result.data);
+  }
+
+  async saveDrink(accountId: string, matchId: string): Promise<"created" | "duplicate" | "match_not_found"> {
+    const result = await this.client
+      .from("saved_drinks")
+      .insert({ account_id: accountId, match_id: matchId });
+    if (!result.error) return "created";
+    if (result.error.code === "23505") return "duplicate";
+    if (result.error.code === "23503") return "match_not_found";
+    throw new Error(result.error.message);
+  }
+
+  async listSavedDrinks(accountId: string, limit: number): Promise<SavedDrink[]> {
+    const result = await this.client
+      .from("saved_drinks")
+      .select("id, created_at, match:match_events (id, item_name, created_at, vibe_name, tastes_like, flavor_profile, why_this_match, roast, venue_name, venue_slug, menu_name, menu_slug)")
+      .eq("account_id", accountId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (result.error) throw new Error(result.error.message);
+    return (result.data ?? []).flatMap((row) => {
+      const match = toSharedMatch(Array.isArray(row.match) ? row.match[0] : row.match);
+      // Rows recorded before the snapshot columns existed cannot render a card.
+      return match ? [{ id: String(row.id), savedAt: String(row.created_at), match }] : [];
+    });
+  }
+
   async recordMatchEvent(event: RecordMatchEventInput): Promise<string> {
     const result = await this.client
       .from("match_events")
@@ -415,6 +451,16 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
         item_name: event.itemName,
         trace_id: event.traceId,
         account_id: event.accountId ?? null,
+        original_vibe: event.snapshot.originalVibe,
+        vibe_name: event.snapshot.vibeName,
+        tastes_like: event.snapshot.tastesLike,
+        flavor_profile: event.snapshot.flavorProfile,
+        why_this_match: event.snapshot.whyThisMatch,
+        roast: event.snapshot.roast,
+        venue_name: event.snapshot.venueName,
+        venue_slug: event.snapshot.venueSlug,
+        menu_name: event.snapshot.menuName,
+        menu_slug: event.snapshot.menuSlug,
       })
       .select("id")
       .single();
@@ -626,4 +672,24 @@ function firstFreeSlug(taken: ReadonlySet<string>, slugBase: string): string {
 
 function asStrings(value: unknown): string[] {
   return Array.isArray(value) ? value.map(String) : [];
+}
+
+/** Null when the row predates the snapshot columns — those cannot render a card. */
+function toSharedMatch(row: Record<string, unknown> | null | undefined): SharedMatch | null {
+  if (!row || !row["vibe_name"]) return null;
+  return sharedMatchSchema.parse({
+    matchId: String(row["id"]),
+    venueName: String(row["venue_name"]),
+    venueSlug: String(row["venue_slug"]),
+    menuName: row["menu_name"] === null ? null : String(row["menu_name"]),
+    menuSlug: row["menu_slug"] === null ? null : String(row["menu_slug"]),
+    itemName: String(row["item_name"]),
+    originalVibe: row["original_vibe"] == null ? null : String(row["original_vibe"]),
+    vibeName: String(row["vibe_name"]),
+    tastesLike: String(row["tastes_like"]),
+    flavorProfile: String(row["flavor_profile"]),
+    whyThisMatch: String(row["why_this_match"]),
+    roast: String(row["roast"]),
+    createdAt: String(row["created_at"]),
+  });
 }
