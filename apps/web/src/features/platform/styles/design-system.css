@@ -1238,7 +1238,8 @@
   .bubble,
   .liquid-wave-1,
   .liquid-wave-2,
-  .marquee-track {
+  .marquee-track,
+  .stage-orbit {
     animation: none;
   }
   .rise-in {
