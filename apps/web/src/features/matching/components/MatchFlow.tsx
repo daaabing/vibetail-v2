@@ -48,7 +48,7 @@ export function MatchFlow({ context, destination, headerAction, initialPreferenc
     {!busy && result && <RecommendationCard
       {...(destination ? { destination: destination(result) } : {})}
       result={result}
-      onAgain={() => preferences && void submit(preferences)}
+      onAgain={() => { setResult(undefined); setPreferences(undefined); }}
       onDestination={() => preferences && onDestination?.(preferences, result)}
       onEdit={() => setResult(undefined)}
     />}
