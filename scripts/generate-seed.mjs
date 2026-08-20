@@ -179,7 +179,7 @@ emit(`-- Source fixture: fixtures/venue/menus.json`);
 
 // --- storage bucket ---------------------------------------------------------
 emitSection("Storage: private bucket for merchant menu uploads");
-// 0000_baseline.sql already creates this bucket (idempotently); keep the seed
+// 0000_schema.sql already creates this bucket (idempotently); keep the seed
 // self-sufficient but conflict-safe so db reset never fails on the duplicate.
 counts.set("storage.buckets", (counts.get("storage.buckets") ?? 0) + 1);
 emit(

@@ -114,7 +114,7 @@ Guests scanning the QR are counted as menu views; successful matches are recorde
 
 Drinks are venue-level entities: one drink can appear on several menus, edits propagate everywhere, and deleting a drink warns about the menus that reference it. Deleting a menu never deletes drinks. The legacy private-token flow at `/manage/:token` remains available unchanged during the transition.
 
-The venue backend always runs on Supabase. Locally, `pnpm db:reset` (and the test global setup) applies the reviewed migrations in [`infra/supabase/migrations/`](infra/supabase/migrations/) to the local stack; against the shared project they are applied manually after review. Public reads use the publishable client (`SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY`) and work without a privileged key. The venue backend and the legacy management flow additionally need the server-only `SUPABASE_SERVICE_ROLE_KEY`; without it they fail closed with `503` while public reads keep working. The runtime adapters never run migrations or seeds on their own.
+The venue backend always runs on Supabase. The local stack is the only database: `pnpm db:reset` (and the test global setup) replays [`infra/supabase/migrations/0000_schema.sql`](infra/supabase/migrations/0000_schema.sql) onto an empty database and loads the generated seed. Public reads use the publishable client (`SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY`) and work without a privileged key. The venue backend and the legacy management flow additionally need the server-only `SUPABASE_SERVICE_ROLE_KEY`; without it they fail closed with `503` while public reads keep working. The runtime adapters never run migrations or seeds on their own.
 
 ## Authentication
 
@@ -122,7 +122,7 @@ The venue backend always runs on Supabase. Locally, `pnpm db:reset` (and the tes
 
 | Value | Behaviour |
 | --- | --- |
-| `supabase` (default) | Supabase Auth on `/venue`: email/password and Google are both offered. Requires `SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY` and `infra/supabase/migrations/0003_supabase_auth.sql` applied. `POST /v1/venue/session` (name login) then returns `400`. |
+| `supabase` (default) | Supabase Auth on `/venue`: email/password and Google are both offered. Requires `SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY` and a database built from [`infra/supabase/migrations/0000_schema.sql`](infra/supabase/migrations/0000_schema.sql) (`pnpm db:reset`). `POST /v1/venue/session` (name login) then returns `400`. |
 | `none` | Legacy passwordless account-name login, kept because tests still cover it. Anyone who guesses an account name gets in — local use only. |
 
 Email/password needs nothing beyond the Supabase project itself, so it is the path that works against a bare local stack and in tests. Google additionally needs an OAuth client in Google Cloud and the Supabase dashboard; until that is configured, clicking the (always visible) Google button shows an in-app notice instead of leaving the page.

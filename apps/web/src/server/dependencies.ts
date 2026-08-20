@@ -92,9 +92,9 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
         serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
       }))
     : new UnavailableManagementService();
-  // The venue backend needs the reviewed Venue MVP migrations applied
-  // (infra/supabase/migrations/0001_venue_mvp_enum.sql + 0002_venue_mvp.sql);
-  // without the service-role key it fails closed like legacy management.
+  // The venue backend needs a database built from
+  // infra/supabase/migrations/0000_schema.sql; without the service-role key it
+  // fails closed like legacy management.
   const venueManagementService = env.SUPABASE_SERVICE_ROLE_KEY
     ? new DefaultVenueManagementService(
         new SupabaseVenueManagementRepository({

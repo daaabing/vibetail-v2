@@ -57,9 +57,10 @@ In the Supabase dashboard:
 
 ## 4. Database
 
-Apply [`infra/supabase/migrations/0003_supabase_auth.sql`](../../infra/supabase/migrations/0003_supabase_auth.sql)
-manually, after `0002_venue_mvp.sql`. Per `AGENTS.md`, migrations are never applied
-automatically. Run its verification checklist against staging first.
+Nothing to apply by hand: the schema this needs — `venue_accounts.auth_user_id`
+linked to `auth.users`, plus `email` — is part of
+[`infra/supabase/migrations/0000_schema.sql`](../../infra/supabase/migrations/0000_schema.sql).
+Run `pnpm db:reset` and the database is ready.
 
 ## 5. App environment
 
@@ -99,8 +100,9 @@ Google** instead of the account-name form.
 
 - **Existing passwordless venues do not carry over.** A venue created through
   the old name login is not linked to any Google identity, so the owner's first
-  Google sign-in creates an empty account. The migration file documents the
-  manual `update` that hands the existing venue to their identity.
+  Google sign-in creates an empty account. Handing an existing venue to a Google
+  identity means pointing that account's `auth_user_id` and `email` at the
+  `auth.users` row by hand — there is no automated path.
 - **Token verification cost.** The server calls `auth.getUser` and caches the
   result for 60 seconds per token, so a sign-out takes up to a minute to stop
   authorising in-flight API calls. Access tokens themselves are refreshed by the

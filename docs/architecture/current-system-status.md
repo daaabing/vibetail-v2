@@ -95,7 +95,7 @@ Bar Management /manage/:privateToken
 - 稳定消费者入口 `/m/:venueSlug` 始终解析当前 published menu，QR code（服务端 `qrcode` SVG）编码该 URL；
 - 事件闭环：menu view beacon、match event（best-effort，绝不影响匹配成功）、1–5 星 feedback（matchId 为能力凭证，`UNIQUE(match_id)` 幂等）；
 - dashboard 聚合（today/7d/30d）：usage、matches、feedback 均值、top drinks、recent comments；
-- Supabase 侧：`infra/supabase/migrations/0001_venue_mvp_enum.sql` + `0002_venue_mvp.sql` 对共享项目仅供人工审核执行（本地栈由 `supabase db reset` 自动重放）；无 service-role key 时管理端 503 fail closed，公共事件降级为 no-op；
+- Supabase 侧：本地栈是唯一数据库，schema 全部在 `infra/supabase/migrations/0000_schema.sql`，由 `supabase db reset` 重放；无 service-role key 时管理端 503 fail closed，公共事件降级为 no-op；
 - 旧 `/manage/:token` 私链流保持原样，作为过渡期兼容层。
 
 ### Seed 数据与验证
