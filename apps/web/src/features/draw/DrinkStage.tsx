@@ -425,7 +425,7 @@ export default function DrinkStage({
       <div className="grain-layer" aria-hidden style={{ opacity: 0.4 }} />
 
       {/* ── Plate header ── */}
-      <div className="relative flex items-baseline justify-between px-8 pt-7 lg:px-10">
+      <div className="relative flex items-baseline justify-between px-6 pt-5 lg:px-10 lg:pt-7">
         <span
           style={{
             fontFamily: "var(--font-display)",
@@ -458,8 +458,11 @@ export default function DrinkStage({
           }}
         />
 
-        <div className="stage-orbit w-[min(64%,340px)]">
-          <svg viewBox="0 0 240 300" style={{ overflow: "visible", color: "var(--ink)" }}>
+        {/* Sized by width AND height so the sketch scales down instead of
+            overflowing the short mobile stage (the svg keeps its 240:300
+            ratio via preserveAspectRatio). */}
+        <div className="stage-orbit flex h-full max-h-full w-[min(64%,340px)] items-center justify-center">
+          <svg viewBox="0 0 240 300" width="100%" height="100%" style={{ overflow: "visible", color: "var(--ink)" }}>
             <defs>
               <clipPath id="stage-vessel-clip">
                 <path d={vessel.clip} />
@@ -727,7 +730,7 @@ export default function DrinkStage({
       </div>
 
       {/* ── Status ledger ── */}
-      <div className="relative px-8 pb-8 lg:px-10">
+      <div className="relative px-6 pb-5 lg:px-10 lg:pb-8">
         <hr className="rule-strong" style={{ background: "var(--line-strong)" }} />
         <div className="mt-4 flex items-baseline justify-between gap-6">
           <div className="min-w-0">
@@ -753,7 +756,7 @@ export default function DrinkStage({
               {parts.length ? parts.join(", ") : "nothing yet — tell us the mood"}
             </p>
           </div>
-          <span className="mono-sm shrink-0" style={{ color: "var(--ink-mute)" }}>
+          <span className="mono-sm hidden shrink-0 lg:inline" style={{ color: "var(--ink-mute)" }}>
             {"it builds as you answer"}
           </span>
         </div>

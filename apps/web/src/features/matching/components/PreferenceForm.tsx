@@ -61,7 +61,14 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
 
   /* ── Step navigation ── */
   const [step, setStepState] = useState(0);
-  const setStep = (n: number) => {
+  // Taps faster than the 240ms step transition interrupt AnimatePresence
+  // (mode="wait") mid-exit and strand the outgoing section on screen, so
+  // navigation is ignored while the previous transition is still playing.
+  const navLockRef = useRef(Number.NEGATIVE_INFINITY);
+  const setStep = (n: number, force = false) => {
+    const now = performance.now();
+    if (!force && now - navLockRef.current < 320) return;
+    navLockRef.current = now;
     setStepState(Math.min(STEP_IDS.length - 1, Math.max(0, n)));
     // "instant" beats the global `html { scroll-behavior: smooth }` rule; a
     // multi-hundred-ms animated scroll under the sticky header would run
@@ -115,7 +122,7 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
   const changeSensory = (key: keyof SensoryState, v: number) => setSensory((s) => ({ ...s, [key]: v }));
 
   const submit = () => {
-    if (!hasVibe) { setError("Choose a mood or write your own line."); setStep(0); return; }
+    if (!hasVibe) { setError("Choose a mood or write your own line."); setStep(0, true); return; }
     const { finalFlavors, customPreference } = buildPreference(order, "en");
     const mood = moodText.trim() || findVibePick(pickedLabel)?.mood || "";
     const parsed = venuePreferencesSchema.safeParse({
