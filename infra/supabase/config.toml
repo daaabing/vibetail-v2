@@ -31,8 +31,8 @@ enabled = true
 
 [auth.email]
 enable_signup = true
-# local_smtp is off below, so a confirmation link could never be read here.
-# Production keeps confirmations on; the sign-up form handles the no-session case.
+# local_smtp is off below, so a confirmation link could never be read here;
+# the sign-up form handles the no-session case.
 enable_confirmations = false
 
 # To make the Google button complete locally: create the OAuth client per

@@ -17,6 +17,8 @@
 - Temporary legacy venue UI must remain isolated and replaceable.
 - UI must access venue functionality through shared contracts and APIs.
 - Business logic must not depend directly on sandbox or model providers.
-- Do not apply production database migrations without explicit approval.
+- The local Supabase stack is the only database (no remote/production
+  project): the schema lives in `infra/supabase/migrations/0000_schema.sql`,
+  edited in place; `pnpm db:reset` is apply.
 - Do not deploy to production or modify DNS without explicit approval.
 - Run lint, typecheck, tests, and build before declaring a phase complete.

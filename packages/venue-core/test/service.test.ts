@@ -190,8 +190,8 @@ describe("DefaultVenueService", () => {
   it("takes menu facts from the repository while preserving only the provider explanation", async () => {
     const provider = fixedProvider("33333333-3333-4333-8333-333333333331", "Selected for the requested spice.");
     const result = await new DefaultVenueService(anonVenueRepository(), provider).matchVenueItem(request);
-    // menu_items has no price column in the shared schema, so legacy fixture
-    // prices are lost in DB mode and surface as null (fixture mode showed "$19").
+    // menu_items has no price column, so legacy fixture prices are not
+    // persisted and surface as null (fixture mode showed "$19").
     expect(result.item).toMatchObject({ name: "Holy Shishito", price: null, availabilityStatus: "active" });
     expect(result.whyThisMatch).toBe("Selected for the requested spice.");
   });

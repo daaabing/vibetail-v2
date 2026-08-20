@@ -43,17 +43,18 @@ fixtures/venue/menus.json  --(scripts/generate-seed.mjs)-->  infra/supabase/seed
   signs in with them. Emitted before `venue_accounts` because `auth_user_id` has
   an FK to `auth.users`; pgcrypto is schema-qualified (`extensions.crypt`).
 
-## Migrations (`infra/supabase/migrations/`)
+## Schema (`infra/supabase/migrations/0000_schema.sql`)
 
-- Applied in filename order: `0000_baseline` → `0001_venue_mvp_enum` →
-  `0002_venue_mvp` → `0003_supabase_auth`. Purely numeric prefixes only — the
-  CLI silently skips names like `0001a_*`.
-- One transaction per file (why the enum `add value` lives alone in 0001).
-- `0000_baseline.sql` reconstructs the legacy shared-project schema, anon RLS
-  policies, and PG17 hardened-image grants; its predicates are reconstructions
-  to be reconciled against the shared project's `pg_policies`.
-- Production migrations remain manual-apply with explicit approval
-  (see `infra/supabase/README.md` and `AGENTS.md`). Local `db reset` is free.
+- One file holds the complete schema (tables, enums, RLS, triggers, storage
+  bucket). The local stack is the only database — there is no remote/staging/
+  production project. To change the schema, edit the file in place; `db reset`
+  is apply. Do not add incremental migration files unless a persistent
+  deployment exists someday (then freeze `0000_schema.sql` as the baseline).
+- If more files are ever added: purely numeric prefixes only (the CLI silently
+  skips names like `0001a_*`), one transaction per file, and an enum value
+  added with `alter type … add value` cannot be referenced in the same file.
+- After a schema change, regenerate the type snapshot:
+  `supabase --workdir infra gen types typescript --local > packages/venue-core/src/repositories/database.types.ts`
 
 ## Writing tests
 
@@ -79,5 +80,5 @@ fixtures/venue/menus.json  --(scripts/generate-seed.mjs)-->  infra/supabase/seed
 | `Supabase CLI not found` / `Docker is not running` | `brew install supabase/tap/supabase`; start Docker Desktop |
 | `Database client error. Retrying the connection.` | PostgREST not ready right after reset — globalSetup already polls readiness; if seen elsewhere, wait/retry |
 | Tests hang pulling images | first `db:start` downloads ~2GB; Docker Desktop stuck in pause loop → quit and restart it |
-| `permission denied for table …` on a fresh migration | PG17 images harden `public` schema defaults — new tables need the grants block pattern from `0000_baseline.sql` |
-| anon queries return empty instead of erroring | missing RLS SELECT policy on a new table — add one to the migration |
+| `permission denied for table …` after a schema change | PG17 images harden `public` schema defaults — the `alter default privileges` block at the top of `0000_schema.sql` must run before any table is created |
+| anon queries return empty instead of erroring | missing RLS SELECT policy on a new table — add one to `0000_schema.sql` |

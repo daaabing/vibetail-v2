@@ -302,7 +302,7 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
         name: input.name,
         slug,
         status: "draft",
-        // Legacy columns still required by the shared schema.
+        // Legacy game columns: NOT NULL in the schema with no default.
         enabled_game_ids: ["mood-match"],
         game_display_order: ["mood-match"],
       })

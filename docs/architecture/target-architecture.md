@@ -13,7 +13,7 @@ flowchart LR
   Browser["Guest / operator browser"] --> Web["apps/web: UI + HTTP API"]
   Web --> Venue["packages/venue-core"]
   Venue --> Repo["VenueRepository"]
-  Repo --> Supabase["Supabase (local stack or shared project)"]
+  Repo --> Supabase["Supabase (local stack)"]
   Venue --> Model["ModelProvider"]
   Model --> Deterministic["Deterministic matcher"]
   Model --> RemoteModels["Vertex / Gemini / OpenAI / Alibaba adapters"]
@@ -95,7 +95,7 @@ The web foundation contains testable health/readiness response builders. Phase 2
 
 | Concern | Demo path | Long-term path |
 | --- | --- | --- |
-| Venue data | Supabase repository adapter (local stack in dev/test, shared project in staging) | repository adapter can evolve without UI changes |
+| Venue data | Supabase repository adapter (local stack) | repository adapter can evolve without UI changes |
 | Venue UI | optional isolated legacy subset | parallel new UI replaces the entire legacy feature |
 | Matching | deterministic provider fallback | selectable model adapters behind one contract |
 | Sandbox | local tests plus real FC demo path | FC, E2B, or another provider by configuration/capability |
