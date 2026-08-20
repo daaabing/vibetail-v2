@@ -1,6 +1,6 @@
 # 当前系统状态
 
-最后核对：2026-08-16（移除 fixture 模式、统一为单一 Supabase 数据路径后）
+最后核对：2026-08-20（schema 合并为单文件、移除远程/共享 Supabase 项目的叙事后）
 
 本文记录仓库中**已经真实实现的能力**、**当前本地运行模式**以及**尚未接入的后端能力**。它用于避免把“已有 contract 或 adapter”误认为“已经连接生产服务”。如实现或部署状态改变，应同步更新本文。
 
@@ -14,11 +14,11 @@
 React browser
   → Express HTTP API
   → VenueService / ManagementService
-  → SupabaseVenueRepository（本地开发/测试连本地 Supabase 栈，staging 连共享项目）
+  → SupabaseVenueRepository（Supabase：本地栈是唯一数据库）
   → DeterministicMatchingProvider（本地默认；staging 为 OpenRouter）
 ```
 
-数据层只有这一条 Supabase 路径：内存 fixture 模式已移除，`fixtures/venue/menus.json` 现在是 `scripts/generate-seed.mjs` 的 seed 数据源，由 `supabase db reset` 连同迁移一起写入数据库。因此，当前可以称为“已上线的真实 API 后端 + 已验证的旧 Supabase public read + 已连接 OpenRouter 的 staging AI matching”。Railway staging 当前选择 `openrouter`，并已完成 Global Match 与 venue-specific match 的真实模型调用验收；它仍不能称为“完整共享项目 management 或生产后端”。本地数据持久化在本地栈中，`pnpm db:reset`（以及每次 `pnpm test`）会从 seed 重置。
+数据层只有这一条 Supabase 路径：内存 fixture 模式已移除，`fixtures/venue/menus.json` 现在是 `scripts/generate-seed.mjs` 的 seed 数据源，由 `supabase db reset` 连同迁移一起写入数据库。因此，当前可以称为“已上线的真实 API 后端 + 已验证的 Supabase public read + 已连接 OpenRouter 的 staging AI matching”。Railway staging 当前选择 `openrouter`，并已完成 Global Match 与 venue-specific match 的真实模型调用验收；它仍不能称为“完整的生产后端”。本地数据持久化在本地栈中，`pnpm db:reset`（以及每次 `pnpm test`）会从 seed 重置。
 
 ## 已经完成的产品链路
 
@@ -119,7 +119,7 @@ SANDBOX_PROVIDER=local
 
 数据层没有开关：venue 数据始终走 Supabase。本地开发需先 `pnpm db:start`，再把 `pnpm db:status` 输出的 `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SERVICE_ROLE_KEY` 填入 `.env`；测试不读 `.env`，由 vitest globalSetup 自动注入本地栈凭证。
 
-本地工作区的 gitignored `.env` 指向本地 Supabase 栈（此前也曾用旧共享项目的 publishable key 做只读验证）。Railway 项目 `vibetail-staging` / 环境 `staging` 已部署到 `https://vibetailweb-production.up.railway.app`，真实浏览器和公网 smoke 已验证 Landing、Global Match、venue directory、Double Chicken Please deep link、venue-specific match、`/health` 和 `/ready`。没有配置 service-role key，因此真实 management API 安全返回 `503`，未执行数据库写入。Railway 已配置 server-only OpenRouter key、`MODEL_PROVIDER=openrouter` 和 `MODEL_NAME=openai/gpt-5-mini`；真实 Global Match 返回约 4.2 秒，页面端 venue-specific match 也成功显示非模板 AI 文案。PostHog、FC 和 E2B 仍未连接。
+本地工作区的 gitignored `.env` 指向本地 Supabase 栈。Railway 项目 `vibetail-staging` / 环境 `staging` 已部署到 `https://vibetailweb-production.up.railway.app`，真实浏览器和公网 smoke 已验证 Landing、Global Match、venue directory、Double Chicken Please deep link、venue-specific match、`/health` 和 `/ready`。没有配置 service-role key，因此真实 management API 安全返回 `503`，未执行数据库写入。Railway 已配置 server-only OpenRouter key、`MODEL_PROVIDER=openrouter` 和 `MODEL_NAME=openai/gpt-5-mini`；真实 Global Match 返回约 4.2 秒，页面端 venue-specific match 也成功显示非模板 AI 文案。PostHog、FC 和 E2B 仍未连接。
 
 本地 legacy management token 是公开测试字符串，不是生产凭证。本地数据持久化在本地 Supabase 栈中，管理修改会立即影响匹配并在重启 dev server 后保留；`pnpm db:reset` 会从 `fixtures/venue/menus.json` 重新生成 seed 并重置数据库。
 
@@ -127,8 +127,8 @@ SANDBOX_PROVIDER=local
 
 | 能力 | 仓库中已有 | 当前没有完成 |
 | --- | --- | --- |
-| Supabase public read | `SupabaseVenueRepository`、generated database types | 已在 Railway staging 验证 2 个 published menus 和完整 public matching 流程；生产切换未执行 |
-| Supabase management write | server-only `SupabaseManagementRepository`（本地栈上已被完整测试套件覆盖） | 未对共享 staging/production 执行写入，未验证共享项目真实 token/schema/RLS 兼容性 |
+| Supabase public read | `SupabaseVenueRepository`、generated database types | 已在 Railway staging 验证 2 个 published menus 和完整 public matching 流程 |
+| Supabase management write | server-only `SupabaseManagementRepository`（本地栈上已被完整测试套件覆盖） | 未对任何持久化部署执行写入；线上只跑 public read |
 | PostHog | `POSTHOG_KEY`、`POSTHOG_HOST` env schema | 没有 SDK、初始化、事件 taxonomy 或任何 `capture` 调用 |
 | Remote AI | OpenRouter Chat Completions + Structured Outputs、direct OpenAI Responses adapter、mock contract tests、web composition switch | Railway staging 已使用 `openai/gpt-5-mini` 完成真实 Global/venue match 验收；仍缺 usage/cost telemetry、rate limit、spend guardrails，Vertex/direct Gemini/Alibaba 尚未实现 |
 | Agent worker | workspace、contracts、env validation、provider-neutral boundaries | 没有 Agent state machine、durable run store、queue、checkpoint、approval execution 或实际 worker loop |
@@ -141,10 +141,9 @@ SANDBOX_PROVIDER=local
 
 ### 数据与身份
 
-- 旧 Supabase service-role management 连接；
-- staging 数据库验收；
+- 任何持久化部署的数据库（当前本地栈是唯一数据库）；
 - 在 schema 变更后持续重新生成 Supabase types；
-- 审核后的 additive migration；
+- 若将来出现持久化部署，冻结 `0000_schema.sql` 为 baseline 后的增量 migration；
 - Supabase Auth；
 - merchant membership 和 RBAC；
 - 多成员、角色、邀请和完整权限。
