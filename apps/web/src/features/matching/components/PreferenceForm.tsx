@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { venuePreferencesSchema, type VenueMenuItem, type VenuePreferences } from "@vibetail/contracts";
 
 import DrinkStage from "../../draw/DrinkStage.js";
@@ -63,7 +63,10 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
   const [step, setStepState] = useState(0);
   const setStep = (n: number) => {
     setStepState(Math.min(STEP_IDS.length - 1, Math.max(0, n)));
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // "instant" beats the global `html { scroll-behavior: smooth }` rule; a
+    // multi-hundred-ms animated scroll under the sticky header would run
+    // concurrently with the step transition on every click.
+    window.scrollTo({ top: 0, behavior: "instant" });
   };
   const stepId = STEP_IDS[step]!;
 
@@ -159,7 +162,7 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
 
         {/* ── Right — the questions, on paper ── */}
         <div className="paper-pocket relative flex min-w-0 flex-col" style={{ background: "var(--paper)" }}>
-          <div className="sticky top-0 z-30" style={{ background: "rgba(242,241,238,0.94)", backdropFilter: "blur(8px)", borderBottom: "1px solid var(--line)" }}>
+          <div className="sticky top-0 z-30" style={{ background: "var(--paper)", borderBottom: "1px solid var(--line)" }}>
             <div className="flex items-center justify-between gap-4 px-[clamp(20px,4vw,64px)] py-3.5">
               <a href="/" className="mono flex items-center gap-2" style={{ color: "inherit", textDecoration: "none" }}>
                 <span aria-hidden>←</span>
@@ -183,12 +186,13 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col justify-center px-[clamp(20px,4vw,64px)] pb-40 pt-10 lg:pb-16">
-            <AnimatePresence mode="wait">
-              <motion.section key={stepId} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}>
-                <StepHeader index={step} total={STEP_IDS.length} title={STEP_TITLES[stepId].en} sub={STEP_SUBS[stepId]} />
-                {stepBody}
-              </motion.section>
-            </AnimatePresence>
+            {/* No exit animation: the old step's DOM (17 filtered sketches on
+                step one) must leave in a single cheap frame, not spend 240ms
+                animating on the way out while the next step rasterises. */}
+            <motion.section key={stepId} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}>
+              <StepHeader index={step} total={STEP_IDS.length} title={STEP_TITLES[stepId].en} sub={STEP_SUBS[stepId]} />
+              {stepBody}
+            </motion.section>
 
             {error && <p className="vt-form-error" role="alert">{error}</p>}
 

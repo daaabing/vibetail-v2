@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { ROUGH } from "./Sketch.js";
 import type { MixOrder } from "../../lib/mix-flow.js";
@@ -143,6 +143,7 @@ function FlavorDecor({
   liquidTop: number;
   index: number;
 }) {
+  const reduceMotion = useReducedMotion();
   const { rimY, rimRight, cx } = vessel;
   const rimLeft = 240 - rimRight;
   const common = {
@@ -170,16 +171,31 @@ function FlavorDecor({
         </motion.g>
       );
     case "smoky":
+      // The drift loop runs forever, so it must never animate a filtered
+      // node: each wisp loops on a bare wrapper around a static rough path.
       return (
-        <motion.g {...common} {...entry} strokeWidth={1.9}>
-          {[cx - 22, cx, cx + 22].map((x, i) => (
-            <motion.path
-              key={x}
-              d={`M${x} ${liquidTop - 8} c -5 -10, 5 -14, 0 -24 c 5 -8, -3 -14, 1 -20`}
-              animate={{ y: [0, -5, 0], opacity: [0.85, 0.45, 0.85] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 }}
-            />
-          ))}
+        <motion.g
+          {...entry}
+          stroke="currentColor"
+          fill="none"
+          strokeWidth={1.9}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          {[cx - 22, cx, cx + 22].map((x, i) => {
+            const d = `M${x} ${liquidTop - 8} c -5 -10, 5 -14, 0 -24 c 5 -8, -3 -14, 1 -20`;
+            return reduceMotion ? (
+              <path key={x} d={d} filter={ROUGH} />
+            ) : (
+              <motion.g
+                key={x}
+                animate={{ y: [0, -5, 0], opacity: [0.85, 0.45, 0.85] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 }}
+              >
+                <path d={d} filter={ROUGH} />
+              </motion.g>
+            );
+          })}
         </motion.g>
       );
     case "herbal":
@@ -351,6 +367,7 @@ export default function DrinkStage({
   hasVibe: boolean;
   step: number;
 }) {
+  const reduceMotion = useReducedMotion();
   const vessel: Vessel = VESSEL_BY_ALCOHOL[order.alcohol] ?? VESSELS.tall!;
   const innerH = vessel.bottom - vessel.top;
   const liquidTop = hasVibe ? vessel.bottom - innerH * vessel.fill : vessel.bottom;
@@ -433,9 +450,11 @@ export default function DrinkStage({
           animate={{ opacity: hasVibe ? 1 : 0 }}
           transition={{ duration: 1.2 }}
           style={{
+            // No blur filter here: the radial gradients already fade to
+            // transparent, and an 18px Gaussian over this whole layer had to
+            // be re-run on every repaint. Gradients don't interpolate, so the
+            // old `background 900ms` transition was a delayed hard swap anyway.
             background: `radial-gradient(45% 38% at 50% 30%, ${topColor}2e, transparent 70%), radial-gradient(50% 42% at 50% 72%, ${baseColor}3a, transparent 72%)`,
-            filter: "blur(18px)",
-            transition: "background 900ms ease",
           }}
         />
 
@@ -445,27 +464,20 @@ export default function DrinkStage({
               <clipPath id="stage-vessel-clip">
                 <path d={vessel.clip} />
               </clipPath>
+              {/* No SMIL loops anywhere in this svg: they tick on the main
+                  thread and dirty the filtered subtrees every frame, forever. */}
               <linearGradient id="stage-liquid-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={topColor} stopOpacity="0.9">
-                  <animate
-                    attributeName="stop-opacity"
-                    values="0.9;0.75;0.9"
-                    dur="4s"
-                    repeatCount="indefinite"
-                  />
-                </stop>
+                <stop offset="0%" stopColor={topColor} stopOpacity="0.9" />
                 <stop offset="100%" stopColor={baseColor} stopOpacity="0.95" />
               </linearGradient>
             </defs>
 
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.g
-                key={vessel.name}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-              >
+            {/* The drink persists across vessel swaps — only the outline group
+                further down crossfades. Remounting the whole subtree meant
+                re-rasterising all seven rough-filter chains on every alcohol
+                click, plus ~560ms of per-frame filter invalidation while the
+                old tree animated out and the new one animated in. */}
+            <g>
                 {/* Liquid — the mood, in colour */}
                 <g clipPath="url(#stage-vessel-clip)">
                   <motion.rect
@@ -481,19 +493,24 @@ export default function DrinkStage({
                     transition={{ type: "spring", stiffness: 130, damping: 20 }}
                     style={{ mixBlendMode: "screen" }}
                   />
-                  {/* Surface line */}
+                  {/* Surface line. The spring lives on an unfiltered wrapper:
+                      animating a node that carries the rough filter re-runs
+                      the whole turbulence chain every frame it moves. */}
                   {hasVibe && (
-                    <motion.path
-                      d={`M${vessel.x - 4} 0 C ${vessel.cx - 30} -7, ${vessel.cx + 30} 7, ${vessel.x + vessel.w + 4} -2`}
-                      stroke="currentColor"
-                      strokeWidth="2.6"
-                      fill="none"
-                      strokeLinecap="round"
-                      filter={ROUGH}
+                    <motion.g
                       initial={false}
                       animate={{ y: liquidTop }}
                       transition={{ type: "spring", stiffness: 130, damping: 20 }}
-                    />
+                    >
+                      <path
+                        d={`M${vessel.x - 4} 0 C ${vessel.cx - 30} -7, ${vessel.cx + 30} 7, ${vessel.x + vessel.w + 4} -2`}
+                        stroke="currentColor"
+                        strokeWidth="2.6"
+                        fill="none"
+                        strokeLinecap="round"
+                        filter={ROUGH}
+                      />
+                    </motion.g>
                   )}
 
                   {/* Ice — two rough cubes for a long night */}
@@ -501,44 +518,32 @@ export default function DrinkStage({
                     {iced && hasVibe && (
                       <motion.g
                         key="ice"
-                        filter={ROUGH}
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        fill="none"
                         initial={{ opacity: 0, y: -40 }}
                         animate={{ opacity: 0.9, y: 0 }}
                         exit={{ opacity: 0 }}
                         transition={{ type: "spring", stiffness: 160, damping: 14 }}
                       >
-                        <path d={`M${vessel.cx - 34} ${liquidTop + 16} l30 -8 8 26 -30 9 Z`} />
-                        <path d={`M${vessel.cx + 12} ${liquidTop + 34} l26 -6 6 24 -26 7 Z`} />
+                        <g filter={ROUGH} stroke="currentColor" strokeWidth="2.2" fill="none">
+                          <path d={`M${vessel.cx - 34} ${liquidTop + 16} l30 -8 8 26 -30 9 Z`} />
+                          <path d={`M${vessel.cx + 12} ${liquidTop + 34} l26 -6 6 24 -26 7 Z`} />
+                        </g>
                       </motion.g>
                     )}
                   </AnimatePresence>
 
-                  {/* Bubbles — always breathing, denser when the pour is bright */}
+                  {/* Bubbles — hand-dotted, denser when the pour is bright.
+                      They hold still: the old SMIL risers dirtied the svg
+                      every frame for as long as the page was open. */}
                   {hasVibe && (
-                    <g stroke="currentColor" fill="none" strokeWidth="1.8" opacity="0.7">
+                    <g stroke="currentColor" fill="none" strokeWidth="1.8" opacity="0.55">
                       {(bright
                         ? [vessel.cx - 24, vessel.cx - 8, vessel.cx + 6, vessel.cx + 20, vessel.cx + 32]
                         : [vessel.cx - 10, vessel.cx + 12, vessel.cx + 28]
-                      ).map((cxx, i) => (
-                        <circle key={cxx} cx={cxx} cy={0} r={2.6 + (i % 3)}>
-                          <animate
-                            attributeName="cy"
-                            from={String(vessel.bottom - 6)}
-                            to={String(liquidTop + 10)}
-                            dur={`${2.2 + i * 0.6}s`}
-                            repeatCount="indefinite"
-                          />
-                          <animate
-                            attributeName="opacity"
-                            values="0;0.7;0"
-                            dur={`${2.2 + i * 0.6}s`}
-                            repeatCount="indefinite"
-                          />
-                        </circle>
-                      ))}
+                      ).map((cxx, i) => {
+                        const span = Math.max(18, vessel.bottom - 8 - (liquidTop + 12));
+                        const cy = liquidTop + 12 + (((i * 41 + 13) % 97) / 97) * span;
+                        return <circle key={cxx} cx={cxx} cy={cy} r={2.6 + (i % 3)} />;
+                      })}
                     </g>
                   )}
 
@@ -556,26 +561,40 @@ export default function DrinkStage({
                   </AnimatePresence>
                 </g>
 
-                {/* Vessel */}
-                <g
-                  filter={ROUGH}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {vessel.outline.map((d, i) => (
-                    <path key={i} d={d} strokeWidth={i === 1 ? 3.6 : 3} />
-                  ))}
-                </g>
+                {/* Vessel — the one part that really changes shape, so the one
+                    part that crossfades. Old and new outlines fade in parallel
+                    (no mode="wait" serialisation), and the filter sits on a
+                    static inner group the opacity tween never touches. */}
+                <AnimatePresence initial={false}>
+                  <motion.g
+                    key={vessel.name}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <g
+                      filter={ROUGH}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      {vessel.outline.map((d, i) => (
+                        <path key={i} d={d} strokeWidth={i === 1 ? 3.6 : 3} />
+                      ))}
+                    </g>
+                  </motion.g>
+                </AnimatePresence>
 
-                {/* Flames licking off the top when it's one-and-done */}
+                {/* Flames licking off the top when it's one-and-done. Each
+                    flicker loop animates an unfiltered wrapper around a static
+                    filtered path, and rests entirely under reduced motion. */}
                 <AnimatePresence>
                   {length === "short" && hasVibe && (
                     <motion.g
                       key="flames"
-                      filter={ROUGH}
                       stroke="currentColor"
                       strokeWidth="2.2"
                       fill="none"
@@ -584,24 +603,45 @@ export default function DrinkStage({
                       animate={{ opacity: 0.95, y: 0 }}
                       exit={{ opacity: 0 }}
                     >
-                      <motion.path
-                        d={`M${vessel.cx - 22} ${vessel.rimY + 2} c -7 -12, 7 -16, 1 -30 c 9 10, 11 18, 4 30`}
-                        animate={{ scaleY: [1, 1.14, 1], opacity: [0.9, 0.6, 0.9] }}
-                        transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
-                        style={{ transformOrigin: `${vessel.cx - 22}px ${vessel.rimY + 2}px` }}
-                      />
-                      <motion.path
-                        d={`M${vessel.cx + 2} ${vessel.rimY + 2} c -8 -16, 8 -20, 2 -38 c 11 13, 13 24, 5 38`}
-                        animate={{ scaleY: [1, 1.2, 1], opacity: [0.95, 0.65, 0.95] }}
-                        transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
-                        style={{ transformOrigin: `${vessel.cx + 2}px ${vessel.rimY + 2}px` }}
-                      />
-                      <motion.path
-                        d={`M${vessel.cx + 25} ${vessel.rimY + 2} c -6 -10, 6 -13, 1 -24 c 8 8, 9 15, 3 24`}
-                        animate={{ scaleY: [1, 1.1, 1], opacity: [0.85, 0.55, 0.85] }}
-                        transition={{ duration: 1.25, repeat: Infinity, ease: "easeInOut", delay: 0.45 }}
-                        style={{ transformOrigin: `${vessel.cx + 25}px ${vessel.rimY + 2}px` }}
-                      />
+                      {[
+                        {
+                          d: `M${vessel.cx - 22} ${vessel.rimY + 2} c -7 -12, 7 -16, 1 -30 c 9 10, 11 18, 4 30`,
+                          scaleY: [1, 1.14, 1],
+                          opacity: [0.9, 0.6, 0.9],
+                          duration: 1.1,
+                          delay: 0,
+                          originX: vessel.cx - 22,
+                        },
+                        {
+                          d: `M${vessel.cx + 2} ${vessel.rimY + 2} c -8 -16, 8 -20, 2 -38 c 11 13, 13 24, 5 38`,
+                          scaleY: [1, 1.2, 1],
+                          opacity: [0.95, 0.65, 0.95],
+                          duration: 0.9,
+                          delay: 0.2,
+                          originX: vessel.cx + 2,
+                        },
+                        {
+                          d: `M${vessel.cx + 25} ${vessel.rimY + 2} c -6 -10, 6 -13, 1 -24 c 8 8, 9 15, 3 24`,
+                          scaleY: [1, 1.1, 1],
+                          opacity: [0.85, 0.55, 0.85],
+                          duration: 1.25,
+                          delay: 0.45,
+                          originX: vessel.cx + 25,
+                        },
+                      ].map((flame) =>
+                        reduceMotion ? (
+                          <path key={flame.originX} d={flame.d} filter={ROUGH} />
+                        ) : (
+                          <motion.g
+                            key={flame.originX}
+                            animate={{ scaleY: flame.scaleY, opacity: flame.opacity }}
+                            transition={{ duration: flame.duration, repeat: Infinity, ease: "easeInOut", delay: flame.delay }}
+                            style={{ transformOrigin: `${flame.originX}px ${vessel.rimY + 2}px` }}
+                          >
+                            <path d={flame.d} filter={ROUGH} />
+                          </motion.g>
+                        ),
+                      )}
                     </motion.g>
                   )}
                 </AnimatePresence>
@@ -611,21 +651,21 @@ export default function DrinkStage({
                   {bright && hasVibe && (
                     <motion.g
                       key="citrus"
-                      filter={ROUGH}
                       stroke="currentColor"
                       fill="none"
                       strokeWidth="2.2"
                       initial={{ opacity: 0, scale: 0.6, rotate: -20 }}
                       animate={{ opacity: 1, scale: 1, rotate: 0 }}
                       exit={{ opacity: 0, scale: 0.6 }}
-                      transform={rimShift}
                       style={{ transformOrigin: `${vessel.rimRight}px ${vessel.rimY - 4}px` }}
                     >
-                      <circle cx="181" cy="56" r="20" />
-                      <path
-                        d="M181 36 v40 M161 56 h40 M167 42 l28 28 M195 42 l-28 28"
-                        strokeWidth="1.5"
-                      />
+                      <g filter={ROUGH} transform={rimShift}>
+                        <circle cx="181" cy="56" r="20" />
+                        <path
+                          d="M181 36 v40 M161 56 h40 M167 42 l28 28 M195 42 l-28 28"
+                          strokeWidth="1.5"
+                        />
+                      </g>
                     </motion.g>
                   )}
                 </AnimatePresence>
@@ -635,7 +675,6 @@ export default function DrinkStage({
                   {surprising && hasVibe && (
                     <motion.g
                       key="swizzle"
-                      filter={ROUGH}
                       stroke="currentColor"
                       strokeWidth="2.4"
                       strokeLinecap="round"
@@ -644,10 +683,12 @@ export default function DrinkStage({
                       exit={{ opacity: 0 }}
                       style={{ transformOrigin: `${vessel.cx}px ${vessel.rimY + 60}px` }}
                     >
-                      <path
-                        d={`M${vessel.cx - 24} ${vessel.rimY - 34} L${vessel.cx + 8} ${vessel.bottom - 26}`}
-                      />
-                      <circle cx={vessel.cx - 27} cy={vessel.rimY - 40} r="8" fill="none" />
+                      <g filter={ROUGH}>
+                        <path
+                          d={`M${vessel.cx - 24} ${vessel.rimY - 34} L${vessel.cx + 8} ${vessel.bottom - 26}`}
+                        />
+                        <circle cx={vessel.cx - 27} cy={vessel.rimY - 40} r="8" fill="none" />
+                      </g>
                     </motion.g>
                   )}
                 </AnimatePresence>
@@ -664,8 +705,7 @@ export default function DrinkStage({
                     />
                   )}
                 </AnimatePresence>
-              </motion.g>
-            </AnimatePresence>
+            </g>
           </svg>
         </div>
 
