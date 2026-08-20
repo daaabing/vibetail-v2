@@ -61,15 +61,16 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
 
   /* ── Step navigation ── */
   const [step, setStepState] = useState(0);
-  // Taps faster than the 240ms step transition interrupt AnimatePresence
-  // (mode="wait") mid-exit and strand the outgoing section on screen, so
-  // navigation is ignored while the previous transition is still playing.
-  const navLockRef = useRef(Number.NEGATIVE_INFINITY);
-  const setStep = (n: number, force = false) => {
-    const now = performance.now();
-    if (!force && now - navLockRef.current < 320) return;
-    navLockRef.current = now;
-    setStepState(Math.min(STEP_IDS.length - 1, Math.max(0, n)));
+  // The primary button changes identity on the last step — "Continue" becomes
+  // "Meet my drink" — so a double-tap landing either side of that change fires
+  // a match the guest never asked for. Remember when the step last moved and
+  // let submit() ignore anything arriving within one double-tap of it.
+  const stepMovedAtRef = useRef(Number.NEGATIVE_INFINITY);
+  const setStep = (n: number) => {
+    const next = Math.min(STEP_IDS.length - 1, Math.max(0, n));
+    if (next === step) return;
+    stepMovedAtRef.current = performance.now();
+    setStepState(next);
     // "instant" beats the global `html { scroll-behavior: smooth }` rule; a
     // multi-hundred-ms animated scroll under the sticky header would run
     // concurrently with the step transition on every click.
@@ -122,7 +123,11 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
   const changeSensory = (key: keyof SensoryState, v: number) => setSensory((s) => ({ ...s, [key]: v }));
 
   const submit = () => {
-    if (!hasVibe) { setError("Choose a mood or write your own line."); setStep(0, true); return; }
+    // advance() routes the last step here rather than through setStep, so
+    // without this guard a double-tap on Continue at the 04 → 05 boundary
+    // lands on "Meet my drink" and submits a step early.
+    if (performance.now() - stepMovedAtRef.current < 320) return;
+    if (!hasVibe) { setError("Choose a mood or write your own line."); setStep(0); return; }
     const { finalFlavors, customPreference } = buildPreference(order, "en");
     const mood = moodText.trim() || findVibePick(pickedLabel)?.mood || "";
     const parsed = venuePreferencesSchema.safeParse({
