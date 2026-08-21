@@ -425,7 +425,7 @@ export default function DrinkStage({
       <div className="grain-layer" aria-hidden style={{ opacity: 0.4 }} />
 
       {/* ── Plate header ── */}
-      <div className="relative flex items-baseline justify-between px-8 pt-7 lg:px-10">
+      <div className="relative flex items-baseline justify-between px-6 pt-5 lg:px-10 lg:pt-7">
         <span
           style={{
             fontFamily: "var(--font-display)",
@@ -441,11 +441,23 @@ export default function DrinkStage({
       </div>
 
       {/* ── The drink ── */}
-      <div className="relative flex min-h-0 flex-1 items-center justify-center">
-        {/* The pour's light, bleeding onto the wall */}
+      <div className="relative flex min-h-0 flex-1 items-center justify-center" style={{ containerType: "size" }}>
+        {/* The light and the drawing share one box carrying the sketch's own
+            240:300 ratio. The svg letterboxes inside whatever box it is
+            given, so sizing the glow against the stage instead would stop
+            tracking the glass as soon as a short stage drives the fit by
+            height — which is exactly what happens on a phone. */}
+        <div
+          className="relative flex items-center justify-center"
+          style={{ width: "min(64%, 340px, calc(100cqh * 240 / 300))", aspectRatio: "240 / 300" }}
+        >
+        {/* The pour's light, bleeding onto the wall. Sized against the box
+            above, so it is a share of the drink rather than of the room:
+            just past the glass on each side, the way the old stage-relative
+            72%/62% resolved on the desktop canvas this was drawn for. */}
         <motion.div
           aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[72%] w-[62%] -translate-x-1/2 -translate-y-1/2"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[111%] w-[104%] -translate-x-1/2 -translate-y-1/2"
           initial={false}
           animate={{ opacity: hasVibe ? 1 : 0 }}
           transition={{ duration: 1.2 }}
@@ -458,8 +470,8 @@ export default function DrinkStage({
           }}
         />
 
-        <div className="stage-orbit w-[min(64%,340px)]">
-          <svg viewBox="0 0 240 300" style={{ overflow: "visible", color: "var(--ink)" }}>
+        <div className="stage-orbit flex h-full w-full items-center justify-center">
+          <svg viewBox="0 0 240 300" width="100%" height="100%" style={{ overflow: "visible", color: "var(--ink)" }}>
             <defs>
               <clipPath id="stage-vessel-clip">
                 <path d={vessel.clip} />
@@ -708,6 +720,7 @@ export default function DrinkStage({
             </g>
           </svg>
         </div>
+        </div>
 
         {/* Step numeral, etched on the wall */}
         <div
@@ -727,7 +740,7 @@ export default function DrinkStage({
       </div>
 
       {/* ── Status ledger ── */}
-      <div className="relative px-8 pb-8 lg:px-10">
+      <div className="relative px-6 pb-5 lg:px-10 lg:pb-8">
         <hr className="rule-strong" style={{ background: "var(--line-strong)" }} />
         <div className="mt-4 flex items-baseline justify-between gap-6">
           <div className="min-w-0">
@@ -753,7 +766,7 @@ export default function DrinkStage({
               {parts.length ? parts.join(", ") : "nothing yet — tell us the mood"}
             </p>
           </div>
-          <span className="mono-sm shrink-0" style={{ color: "var(--ink-mute)" }}>
+          <span className="mono-sm hidden shrink-0 lg:inline" style={{ color: "var(--ink-mute)" }}>
             {"it builds as you answer"}
           </span>
         </div>

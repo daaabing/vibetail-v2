@@ -31,6 +31,9 @@ import {
   deriveMenuBaseSpiritKeys,
 } from "../../../lib/mix-flow.js";
 
+/** Longest gap between two taps still read as one double-tap. */
+const DOUBLE_TAP_MS = 320;
+
 const STEP_SUBS: Record<StepId, string> = {
   vibe: "Pick the one that fits tonight. This is the only answer we actually need.",
   taste:
@@ -61,8 +64,16 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
 
   /* ── Step navigation ── */
   const [step, setStepState] = useState(0);
+  // The primary button changes identity on the last step — "Continue" becomes
+  // "Meet my drink" — so a double-tap landing either side of that change fires
+  // a match the guest never asked for. Remember when the step last moved and
+  // let submit() ignore anything arriving within one double-tap of it.
+  const stepMovedAtRef = useRef(Number.NEGATIVE_INFINITY);
   const setStep = (n: number) => {
-    setStepState(Math.min(STEP_IDS.length - 1, Math.max(0, n)));
+    const next = Math.min(STEP_IDS.length - 1, Math.max(0, n));
+    if (next === step) return;
+    stepMovedAtRef.current = performance.now();
+    setStepState(next);
     // "instant" beats the global `html { scroll-behavior: smooth }` rule; a
     // multi-hundred-ms animated scroll under the sticky header would run
     // concurrently with the step transition on every click.
@@ -115,6 +126,10 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
   const changeSensory = (key: keyof SensoryState, v: number) => setSensory((s) => ({ ...s, [key]: v }));
 
   const submit = () => {
+    // advance() routes the last step here rather than through setStep, so
+    // without this guard a double-tap on Continue at the 04 → 05 boundary
+    // lands on "Meet my drink" and submits a step early.
+    if (performance.now() - stepMovedAtRef.current < DOUBLE_TAP_MS) return;
     if (!hasVibe) { setError("Choose a mood or write your own line."); setStep(0); return; }
     const { finalFlavors, customPreference } = buildPreference(order, "en");
     const mood = moodText.trim() || findVibePick(pickedLabel)?.mood || "";

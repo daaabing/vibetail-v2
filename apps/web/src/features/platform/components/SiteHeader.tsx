@@ -6,7 +6,7 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
     <header className={`house-header${overlay ? " house-header-overlay" : ""}`}>
       <div className="house-header-inner">
         <a className="house-wordmark" href="/" aria-label="Vibetail home">VIBETAL(E.)</a>
-        <button className="house-menu-button" type="button" aria-expanded={open} aria-label="Menu" onClick={() => setOpen((value) => !value)}>
+        <button className={`house-menu-button${open ? " is-open" : ""}`} type="button" aria-expanded={open} aria-label="Menu" onClick={() => setOpen((value) => !value)}>
           <span /><span /><span />
         </button>
         <nav className={open ? "is-open" : ""} aria-label="Main navigation">
