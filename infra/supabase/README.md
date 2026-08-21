@@ -6,7 +6,8 @@ or production project. Schema-as-code:
 - `migrations/0000_schema.sql` — the complete schema (tables, enums, RLS,
   triggers, storage bucket). To change the schema, edit it in place.
 - `seed.sql` — generated from `fixtures/venue/menus.json` by
-  `scripts/generate-seed.mjs` (gitignored; never edit by hand).
+  `scripts/generate-seed.mjs`; never edit it by hand, edit the JSON. Every
+  consumer regenerates it first, so its contents are always derivable.
 
 `pnpm db:reset` (and the vitest globalSetup) regenerates the seed, replays the
 schema onto an empty database, and loads the seed. That is the entire

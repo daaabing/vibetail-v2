@@ -374,8 +374,6 @@ export type Database = {
         Row: {
           cover_image_url: string | null
           created_at: string
-          enabled_game_ids: string[]
-          game_display_order: string[]
           id: string
           menu_file_type: string | null
           menu_file_url: string | null
@@ -391,8 +389,6 @@ export type Database = {
         Insert: {
           cover_image_url?: string | null
           created_at?: string
-          enabled_game_ids: string[]
-          game_display_order: string[]
           id?: string
           menu_file_type?: string | null
           menu_file_url?: string | null
@@ -408,8 +404,6 @@ export type Database = {
         Update: {
           cover_image_url?: string | null
           created_at?: string
-          enabled_game_ids?: string[]
-          game_display_order?: string[]
           id?: string
           menu_file_type?: string | null
           menu_file_url?: string | null

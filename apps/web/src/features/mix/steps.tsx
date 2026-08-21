@@ -48,45 +48,26 @@ export function StepHeader({
 }
 
 /**
- * A slider that explains itself: the two ends are drawn, not named with words
- * like "crisp" that only mean something if you already drink cocktails.
+ * One drawn end of a PoleSlider. Lives at module scope so its identity is
+ * stable across renders — defined inline it would force React to unmount and
+ * remount the filtered sketch on every slider input event.
  */
-function PoleSlider({
-  value,
-  onChange,
-  left,
-  right,
-  leftArt,
-  rightArt,
-  leftHint,
-  rightHint,
+function Pole({
+  art,
+  label,
+  hint,
+  active,
+  onPick,
+  align,
 }: {
-  value: number;
-  onChange: (v: number) => void;
-  left: string;
-  right: string;
-  leftArt: string;
-  rightArt: string;
-  leftHint: string;
-  rightHint: string;
+  art: string;
+  label: string;
+  hint: string;
+  active: boolean;
+  onPick: () => void;
+  align: "start" | "end";
 }) {
-  const leaning = value < 42 ? "left" : value > 58 ? "right" : "mid";
-
-  const Pole = ({
-    art,
-    label,
-    hint,
-    active,
-    onPick,
-    align,
-  }: {
-    art: string;
-    label: string;
-    hint: string;
-    active: boolean;
-    onPick: () => void;
-    align: "start" | "end";
-  }) => (
+  return (
     <button
       type="button"
       onClick={onPick}
@@ -118,6 +99,32 @@ function PoleSlider({
       </span>
     </button>
   );
+}
+
+/**
+ * A slider that explains itself: the two ends are drawn, not named with words
+ * like "crisp" that only mean something if you already drink cocktails.
+ */
+function PoleSlider({
+  value,
+  onChange,
+  left,
+  right,
+  leftArt,
+  rightArt,
+  leftHint,
+  rightHint,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  left: string;
+  right: string;
+  leftArt: string;
+  rightArt: string;
+  leftHint: string;
+  rightHint: string;
+}) {
+  const leaning = value < 42 ? "left" : value > 58 ? "right" : "mid";
 
   return (
     <div className="flex items-start gap-3 sm:gap-5">

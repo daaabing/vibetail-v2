@@ -144,8 +144,6 @@ function menuSnapshotRow(merchantId, menu) {
     menu_file_url: menu.fullMenuUrl,
     menu_file_type: menu.fullMenuType,
     menu_theme: null,
-    enabled_game_ids: ["mood-match"],
-    game_display_order: ["mood-match"],
   };
 }
 
@@ -303,10 +301,6 @@ for (const entry of drinks) {
 // publish section below runs the three-step flip once versions exist
 // (menus.published_version_id <-> menu_versions.menu_id is an FK cycle).
 //
-// enabled_game_ids/game_display_order are NOT NULL without defaults; the
-// value ['mood-match'] is invented here, mirroring createMenu defaults in
-// supabase-management.ts / supabase-venue-management.ts.
-//
 // created_at/updated_at stagger (invented, not in the fixture): management
 // lists order menus by updated_at desc, and fixture array order is
 // newest-first, so menu index i gets now() - (i + 1) minutes.
@@ -322,8 +316,6 @@ function emitMenu(merchant, menu, indexWithinMerchant) {
     ["cover_image_url", sqlString(menu.coverImageUrl)],
     ["menu_file_url", sqlString(menu.fullMenuUrl)],
     ["menu_file_type", sqlString(menu.fullMenuType)],
-    ["enabled_game_ids", sqlTextArray(["mood-match"])],
-    ["game_display_order", sqlTextArray(["mood-match"])],
     ["created_at", sqlMinutesAgo(indexWithinMerchant + 1)],
     ["updated_at", sqlMinutesAgo(indexWithinMerchant + 1)],
   ]);

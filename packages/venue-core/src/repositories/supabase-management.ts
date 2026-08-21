@@ -124,7 +124,6 @@ export class SupabaseManagementRepository implements ManagementRepository {
     const result = await this.client.from("menus").insert({
       merchant_id: merchantId, name: input.name, slug: input.slug,
       short_intro: input.shortIntro, status: "draft",
-      enabled_game_ids: ["mood-match"], game_display_order: ["mood-match"],
     }).select("id").single();
     if (result.error) throw new Error(result.error.message);
     return String(result.data.id);

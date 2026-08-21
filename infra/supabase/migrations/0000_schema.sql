@@ -95,10 +95,6 @@ create table public.menus (
   menu_file_url text,
   menu_file_type text,
   published_version_id uuid, -- FK added below, after menu_versions exists
-  -- Legacy game columns: NOT NULL with no default, every code path supplies
-  -- them explicitly (see supabase-venue-management.ts).
-  enabled_game_ids text[] not null,
-  game_display_order text[] not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (merchant_id, slug)
