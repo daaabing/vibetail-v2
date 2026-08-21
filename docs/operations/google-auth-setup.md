@@ -57,10 +57,24 @@ In the Supabase dashboard:
 
 ## 4. Database
 
-Nothing to apply by hand: the schema this needs — `venue_accounts.auth_user_id`
-linked to `auth.users`, plus `email` — is part of
+The schema this needs — `venue_accounts.auth_user_id` linked to `auth.users`,
+plus `email` — is part of
 [`infra/supabase/migrations/0000_schema.sql`](../../infra/supabase/migrations/0000_schema.sql).
-Run `pnpm db:reset` and the database is ready.
+
+**On the local stack**, `pnpm db:reset` builds it for you and you are done.
+
+**On the hosted project from step 1**, there is no automated path today, and
+this is deliberate. Apply the schema by hand — paste `0000_schema.sql` into the
+dashboard SQL editor — and do not load `seed.sql`: it plants demo venues, the
+two public management tokens, and a working `demo@vibetail.test` login whose
+password is published in this repository.
+
+> **Never point `db reset` at a hosted project.** It DROPS the database before
+> recreating it, and it also truncates every table in the `auth` schema, so it
+> would destroy real accounts as well as real data. `pnpm db:reset` is pinned
+> to `--local` precisely so that appending `--linked` or `--db-url` fails
+> instead of running. The same applies to `supabase db push --include-seed`,
+> which would inject the demo seed without any destructive prompt at all.
 
 ## 5. App environment
 
