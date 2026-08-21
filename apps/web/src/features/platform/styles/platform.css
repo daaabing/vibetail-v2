@@ -92,7 +92,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 
 @media (max-width: 800px) {
   :root { --shell-gutter: 28px; --header-h: 72px; }
-  .house-header nav { display:none; position:absolute; top:var(--header-h); inset-inline:0; padding:10px 22px 20px; background:var(--night); color:var(--paper); flex-direction:column; }.house-header:not(.house-header-overlay) nav { background:var(--paper); color:var(--ink); border-bottom:1px solid var(--line); }.house-header nav.is-open { display:flex; }.house-menu-button { display:block; margin-left:auto; }.house-header-cta { display:none; }
+  .house-header nav { display:none; position:absolute; top:var(--header-h); inset-inline:0; padding:10px calc(var(--shell-gutter) / 2) 20px; background:var(--night); color:var(--paper); flex-direction:column; }.house-header:not(.house-header-overlay) nav { background:var(--paper); color:var(--ink); border-bottom:1px solid var(--line); }.house-header nav.is-open { display:flex; }.house-menu-button { display:block; margin-left:auto; }.house-header-cta { display:none; }
   .landing-drummer { width:min(68vw,380px); }.landing-hero-copy { padding-bottom:45px; }.landing-hero h1 { font-size:clamp(37px,11vw,58px); }.landing-hero-copy > p { max-width:90%; }.house-script { display:block; margin:17px 0 0; }.hero-scroll { display:none; }
   .house-columns,.house-paths,.specimen-layout,.house-footer-grid,.for-bars-grid { grid-template-columns:1fr; }.house-columns { gap:15px; }.house-paths a { min-height:230px; border:0; border-bottom:1px solid var(--line-strong); }.house-paths h3 { margin-top:60px; }.specimen-layout { gap:55px; }.house-steps li,.house-ledger article { grid-template-columns:42px 1fr; gap:14px; }.house-steps p,.house-steps small,.house-ledger p { grid-column:2; }.house-steps small { justify-self:start; }.for-bars-action,.vt-management-title,.vt-menu-editor-head,.for-bars-final { align-items:flex-start; flex-direction:column; }.for-bars-hero-action { align-items:flex-start; flex-direction:column; gap:18px; }.for-bars-hero-action > p { border-left:0; padding-left:0; }.for-bars-grid article,.for-bars-pricing article { min-height:auto; border-right:0; border-bottom:1px solid var(--line-strong); padding:26px; }.for-bars-grid article:last-child { border-bottom:0; }.for-bars-grid h3 { margin-top:45px; }.for-bars-grid ul { margin-top:45px; }.house-ink .for-bars-grid article { border-color:rgba(244,243,240,.25); }
   .vt-admin-grid { grid-template-columns:1fr; }.vt-span-2 { grid-column:auto; }.vt-inline-actions { flex-wrap:wrap; }.house-footer-grid { gap:38px; }.house-footer-bottom { align-items:flex-start; flex-direction:column; gap:12px; }
@@ -130,6 +130,9 @@ a, button { -webkit-tap-highlight-color: transparent; }
 /* Buttons keep the small-caps grammar with the serif nowhere near them */
 .vt-primary, .vt-secondary, .house-button { font-family: var(--font-body); }
 .vt-locale-toggle { display: none; }
+/* Not the 800px breakpoint the rest of the file shares: three plates need
+   ~300px each to keep a venue name off a second line, so the directory has to
+   fold one tier earlier than the chrome does. */
 @media (max-width: 900px) { .vt-directory { grid-template-columns: 1fr; } }
 
 /* Result poster wrap */

@@ -441,11 +441,23 @@ export default function DrinkStage({
       </div>
 
       {/* ── The drink ── */}
-      <div className="relative flex min-h-0 flex-1 items-center justify-center">
-        {/* The pour's light, bleeding onto the wall */}
+      <div className="relative flex min-h-0 flex-1 items-center justify-center" style={{ containerType: "size" }}>
+        {/* The light and the drawing share one box carrying the sketch's own
+            240:300 ratio. The svg letterboxes inside whatever box it is
+            given, so sizing the glow against the stage instead would stop
+            tracking the glass as soon as a short stage drives the fit by
+            height — which is exactly what happens on a phone. */}
+        <div
+          className="relative flex items-center justify-center"
+          style={{ width: "min(64%, 340px, calc(100cqh * 240 / 300))", aspectRatio: "240 / 300" }}
+        >
+        {/* The pour's light, bleeding onto the wall. Sized against the box
+            above, so it is a share of the drink rather than of the room:
+            just past the glass on each side, the way the old stage-relative
+            72%/62% resolved on the desktop canvas this was drawn for. */}
         <motion.div
           aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[72%] w-[62%] -translate-x-1/2 -translate-y-1/2"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[111%] w-[104%] -translate-x-1/2 -translate-y-1/2"
           initial={false}
           animate={{ opacity: hasVibe ? 1 : 0 }}
           transition={{ duration: 1.2 }}
@@ -458,10 +470,7 @@ export default function DrinkStage({
           }}
         />
 
-        {/* Sized by width AND height so the sketch scales down instead of
-            overflowing the short mobile stage (the svg keeps its 240:300
-            ratio via preserveAspectRatio). */}
-        <div className="stage-orbit flex h-full max-h-full w-[min(64%,340px)] items-center justify-center">
+        <div className="stage-orbit flex h-full w-full items-center justify-center">
           <svg viewBox="0 0 240 300" width="100%" height="100%" style={{ overflow: "visible", color: "var(--ink)" }}>
             <defs>
               <clipPath id="stage-vessel-clip">
@@ -710,6 +719,7 @@ export default function DrinkStage({
                 </AnimatePresence>
             </g>
           </svg>
+        </div>
         </div>
 
         {/* Step numeral, etched on the wall */}
