@@ -40,3 +40,32 @@ jobs:
       - run: pnpm test
       - run: pnpm build
       - run: pnpm audit:forbidden
+
+  # Schema follows the code: once main is green, apply any migration the linked
+  # project has not recorded yet. The one-time `migration repair` that aligned
+  # the remote history with the hand-applied baseline is described in
+  # docs/operations/deployment.md.
+  migrate-staging:
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Never cancelled mid-migration: the workflow-level group above cancels
+    # superseded runs, which is right for tests and wrong for DDL.
+    concurrency:
+      group: migrate-staging
+      cancel-in-progress: false
+    environment: staging
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase --workdir infra link --project-ref ${{ vars.SUPABASE_PROJECT_REF }}
+      # Print the plan before applying it, so a failed push leaves a readable
+      # record of what it was about to do.
+      - run: supabase --workdir infra db push --linked --dry-run
+      - run: supabase --workdir infra db push --linked

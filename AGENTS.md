@@ -17,6 +17,10 @@
 - Temporary legacy venue UI must remain isolated and replaceable.
 - UI must access venue functionality through shared contracts and APIs.
 - Business logic must not depend directly on sandbox or model providers.
+- Migrations must be backward compatible: CI applies them to staging on merge
+  while the previous release is still serving, so old and new code overlap.
+  Additive changes ship directly; a drop or rename needs two releases — first
+  stop reading the column, then remove it in a later migration.
 - Do not apply production database migrations without explicit approval.
 - Do not deploy to production or modify DNS without explicit approval.
 - Run lint, typecheck, tests, and build before declaring a phase complete.

@@ -38,6 +38,46 @@ The direct OpenAI adapter remains available with `MODEL_PROVIDER=openai`, `MODEL
 
 Do not paste secrets into logs, commits, public variables, browser code, or deployment URLs. Before enabling management writes, verify the old schema, RLS, `published_version_id`, and SHA-256 private-token format using a dedicated test merchant.
 
+## Schema migrations
+
+`infra/supabase/migrations/` is the source of truth for the remote schema. The
+`migrate-staging` job in [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
+runs `supabase db push --linked` after `validate` passes on `main`, so schema
+changes land with the code that needs them instead of by hand in the SQL editor.
+
+The job needs a `staging` GitHub Environment holding:
+
+```text
+secrets.SUPABASE_ACCESS_TOKEN   personal access token from the Supabase dashboard
+secrets.SUPABASE_DB_PASSWORD    the linked project's database password
+vars.SUPABASE_PROJECT_REF       e.g. dzabqqybqmrjxxrmziyf
+```
+
+Seed data is never pushed: `db push` includes it only behind `--include-seed`,
+which this job does not pass. `infra/supabase/config.toml` describes the local
+test stack only — the hosted project's own settings (email confirmation, OAuth
+providers, SMTP) live in the Supabase dashboard and are not managed here.
+
+Migrations must be backward compatible; see the rule in
+[`AGENTS.md`](../../AGENTS.md) for why, and what a column drop requires.
+
+### One-time history repair
+
+The staging project's baseline was applied by hand, so its migration history
+table was empty while the schema was already current. Pushing against an empty
+history would have replayed `0000_baseline.sql` and failed on `create table`.
+The history was therefore aligned once, without touching the schema:
+
+```bash
+supabase --workdir infra link --project-ref <ref>
+supabase --workdir infra migration repair --status applied 0000 0001 0002 0003 0004
+supabase --workdir infra migration list   # every local version now matches remote
+```
+
+Any future project that starts from a hand-applied schema needs the same repair
+before CI can push to it. Verify the schema really is current first — repairing
+past a migration that never ran skips it permanently.
+
 ## Release verification
 
 For every generated staging URL verify:

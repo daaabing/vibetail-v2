@@ -58,3 +58,46 @@ enabled = false
 
 [analytics]
 enabled = false
+
+# ---------------------------------------------------------------------------
+# Remote overrides. NOTHING PUSHES THESE TODAY — `supabase config push` is not
+# wired into CI, and `config push` has no --dry-run, so the first push must be
+# rehearsed against a throwaway project rather than staging. Until then this
+# block is reviewable documentation of what staging's settings should be.
+#
+# Everything above describes the local test stack. `config push` merges that
+# base with the block below, so any local-only value that would be wrong on a
+# hosted project has to be restated here — silence means the local value wins.
+# ---------------------------------------------------------------------------
+[remotes.staging]
+project_id = "dzabqqybqmrjxxrmziyf"
+
+[remotes.staging.auth]
+# The base has no site_url, which would resolve to localhost and send every
+# confirmation and OAuth redirect to a machine the merchant is not sitting at.
+site_url = "https://vibetailweb-staging.up.railway.app"
+additional_redirect_urls = ["https://vibetailweb-staging.up.railway.app/auth/callback"]
+
+[remotes.staging.auth.email]
+enable_signup = true
+# Staging has no custom SMTP, and Supabase's built-in mailer only delivers to
+# project team members at 2 messages/hour — so a required confirmation strands
+# every other address. Turn this back on in the same change that configures a
+# real SMTP provider.
+enable_confirmations = false
+
+[remotes.staging.db.seed]
+# infra/supabase/seed.sql is generated test data for the local stack. `db push`
+# already withholds seeds unless asked, and this keeps `config push` honest too.
+enabled = false
+
+# Re-enabled because the base disables all three purely to make `supabase start`
+# faster for tests; a hosted project has no reason to lose them.
+[remotes.staging.studio]
+enabled = true
+
+[remotes.staging.realtime]
+enabled = true
+
+[remotes.staging.analytics]
+enabled = true
