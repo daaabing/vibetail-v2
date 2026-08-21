@@ -31,6 +31,9 @@ import {
   deriveMenuBaseSpiritKeys,
 } from "../../../lib/mix-flow.js";
 
+/** Longest gap between two taps still read as one double-tap. */
+const DOUBLE_TAP_MS = 320;
+
 const STEP_SUBS: Record<StepId, string> = {
   vibe: "Pick the one that fits tonight. This is the only answer we actually need.",
   taste:
@@ -126,7 +129,7 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
     // advance() routes the last step here rather than through setStep, so
     // without this guard a double-tap on Continue at the 04 → 05 boundary
     // lands on "Meet my drink" and submits a step early.
-    if (performance.now() - stepMovedAtRef.current < 320) return;
+    if (performance.now() - stepMovedAtRef.current < DOUBLE_TAP_MS) return;
     if (!hasVibe) { setError("Choose a mood or write your own line."); setStep(0); return; }
     const { finalFlavors, customPreference } = buildPreference(order, "en");
     const mood = moodText.trim() || findVibePick(pickedLabel)?.mood || "";
