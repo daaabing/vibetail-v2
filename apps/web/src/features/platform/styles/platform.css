@@ -28,6 +28,19 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .house-header nav a, .house-header-cta { color: inherit; font-size: 10px; font-weight: 500; letter-spacing: .17em; text-decoration: none; text-transform: uppercase; }
 .house-header nav a { opacity: .72; }.house-header nav a:hover { opacity: 1; }
 .house-header-cta { padding-bottom: 4px; border-bottom: 1px solid currentColor; }
+/* Account control: the Log in link borrows the CTA's underline, and the
+   avatar is the only round thing in the header on purpose — it reads as a
+   person, not another nav item. */
+.house-account-link { padding-bottom: 4px; border-bottom: 1px solid currentColor; color: inherit; font-size: 10px; font-weight: 500; letter-spacing: .17em; text-decoration: none; text-transform: uppercase; white-space: nowrap; }
+.house-account-slot, .house-avatar { width: 34px; height: 34px; }
+.house-account-slot { display: block; }
+.house-account { position: relative; }
+.house-avatar { display: grid; place-items: center; overflow: hidden; padding: 0; border: 1px solid currentColor; border-radius: 50%; color: inherit; background: transparent; cursor: pointer; font-size: 13px; letter-spacing: .04em; }
+.house-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.house-account-menu { position: absolute; top: calc(100% + 12px); right: 0; z-index: 60; display: grid; justify-items: start; gap: 12px; min-width: 210px; border: 1px solid var(--line-strong); padding: 18px; color: var(--ink); background: var(--paper-card); }
+.house-account-menu p { max-width: 100%; margin: 0; overflow: hidden; color: var(--ink-mute); font-size: 11px; letter-spacing: .04em; text-overflow: ellipsis; white-space: nowrap; }
+.house-account-menu a, .house-account-menu button { border: 0; padding: 0; color: inherit; background: none; cursor: pointer; font-size: 10px; font-weight: 500; letter-spacing: .14em; text-decoration: none; text-transform: uppercase; }
+.house-account-menu a:hover, .house-account-menu button:hover { text-decoration: underline; text-underline-offset: 4px; }
 .house-menu-button { --bar-h: 1px; --bar-gap: 5px; display: none; border: 0; padding: 8px; color: inherit; background: none; }.house-menu-button span { display: block; width: 21px; height: var(--bar-h); margin: var(--bar-gap); background: currentColor; transition: transform .2s, opacity .2s; }
 /* Adjacent bar margins collapse, so the pitch is one bar plus one gap — the
    distance each outer bar travels to meet the middle one. */
@@ -92,7 +105,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 
 @media (max-width: 800px) {
   :root { --shell-gutter: 28px; --header-h: 72px; }
-  .house-header nav { display:none; position:absolute; top:var(--header-h); inset-inline:0; padding:10px calc(var(--shell-gutter) / 2) 20px; background:var(--night); color:var(--paper); flex-direction:column; }.house-header:not(.house-header-overlay) nav { background:var(--paper); color:var(--ink); border-bottom:1px solid var(--line); }.house-header nav.is-open { display:flex; }.house-menu-button { display:block; margin-left:auto; }.house-header-cta { display:none; }
+  .house-header nav { display:none; position:absolute; top:var(--header-h); inset-inline:0; padding:10px calc(var(--shell-gutter) / 2) 20px; background:var(--night); color:var(--paper); flex-direction:column; }.house-header:not(.house-header-overlay) nav { background:var(--paper); color:var(--ink); border-bottom:1px solid var(--line); }.house-header nav.is-open { display:flex; }.house-menu-button { display:block; order:3; }.house-header-cta { display:none; }.house-wordmark { order:1; }.house-account,.house-account-link,.house-account-slot { order:2; margin-left:auto; }
   .landing-drummer { width:min(68vw,380px); }.landing-hero-copy { padding-bottom:45px; }.landing-hero h1 { font-size:clamp(37px,11vw,58px); }.landing-hero-copy > p { max-width:90%; }.house-script { display:block; margin:17px 0 0; }.hero-scroll { display:none; }
   .house-columns,.house-paths,.specimen-layout,.house-footer-grid,.for-bars-grid { grid-template-columns:1fr; }.house-columns { gap:15px; }.house-paths a { min-height:230px; border:0; border-bottom:1px solid var(--line-strong); }.house-paths h3 { margin-top:60px; }.specimen-layout { gap:55px; }.house-steps li,.house-ledger article { grid-template-columns:42px 1fr; gap:14px; }.house-steps p,.house-steps small,.house-ledger p { grid-column:2; }.house-steps small { justify-self:start; }.for-bars-action,.vt-management-title,.vt-menu-editor-head,.for-bars-final { align-items:flex-start; flex-direction:column; }.for-bars-hero-action { align-items:flex-start; flex-direction:column; gap:18px; }.for-bars-hero-action > p { border-left:0; padding-left:0; }.for-bars-grid article,.for-bars-pricing article { min-height:auto; border-right:0; border-bottom:1px solid var(--line-strong); padding:26px; }.for-bars-grid article:last-child { border-bottom:0; }.for-bars-grid h3 { margin-top:45px; }.for-bars-grid ul { margin-top:45px; }.house-ink .for-bars-grid article { border-color:rgba(244,243,240,.25); }
   .vt-admin-grid { grid-template-columns:1fr; }.vt-span-2 { grid-column:auto; }.vt-inline-actions { flex-wrap:wrap; }.house-footer-grid { gap:38px; }.house-footer-bottom { align-items:flex-start; flex-direction:column; gap:12px; }

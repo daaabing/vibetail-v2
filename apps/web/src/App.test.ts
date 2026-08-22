@@ -16,6 +16,7 @@ describe("platform routes", () => {
     ["/", { kind: "landing" }],
     ["/match", { kind: "match" }],
     ["/venues", { kind: "venues" }],
+    ["/signin", { kind: "signin" }],
     ["/venues/nightjar-demo", { kind: "venue_detail", merchantSlug: "nightjar-demo" }],
     ["/manage", { kind: "redirect", to: "/venue" }],
     ["/for-bars", { kind: "for_bars" }],

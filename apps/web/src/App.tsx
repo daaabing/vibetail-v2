@@ -1,4 +1,5 @@
 import { AuthCallbackPage } from "./features/auth/AuthCallbackPage.js";
+import { SignInPage } from "./features/auth/SignInPage.js";
 import { CurrentMenuRoute } from "./routes/CurrentMenuRoute.js";
 import { VenueRoute } from "./routes/VenueRoute.js";
 import { GlobalMatchPage } from "./features/platform/pages/GlobalMatchPage.js";
@@ -30,6 +31,7 @@ export function App() {
   if (route.kind === "landing") return <LandingPage />;
   if (route.kind === "match") return <GlobalMatchPage />;
   if (route.kind === "auth_callback") return <AuthCallbackPage />;
+  if (route.kind === "signin") return <SignInPage />;
   if (route.kind === "venues") return <VenuesPage />;
   if (route.kind === "venue_detail") return <VenueDetailPage merchantSlug={route.merchantSlug} />;
   if (route.kind === "management") return <ManagementPage {...(route.privateToken ? { privateToken: route.privateToken } : {})} />;
@@ -51,6 +53,7 @@ export type AppRoute =
   | { kind: "landing" }
   | { kind: "match" }
   | { kind: "auth_callback" }
+  | { kind: "signin" }
   | { kind: "venues" }
   | { kind: "venue_detail"; merchantSlug: string }
   | { kind: "management"; privateToken?: string }
@@ -67,6 +70,8 @@ export function resolveAppRoute(pathname: string): AppRoute {
   if (normalized === "/match") return { kind: "match" };
   // Fixed OAuth redirect target; must match the Supabase + Google redirect allowlists.
   if (normalized === "/auth/callback") return { kind: "auth_callback" };
+  // Guest sign-in; `next` travels in the query string, which routing ignores.
+  if (normalized === "/signin") return { kind: "signin" };
   if (normalized === "/venues") return { kind: "venues" };
   const detail = normalized.match(/^\/venues\/([^/]+)$/);
   if (detail?.[1]) return { kind: "venue_detail", merchantSlug: decodeURIComponent(detail[1]) };

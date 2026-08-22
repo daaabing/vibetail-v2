@@ -51,6 +51,67 @@ async function getSupabaseClient(): Promise<SupabaseClient | null> {
   return clientPromise;
 }
 
+/** What the header needs to draw a signed-in guest. */
+export interface AuthUser {
+  id: string;
+  email: string | null;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
+// supabase-js stores the session under `sb-<project-ref>-auth-token`, splitting
+// it into `.0`/`.1` chunks when it outgrows one entry.
+const STORED_SESSION_KEY = /^sb-.+-auth-token(\.\d+)?$/;
+
+/**
+ * Whether this browser holds a Supabase session at all. Every page's header
+ * asks first: probing storage keeps signed-out guests from downloading the
+ * auth SDK only to be told they are signed out. A `true` here is a hint, not
+ * proof — `getCurrentUser` still decides.
+ */
+export function hasStoredSession(storage: Pick<Storage, "key" | "length"> = window.localStorage): boolean {
+  try {
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index);
+      if (key && STORED_SESSION_KEY.test(key)) return true;
+    }
+  } catch {
+    // Storage is unavailable (private mode, blocked cookies): treat as signed out.
+  }
+  return false;
+}
+
+/** The signed-in guest, or null when signed out or unconfigured. */
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  const client = await getSupabaseClient();
+  if (!client) return null;
+  // getSession reads (and refreshes) locally; getUser would cost a round trip
+  // on every page load to learn what the stored session already says.
+  const { data } = await client.auth.getSession();
+  const user = data.session?.user;
+  if (!user) return null;
+  const metadata = user.user_metadata as Record<string, unknown> | undefined;
+  return {
+    id: user.id,
+    email: user.email ?? null,
+    displayName: readString(metadata, "full_name") ?? readString(metadata, "name") ?? user.email ?? "Guest",
+    // Google fills `avatar_url`; other providers use `picture`.
+    avatarUrl: readString(metadata, "avatar_url") ?? readString(metadata, "picture") ?? null,
+  };
+}
+
+function readString(source: Record<string, unknown> | undefined, key: string): string | null {
+  const value = source?.[key];
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+/** The letter drawn when a guest has no provider avatar. */
+export function accountInitial(user: AuthUser): string {
+  const source = user.displayName.trim() || user.email?.trim() || "";
+  // Match the first letter or digit: "@handle" and " ?? name" must not render as punctuation.
+  return source.match(/\p{L}|\p{N}/u)?.[0]?.toUpperCase() ?? "?";
+}
+
 /**
  * The bearer token for API calls. Supabase refreshes an expiring access token
  * here, so callers should fetch it per request rather than hold onto it.
