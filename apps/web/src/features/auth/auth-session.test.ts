@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { safeNext } from "./auth-session.js";
+import { accountInitial, hasStoredSession, safeNext } from "./auth-session.js";
 
 describe("safeNext", () => {
   it("keeps plain same-origin paths", () => {
@@ -19,5 +19,48 @@ describe("safeNext", () => {
     expect(safeNext("/\r\\evil.example")).toBe("/");
     expect(safeNext("")).toBe("/");
     expect(safeNext("venue/dashboard")).toBe("/");
+  });
+});
+
+/** Enough of Storage for the key scan; the real one is unavailable under node. */
+function storage(...keys: string[]): Pick<Storage, "key" | "length"> {
+  return { length: keys.length, key: (index: number) => keys[index] ?? null };
+}
+
+describe("hasStoredSession", () => {
+  it("recognises the supabase session key, chunked or not", () => {
+    expect(hasStoredSession(storage("sb-abcdefg-auth-token"))).toBe(true);
+    expect(hasStoredSession(storage("theme", "sb-abcdefg-auth-token.0", "sb-abcdefg-auth-token.1"))).toBe(true);
+  });
+
+  it("stays false for an empty or unrelated store", () => {
+    expect(hasStoredSession(storage())).toBe(false);
+    expect(hasStoredSession(storage("theme", "vibetail:match-handoff:v1", "sb-auth-token"))).toBe(false);
+  });
+
+  it("treats unreadable storage as signed out", () => {
+    const blocked: Pick<Storage, "key" | "length"> = {
+      get length(): number { throw new Error("blocked"); },
+      key: () => null,
+    };
+    expect(hasStoredSession(blocked)).toBe(false);
+  });
+});
+
+describe("accountInitial", () => {
+  const base = { id: "user-1", email: null, avatarUrl: null };
+
+  it("takes the first letter of the display name", () => {
+    expect(accountInitial({ ...base, displayName: "ada lovelace" })).toBe("A");
+    expect(accountInitial({ ...base, displayName: "陈" })).toBe("陈");
+  });
+
+  it("skips leading punctuation and falls back to the email", () => {
+    expect(accountInitial({ ...base, displayName: "@nightowl" })).toBe("N");
+    expect(accountInitial({ ...base, displayName: "   ", email: "guest@example.com" })).toBe("G");
+  });
+
+  it("never renders empty", () => {
+    expect(accountInitial({ ...base, displayName: "…" })).toBe("?");
   });
 });
