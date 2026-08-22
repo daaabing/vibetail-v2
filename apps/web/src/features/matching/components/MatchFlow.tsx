@@ -53,7 +53,6 @@ export function MatchFlow({ context, destination, headerAction, initialPreferenc
       result={result}
       onAgain={() => { setResult(undefined); setPreferences(undefined); }}
       onDestination={() => preferences && onDestination?.(preferences, result)}
-      onEdit={() => setResult(undefined)}
     />}
   </>;
 }
@@ -78,13 +77,12 @@ function guestForSerial(serial: string) {
  *  drink with a house guest drawn onto it, and a colophon. The headline is
  *  the model's vibeName — the guest's night, not the menu's label — and the
  *  orderable item name sits right under it as the order line. */
-function RecommendationCard({ destination, originalVibe, result, onAgain, onDestination, onEdit }: {
+function RecommendationCard({ destination, originalVibe, result, onAgain, onDestination }: {
   destination?: { label: string; url: string };
   originalVibe: string;
   result: VenueMatchResult;
   onAgain(): void;
   onDestination(): void;
-  onEdit(): void;
 }) {
   const [cardState, setCardState] = useState<"idle" | "working" | "done" | "error">("idle");
   const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
@@ -240,7 +238,6 @@ function RecommendationCard({ destination, originalVibe, result, onAgain, onDest
         {shareState === "copied" ? "Link copied ✓" : shareState === "shared" ? "Shared ✓" : "Share"}
       </button>
       <button className="btn btn-outline" type="button" onClick={onAgain}>Match again</button>
-      <button className="mono-sm underline underline-offset-4" type="button" onClick={onEdit}>Edit preferences</button>
     </div>
 
     {/* Dossier — what's actually in it */}
