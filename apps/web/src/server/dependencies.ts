@@ -1,5 +1,4 @@
 import {
-  AlibabaDrinkPhotoProvider,
   DeterministicMatchingProvider,
   DeterministicMenuPhotoScanProvider,
   OpenAIMenuPhotoScanProvider,
@@ -164,14 +163,6 @@ function createDrinkPhotoProvider(env: WebServerEnv) {
     return new Sam2DrinkPhotoProvider({
       baseUrl: env.SAM2_CUTOUT_URL ?? "http://127.0.0.1:8091",
       model: env.IMAGE_CUTOUT_MODEL ?? "sam2.1_hiera_small",
-    });
-  }
-  if (env.IMAGE_CUTOUT_PROVIDER === "alibaba") {
-    if (!env.DASHSCOPE_API_KEY) throw new Error("DASHSCOPE_API_KEY is required for image cutout");
-    return new AlibabaDrinkPhotoProvider({
-      apiKey: env.DASHSCOPE_API_KEY,
-      ...(env.IMAGE_CUTOUT_MODEL ? { model: env.IMAGE_CUTOUT_MODEL } : {}),
-      ...(env.DASHSCOPE_IMAGE_ENDPOINT ? { endpoint: env.DASHSCOPE_IMAGE_ENDPOINT } : {}),
     });
   }
   return new OriginalDrinkPhotoProvider();
