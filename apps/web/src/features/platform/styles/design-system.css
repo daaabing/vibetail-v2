@@ -45,6 +45,17 @@
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-destructive: var(--destructive);
+
+  /* The house palette, exposed as utilities. Aliases rather than values, so
+     these follow --paper/--ink when .noir flips the world underneath them. */
+  --color-paper: var(--paper);
+  --color-paper-warm: var(--paper-warm);
+  --color-paper-card: var(--paper-card);
+  --color-night: var(--night);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-mute: var(--ink-mute);
+  --color-gold: var(--gold);
   --radius-lg: var(--radius);
 }
 
