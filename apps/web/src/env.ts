@@ -85,12 +85,17 @@ export function parseWebEnv(source: NodeJS.ProcessEnv): {
   serverEnv: WebServerEnv;
 } {
   const nodeEnv = source.NODE_ENV ?? "development";
+  const publicEnv = publicEnvSchema.parse(source);
+  const serverEnv = serverEnvSchema.parse({
+    ...source,
+    HOST: source.HOST ?? (nodeEnv === "production" ? "0.0.0.0" : "127.0.0.1"),
+  });
+  if (serverEnv.NODE_ENV === "production" && isLoopbackUrl(serverEnv.APP_URL)) {
+    throw new Error("APP_URL must be set to the public deployment origin in production.");
+  }
   return {
-    publicEnv: publicEnvSchema.parse(source),
-    serverEnv: serverEnvSchema.parse({
-      ...source,
-      HOST: source.HOST ?? (nodeEnv === "production" ? "0.0.0.0" : "127.0.0.1"),
-    }),
+    publicEnv,
+    serverEnv,
   };
 }
 
@@ -108,4 +113,9 @@ function requireFields(
       });
     }
   }
+}
+
+function isLoopbackUrl(value: string): boolean {
+  const hostname = new URL(value).hostname;
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
 }

@@ -71,8 +71,8 @@ SUPABASE_SERVICE_ROLE_KEY=<service role key>
 APP_URL=http://127.0.0.1:3000
 ```
 
-`APP_URL` must match the origin you browse, because the callback redirect is
-built from `window.location.origin` and has to be on the allowlist above.
+`APP_URL` must match the public app origin, because the callback redirect is
+built from `APP_URL` at runtime and has to be on the allowlist above.
 
 Venue data always persists to the Supabase project that `SUPABASE_URL` points
 at; there is no separate in-memory mode.

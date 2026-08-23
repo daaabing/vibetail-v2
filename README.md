@@ -131,7 +131,7 @@ The local seed ships one ready account — **`demo@vibetail.test` / `vibetail-de
 
 Guests and venue owners share one account row: owning a venue is just a non-null `merchant_id`. Consumer surfaces have **no sign-in entry point** — anonymous scanning, matching, and feedback are the whole guest flow. The `account_id` columns on `match_events` / `match_feedback` are still written when a signed-in venue owner browses a menu, and a guest entry point can be added later without schema work.
 
-The browser reads publishable settings from `GET /v1/config` at runtime, so one client build works across environments; the Supabase JS SDK is loaded lazily and never ships in the main bundle. The browser sends the Supabase access token as `Authorization: Bearer`, and the server verifies it with `auth.getUser` behind a 60-second cache. `/auth/callback` is the fixed PKCE redirect target and must be on the Supabase redirect allowlist and the Google OAuth client's authorised redirect URIs.
+The browser reads publishable settings from `GET /v1/config` at runtime, so one client build works across environments; the Supabase JS SDK is loaded lazily and never ships in the main bundle. The browser sends the Supabase access token as `Authorization: Bearer`, and the server verifies it with `auth.getUser` behind a 60-second cache. `/auth/callback` is the fixed PKCE redirect target and is anchored to `APP_URL`, so that origin must be on the Supabase redirect allowlist and the Google OAuth client's authorised redirect URIs.
 
 Setup steps for a fresh Supabase project and Google OAuth client are in [`docs/operations/google-auth-setup.md`](docs/operations/google-auth-setup.md).
 

@@ -19,8 +19,8 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createWebApp } from "./app.js";
 
-const NO_AUTH = { provider: "none", supabaseUrl: null, supabasePublishableKey: null } as const;
 const APP_URL = "http://127.0.0.1:3000";
+const NO_AUTH = { appUrl: APP_URL, provider: "none", supabaseUrl: null, supabasePublishableKey: null } as const;
 
 // Seeded by scripts/generate-seed.mjs (fixtures/venue/menus.json) via the
 // vitest globalSetup's `supabase db reset`. These rows are read-only for tests.
@@ -130,7 +130,7 @@ describe("venue HTTP slice (local supabase)", () => {
   it("serves the publishable auth config and no secrets", async () => {
     const body = (await request(app()).get("/v1/config").expect(200)).body;
     expect(body).toEqual({
-      auth: { provider: "none", supabaseUrl: null, supabasePublishableKey: null },
+      auth: { appUrl: APP_URL, provider: "none", supabaseUrl: null, supabasePublishableKey: null },
     });
   });
 

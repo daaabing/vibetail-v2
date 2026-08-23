@@ -26,6 +26,17 @@ describe("web environment", () => {
       .toBe("127.0.0.1");
   });
 
+  it("rejects localhost APP_URL in production", () => {
+    expect(() => parseWebEnv({ ...localEnv, NODE_ENV: "production" })).toThrow(
+      /APP_URL must be set to the public deployment origin in production/,
+    );
+    expect(() => parseWebEnv({
+      ...localEnv,
+      NODE_ENV: "production",
+      APP_URL: "https://venue.vibetail.com",
+    }).serverEnv.APP_URL).not.toThrow();
+  });
+
   it("always requires the Supabase connection settings, with setup guidance", () => {
     expect(() => parseWebEnv({ ...localEnv, SUPABASE_URL: undefined })).toThrow(
       /SUPABASE_URL is required.*pnpm db:start/,

@@ -6,6 +6,7 @@ import { z } from "zod";
  * `none` keeps the passwordless account-name login used by local development runs.
  */
 export const authConfigSchema = z.object({
+  appUrl: z.string().url(),
   provider: z.enum(["none", "supabase"]),
   supabaseUrl: z.string().url().nullable().default(null),
   supabasePublishableKey: z.string().min(1).nullable().default(null),
