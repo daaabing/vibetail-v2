@@ -66,17 +66,18 @@ describe("accountInitial", () => {
 });
 
 describe("buildOAuthRedirectUrl", () => {
-  const APP_URL = "https://venue.vibetail.com";
-
-  it("anchors the Google callback to the configured APP_URL origin", () => {
-    expect(buildOAuthRedirectUrl({ appUrl: APP_URL }, "/venue/dashboard")).toBe(
-      `${APP_URL}/auth/callback?next=%2Fvenue%2Fdashboard`,
-    );
-  });
+  it.each(["https://app.example.com", "https://preview.example.net"])(
+    "anchors the Google callback to the configured APP_URL origin: %s",
+    (configuredAppUrl) => {
+      expect(buildOAuthRedirectUrl({ appUrl: configuredAppUrl }, "/venue/dashboard")).toBe(
+        `${configuredAppUrl}/auth/callback?next=%2Fvenue%2Fdashboard`,
+      );
+    },
+  );
 
   it("normalizes the post-login path before attaching it", () => {
-    expect(buildOAuthRedirectUrl({ appUrl: APP_URL }, "https://evil.example")).toBe(
-      `${APP_URL}/auth/callback?next=%2F`,
+    expect(buildOAuthRedirectUrl({ appUrl: "https://app.example.com" }, "https://evil.example")).toBe(
+      "https://app.example.com/auth/callback?next=%2F",
     );
   });
 });

@@ -21,8 +21,9 @@ describe("web environment", () => {
   });
 
   it("binds production to all container interfaces by default", () => {
-    expect(parseWebEnv({ ...localEnv, NODE_ENV: "production" }).serverEnv.HOST).toBe("0.0.0.0");
-    expect(parseWebEnv({ ...localEnv, NODE_ENV: "production", HOST: "127.0.0.1" }).serverEnv.HOST)
+    const productionEnv = { ...localEnv, NODE_ENV: "production", APP_URL: "https://app.example.com" };
+    expect(parseWebEnv(productionEnv).serverEnv.HOST).toBe("0.0.0.0");
+    expect(parseWebEnv({ ...productionEnv, HOST: "127.0.0.1" }).serverEnv.HOST)
       .toBe("127.0.0.1");
   });
 
@@ -33,7 +34,7 @@ describe("web environment", () => {
     expect(() => parseWebEnv({
       ...localEnv,
       NODE_ENV: "production",
-      APP_URL: "https://venue.vibetail.com",
+      APP_URL: "https://app.example.com",
     }).serverEnv.APP_URL).not.toThrow();
   });
 
