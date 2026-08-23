@@ -21,6 +21,7 @@ LOG_LEVEL=info
 ```
 
 Railway supplies `PORT`. `HOST` may be omitted because production defaults to `0.0.0.0`.
+The production server now rejects a loopback `APP_URL` such as `http://127.0.0.1:3000`, so missing this variable fails fast instead of generating localhost OAuth callbacks.
 
 To enable the venue backend and the temporary legacy management flow, additionally configure `SUPABASE_SERVICE_ROLE_KEY` with a server-only secret or legacy `service_role` key. Without it, public reads remain available while all management operations fail closed with `503`.
 

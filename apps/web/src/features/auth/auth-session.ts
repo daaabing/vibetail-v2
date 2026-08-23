@@ -160,7 +160,8 @@ export async function signUpWithEmail(email: string, password: string): Promise<
 
 export async function signInWithGoogle(next: string): Promise<void> {
   const client = await requireClient();
-  const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeNext(next))}`;
+  const config = await loadAuthConfig();
+  const redirectTo = buildOAuthRedirectUrl(config, next);
   const { data, error } = await client.auth.signInWithOAuth({
     provider: "google",
     options: { redirectTo, skipBrowserRedirect: true },
@@ -187,6 +188,20 @@ export async function signInWithGoogle(next: string): Promise<void> {
 }
 
 class GoogleNotConfiguredError extends Error {}
+
+/**
+ * `APP_URL` selects the deployment origin. The callback path itself stays
+ * fixed so `AuthCallbackPage` can always exchange the PKCE code before the app
+ * resumes to the requested in-product destination carried in `next`.
+ */
+export function buildOAuthRedirectUrl(
+  config: Pick<AuthConfig, "appUrl">,
+  next: string,
+): string {
+  const redirectTo = new URL("/auth/callback", config.appUrl);
+  redirectTo.searchParams.set("next", safeNext(next));
+  return redirectTo.toString();
+}
 
 export async function signOut(): Promise<void> {
   const client = await getSupabaseClient();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accountInitial, hasStoredSession, safeNext } from "./auth-session.js";
+import { accountInitial, buildOAuthRedirectUrl, hasStoredSession, safeNext } from "./auth-session.js";
 
 describe("safeNext", () => {
   it("keeps plain same-origin paths", () => {
@@ -62,5 +62,22 @@ describe("accountInitial", () => {
 
   it("never renders empty", () => {
     expect(accountInitial({ ...base, displayName: "…" })).toBe("?");
+  });
+});
+
+describe("buildOAuthRedirectUrl", () => {
+  it.each(["https://app.example.com", "https://preview.example.net"])(
+    "anchors the Google callback to the configured APP_URL origin: %s",
+    (configuredAppUrl) => {
+      expect(buildOAuthRedirectUrl({ appUrl: configuredAppUrl }, "/venue/dashboard")).toBe(
+        `${configuredAppUrl}/auth/callback?next=%2Fvenue%2Fdashboard`,
+      );
+    },
+  );
+
+  it("normalizes the post-login path before attaching it", () => {
+    expect(buildOAuthRedirectUrl({ appUrl: "https://app.example.com" }, "https://evil.example")).toBe(
+      "https://app.example.com/auth/callback?next=%2F",
+    );
   });
 });

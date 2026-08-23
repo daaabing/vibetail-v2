@@ -21,9 +21,21 @@ describe("web environment", () => {
   });
 
   it("binds production to all container interfaces by default", () => {
-    expect(parseWebEnv({ ...localEnv, NODE_ENV: "production" }).serverEnv.HOST).toBe("0.0.0.0");
-    expect(parseWebEnv({ ...localEnv, NODE_ENV: "production", HOST: "127.0.0.1" }).serverEnv.HOST)
+    const productionEnv = { ...localEnv, NODE_ENV: "production", APP_URL: "https://app.example.com" };
+    expect(parseWebEnv(productionEnv).serverEnv.HOST).toBe("0.0.0.0");
+    expect(parseWebEnv({ ...productionEnv, HOST: "127.0.0.1" }).serverEnv.HOST)
       .toBe("127.0.0.1");
+  });
+
+  it("rejects localhost APP_URL in production", () => {
+    expect(() => parseWebEnv({ ...localEnv, NODE_ENV: "production" })).toThrow(
+      /APP_URL must be set to the public deployment origin in production/,
+    );
+    expect(() => parseWebEnv({
+      ...localEnv,
+      NODE_ENV: "production",
+      APP_URL: "https://app.example.com",
+    }).serverEnv.APP_URL).not.toThrow();
   });
 
   it("always requires the Supabase connection settings, with setup guidance", () => {
