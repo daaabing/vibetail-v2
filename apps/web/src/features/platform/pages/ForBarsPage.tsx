@@ -146,7 +146,7 @@ export function ForBarsPage() {
         <img src="/brand/forbars-desk.jpg" alt="" aria-hidden />
         <div className="for-bars-desk-shade" />
         <div className="house-shell for-bars-desk-head-inner">
-          <div className="for-bars-desk-bar"><a className="house-wordmark" href="/" aria-label="Vibetail home">VIBETAL(E.)</a><span className="mono-sm">Step 2 of 2 — check our reading</span></div>
+          <div className="for-bars-desk-bar"><a className="house-wordmark" href="/" aria-label="Vibetail home">VIBETAIL</a><span className="mono-sm">Step 2 of 2 — check our reading</span></div>
           <div className="for-bars-desk-title">
             <div className="on-dark">
               <h1>{saved ? <>Saved — <em>over to us</em>.</> : <>Here&apos;s what <em>we read</em>.</>}</h1>

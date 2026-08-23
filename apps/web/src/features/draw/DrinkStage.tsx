@@ -435,7 +435,7 @@ export default function DrinkStage({
             color: "var(--ink)",
           }}
         >
-          VIBETAL(E.)
+          VIBETAIL
         </span>
         <span className="mono-sm">{"The pour — live"}</span>
       </div>
