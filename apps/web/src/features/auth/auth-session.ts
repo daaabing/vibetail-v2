@@ -189,6 +189,11 @@ export async function signInWithGoogle(next: string): Promise<void> {
 
 class GoogleNotConfiguredError extends Error {}
 
+/**
+ * `APP_URL` selects the deployment origin. The callback path itself stays
+ * fixed so `AuthCallbackPage` can always exchange the PKCE code before the app
+ * resumes to the requested in-product destination carried in `next`.
+ */
 export function buildOAuthRedirectUrl(
   config: Pick<AuthConfig, "appUrl">,
   next: string,
