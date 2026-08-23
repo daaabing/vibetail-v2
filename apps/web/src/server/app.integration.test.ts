@@ -73,6 +73,7 @@ function app(venueProvider?: ModelProvider) {
         renderQrSvg: async (text) => `<svg data-url="${text}"></svg>`,
       },
     ),
+    menuPhotoScanProvider: new DeterministicMenuPhotoScanProvider(),
     authConfig: NO_AUTH,
     checkReadiness: async () => {
       try {
@@ -389,6 +390,16 @@ describe("venue HTTP slice (local supabase)", () => {
     const stored = await fetch(prepared.body.imageUrl as string);
     expect(stored.status).toBe(200);
     expect(Buffer.from(await stored.arrayBuffer()).toString("utf8")).toBe("fixture-image");
+  });
+
+  it("exposes the same menu-photo provider through the public bar upload endpoint", async () => {
+    const response = await request(app()).post("/v1/menu/scan-photo").send({
+      imageBase64: Buffer.from("fixture-image").toString("base64"),
+      imageContentType: "image/jpeg",
+      fileName: "bar-menu.jpg",
+    }).expect(200);
+    expect(response.body).toMatchObject({ provider: "deterministic", suggestedMenuName: "Imported drinks" });
+    expect(response.body.drinks).toHaveLength(3);
   });
 
   it("deletes drinks with menu cleanup through the HTTP surface", async () => {

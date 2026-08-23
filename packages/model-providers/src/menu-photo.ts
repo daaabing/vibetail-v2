@@ -113,7 +113,7 @@ export class OpenRouterMenuPhotoScanProvider implements MenuPhotoScanProvider {
       messages: [
         { role: "system", content: MENU_PHOTO_PROMPT },
         { role: "user", content: [
-          { type: "text", text: "Extract every drink from this menu photo." },
+          { type: "text", text: "Extract only beverage items from this menu photo, especially cocktails and mocktails." },
           { type: "image_url", image_url: { url: imageUrl } },
         ] },
       ],
@@ -124,11 +124,12 @@ export class OpenRouterMenuPhotoScanProvider implements MenuPhotoScanProvider {
   }
 
   async scanMenuUrl(request: MenuUrlScanRequest): Promise<ScannedMenu> {
+    const menuText = await fetchMenuText(request.sourceUrl, request.timeoutMs);
     const response = await this.client.chat.completions.parse({
       model: this.model,
       messages: [
         { role: "system", content: MENU_PHOTO_PROMPT },
-        { role: "user", content: `Extract every drink from this public menu URL: ${request.sourceUrl}` },
+        { role: "user", content: `Extract every beverage item from this fetched public menu page:\n\n${menuText}` },
       ],
       max_completion_tokens: 4_000,
       response_format: zodResponseFormat(scannedMenuSchema, "fetched_drink_menu"),
@@ -171,12 +172,13 @@ export class OpenAIMenuPhotoScanProvider implements MenuPhotoScanProvider {
   }
 
   async scanMenuUrl(request: MenuUrlScanRequest): Promise<ScannedMenu> {
+    const menuText = await fetchMenuText(request.sourceUrl, request.timeoutMs);
     const response = await this.client.responses.parse({
       model: this.model,
       store: false,
       input: [
         { role: "system", content: MENU_PHOTO_PROMPT },
-        { role: "user", content: `Extract every drink from this public menu URL: ${request.sourceUrl}` },
+        { role: "user", content: `Extract every beverage item from this fetched public menu page:\n\n${menuText}` },
       ],
       max_output_tokens: 4_000,
       text: { format: zodTextFormat(scannedMenuSchema, "fetched_drink_menu") },
@@ -185,8 +187,10 @@ export class OpenAIMenuPhotoScanProvider implements MenuPhotoScanProvider {
   }
 }
 
-const MENU_PHOTO_PROMPT = `You extract a venue's complete drink menu from one photo.
-Return every actual drink as an editable draft. Ignore section headings and food.
+const MENU_PHOTO_PROMPT = `You extract a venue's complete beverage menu from one photo.
+Return every actual beverage item as an editable draft, especially cocktails and mocktails.
+Include beer, wine, spirits, shots, non-alcoholic drinks, coffee, tea, soda, and other beverages when they are listed as menu items.
+Exclude food, dishes, section headings, descriptive prose without a beverage, and decorative text.
 Preserve printed names, descriptions, prices, ingredients, and allergens exactly when visible.
 Infer flavorTags, baseSpirit, strength, and recommendationNote conservatively from visible facts.
 Use null when a fact is not visible and cannot be safely inferred. Never invent an image URL.
@@ -194,6 +198,59 @@ suggestedMenuName should use the printed menu title, or "Imported menu" when no 
 
 function dataUrl(bytes: Uint8Array, contentType: string): string {
   return `data:${contentType};base64,${Buffer.from(bytes).toString("base64")}`;
+}
+
+async function fetchMenuText(sourceUrl: string, timeoutMs: number): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(sourceUrl, {
+      headers: {
+        accept: "text/html, application/xhtml+xml, text/plain;q=0.9",
+        "user-agent": "Vibetail menu importer/1.0",
+      },
+      redirect: "follow",
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`Menu page fetch failed (${response.status})`);
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType && !/(html|xhtml|text\/plain)/i.test(contentType)) {
+      throw new Error("Menu URL did not return a readable webpage");
+    }
+    const html = await response.text();
+    const text = htmlToText(html).slice(0, 30_000);
+    if (!text) throw new Error("Menu page contained no readable text");
+    return text;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function htmlToText(html: string): string {
+  return decodeHtmlEntities(
+    html
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+      .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, " ")
+      .replace(/<(br|\/p|\/div|\/li|\/tr|\/h[1-6])\b[^>]*>/gi, "\n")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/[ \t]+/g, " ")
+      .replace(/\n\s+/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim(),
+  );
+}
+
+function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&#(\d+);/g, (_match, code: string) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([\da-f]+);/gi, (_match, code: string) => String.fromCodePoint(Number.parseInt(code, 16)));
 }
 
 function draft(input: Partial<DrinkInput> & Pick<DrinkInput, "name">): DrinkInput {

@@ -47,10 +47,9 @@ const serverEnvSchema = z
     MODEL_API_KEY: optionalString(),
     OPENROUTER_API_KEY: optionalString(),
     MODEL_NAME: optionalString(),
-    IMAGE_CUTOUT_PROVIDER: z.enum(["original", "alibaba", "sam2"]).default("original"),
+    MENU_PHOTO_MODEL: optionalString(),
+    IMAGE_CUTOUT_PROVIDER: z.enum(["original", "sam2"]).default("original"),
     IMAGE_CUTOUT_MODEL: optionalString(),
-    DASHSCOPE_API_KEY: optionalString(),
-    DASHSCOPE_IMAGE_ENDPOINT: optionalString(z.string().url()),
     SAM2_CUTOUT_URL: optionalString(z.string().url()),
     FC_SANDBOX_ENDPOINT: optionalString(z.string().url()),
     FC_SANDBOX_API_KEY: optionalString(),
@@ -68,9 +67,6 @@ const serverEnvSchema = z
     }
     if (env.SANDBOX_PROVIDER === "e2b") {
       requireFields(env, ["E2B_ENDPOINT", "E2B_API_KEY"], context);
-    }
-    if (env.IMAGE_CUTOUT_PROVIDER === "alibaba") {
-      requireFields(env, ["DASHSCOPE_API_KEY"], context);
     }
     if (env.IMAGE_CUTOUT_PROVIDER === "sam2") {
       requireFields(env, ["SAM2_CUTOUT_URL"], context);

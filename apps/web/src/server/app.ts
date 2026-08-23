@@ -10,6 +10,7 @@ import {
   menuItemInputSchema,
   menuViewEventSchema,
   menuPhotoScanInputSchema,
+  menuPhotoScanResultSchema,
   menuUrlScanInputSchema,
   prepareDrinkPhotoInputSchema,
   runtimeConfigSchema,
@@ -25,6 +26,7 @@ import {
   type VenueError,
   type VenueMatchResult,
 } from "@vibetail/contracts";
+import type { MenuPhotoScanProvider } from "@vibetail/model-providers";
 import {
   ManagementServiceError,
   VenueManagementServiceError,
@@ -35,6 +37,7 @@ import {
   type VenueManagementService,
 } from "@vibetail/venue-core";
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
+import { randomUUID } from "node:crypto";
 import { ZodError } from "zod";
 
 export interface WebAppOptions {
@@ -42,6 +45,7 @@ export interface WebAppOptions {
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
   authConfig: AuthConfig;
+  menuPhotoScanProvider?: MenuPhotoScanProvider;
   checkReadiness?: () => Promise<Array<{ name: string; ready: boolean; detail: string }>>;
   testFrontend?: boolean;
 }
@@ -88,6 +92,22 @@ export function createWebApp(options: WebAppOptions): Express {
     "/v1/venues/:merchantSlug",
     asyncRoute(async (request, response) => {
       response.json(await options.venueService.getVenue(request.params.merchantSlug ?? ""));
+    }),
+  );
+
+  app.post(
+    "/v1/menu/scan-photo",
+    asyncRoute(async (request, response) => {
+      const provider = options.menuPhotoScanProvider;
+      if (!provider) throw mediaUnavailable("Menu photo scanning is not configured on this server.");
+      const input = menuPhotoScanInputSchema.parse(request.body);
+      const scan = await provider.scanMenuPhoto({
+        image: { bytes: decodeBase64(input.imageBase64), contentType: input.imageContentType },
+        ...(input.fileName ? { fileName: input.fileName } : {}),
+        traceId: randomUUID(),
+        timeoutMs: 45_000,
+      });
+      response.json(menuPhotoScanResultSchema.parse({ ...scan, provider: provider.id }));
     }),
   );
 
@@ -502,6 +522,24 @@ function mapError(error: unknown): { status: number; body: VenueError } {
     status: 500,
     body: { code: "INTERNAL_ERROR", message: "Unexpected server error.", retryable: true },
   };
+}
+
+function mediaUnavailable(message: string): VenueManagementServiceError {
+  return new VenueManagementServiceError(
+    { code: "MATCH_PROVIDER_UNAVAILABLE", message, retryable: true },
+    503,
+  );
+}
+
+function decodeBase64(value: string): Uint8Array {
+  const bytes = Uint8Array.from(Buffer.from(value, "base64"));
+  if (bytes.length === 0 || bytes.length > 8_000_000) {
+    throw new VenueManagementServiceError(
+      { code: "INVALID_REQUEST", message: "Upload a PNG, JPEG, or WebP image under 8 MB.", retryable: false },
+      400,
+    );
+  }
+  return bytes;
 }
 
 function readBearerToken(request: Request): string {
