@@ -181,7 +181,7 @@ export function ForBarsPage() {
               <p>{saved
                 ? "Your draft is kept on this device. Open bar management to turn it into a live menu — or send it to us and we'll wire it up and share your private management link, usually within the day."
                 : "Fix anything we got wrong — names, descriptions, tones — and add a photo per drink if you have one. Nothing goes live until you say so."}</p>
-              {saved && <div className="for-bars-desk-next"><a className="house-button house-button-light" href="/venue">Open bar management <span>→</span></a><a className="house-text-link on-dark" href="mailto:hello@vibetail.com?subject=Menu%20draft">Send it to us →</a></div>}
+              {saved && <div className="for-bars-desk-next"><a className="house-button house-button-light" href="/venue">Open bar management <span>→</span></a><a className="house-text-link on-dark" href="mailto:vibetail.communication@gmail.com?subject=Menu%20draft">Send it to us →</a></div>}
             </div>
             <div className="for-bars-pages">
               {pages.map((src, i) => <img key={i} src={src} alt={`Menu page ${i + 1}`} style={{ transform: `rotate(${(i % 2 ? 1 : -1) * 1.6}deg)` }} />)}
@@ -267,7 +267,7 @@ export function ForBarsPage() {
 
       <section id="pricing" className="house-section house-ink"><div className="film-grain" /><div className="house-shell">
         <div className="house-section-head"><p className="house-eyebrow">Straightforward pricing</p><h2>Scale with every<br />drink <em>served.</em></h2><p>Plans include a set number of completed Vibetail orders. Additional completed orders are billed at a fixed per-drink rate—never for browsing or regenerating.</p></div>
-        <div className="for-bars-grid for-bars-pricing">{plans.map(([label,title,items,cta,subject]) => <article key={label}><span className="for-bars-card-label">{label}</span><h3>{title}</h3><ul>{items.map((item) => <li key={item}>✓ {item}</li>)}</ul><a className="house-text-link" href={`mailto:hello@vibetail.com?subject=${subject}`}>{cta} →</a></article>)}</div>
+        <div className="for-bars-grid for-bars-pricing">{plans.map(([label,title,items,cta,subject]) => <article key={label}><span className="for-bars-card-label">{label}</span><h3>{title}</h3><ul>{items.map((item) => <li key={item}>✓ {item}</li>)}</ul><a className="house-text-link" href={`mailto:vibetail.communication@gmail.com?subject=${subject}`}>{cta} →</a></article>)}</div>
         <p className="for-bars-pricing-note">Printing hardware and materials are priced separately. Every plan is billed on completed paid orders—not views, prompts or recommendations.</p>
       </div></section>
 
