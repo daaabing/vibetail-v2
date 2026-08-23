@@ -91,7 +91,7 @@ authorised redirect URIs alongside the hosted one.
 curl -s http://127.0.0.1:3000/v1/config
 ```
 
-Expect `{"auth":{"provider":"supabase","supabaseUrl":"…","supabasePublishableKey":"…"}}`
+Expect `{"auth":{"appUrl":"…","provider":"supabase","supabaseUrl":"…","supabasePublishableKey":"…"}}`
 and no service-role key. Then open `/venue` — it should show **Continue with
 Google** instead of the account-name form.
 
