@@ -39,6 +39,7 @@ export interface WebDependencies {
   venueService: DefaultVenueService;
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
+  menuPhotoScanProvider: ReturnType<typeof createMenuPhotoScanProvider>;
   authConfig: AuthConfig;
   checkReadiness(): Promise<DependencyReadinessCheck[]>;
 }
@@ -118,6 +119,7 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
     venueService: new DefaultVenueService(repository, provider),
     managementService,
     venueManagementService,
+    menuPhotoScanProvider: createMenuPhotoScanProvider(env),
     authConfig,
     checkReadiness: async () => {
       try {
@@ -151,7 +153,7 @@ function createMenuPhotoScanProvider(env: WebServerEnv) {
     }
     return new OpenRouterMenuPhotoScanProvider({
       apiKey: env.OPENROUTER_API_KEY,
-      model: env.MODEL_NAME,
+      model: env.MENU_PHOTO_MODEL ?? "openrouter/free",
       siteUrl: env.APP_URL,
     });
   }

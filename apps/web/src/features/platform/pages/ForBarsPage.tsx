@@ -59,15 +59,6 @@ interface DraftItem {
   image: string | null;
 }
 
-/* Until the OCR service is wired in, the reading step drafts a plausible
-   starting menu the owner corrects — the flow is the product here. */
-const SEED_ITEMS: Omit<DraftItem, "id" | "image">[] = [
-  { name: "House Negroni", description: "Gin, sweet vermouth and bitter aperitivo, stirred over one large cube.", tones: ["bitter", "boozy"] },
-  { name: "Yuzu Highball", description: "Toki whisky, fresh yuzu and soda — tall, cold and very fast.", tones: ["citrusy", "bubbly"] },
-  { name: "Espresso Martini", description: "Vodka, cold espresso and a whisper of vanilla, shaken to a foam.", tones: ["creamy", "boozy"] },
-  { name: "Garden Spritz", description: "Cucumber, elderflower and prosecco over ice — the patio in a glass.", tones: ["floral", "dry"] },
-];
-
 const READING_LINES = ["Straightening the photograph…", "Reading the sections…", "Guessing every base spirit…", "Drafting tasting tones…"];
 
 const SHOOTING_NOTES: [string, string][] = [
@@ -87,6 +78,7 @@ export function ForBarsPage() {
   const [pages, setPages] = useState<string[]>([]);
   const [items, setItems] = useState<DraftItem[]>([]);
   const [readingStep, setReadingStep] = useState(0);
+  const [readingError, setReadingError] = useState("");
   const [saved, setSaved] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [toneHint, setToneHint] = useState<number | null>(null);
@@ -106,10 +98,46 @@ export function ForBarsPage() {
   useEffect(() => {
     if (stage !== "reading") return;
     setReadingStep(0);
+    setReadingError("");
     const tick = setInterval(() => setReadingStep((s) => Math.min(READING_LINES.length - 1, s + 1)), 700);
-    const done = setTimeout(() => { setItems(SEED_ITEMS.map((it) => ({ ...it, id: nextId++, image: null }))); setStage("edit"); window.scrollTo({ top: 0 }); }, 3000);
-    return () => { clearInterval(tick); clearTimeout(done); };
+    let cancelled = false;
+    void scanMenuPages().then((drafts) => {
+      if (cancelled) return;
+      setItems(drafts);
+      setStage("edit");
+      window.scrollTo({ top: 0 });
+    }).catch(() => {
+      if (!cancelled) {
+        setReadingStep(READING_LINES.length - 1);
+        setReadingError("We could not read that menu. Try a clearer, well-lit image.");
+      }
+    });
+    return () => { cancelled = true; clearInterval(tick); };
   }, [stage]);
+
+  async function scanMenuPages(): Promise<DraftItem[]> {
+    const results = await Promise.all(pages.map(async (page, index) => {
+      const match = page.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/s);
+      if (!match) throw new Error("Menu image could not be read.");
+      const response = await fetch("/v1/menu/scan-photo", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ imageBase64: match[2], imageContentType: match[1], fileName: `menu-page-${index + 1}` }),
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({})) as { message?: string };
+        throw new Error(body.message ?? "The menu could not be read.");
+      }
+      return await response.json() as { drinks: Array<{ name: string; description: string | null; flavorTags: string[] }> };
+    }));
+    return results.flatMap((result) => result.drinks.map((drink) => ({
+      id: nextId++,
+      name: drink.name,
+      description: drink.description ?? "",
+      tones: drink.flavorTags.slice(0, 3),
+      image: null,
+    })));
+  }
 
   const update = (id: number, patch: Partial<DraftItem>) => setItems((list) => list.map((it) => (it.id === id ? { ...it, ...patch } : it)));
 
@@ -259,6 +287,7 @@ export function ForBarsPage() {
           <span className="eyebrow-gilt">Reading your menu</span>
           <motion.div style={{ width: 180 }} animate={{ rotate: [-3, 3, -3], y: [0, -6, 0] }} transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}><Drummer /></motion.div>
           <ul>{READING_LINES.map((line, i) => <li key={line} data-state={i < readingStep ? "done" : i === readingStep ? "now" : "next"}>{line}</li>)}</ul>
+          {readingError && <p role="alert">{readingError}</p>}
         </div>
       </motion.div>}
     </AnimatePresence>

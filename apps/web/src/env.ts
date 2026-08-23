@@ -47,6 +47,7 @@ const serverEnvSchema = z
     MODEL_API_KEY: optionalString(),
     OPENROUTER_API_KEY: optionalString(),
     MODEL_NAME: optionalString(),
+    MENU_PHOTO_MODEL: optionalString(),
     IMAGE_CUTOUT_PROVIDER: z.enum(["original", "sam2"]).default("original"),
     IMAGE_CUTOUT_MODEL: optionalString(),
     SAM2_CUTOUT_URL: optionalString(z.string().url()),
