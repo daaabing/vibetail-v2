@@ -12,7 +12,7 @@ import { SiteFooter, SiteHeader } from "../../platform/components/SiteHeader.js"
 import { useSeo } from "../../platform/useSeo.js";
 import { VenueClientError } from "../../../clients/http-venue-client.js";
 import { errorMessage } from "../VenueShell.js";
-import { clearVenueToken, saveVenueToken } from "../session-store.js";
+import { clearVenueToken, readCachedVenueSession, saveCachedVenueSession, saveVenueToken } from "../session-store.js";
 
 function destinationFor(hasVenue: boolean): string {
   return hasVenue ? "/venue/dashboard" : "/venue/setup";
@@ -33,6 +33,15 @@ export function VenueLoginPage() {
 
   // An existing session skips the form entirely, whichever provider issued it.
   useEffect(() => {
+    // A cached snapshot means this browser was signed in moments ago: jump
+    // straight to the backend and let the admin page's background check
+    // re-verify. A dead credential bounces back here with the cache already
+    // cleared, so this cannot loop.
+    const cached = readCachedVenueSession();
+    if (cached) {
+      window.location.replace(destinationFor(Boolean(cached.venue)));
+      return;
+    }
     let active = true;
     void (async () => {
       try {
@@ -55,6 +64,8 @@ export function VenueLoginPage() {
           return;
         }
         const session = await new HttpVenueManagementClient(token).getSession();
+        // Seed the snapshot so the admin page we land on renders instantly.
+        saveCachedVenueSession(session);
         if (active) window.location.replace(destinationFor(Boolean(session.venue)));
       } catch (caught) {
         // Only a definitive 401 may wipe the stored credential; a network blip
@@ -77,6 +88,7 @@ export function VenueLoginPage() {
     try {
       const result = await new HttpVenueManagementClient().login({ name });
       saveVenueToken(result.token);
+      saveCachedVenueSession(result.session);
       window.location.assign(destinationFor(Boolean(result.session.venue)));
     } catch (caught) {
       setError(errorMessage(caught));
@@ -115,6 +127,7 @@ export function VenueLoginPage() {
       }
       // The session decides the landing page; a fresh account has no venue yet.
       const session = await new HttpVenueManagementClient(await getAccessToken()).getSession();
+      saveCachedVenueSession(session);
       window.location.assign(destinationFor(Boolean(session.venue)));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : errorMessage(caught));
