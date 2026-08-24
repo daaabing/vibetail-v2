@@ -4,7 +4,7 @@ import { HttpVenueManagementClient } from "../../clients/http-venue-management-c
 import { VenueClientError } from "../../clients/http-venue-client.js";
 import { getAccessToken, signOut } from "../auth/auth-session.js";
 import { SiteFooter, SiteHeader } from "../platform/components/SiteHeader.js";
-import { clearVenueToken } from "./session-store.js";
+import { clearVenueToken, readCachedVenueSession, saveCachedVenueSession } from "./session-store.js";
 
 export type VenueAdminSection = "dashboard" | "drinks" | "menus" | "qr";
 
@@ -14,37 +14,61 @@ export interface VenueSessionState {
   refreshSession(): Promise<void>;
 }
 
+interface SessionState {
+  client: HttpVenueManagementClient;
+  session: VenueSessionInfo;
+}
+
+/**
+ * Rebuilds usable state from the cached snapshot synchronously, so a page
+ * navigation renders without waiting on the network. The client resolves its
+ * token per request, so it needs no upfront await either.
+ */
+function stateFromCache(): SessionState | undefined {
+  const cached = readCachedVenueSession();
+  return cached ? { client: new HttpVenueManagementClient(getAccessToken), session: cached } : undefined;
+}
+
 /**
  * Verifies the stored session and redirects to /venue (no session) or
- * /venue/setup (no venue yet) before rendering an admin page.
+ * /venue/setup (no venue yet) before rendering an admin page. A cached
+ * session renders immediately while that check runs in the background.
  */
 export function useVenueSession(): VenueSessionState | null {
-  const [state, setState] = useState<{ client: HttpVenueManagementClient; session: VenueSessionInfo }>();
+  const [state, setState] = useState<SessionState | undefined>(stateFromCache);
 
   useEffect(() => {
     let active = true;
     void (async () => {
-      // Supabase resolves (and refreshes) the token asynchronously, so the
-      // client can only be built once a token is in hand.
       const token = await getAccessToken().catch(() => null);
       if (!active) return;
       if (!token) {
+        clearVenueToken();
         window.location.replace("/venue");
         return;
       }
-      const client = new HttpVenueManagementClient(token);
       try {
-        const session = await client.getSession();
+        const session = await new HttpVenueManagementClient(getAccessToken).getSession();
         if (!active) return;
+        saveCachedVenueSession(session);
         if (!session.venue && window.location.pathname !== "/venue/setup") {
           window.location.replace("/venue/setup");
           return;
         }
-        setState({ client, session });
+        // Keep the cached-path client if one is already rendering: a new
+        // instance would re-fire every page effect keyed on it.
+        setState((current) => ({ client: current?.client ?? new HttpVenueManagementClient(getAccessToken), session }));
       } catch (error: unknown) {
         if (!active) return;
-        if (error instanceof VenueClientError && error.status === 401) clearVenueToken();
-        window.location.replace("/venue");
+        if (error instanceof VenueClientError && error.status === 401) {
+          clearVenueToken();
+          window.location.replace("/venue");
+          return;
+        }
+        // Transient failure (network blip, 5xx): keep serving the cached
+        // session rather than signing the merchant out. Without a cache there
+        // is nothing to render, so only then fall back to the login page.
+        if (!readCachedVenueSession()) window.location.replace("/venue");
       }
     })();
     return () => {
@@ -59,6 +83,7 @@ export function useVenueSession(): VenueSessionState | null {
     session: state.session,
     refreshSession: async () => {
       const session = await client.getSession();
+      saveCachedVenueSession(session);
       setState({ client, session });
     },
   };

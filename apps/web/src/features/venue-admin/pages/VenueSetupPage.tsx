@@ -3,6 +3,7 @@ import { venueTypeSchema } from "@vibetail/contracts";
 import { SiteFooter, SiteHeader } from "../../platform/components/SiteHeader.js";
 import { useSeo } from "../../platform/useSeo.js";
 import { VenueAdminLoading, errorMessage, useVenueSession } from "../VenueShell.js";
+import { saveCachedVenueSession } from "../session-store.js";
 
 const VENUE_TYPES = [
   { value: "cocktail_bar", label: "Cocktail bar" },
@@ -30,11 +31,14 @@ export function VenueSetupPage() {
     setPending(true);
     setError("");
     try {
-      await state.client.createVenue({
+      const created = await state.client.createVenue({
         name: String(data.get("name") ?? "").trim(),
         address: String(data.get("address") ?? "").trim(),
         venueType: venueTypeSchema.parse(data.get("venueType") ?? "cocktail_bar"),
       });
+      // The dashboard renders from this snapshot on arrival; without it the
+      // brand-new venue would flash the account name until the recheck lands.
+      saveCachedVenueSession(created);
       window.location.assign("/venue/dashboard");
     } catch (caught) {
       setError(errorMessage(caught));

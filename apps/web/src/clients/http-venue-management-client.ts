@@ -39,8 +39,15 @@ import {
 import { z } from "zod";
 import { parseResponse } from "./http-venue-client.js";
 
+/**
+ * Either a resolved token or a provider consulted per request. The provider
+ * form lets long-lived clients pick up refreshed tokens automatically instead
+ * of holding one that expires.
+ */
+export type AccessTokenSource = string | null | (() => Promise<string | null>);
+
 export class HttpVenueManagementClient implements VenueManagementClient {
-  constructor(private readonly token: string | null = null, private readonly baseUrl = "") {}
+  constructor(private readonly token: AccessTokenSource = null, private readonly baseUrl = "") {}
 
   login(input: VenueLoginInput): Promise<VenueLoginResult> {
     return this.call("POST", "/v1/venue/session", input, venueLoginResultSchema.parse);
@@ -127,10 +134,11 @@ export class HttpVenueManagementClient implements VenueManagementClient {
   }
 
   private async call<T>(method: string, path: string, body: unknown, parse: (input: unknown) => T): Promise<T> {
+    const token = typeof this.token === "function" ? await this.token() : this.token;
     const response = await fetch(`${this.baseUrl}${path}`, {
       method,
       headers: {
-        ...(this.token ? { authorization: `Bearer ${this.token}` } : {}),
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
         ...(body === undefined ? {} : { "content-type": "application/json" }),
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
