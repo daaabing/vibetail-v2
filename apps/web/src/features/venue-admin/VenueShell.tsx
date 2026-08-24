@@ -6,7 +6,7 @@ import { getAccessToken, signOut } from "../auth/auth-session.js";
 import { SiteFooter, SiteHeader } from "../platform/components/SiteHeader.js";
 import { clearVenueToken, readCachedVenueSession, saveCachedVenueSession } from "./session-store.js";
 
-export type VenueAdminSection = "dashboard" | "drinks" | "menus" | "qr";
+export type VenueAdminSection = "dashboard" | "drinks" | "menus" | "qr" | "profile";
 
 export interface VenueSessionState {
   client: HttpVenueManagementClient;
@@ -94,6 +94,7 @@ const NAV_ITEMS: Array<{ section: VenueAdminSection; href: string; label: string
   { section: "drinks", href: "/venue/drinks", label: "Drink library" },
   { section: "menus", href: "/venue/menus", label: "Menus" },
   { section: "qr", href: "/venue/qr", label: "QR code" },
+  { section: "profile", href: "/venue/profile", label: "Profile" },
 ];
 
 export function VenueShell({ active, state, children }: {

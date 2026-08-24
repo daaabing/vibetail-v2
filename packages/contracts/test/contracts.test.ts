@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   agentApprovalRequestSchema,
+  createVenueInputSchema,
   globalMatchResultSchema,
   managedMenuSchema,
   managedMenuItemSchema,
@@ -8,6 +9,7 @@ import {
   modelMatchSelectionSchema,
   MAX_ALLOWLISTED_MATCH_IDS,
   updateMenuInputSchema,
+  updateVenueProfileInputSchema,
   venueErrorCodeSchema,
   venueMatchResultSchema,
   venueMenuItemSchema,
@@ -124,6 +126,15 @@ describe("venue contracts", () => {
     };
     expect(managedMenuSchema.parse(menu).status).toBe("archived");
     expect(() => updateMenuInputSchema.parse({ name: "x", slug: "old-menu", shortIntro: null, status: "archived" })).toThrow();
+  });
+
+  it("defaults a missing venue intro to null and normalises blank ones", () => {
+    // Clients that predate the intro field keep working against the same route.
+    expect(createVenueInputSchema.parse({ name: "Ego", address: "1 Test Street" }).shortIntro).toBeNull();
+    expect(createVenueInputSchema.parse({ name: "Ego", address: "1 Test Street", shortIntro: " " }).shortIntro).toBeNull();
+    expect(updateVenueProfileInputSchema.parse({
+      name: "Ego", address: "1 Test Street", venueType: "cocktail_bar", shortIntro: "  Natural wine and highballs.  ",
+    }).shortIntro).toBe("Natural wine and highballs.");
   });
 });
 

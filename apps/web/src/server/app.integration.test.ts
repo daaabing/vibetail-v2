@@ -255,9 +255,15 @@ describe("venue HTTP slice (local supabase)", () => {
     expect(login.body.session.venue).toBeNull();
     const auth = { Authorization: `Bearer ${login.body.token as string}` };
 
+    // No shortIntro in the payload: clients that predate the field still work.
     const created = await request(instance).post("/v1/venue").set(auth)
       .send({ name: venueName, address: "42 Test Ave", venueType: "cocktail_bar" }).expect(201);
-    expect(created.body.venue).toMatchObject({ slug: venueSlug, address: "42 Test Ave" });
+    expect(created.body.venue).toMatchObject({ slug: venueSlug, address: "42 Test Ave", shortIntro: null });
+
+    const profile = await request(instance).patch("/v1/venue").set(auth).send({
+      name: venueName, address: "42 Test Ave", venueType: "cocktail_bar", shortIntro: "Webint intro line.",
+    }).expect(200);
+    expect(profile.body.venue).toMatchObject({ slug: venueSlug, shortIntro: "Webint intro line." });
 
     await request(instance).get(`/v1/venues/${venueSlug}/current-menu`).expect(404)
       .then((response) => expect(response.body.code).toBe("NO_PUBLISHED_MENU"));
@@ -293,6 +299,11 @@ describe("venue HTTP slice (local supabase)", () => {
     const statuses = new Map(republished.body.map((entry: { id: string; status: string }) => [entry.id, entry.status]));
     expect(statuses.get(menu.body.id)).toBe("archived");
     expect(statuses.get(second.body.id)).toBe("published");
+
+    // The saved intro is what the public directory prints under the venue name.
+    const directory = await request(instance).get("/v1/venues").expect(200);
+    const listed = directory.body.find((entry: { venue: { slug: string } }) => entry.venue.slug === venueSlug);
+    expect(listed.venue.shortIntro).toBe("Webint intro line.");
 
     const qr = await request(instance).get("/v1/venue/qr").set(auth).expect(200);
     expect(qr.body.consumerUrl).toBe(`${APP_URL}/m/${venueSlug}`);

@@ -89,6 +89,7 @@ export async function createLegacyMerchantContext(prefix: string): Promise<Legac
   const merchantId = await repository.createVenue(account.id, {
     name,
     slugBase: name,
+    shortIntro: null,
     address: "1 Test Street",
     venueType: "cocktail_bar",
   });

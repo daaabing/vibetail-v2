@@ -53,6 +53,7 @@ async function createVenueContext(
     name,
     address: "1 Test Street",
     venueType: "cocktail_bar",
+    shortIntro: null,
   });
   const venue = session.venue;
   if (!venue) throw new Error("createVenue did not attach a venue to the session");
@@ -123,18 +124,61 @@ describe("venue creation", () => {
       name: "Vibetail Taproom",
       address: "1 Test Street",
       venueType: "cocktail_bar",
+      shortIntro: "Taproom test intro.",
     });
     // The seeded slug "vibetail-taproom" is taken, so a numeric suffix is
     // appended. The exact number depends on how many colliding venues this
     // run created before, so only the shape is asserted.
     expect(session.venue?.slug).toMatch(/^vibetail-taproom-\d+$/);
     expect(session.venue?.address).toBe("1 Test Street");
+    expect(session.venue?.shortIntro).toBe("Taproom test intro.");
     expect(session.venue?.isActive).toBe(true);
     await expect(service.createVenue(token, {
       name: "Another",
       address: "2 Test Street",
       venueType: "other",
+      shortIntro: null,
     })).rejects.toMatchObject({ detail: { code: "CONFLICT" } });
+  });
+
+  it("creates a venue without an intro and fills it in later without moving the slug", async () => {
+    const { service } = createService();
+    const name = uniqueName("vms-test-intro");
+    const { token } = await service.login(name);
+    const created = await service.createVenue(token, { name, address: "1 Test Street", venueType: "cocktail_bar", shortIntro: null });
+    expect(created.venue?.shortIntro).toBeNull();
+
+    const updated = await service.updateVenueProfile(token, {
+      name: `${name} Bar`,
+      address: "2 Test Street",
+      venueType: "restaurant",
+      shortIntro: "Culinary cocktails, tucked away.",
+    });
+    expect(updated.venue?.slug).toBe(created.venue?.slug);
+    expect(updated.venue?.name).toBe(`${name} Bar`);
+    expect(updated.venue?.address).toBe("2 Test Street");
+    expect(updated.venue?.venueType).toBe("restaurant");
+    expect(updated.venue?.shortIntro).toBe("Culinary cocktails, tucked away.");
+
+    // A blank intro clears the field rather than storing an empty string.
+    const cleared = await service.updateVenueProfile(token, {
+      name: `${name} Bar`,
+      address: "2 Test Street",
+      venueType: "restaurant",
+      shortIntro: "   ",
+    });
+    expect(cleared.venue?.shortIntro).toBeNull();
+  });
+
+  it("refuses a profile update before a venue exists", async () => {
+    const { service } = createService();
+    const { token } = await service.login(uniqueName("vms-test-no-venue"));
+    await expect(service.updateVenueProfile(token, {
+      name: "Nowhere",
+      address: "1 Test Street",
+      venueType: "other",
+      shortIntro: null,
+    })).rejects.toMatchObject({ detail: { code: "FORBIDDEN" } });
   });
 });
 

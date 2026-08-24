@@ -90,6 +90,7 @@ export interface StoredVenueProfile {
   id: string;
   slug: string;
   name: string;
+  shortIntro: string | null;
   isActive: boolean;
   address: string | null;
   venueType: VenueType | null;
@@ -166,6 +167,14 @@ export interface CreateVenueRecord {
   slugBase: string;
   address: string;
   venueType: VenueType;
+  shortIntro: string | null;
+}
+
+export interface UpdateVenueProfileRecord {
+  name: string;
+  address: string;
+  venueType: VenueType;
+  shortIntro: string | null;
 }
 
 export interface VenueMenuRecordInput {
@@ -205,6 +214,7 @@ export interface VenueManagementRepository {
   revokeVenueSession(tokenHash: string): Promise<void>;
   createVenue(accountId: string, input: CreateVenueRecord): Promise<string>;
   getVenueProfile(merchantId: string): Promise<StoredVenueProfile | null>;
+  updateVenueProfile(merchantId: string, input: UpdateVenueProfileRecord): Promise<void>;
   listDrinks(merchantId: string): Promise<StoredDrink[]>;
   createDrink(merchantId: string, input: DrinkInput): Promise<string>;
   updateDrink(merchantId: string, drinkId: string, input: DrinkInput): Promise<void>;

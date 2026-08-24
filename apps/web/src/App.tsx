@@ -12,6 +12,7 @@ import { VenueDashboardPage } from "./features/venue-admin/pages/VenueDashboardP
 import { VenueDrinksPage } from "./features/venue-admin/pages/VenueDrinksPage.js";
 import { VenueLoginPage } from "./features/venue-admin/pages/VenueLoginPage.js";
 import { VenueMenusPage } from "./features/venue-admin/pages/VenueMenusPage.js";
+import { VenueProfilePage } from "./features/venue-admin/pages/VenueProfilePage.js";
 import { VenueQrPage } from "./features/venue-admin/pages/VenueQrPage.js";
 import { VenueSetupPage } from "./features/venue-admin/pages/VenueSetupPage.js";
 
@@ -22,6 +23,7 @@ const VENUE_ADMIN_PAGES = {
   drinks: VenueDrinksPage,
   menus: VenueMenusPage,
   qr: VenueQrPage,
+  profile: VenueProfilePage,
 } as const;
 
 export type VenueAdminSection = keyof typeof VENUE_ADMIN_PAGES;
@@ -79,7 +81,7 @@ export function resolveAppRoute(pathname: string): AppRoute {
   const legacy = normalized.match(/^\/restaurants(\/[^/]+)?$/);
   if (legacy) return { kind: "redirect", to: `/venues${legacy[1] ?? ""}` };
   if (normalized === "/venue") return { kind: "venue_admin", section: "login" };
-  const admin = normalized.match(/^\/venue\/(setup|dashboard|drinks|menus|qr)$/);
+  const admin = normalized.match(/^\/venue\/(setup|dashboard|drinks|menus|qr|profile)$/);
   if (admin?.[1]) return { kind: "venue_admin", section: admin[1] as VenueAdminSection };
   if (normalized === "/manage") return { kind: "redirect", to: "/venue" };
   if (normalized === "/for-bars") return { kind: "for_bars" };

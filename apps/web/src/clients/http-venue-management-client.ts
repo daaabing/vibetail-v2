@@ -26,6 +26,7 @@ import {
   type PrepareDrinkPhotoInput,
   type PrepareDrinkPhotoResult,
   type UpdateVenueMenuInput,
+  type UpdateVenueProfileInput,
   type VenueAdminMenu,
   type VenueDashboardRange,
   type VenueDashboardStats,
@@ -63,6 +64,10 @@ export class HttpVenueManagementClient implements VenueManagementClient {
 
   createVenue(input: CreateVenueInput): Promise<VenueSessionInfo> {
     return this.call("POST", "/v1/venue", input, venueSessionInfoSchema.parse);
+  }
+
+  updateVenueProfile(input: UpdateVenueProfileInput): Promise<VenueSessionInfo> {
+    return this.call("PATCH", "/v1/venue", input, venueSessionInfoSchema.parse);
   }
 
   getDashboard(range: VenueDashboardRange): Promise<VenueDashboardStats> {
