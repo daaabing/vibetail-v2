@@ -29,6 +29,8 @@ export const venueProfileSchema = z.object({
   id: z.string().uuid(),
   slug: slugSchema,
   name: z.string().min(1).max(200),
+  // Shown as the venue's description in the public directory.
+  shortIntro: z.string().max(1_000).nullable(),
   address: z.string().max(500).nullable(),
   venueType: venueTypeSchema.nullable(),
   isActive: z.boolean(),
@@ -47,12 +49,24 @@ export const venueLoginResultSchema = z.object({
 });
 export type VenueLoginResult = z.infer<typeof venueLoginResultSchema>;
 
+const shortIntroInputSchema = z.union([z.string().trim().max(1_000), z.null()])
+  .transform((value) => value || null);
+
 export const createVenueInputSchema = z.object({
   name: z.string().trim().min(1).max(200),
   address: z.string().trim().min(1).max(500),
   venueType: venueTypeSchema.default("cocktail_bar"),
+  shortIntro: shortIntroInputSchema.default(null),
 });
 export type CreateVenueInput = z.infer<typeof createVenueInputSchema>;
+
+export const updateVenueProfileInputSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  address: z.string().trim().min(1).max(500),
+  venueType: venueTypeSchema,
+  shortIntro: shortIntroInputSchema,
+});
+export type UpdateVenueProfileInput = z.infer<typeof updateVenueProfileInputSchema>;
 
 export const drinkInputSchema = z.object({
   name: z.string().trim().min(1).max(200),
@@ -247,6 +261,7 @@ export interface VenueManagementClient {
   getSession(): Promise<VenueSessionInfo>;
   logout(): Promise<void>;
   createVenue(input: CreateVenueInput): Promise<VenueSessionInfo>;
+  updateVenueProfile(input: UpdateVenueProfileInput): Promise<VenueSessionInfo>;
   getDashboard(range: VenueDashboardRange): Promise<VenueDashboardStats>;
   getQr(): Promise<VenueQr>;
   listDrinks(): Promise<VenueDrink[]>;

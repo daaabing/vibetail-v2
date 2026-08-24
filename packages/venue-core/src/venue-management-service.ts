@@ -17,6 +17,7 @@ import {
   prepareDrinkPhotoInputSchema,
   prepareDrinkPhotoResultSchema,
   updateVenueMenuInputSchema,
+  updateVenueProfileInputSchema,
   venueAdminMenuSchema,
   venueDashboardStatsSchema,
   venueDrinkSchema,
@@ -42,6 +43,7 @@ import {
   type PrepareDrinkPhotoInput,
   type PrepareDrinkPhotoResult,
   type UpdateVenueMenuInput,
+  type UpdateVenueProfileInput,
   type VenueAdminMenu,
   type VenueDashboardRange,
   type VenueDashboardStats,
@@ -88,6 +90,7 @@ export interface VenueManagementService {
    */
   resolveAccountId(token: string): Promise<string | null>;
   createVenue(token: string, input: CreateVenueInput): Promise<VenueSessionInfo>;
+  updateVenueProfile(token: string, input: UpdateVenueProfileInput): Promise<VenueSessionInfo>;
   getDashboard(token: string, range: VenueDashboardRange, now?: Date): Promise<VenueDashboardStats>;
   getQr(token: string): Promise<VenueQr>;
   listDrinks(token: string): Promise<VenueDrink[]>;
@@ -190,9 +193,23 @@ export class DefaultVenueManagementService implements VenueManagementService {
       slugBase: slugify(parsed.name),
       address: parsed.address,
       venueType: parsed.venueType,
+      shortIntro: parsed.shortIntro,
     }));
     const refreshed = await this.authorize(token);
     return this.buildSession(refreshed);
+  }
+
+  async updateVenueProfile(token: string, input: UpdateVenueProfileInput): Promise<VenueSessionInfo> {
+    const merchantId = await this.requireVenue(token);
+    const parsed = updateVenueProfileInputSchema.parse(input);
+    // The slug stays put: it is already printed on QR codes and shared links.
+    await this.mutate(() => this.repository.updateVenueProfile(merchantId, {
+      name: parsed.name,
+      address: parsed.address,
+      venueType: parsed.venueType,
+      shortIntro: parsed.shortIntro,
+    }));
+    return this.getSession(token);
   }
 
   async getDashboard(token: string, range: VenueDashboardRange, now: Date = new Date()): Promise<VenueDashboardStats> {
@@ -562,6 +579,12 @@ export class UnavailableVenueManagementService implements VenueManagementService
   }
 
   async createVenue(token: string, input: CreateVenueInput): Promise<VenueSessionInfo> {
+    void token;
+    void input;
+    return venueBackendUnavailable();
+  }
+
+  async updateVenueProfile(token: string, input: UpdateVenueProfileInput): Promise<VenueSessionInfo> {
     void token;
     void input;
     return venueBackendUnavailable();

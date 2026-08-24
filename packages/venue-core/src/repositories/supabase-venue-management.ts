@@ -10,6 +10,7 @@ import type {
   StoredVenueAccount,
   StoredVenueAdminMenu,
   StoredVenueProfile,
+  UpdateVenueProfileRecord,
   VenueManagementRepository,
   VenueMenuRecordInput,
 } from "../types.js";
@@ -175,7 +176,14 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
     const slug = await this.uniqueMerchantSlug(input.slugBase);
     const merchant = await this.client
       .from("merchants")
-      .insert({ slug, name: input.name, address: input.address, venue_type: input.venueType, is_active: true })
+      .insert({
+        slug,
+        name: input.name,
+        short_intro: input.shortIntro,
+        address: input.address,
+        venue_type: input.venueType,
+        is_active: true,
+      })
       .select("id")
       .single();
     if (merchant.error) throw new Error(merchant.error.message);
@@ -191,7 +199,7 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
   async getVenueProfile(merchantId: string): Promise<StoredVenueProfile | null> {
     const result = await this.client
       .from("merchants")
-      .select("id, slug, name, is_active, address, venue_type")
+      .select("id, slug, name, short_intro, is_active, address, venue_type")
       .eq("id", merchantId)
       .maybeSingle();
     if (result.error) throw new Error(result.error.message);
@@ -200,10 +208,24 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
       id: String(result.data.id),
       slug: String(result.data.slug),
       name: String(result.data.name),
+      shortIntro: result.data.short_intro ? String(result.data.short_intro) : null,
       isActive: Boolean(result.data.is_active),
       address: result.data.address ? String(result.data.address) : null,
       venueType: (result.data.venue_type as VenueType | null) ?? null,
     };
+  }
+
+  async updateVenueProfile(merchantId: string, input: UpdateVenueProfileRecord): Promise<void> {
+    const result = await this.client
+      .from("merchants")
+      .update({
+        name: input.name,
+        short_intro: input.shortIntro,
+        address: input.address,
+        venue_type: input.venueType,
+      })
+      .eq("id", merchantId);
+    if (result.error) throw new Error(result.error.message);
   }
 
   async listDrinks(merchantId: string): Promise<StoredDrink[]> {

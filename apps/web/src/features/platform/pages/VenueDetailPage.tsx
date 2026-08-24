@@ -18,6 +18,6 @@ export function VenueDetailPage({ merchantSlug }: { merchantSlug: string }) {
   return <div className="vt-page"><SiteHeader /><main className="vt-narrow">
     {!entry && !error && <p className="vt-loading">Opening this bar…</p>}
     {error && <div className="vt-alert" role="alert"><strong>Bar unavailable</strong><p>{error}</p><a href="/venues">Back to all bars</a></div>}
-    {entry && <><header className="vt-page-title"><p className="vt-kicker">Vibetail bar</p><h1>{entry.venue.name}</h1><p>{entry.venue.shortIntro}</p></header><section className="vt-detail-menus"><p className="vt-kicker">Published menus</p>{entry.menus.map((menu) => <a key={menu.id} href={`/m/${entry.venue.slug}/${menu.slug}`}><span><strong>{menu.name}</strong><small>{menu.shortIntro}</small></span><b>Match here →</b></a>)}</section></>}
+    {entry && <><header className="vt-page-title"><p className="vt-kicker">Vibetail bar</p><h1>{entry.venue.name}</h1>{entry.venue.shortIntro && <p>{entry.venue.shortIntro}</p>}</header><section className="vt-detail-menus"><p className="vt-kicker">Published menus</p>{entry.menus.map((menu) => <a key={menu.id} href={`/m/${entry.venue.slug}/${menu.slug}`}><span><strong>{menu.name}</strong><small>{menu.shortIntro}</small></span><b>Match here →</b></a>)}</section></>}
   </main><SiteFooter /></div>;
 }

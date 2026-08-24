@@ -34,6 +34,7 @@ export function VenueSetupPage() {
         name: String(data.get("name") ?? "").trim(),
         address: String(data.get("address") ?? "").trim(),
         venueType: venueTypeSchema.parse(data.get("venueType") ?? "cocktail_bar"),
+        shortIntro: String(data.get("shortIntro") ?? "").trim() || null,
       });
       window.location.assign("/venue/dashboard");
     } catch (caught) {
@@ -60,6 +61,10 @@ export function VenueSetupPage() {
               </select>
             </label>
             <label className="vt-span-2">Address<input name="address" required maxLength={500} placeholder="129 City Road, London" /></label>
+            <label className="vt-span-2">Short intro
+              <input name="shortIntro" maxLength={1000} placeholder="Culinary cocktails in NYC's Lower East Side." />
+              <small>One line guests see next to your name in the Vibetail directory.</small>
+            </label>
             <button className="vt-primary" type="submit" disabled={pending}>
               {pending ? "Creating…" : "Create venue"}
             </button>

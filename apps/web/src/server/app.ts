@@ -15,6 +15,7 @@ import {
   prepareDrinkPhotoInputSchema,
   runtimeConfigSchema,
   updateVenueMenuInputSchema,
+  updateVenueProfileInputSchema,
   venueDashboardRangeSchema,
   venueErrorSchema,
   venueLoginInputSchema,
@@ -270,6 +271,15 @@ export function createWebApp(options: WebAppOptions): Express {
     asyncRoute(async (request, response) => {
       response.status(201).json(await venueManagement.createVenue(
         readBearerToken(request), createVenueInputSchema.parse(request.body),
+      ));
+    }),
+  );
+
+  app.patch(
+    "/v1/venue",
+    asyncRoute(async (request, response) => {
+      response.json(await venueManagement.updateVenueProfile(
+        readBearerToken(request), updateVenueProfileInputSchema.parse(request.body),
       ));
     }),
   );
