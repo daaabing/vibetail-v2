@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { VenueDashboardRange, VenueDashboardStats } from "@vibetail/contracts";
 import { useSeo } from "../../platform/useSeo.js";
 import { VenueAdminLoading, VenueShell, errorMessage, useVenueSession } from "../VenueShell.js";
+import { importPendingMenuDraft } from "../draft-import.js";
 
 const RANGES: Array<{ value: VenueDashboardRange; label: string }> = [
   { value: "today", label: "Today" },
@@ -17,6 +18,18 @@ export function VenueDashboardPage() {
   const [error, setError] = useState("");
 
   const client = state?.client;
+  // An owner who already had a venue signs in and lands here, not on setup —
+  // so this is the other place a parked /for-bars draft has to be finished.
+  useEffect(() => {
+    if (!client) return;
+    // Navigating is idempotent, so it is deliberately not gated on an
+    // "effect still live" flag: the cached-session flow replaces the client
+    // mid-import, and the redirect must survive that effect re-run.
+    void importPendingMenuDraft(client)
+      .then((imported) => { if (imported) window.location.assign("/venue/menus"); })
+      .catch(() => { /* The draft stays parked; the desk can retry the save. */ });
+  }, [client]);
+
   useEffect(() => {
     if (!client) return;
     let active = true;
