@@ -5,6 +5,9 @@ import { SiteFooter, SiteHeader } from "../components/SiteHeader.js";
 import { useSeo } from "../useSeo.js";
 import { Drummer } from "../../draw/HeroStage.js";
 import { FLAVOR_CHIPS } from "../../../lib/moodtail-data.js";
+import { HttpVenueManagementClient } from "../../../clients/http-venue-management-client.js";
+import { getAccessToken } from "../../auth/auth-session.js";
+import { UNTITLED_MENU_NAME, clearMenuDraft, draftToDrinkInputs, saveMenuDraft } from "../../../lib/menu-draft.js";
 
 /**
  * The bar-side door.
@@ -68,7 +71,6 @@ const SHOOTING_NOTES: [string, string][] = [
   ["04", "Keep prices, sections and sold-out marks in — all of it helps."],
 ];
 
-const DRAFT_KEY = "vibetail.menuDraft";
 let nextId = 1;
 
 export function ForBarsPage() {
@@ -79,7 +81,8 @@ export function ForBarsPage() {
   const [items, setItems] = useState<DraftItem[]>([]);
   const [readingStep, setReadingStep] = useState(0);
   const [readingError, setReadingError] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [dragging, setDragging] = useState(false);
   const [toneHint, setToneHint] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -150,12 +153,41 @@ export function ForBarsPage() {
 
   const setItemImage = (id: number, file: File) => { const reader = new FileReader(); reader.onload = () => update(id, { image: String(reader.result) }); reader.readAsDataURL(file); };
 
-  const save = () => {
+  /**
+   * Saving is the handover. A signed-in owner with a venue gets the menu
+   * created right here; everyone else is parked on this device and sent
+   * through sign-in — venue creation picks the draft back up on landing.
+   */
+  const save = async () => {
+    const drinks = draftToDrinkInputs(items);
+    if (drinks.length === 0) {
+      setSaveError("Give at least one drink a name before saving.");
+      return;
+    }
+    setSaving(true);
+    setSaveError("");
+    saveMenuDraft(items, true);
+
+    const token = await getAccessToken().catch(() => null);
+    if (!token) {
+      window.location.assign("/venue");
+      return;
+    }
     try {
-      window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ savedAt: new Date().toISOString(), items: items.map((it) => ({ name: it.name, description: it.description, tones: it.tones })) }));
-    } catch { /* private mode — the draft still lives on this screen */ }
-    setSaved(true);
-    window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
+      const client = new HttpVenueManagementClient(token);
+      const session = await client.getSession();
+      if (!session.venue) {
+        window.location.assign("/venue/setup");
+        return;
+      }
+      await client.importScannedMenu({ name: UNTITLED_MENU_NAME, drinks });
+      clearMenuDraft();
+      window.location.assign("/venue/menus");
+    } catch (caught) {
+      // The draft stays on the device, so the owner can retry or sign in again.
+      setSaving(false);
+      setSaveError(caught instanceof Error ? caught.message : "The menu could not be saved.");
+    }
   };
 
   const onDragOver = (e: DragEvent) => { e.preventDefault(); setDragging(true); };
@@ -177,11 +209,8 @@ export function ForBarsPage() {
           <div className="for-bars-desk-bar"><a className="house-wordmark" href="/" aria-label="Vibetail home">VIBETAIL</a><span className="mono-sm">Step 2 of 2 — check our reading</span></div>
           <div className="for-bars-desk-title">
             <div className="on-dark">
-              <h1>{saved ? <>Saved — <em>over to us</em>.</> : <>Here&apos;s what <em>we read</em>.</>}</h1>
-              <p>{saved
-                ? "Your draft is kept on this device. Open bar management to turn it into a live menu — or send it to us and we'll wire it up and share your private management link, usually within the day."
-                : "Fix anything we got wrong — names, descriptions, tones — and add a photo per drink if you have one. Nothing goes live until you say so."}</p>
-              {saved && <div className="for-bars-desk-next"><a className="house-button house-button-light" href="/venue">Open bar management <span>→</span></a><a className="house-text-link on-dark" href="mailto:vibetail.communication@gmail.com?subject=Menu%20draft">Send it to us →</a></div>}
+              <h1>Here&apos;s what <em>we read</em>.</h1>
+              <p>Fix anything we got wrong — names, descriptions, tones — and add a photo per drink if you have one. Saving turns this into a menu in your bar management backend.</p>
             </div>
             <div className="for-bars-pages">
               {pages.map((src, i) => <img key={i} src={src} alt={`Menu page ${i + 1}`} style={{ transform: `rotate(${(i % 2 ? 1 : -1) * 1.6}deg)` }} />)}
@@ -213,9 +242,11 @@ export function ForBarsPage() {
         </div>
         <div className="for-bars-desk-foot">
           <button type="button" className="btn btn-outline" onClick={() => setItems((l) => [...l, { id: nextId++, name: "", description: "", tones: [], image: null }])}>+ Add an item</button>
-          <button type="button" className="btn btn-solid" onClick={save} disabled={saved}>{saved ? "Saved" : "Save my menu"}</button>
+          <button type="button" className="btn btn-solid" onClick={() => void save()} disabled={saving}>{saving ? "Saving…" : "Save my menu"}</button>
           <span className="accent-italic">nothing goes live until you say so</span>
+          <a className="house-text-link" href="mailto:vibetail.communication@gmail.com?subject=Menu%20draft">Send it to us →</a>
         </div>
+        {saveError && <p className="for-bars-save-error" role="alert">{saveError}</p>}
       </main>
       <SiteFooter />
       {inputs}

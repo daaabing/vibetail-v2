@@ -215,3 +215,4 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .for-bars-draft-tones-label { margin: 20px 0 10px; }.for-bars-draft-tones-label em { color: var(--ink-mute); font-size: 17px; }
 .for-bars-draft-chips { display: flex; flex-wrap: wrap; gap: 6px; }.for-bars-draft-chips .chip { padding: 6px 10px; font-size: 11px; }
 .for-bars-desk-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--line); }.for-bars-desk-foot .accent-italic { color: var(--ink-mute); font-size: 21px; }
+.for-bars-save-error { margin-top: 16px; color: var(--danger, #b3261e); }

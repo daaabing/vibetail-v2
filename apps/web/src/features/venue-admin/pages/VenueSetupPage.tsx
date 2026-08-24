@@ -4,6 +4,7 @@ import { SiteFooter, SiteHeader } from "../../platform/components/SiteHeader.js"
 import { useSeo } from "../../platform/useSeo.js";
 import { VenueAdminLoading, errorMessage, useVenueSession } from "../VenueShell.js";
 import { saveCachedVenueSession } from "../session-store.js";
+import { importPendingMenuDraft } from "../draft-import.js";
 
 const VENUE_TYPES = [
   { value: "cocktail_bar", label: "Cocktail bar" },
@@ -37,10 +38,12 @@ export function VenueSetupPage() {
         venueType: venueTypeSchema.parse(data.get("venueType") ?? "cocktail_bar"),
         shortIntro: String(data.get("shortIntro") ?? "").trim() || null,
       });
-      // The dashboard renders from this snapshot on arrival; without it the
+      // The admin page renders from this snapshot on arrival; without it the
       // brand-new venue would flash the account name until the recheck lands.
       saveCachedVenueSession(created);
-      window.location.assign("/venue/dashboard");
+      // An owner who came from /for-bars has a menu waiting; land them on it.
+      const imported = await importPendingMenuDraft(state.client);
+      window.location.assign(imported ? "/venue/menus" : "/venue/dashboard");
     } catch (caught) {
       setError(errorMessage(caught));
       setPending(false);
