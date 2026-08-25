@@ -385,6 +385,27 @@ const MISC_ART: Record<string, Art> = {
       </>
     ),
   },
+  // The long pour — a tall glass over ice, meant to last
+  highball: {
+    d: (
+      <>
+        <path d="M34 14 H66 V82 a4 4 0 0 1 -4 4 H38 a4 4 0 0 1 -4 -4 Z" />
+        <path d="M38 32 c 8 4, 20 -4, 28 0" strokeWidth="1.6" />
+        <path d="M42 42 l10 -4 l4 9 l-10 4 Z M48 60 l9 3 l-3 9 l-9 -3 Z" strokeWidth="1.5" />
+      </>
+    ),
+  },
+  // The short pour — a stemmed coupe, gone in three sips
+  coupe: {
+    d: (
+      <>
+        <path d="M30 22 C 30 44, 38 52, 50 52 C 62 52, 70 44, 70 22 Z" />
+        <path d="M34 32 c 10 4, 22 4, 32 0" strokeWidth="1.6" />
+        <path d="M50 52 V78" />
+        <path d="M36 80 H64" />
+      </>
+    ),
+  },
   shaker: {
     d: (
       <>

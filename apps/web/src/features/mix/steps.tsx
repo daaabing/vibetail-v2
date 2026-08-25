@@ -370,8 +370,8 @@ export function StepStrength({
           onChange={onStrength}
           left={"All evening"}
           right={"One and done"}
-          leftArt="couch"
-          rightArt="fire"
+          leftArt="highball"
+          rightArt="coupe"
           leftHint={"tall glass, ice, keeps going"}
           rightHint={"small glass, concentrated, hits"}
         />
