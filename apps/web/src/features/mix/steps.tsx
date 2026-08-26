@@ -120,7 +120,7 @@ function PoleSlider({
   rightArt,
   leftHint,
   rightHint,
-  artOnly,
+  artOnly = false,
 }: {
   value: number;
   onChange: (v: number) => void;
