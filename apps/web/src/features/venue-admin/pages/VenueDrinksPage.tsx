@@ -23,6 +23,8 @@ export function VenueDrinksPage() {
 
   if (!state) return <VenueAdminLoading />;
 
+  // Rethrows so the submitting DrinkForm can show the failure next to its
+  // button; the banner up here is out of view from a form deep in the list.
   async function run(operation: () => Promise<VenueDrink[]>, success: string) {
     setError("");
     setNotice("");
@@ -31,6 +33,7 @@ export function VenueDrinksPage() {
       setNotice(success);
     } catch (caught) {
       setError(errorMessage(caught));
+      throw caught;
     }
   }
 

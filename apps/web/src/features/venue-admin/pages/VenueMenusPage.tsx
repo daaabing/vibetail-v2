@@ -270,15 +270,13 @@ function MenuCreationStudio({ client, drinks, onChanged, onError, onNotice }: {
         <details className="vt-create-panel" open={drinks.length === 0}>
           <summary>Add a new drink — including its photo</summary>
           <DrinkForm client={client} submitLabel="Add to library" onSubmit={async (input, reset) => {
+            // Failures propagate to DrinkForm, which reports them beside its
+            // own submit button — closer to the merchant than onError's banner.
             onError("");
-            try {
-              await client.createDrink(input);
-              await onChanged();
-              onNotice(`${input.name} added — tick it above to include it.`);
-              reset();
-            } catch (caught) {
-              onError(errorMessage(caught));
-            }
+            await client.createDrink(input);
+            await onChanged();
+            onNotice(`${input.name} added — tick it above to include it.`);
+            reset();
           }} />
         </details>
       </div>}

@@ -68,6 +68,9 @@ export function DrinkForm({ drink, client, submitLabel, onSubmit }: {
   onSubmit: (input: DrinkInput, reset: () => void) => Promise<void>;
 }) {
   const [fields, setFields] = useState<DrinkFormFields>(() => fieldsFrom(drink));
+  const [pending, setPending] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [savedName, setSavedName] = useState("");
   const [suggesting, setSuggesting] = useState(false);
   const [suggestError, setSuggestError] = useState("");
   const [photoFile, setPhotoFile] = useState<File>();
@@ -150,7 +153,15 @@ export function DrinkForm({ drink, client, submitLabel, onSubmit }: {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void onSubmit(toInput(fields), resetForm);
+    if (pending) return;
+    const input = toInput(fields);
+    setPending(true);
+    setSubmitError("");
+    setSavedName("");
+    onSubmit(input, resetForm)
+      .then(() => setSavedName(input.name))
+      .catch((caught: unknown) => setSubmitError(errorMessage(caught)))
+      .finally(() => setPending(false));
   }
 
   const canPreparePhoto = Boolean(photoFile) || looksLikeHttpUrl(fields.imageUrl);
@@ -213,7 +224,13 @@ export function DrinkForm({ drink, client, submitLabel, onSubmit }: {
       </label>
       <label>Allergens<input value={fields.allergens} onChange={(event) => set("allergens", event.target.value)} placeholder="sulfites" /></label>
       <label className="vt-span-2">Recommendation note<input value={fields.recommendationNote} onChange={(event) => set("recommendationNote", event.target.value)} maxLength={500} placeholder="When to pour this drink" /></label>
-      <button className="vt-primary" type="submit">{submitLabel}</button>
+      {/* Feedback sits next to the button: on long pages the shared banner at
+          the top of the section is outside the viewport when submitting. */}
+      <div className="vt-span-2 vt-submit-row">
+        <button className="vt-primary" type="submit" disabled={pending}>{pending ? "Saving…" : submitLabel}</button>
+        {submitError && <div className="vt-alert" role="alert">{submitError}</div>}
+        {!submitError && savedName && <p className="vt-notice" role="status">{savedName} saved.</p>}
+      </div>
     </form>
   );
 }
