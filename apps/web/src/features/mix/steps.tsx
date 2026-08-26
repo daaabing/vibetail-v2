@@ -135,7 +135,10 @@ function PoleSlider({
   const leaning = value < 42 ? "left" : value > 58 ? "right" : "mid";
 
   return (
-    <div className="flex items-start gap-3 sm:gap-5">
+    // Without the big hand-written labels the drawn ends are all the visual
+    // weight this row has, so in artOnly mode it must not stretch across the
+    // whole desktop column — cap it at the width the glasses can hold.
+    <div className={`flex items-start gap-3 sm:gap-5${artOnly ? " max-w-[560px]" : ""}`}>
       <Pole
         art={leftArt}
         label={left}
