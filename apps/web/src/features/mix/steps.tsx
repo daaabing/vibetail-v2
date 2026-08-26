@@ -59,6 +59,7 @@ function Pole({
   active,
   onPick,
   align,
+  artOnly,
 }: {
   art: string;
   label: string;
@@ -66,11 +67,14 @@ function Pole({
   active: boolean;
   onPick: () => void;
   align: "start" | "end";
+  /** Let the drawing speak for itself — the label survives only for readers. */
+  artOnly?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onPick}
+      aria-label={label}
       className="flex w-[104px] shrink-0 flex-col gap-1.5"
       style={{
         alignItems: align === "start" ? "flex-start" : "flex-end",
@@ -88,12 +92,14 @@ function Pole({
       >
         <Draw name={art} strokeWidth={2.8} />
       </span>
-      <span
-        className="hand text-[24px] leading-none"
-        style={{ color: active ? "var(--ink)" : "var(--ink-faint)" }}
-      >
-        {label}
-      </span>
+      {!artOnly && (
+        <span
+          className="hand text-[24px] leading-none"
+          style={{ color: active ? "var(--ink)" : "var(--ink-faint)" }}
+        >
+          {label}
+        </span>
+      )}
       <span className="note text-[13px] leading-tight" style={{ color: "var(--ink-mute)" }}>
         {hint}
       </span>
@@ -114,6 +120,7 @@ function PoleSlider({
   rightArt,
   leftHint,
   rightHint,
+  artOnly = false,
 }: {
   value: number;
   onChange: (v: number) => void;
@@ -123,11 +130,15 @@ function PoleSlider({
   rightArt: string;
   leftHint: string;
   rightHint: string;
+  artOnly?: boolean;
 }) {
   const leaning = value < 42 ? "left" : value > 58 ? "right" : "mid";
 
   return (
-    <div className="flex items-start gap-3 sm:gap-5">
+    // Without the big hand-written labels the drawn ends are all the visual
+    // weight this row has, so in artOnly mode it must not stretch across the
+    // whole desktop column — cap it at the width the glasses can hold.
+    <div className={`flex items-start gap-3 sm:gap-5${artOnly ? " max-w-[560px]" : ""}`}>
       <Pole
         art={leftArt}
         label={left}
@@ -135,6 +146,7 @@ function PoleSlider({
         active={leaning === "left"}
         onPick={() => onChange(12)}
         align="start"
+        artOnly={artOnly}
       />
 
       <div className="relative min-w-0 flex-1 self-center pt-1">
@@ -163,6 +175,7 @@ function PoleSlider({
         active={leaning === "right"}
         onPick={() => onChange(88)}
         align="end"
+        artOnly={artOnly}
       />
     </div>
   );
@@ -370,10 +383,11 @@ export function StepStrength({
           onChange={onStrength}
           left={"All evening"}
           right={"One and done"}
-          leftArt="couch"
-          rightArt="fire"
+          leftArt="highball"
+          rightArt="coupe"
           leftHint={"tall glass, ice, keeps going"}
           rightHint={"small glass, concentrated, hits"}
+          artOnly
         />
       </div>
     </div>

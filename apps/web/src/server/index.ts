@@ -1,5 +1,6 @@
 import express from "express";
 import { existsSync } from "node:fs";
+import { createServer } from "node:http";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseWebEnv } from "../env.js";
@@ -10,6 +11,10 @@ const webRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const { serverEnv } = parseWebEnv(process.env);
 const dependencies = createWebDependencies(serverEnv);
 const app = createWebApp(dependencies);
+// One http server shared with Vite's HMR websocket below: the default
+// standalone HMR port (24678) collides as soon as two dev servers run on
+// the same machine, and every page beyond the first loses hot reload.
+const httpServer = createServer(app);
 
 if (serverEnv.NODE_ENV === "production") {
   const clientRoot = resolve(webRoot, "dist/client");
@@ -22,13 +27,13 @@ if (serverEnv.NODE_ENV === "production") {
   const { createServer: createViteServer } = await import("vite");
   const vite = await createViteServer({
     root: webRoot,
-    server: { middlewareMode: true },
+    server: { middlewareMode: true, ws: { server: httpServer } },
     appType: "spa",
   });
   app.use(vite.middlewares);
 }
 
-const server = app.listen(serverEnv.PORT, serverEnv.HOST, () => {
+const server = httpServer.listen(serverEnv.PORT, serverEnv.HOST, () => {
   console.log(
     JSON.stringify({
       timestamp: new Date().toISOString(),
