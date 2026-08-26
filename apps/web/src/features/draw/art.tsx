@@ -385,20 +385,18 @@ const MISC_ART: Record<string, Art> = {
       </>
     ),
   },
-  // The long pour — a tall glass over ice, straw still going. Drawn wide
-  // (glass left, straw reaching right) so it fills its frame like the rest
-  // of the book instead of floating in the middle.
+  // The long pour — a tall glass over ice, meant to last. Same width as the
+  // coupe so the two read as a matched pair on the slider.
   highball: {
     d: (
       <>
-        <path d="M18 14 H50 V82 a4 4 0 0 1 -4 4 H22 a4 4 0 0 1 -4 -4 Z" />
-        <path d="M22 32 c 8 4, 20 -4, 28 0" strokeWidth="1.6" />
-        <path d="M26 42 l10 -4 l4 9 l-10 4 Z M32 60 l9 3 l-3 9 l-9 -3 Z" strokeWidth="1.5" />
-        <path d="M34 46 L70 12 l10 -4" strokeWidth="1.8" />
+        <path d="M30 14 H70 V82 a4 4 0 0 1 -4 4 H34 a4 4 0 0 1 -4 -4 Z" />
+        <path d="M34 32 c 10 4, 22 -4, 32 0" strokeWidth="1.6" />
+        <path d="M40 42 l11 -4 l4 10 l-11 4 Z M46 61 l10 3 l-3 10 l-10 -3 Z" strokeWidth="1.5" />
       </>
     ),
   },
-  // The short pour — a stemmed coupe with a cherry on the pick
+  // The short pour — a stemmed coupe, gone in three sips
   coupe: {
     d: (
       <>
@@ -406,8 +404,6 @@ const MISC_ART: Record<string, Art> = {
         <path d="M34 32 c 10 4, 22 4, 32 0" strokeWidth="1.6" />
         <path d="M50 52 V78" />
         <path d="M36 80 H64" />
-        <path d="M58 34 L78 14" strokeWidth="1.8" />
-        <circle cx="81" cy="11" r="3" strokeWidth="1.6" />
       </>
     ),
   },
