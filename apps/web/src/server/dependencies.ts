@@ -6,9 +6,7 @@ import {
   OpenRouterMenuPhotoScanProvider,
   OpenRouterModelProvider,
   OriginalDrinkPhotoProvider,
-  ReplicateDrinkPhotoProvider,
   ReplicateSam2DrinkPhotoProvider,
-  defaultReplicateCutoutModel,
   defaultReplicateSam2Model,
   Sam2DrinkPhotoProvider,
   type DrinkInfoProvider,
@@ -176,12 +174,6 @@ function createDrinkPhotoProvider(env: WebServerEnv) {
     return new ReplicateSam2DrinkPhotoProvider({
       apiToken: env.REPLICATE_API_TOKEN,
       model: env.IMAGE_CUTOUT_MODEL ?? defaultReplicateSam2Model,
-    });
-  }
-  if (env.IMAGE_CUTOUT_PROVIDER === "replicate" && env.REPLICATE_API_TOKEN) {
-    return new ReplicateDrinkPhotoProvider({
-      apiToken: env.REPLICATE_API_TOKEN,
-      model: env.IMAGE_CUTOUT_MODEL ?? defaultReplicateCutoutModel,
     });
   }
   return new OriginalDrinkPhotoProvider();
