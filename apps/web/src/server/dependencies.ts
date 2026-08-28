@@ -3,8 +3,6 @@ import {
   DeterministicMenuPhotoScanProvider,
   OpenAIMenuPhotoScanProvider,
   OpenAIModelProvider,
-  OpenRouterDrinkPhotoProvider,
-  defaultOpenRouterCutoutModel,
   OpenRouterMenuPhotoScanProvider,
   OpenRouterModelProvider,
   OriginalDrinkPhotoProvider,
@@ -184,13 +182,6 @@ function createDrinkPhotoProvider(env: WebServerEnv) {
     return new ReplicateDrinkPhotoProvider({
       apiToken: env.REPLICATE_API_TOKEN,
       model: env.IMAGE_CUTOUT_MODEL ?? defaultReplicateCutoutModel,
-    });
-  }
-  if (env.IMAGE_CUTOUT_PROVIDER === "openrouter" && env.OPENROUTER_API_KEY) {
-    return new OpenRouterDrinkPhotoProvider({
-      apiKey: env.OPENROUTER_API_KEY,
-      model: env.IMAGE_CUTOUT_MODEL ?? defaultOpenRouterCutoutModel,
-      siteUrl: env.APP_URL,
     });
   }
   return new OriginalDrinkPhotoProvider();

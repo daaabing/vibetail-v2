@@ -48,7 +48,7 @@ This is the hosted equivalent of the local SAM 2 sidecar: `tmappdev/lang-segment
 
 Alternative: `IMAGE_CUTOUT_PROVIDER=replicate` runs a dedicated remover that returns the finished transparent PNG directly — default Bria RMBG 2.0 (`bria/remove-background`, official model, no cold boots, $0.018 per image, soft alpha edges). Same `REPLICATE_API_TOKEN`; override the model with `IMAGE_CUTOUT_MODEL` (official `owner/name` slugs run without a version hash). In both modes the photo is uploaded through Replicate's Files API (their data-URI path caps well below our 8 MB input limit) and the result is stored in Supabase immediately because Replicate deletes prediction outputs after an hour.
 
-`IMAGE_CUTOUT_PROVIDER=openrouter` remains available as a generative alternative (reuses `OPENROUTER_API_KEY`; model via `IMAGE_CUTOUT_MODEL`, default `openai/gpt-5-image-mini`, must support image input plus `background=transparent`). It redraws the image rather than masking it, so label text can drift — prefer `replicate`. The local no-billing option (`IMAGE_CUTOUT_PROVIDER=sam2`) needs the sidecar in `services/sam2-cutout`, which has no hosted deployment.
+The local no-billing option (`IMAGE_CUTOUT_PROVIDER=sam2`) needs the sidecar in `services/sam2-cutout`, which has no hosted deployment.
 
 Do not paste secrets into logs, commits, public variables, browser code, or deployment URLs. Before enabling management writes, verify the old schema, RLS, `published_version_id`, and SHA-256 private-token format using a dedicated test merchant.
 

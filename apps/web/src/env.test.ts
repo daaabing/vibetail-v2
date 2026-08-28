@@ -62,9 +62,6 @@ describe("web environment", () => {
     expect(() => parseWebEnv({ ...localEnv, IMAGE_CUTOUT_PROVIDER: "sam2" })).toThrow(
       /SAM2_CUTOUT_URL/,
     );
-    expect(() => parseWebEnv({ ...localEnv, IMAGE_CUTOUT_PROVIDER: "openrouter" })).toThrow(
-      /OPENROUTER_API_KEY/,
-    );
     expect(() => parseWebEnv({ ...localEnv, IMAGE_CUTOUT_PROVIDER: "replicate" })).toThrow(
       /REPLICATE_API_TOKEN/,
     );
