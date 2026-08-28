@@ -110,8 +110,7 @@ export function DrinkForm({ drink, client, submitLabel, onSubmit }: {
   }
 
   async function preparePhoto() {
-    const sourceUrl = fields.imageUrl.trim();
-    if (!photoFile && !sourceUrl) return;
+    if (!photoFile) return;
     if (!fields.name.trim()) {
       setSuggestError("Give the drink a name before preparing its photo.");
       return;
@@ -120,17 +119,11 @@ export function DrinkForm({ drink, client, submitLabel, onSubmit }: {
     setSuggestError("");
     setPhotoNotice("");
     try {
-      const result = photoFile
-        ? await client.prepareDrinkPhoto({
-            name: fields.name.trim(),
-            description: fields.description.trim() || null,
-            ...(await readVenueImage(photoFile)),
-          })
-        : await client.prepareDrinkPhoto({
-            name: fields.name.trim(),
-            description: fields.description.trim() || null,
-            sourceImageUrl: sourceUrl,
-          });
+      const result = await client.prepareDrinkPhoto({
+        name: fields.name.trim(),
+        description: fields.description.trim() || null,
+        ...(await readVenueImage(photoFile)),
+      });
       set("imageUrl", result.imageUrl);
       setPhotoPreview(result.imageUrl);
       setPhotoFile(undefined);
@@ -164,8 +157,6 @@ export function DrinkForm({ drink, client, submitLabel, onSubmit }: {
       .finally(() => setPending(false));
   }
 
-  const canPreparePhoto = Boolean(photoFile) || looksLikeHttpUrl(fields.imageUrl);
-
   return (
     <form className="vt-admin-form vt-admin-grid" onSubmit={submit}>
       <label>Drink name<input value={fields.name} onChange={(event) => set("name", event.target.value)} required maxLength={200} placeholder="Smoked Pear Old Fashioned" /></label>
@@ -175,7 +166,7 @@ export function DrinkForm({ drink, client, submitLabel, onSubmit }: {
       <section className="vt-span-2 vt-drink-photo-field" aria-labelledby={`drink-photo-${drink?.id ?? "new"}`}>
         <div>
           <p className="vt-kicker" id={`drink-photo-${drink?.id ?? "new"}`}>Drink photo</p>
-          <p>Upload a photo or paste an image URL, then prepare a clean menu cutout when image processing is configured.</p>
+          <p>Upload a photo of the drink to show on your menu.</p>
         </div>
         {photoPreview && <div className="vt-drink-photo-preview"><img src={photoPreview} alt={`${fields.name || "Drink"} preview`} /></div>}
         <label className="vt-file-drop">
@@ -192,17 +183,8 @@ export function DrinkForm({ drink, client, submitLabel, onSubmit }: {
             }}
           />
         </label>
-        <details className="vt-photo-url-fallback" open={Boolean(fields.imageUrl) && !photoFile}>
-          <summary>Use an image URL instead</summary>
-          <label>Image URL<input value={fields.imageUrl} onChange={(event) => {
-            set("imageUrl", event.target.value);
-            setPhotoPreview(event.target.value);
-            setPhotoFile(undefined);
-            setPhotoNotice("");
-          }} type="url" placeholder="https://…" /></label>
-        </details>
-        {canPreparePhoto && <button className="vt-secondary" type="button" onClick={() => void preparePhoto()} disabled={photoBusy}>
-          {photoBusy ? "Preparing photo…" : photoFile ? "Upload & prepare photo" : "Prepare photo from URL"}
+        {photoFile && <button className="vt-secondary" type="button" onClick={() => void preparePhoto()} disabled={photoBusy}>
+          {photoBusy ? "Preparing photo…" : "Upload & prepare photo"}
         </button>}
         {photoNotice && <small className="vt-photo-notice" role="status">{photoNotice}</small>}
       </section>
@@ -233,13 +215,4 @@ export function DrinkForm({ drink, client, submitLabel, onSubmit }: {
       </div>
     </form>
   );
-}
-
-function looksLikeHttpUrl(value: string): boolean {
-  try {
-    const parsed = new URL(value.trim());
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
 }
