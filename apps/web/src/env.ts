@@ -48,9 +48,10 @@ const serverEnvSchema = z
     OPENROUTER_API_KEY: optionalString(),
     MODEL_NAME: optionalString(),
     MENU_PHOTO_MODEL: optionalString(),
-    IMAGE_CUTOUT_PROVIDER: z.enum(["original", "sam2"]).default("original"),
+    IMAGE_CUTOUT_PROVIDER: z.enum(["original", "sam2", "replicate-sam2"]).default("original"),
     IMAGE_CUTOUT_MODEL: optionalString(),
     SAM2_CUTOUT_URL: optionalString(z.string().url()),
+    REPLICATE_API_TOKEN: optionalString(),
     FC_SANDBOX_ENDPOINT: optionalString(z.string().url()),
     FC_SANDBOX_API_KEY: optionalString(),
     E2B_ENDPOINT: optionalString(z.string().url()),
@@ -70,6 +71,9 @@ const serverEnvSchema = z
     }
     if (env.IMAGE_CUTOUT_PROVIDER === "sam2") {
       requireFields(env, ["SAM2_CUTOUT_URL"], context);
+    }
+    if (env.IMAGE_CUTOUT_PROVIDER === "replicate-sam2") {
+      requireFields(env, ["REPLICATE_API_TOKEN"], context);
     }
   });
 

@@ -62,6 +62,9 @@ describe("web environment", () => {
     expect(() => parseWebEnv({ ...localEnv, IMAGE_CUTOUT_PROVIDER: "sam2" })).toThrow(
       /SAM2_CUTOUT_URL/,
     );
+    expect(() => parseWebEnv({ ...localEnv, IMAGE_CUTOUT_PROVIDER: "replicate-sam2" })).toThrow(
+      /REPLICATE_API_TOKEN/,
+    );
   });
 
   it("accepts OpenRouter with a server-only key and explicit model", () => {
