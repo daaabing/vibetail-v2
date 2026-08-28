@@ -3,9 +3,15 @@ import {
   DeterministicMenuPhotoScanProvider,
   OpenAIMenuPhotoScanProvider,
   OpenAIModelProvider,
+  OpenRouterDrinkPhotoProvider,
+  defaultOpenRouterCutoutModel,
   OpenRouterMenuPhotoScanProvider,
   OpenRouterModelProvider,
   OriginalDrinkPhotoProvider,
+  ReplicateDrinkPhotoProvider,
+  ReplicateSam2DrinkPhotoProvider,
+  defaultReplicateCutoutModel,
+  defaultReplicateSam2Model,
   Sam2DrinkPhotoProvider,
   type DrinkInfoProvider,
   type ModelProvider,
@@ -166,6 +172,25 @@ function createDrinkPhotoProvider(env: WebServerEnv) {
     return new Sam2DrinkPhotoProvider({
       baseUrl: env.SAM2_CUTOUT_URL ?? "http://127.0.0.1:8091",
       model: env.IMAGE_CUTOUT_MODEL ?? "sam2.1_hiera_small",
+    });
+  }
+  if (env.IMAGE_CUTOUT_PROVIDER === "replicate-sam2" && env.REPLICATE_API_TOKEN) {
+    return new ReplicateSam2DrinkPhotoProvider({
+      apiToken: env.REPLICATE_API_TOKEN,
+      model: env.IMAGE_CUTOUT_MODEL ?? defaultReplicateSam2Model,
+    });
+  }
+  if (env.IMAGE_CUTOUT_PROVIDER === "replicate" && env.REPLICATE_API_TOKEN) {
+    return new ReplicateDrinkPhotoProvider({
+      apiToken: env.REPLICATE_API_TOKEN,
+      model: env.IMAGE_CUTOUT_MODEL ?? defaultReplicateCutoutModel,
+    });
+  }
+  if (env.IMAGE_CUTOUT_PROVIDER === "openrouter" && env.OPENROUTER_API_KEY) {
+    return new OpenRouterDrinkPhotoProvider({
+      apiKey: env.OPENROUTER_API_KEY,
+      model: env.IMAGE_CUTOUT_MODEL ?? defaultOpenRouterCutoutModel,
+      siteUrl: env.APP_URL,
     });
   }
   return new OriginalDrinkPhotoProvider();

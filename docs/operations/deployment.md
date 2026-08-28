@@ -37,6 +37,19 @@ The adapter uses OpenRouter's OpenAI-compatible Chat Completions endpoint with s
 
 The direct OpenAI adapter remains available with `MODEL_PROVIDER=openai`, `MODEL_NAME`, and `MODEL_API_KEY`. Do not reuse an OpenRouter key in `MODEL_API_KEY`; the separate names make provider selection and secret rotation explicit.
 
+To enable automatic background removal on venue drink photos (the "Prepare photo" action), configure:
+
+```text
+IMAGE_CUTOUT_PROVIDER=replicate-sam2
+REPLICATE_API_TOKEN=<Replicate API token>
+```
+
+This is the hosted equivalent of the local SAM 2 sidecar: `tmappdev/lang-segment-anything` on Replicate (GroundingDINO + SAM 2.1, ~$0.0014 per image, ~1 s warm) locates the glass from the text prompt "cocktail glass" and returns a binary mask; the server then reapplies the sidecar's post-processing (hole fill so ice stays opaque, largest-component filter, silhouette sanity check, tight crop) and composites the mask as the alpha channel of the original pixels. Community model, so cold boots can add tens of seconds — the first request after idle may time out and succeed on retry. Override with `IMAGE_CUTOUT_MODEL` (`owner/name:versionhash`); any model that returns a single grayscale mask image works.
+
+Alternative: `IMAGE_CUTOUT_PROVIDER=replicate` runs a dedicated remover that returns the finished transparent PNG directly — default Bria RMBG 2.0 (`bria/remove-background`, official model, no cold boots, $0.018 per image, soft alpha edges). Same `REPLICATE_API_TOKEN`; override the model with `IMAGE_CUTOUT_MODEL` (official `owner/name` slugs run without a version hash). In both modes the photo is uploaded through Replicate's Files API (their data-URI path caps well below our 8 MB input limit) and the result is stored in Supabase immediately because Replicate deletes prediction outputs after an hour.
+
+`IMAGE_CUTOUT_PROVIDER=openrouter` remains available as a generative alternative (reuses `OPENROUTER_API_KEY`; model via `IMAGE_CUTOUT_MODEL`, default `openai/gpt-5-image-mini`, must support image input plus `background=transparent`). It redraws the image rather than masking it, so label text can drift — prefer `replicate`. The local no-billing option (`IMAGE_CUTOUT_PROVIDER=sam2`) needs the sidecar in `services/sam2-cutout`, which has no hosted deployment.
+
 Do not paste secrets into logs, commits, public variables, browser code, or deployment URLs. Before enabling management writes, verify the old schema, RLS, `published_version_id`, and SHA-256 private-token format using a dedicated test merchant.
 
 ## Schema migrations

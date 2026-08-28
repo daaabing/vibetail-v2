@@ -92,7 +92,7 @@ Use these exact local URLs:
 - Stable QR target for the demo venue: [http://127.0.0.1:3000/m/vibetail-taproom](http://127.0.0.1:3000/m/vibetail-taproom)
 - Legacy management demo: [http://127.0.0.1:3000/manage/fixture-double-chicken-demo](http://127.0.0.1:3000/manage/fixture-double-chicken-demo)
 
-Optional drink-photo cutouts with local SAM 2 (menu photo/URL scan still uses the venue UI on `/venue`): see [`services/sam2-cutout/README.md`](services/sam2-cutout/README.md), then set `IMAGE_CUTOUT_PROVIDER=sam2`, `SAM2_CUTOUT_URL=http://127.0.0.1:8091`, and run the sidecar beside `pnpm run dev`.
+Optional drink-photo cutouts with local SAM 2 (menu photo/URL scan still uses the venue UI on `/venue`): see [`services/sam2-cutout/README.md`](services/sam2-cutout/README.md), then set `IMAGE_CUTOUT_PROVIDER=sam2`, `SAM2_CUTOUT_URL=http://127.0.0.1:8091`, and run the sidecar beside `pnpm run dev`. For hosted deployments without the sidecar, set `IMAGE_CUTOUT_PROVIDER=replicate-sam2` with `REPLICATE_API_TOKEN` — SAM 2 on Replicate (GroundingDINO + SAM 2.1 via `tmappdev/lang-segment-anything`) with the sidecar's mask post-processing done server-side. `IMAGE_CUTOUT_PROVIDER=replicate` (Bria RMBG 2.0, direct transparent PNG) and `IMAGE_CUTOUT_PROVIDER=openrouter` (generative, reuses `OPENROUTER_API_KEY`) remain as alternatives.
 
 The management token above is deliberately checked-in, non-sensitive seed data. It cannot authorize a production merchant. The explicit IPv4 address matches the server bind and avoids accidentally reaching another local service through `localhost`/IPv6.
 

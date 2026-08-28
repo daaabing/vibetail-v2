@@ -70,3 +70,6 @@ export * from "./openrouter.js";
 export * from "./menu-photo.js";
 export * from "./drink-photo.js";
 export * from "./sam2-drink-photo.js";
+export * from "./openrouter-drink-photo.js";
+export * from "./replicate-drink-photo.js";
+export * from "./replicate-sam2-drink-photo.js";
