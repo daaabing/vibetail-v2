@@ -606,16 +606,18 @@
   color: rgba(239, 233, 221, 0.62);
 }
 
-/* Photography is monochrome throughout — no exceptions. */
+/* Decorative photography uses the site's monochrome treatment. */
 .print-img,
 .photo-mono {
   filter: grayscale(1) contrast(1.08);
 }
 
-/* A venue's drink photograph, dissolved into the paper it sits on. */
+/* Keep the venue's drink photograph in its original colour while dissolving
+   its edges into the paper. Recommendation cards should show the actual drink,
+   not the site's decorative monochrome treatment. */
 .drink-cutout {
   mix-blend-mode: multiply;
-  filter: grayscale(1) contrast(1.12) brightness(1.04);
+  filter: none;
   -webkit-mask-image: radial-gradient(
     ellipse 62% 68% at 50% 50%,
     #000 55%,
