@@ -17,6 +17,7 @@ import { VenueMenusPage } from "./features/venue-admin/pages/VenueMenusPage.js";
 import { VenueProfilePage } from "./features/venue-admin/pages/VenueProfilePage.js";
 import { VenueQrPage } from "./features/venue-admin/pages/VenueQrPage.js";
 import { VenueSetupPage } from "./features/venue-admin/pages/VenueSetupPage.js";
+import { SiteHeader } from "./features/platform/components/SiteHeader.js";
 
 const VENUE_ADMIN_PAGES = {
   login: VenueLoginPage,
@@ -52,7 +53,7 @@ export function App() {
     window.location.replace(route.to);
     return null;
   }
-  return <main className="route-state"><p>404 · LOST THE THREAD</p><h1>That Vibetail page doesn’t exist.</h1><a href="/">Return home</a></main>;
+  return <><SiteHeader /><main className="route-state"><p>404 · LOST THE THREAD</p><h1>That Vibetail page doesn’t exist.</h1><a href="/">Return home</a></main></>;
 }
 
 export type AppRoute =

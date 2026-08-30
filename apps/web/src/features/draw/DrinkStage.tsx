@@ -425,18 +425,7 @@ export default function DrinkStage({
       <div className="grain-layer" aria-hidden style={{ opacity: 0.4 }} />
 
       {/* ── Plate header ── */}
-      <div className="relative flex items-baseline justify-between px-6 pt-5 lg:px-10 lg:pt-7">
-        <span
-          style={{
-            fontFamily: "var(--font-display)",
-            fontWeight: 500,
-            fontSize: 15,
-            letterSpacing: "0.3em",
-            color: "var(--ink)",
-          }}
-        >
-          VIBETAIL
-        </span>
+      <div className="relative flex items-baseline justify-end px-6 pt-5 lg:px-10 lg:pt-7">
         <span className="mono-sm">{"The pour — live"}</span>
       </div>
 

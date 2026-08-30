@@ -170,11 +170,12 @@ export function ForBarsPage() {
   /* ══════════ The editing desk, full width ══════════ */
   if (stage === "edit") {
     return <div className="house-page for-bars-desk-page">
+      <div className="for-bars-desk-header-strip"><SiteHeader /></div>
       <header className="for-bars-desk-head">
         <img src="/brand/forbars-desk.jpg" alt="" aria-hidden />
         <div className="for-bars-desk-shade" />
         <div className="house-shell for-bars-desk-head-inner">
-          <div className="for-bars-desk-bar"><a className="house-wordmark" href="/" aria-label="Vibetail home">VIBETAIL</a><span className="mono-sm">Step 2 of 2 — check our reading</span></div>
+          <div className="for-bars-desk-bar"><span className="mono-sm">Step 2 of 2 — check our reading</span></div>
           <div className="for-bars-desk-title">
             <div className="on-dark">
               <h1>{saved ? <>Saved — <em>over to us</em>.</> : <>Here&apos;s what <em>we read</em>.</>}</h1>
@@ -196,10 +197,13 @@ export function ForBarsPage() {
           {items.map((item, idx) => <motion.article key={item.id} layout initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: Math.min(idx * 0.05, 0.3) }} className="frame-gilt for-bars-draft">
             <div className="for-bars-draft-top"><span className="specimen-no">{String(idx + 1).padStart(2, "0")}</span><button type="button" className="mono-sm for-bars-remove" onClick={() => setItems((l) => l.filter((it) => it.id !== item.id))}>Remove</button></div>
             <div className="for-bars-draft-body">
-              <label className="for-bars-draft-photo">
-                {item.image ? <img src={item.image} alt="" /> : <span className="mono-sm">Add photo</span>}
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && setItemImage(item.id, e.target.files[0])} />
-              </label>
+              <div className="for-bars-draft-photo-wrap">
+                <label className="for-bars-draft-photo">
+                  {item.image ? <img src={item.image} alt="" /> : <span className="mono-sm">Add photo</span>}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && setItemImage(item.id, e.target.files[0])} />
+                </label>
+                {item.image && <small className="for-bars-photo-nudge"><a href="/venue" target="_blank" rel="noopener noreferrer">Sign up</a> for auto background removal</small>}
+              </div>
               <div style={{ minWidth: 0 }}>
                 <input value={item.name} onChange={(e) => update(item.id, { name: e.target.value })} placeholder="Drink name" className="field for-bars-draft-name" />
                 <textarea value={item.description} onChange={(e) => update(item.id, { description: e.target.value })} placeholder="One honest line about it" rows={2} className="field for-bars-draft-desc" />
@@ -224,7 +228,7 @@ export function ForBarsPage() {
 
   /* ══════════ The door: the ask, then the case ══════════ */
   return <div className="house-page house-for-bars" onDragOver={onDragOver} onDragLeave={() => setDragging(false)} onDrop={onDrop}>
-    <SiteHeader overlay />
+    <div className="for-bars-desk-header-strip"><SiteHeader /></div>
     <main>
       <section className="for-bars-hero" data-dragging={dragging}>
         <div className="for-bars-shade" />
