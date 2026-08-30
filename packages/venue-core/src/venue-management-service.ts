@@ -53,6 +53,8 @@ import {
   type VenueMatchResult,
   type VenueQr,
   type VenueSessionInfo,
+  type SavedDrink,
+  type SharedMatch,
 } from "@vibetail/contracts";
 import type { DrinkInfoProvider, DrinkPhotoProvider, MenuPhotoScanProvider } from "@vibetail/model-providers";
 import type { IdentityVerifier } from "./identity.js";
@@ -89,6 +91,10 @@ export interface VenueManagementService {
    * guest flow never fails on an auth problem.
    */
   resolveAccountId(token: string): Promise<string | null>;
+  /** Shared result card for /r/{matchId}; throws MATCH_NOT_FOUND for unknown or pre-snapshot rows. */
+  getSharedMatch(matchId: string): Promise<SharedMatch>;
+  saveToVibeBar(token: string, matchId: string): Promise<{ status: "created" | "duplicate" }>;
+  listVibeBar(token: string): Promise<SavedDrink[]>;
   createVenue(token: string, input: CreateVenueInput): Promise<VenueSessionInfo>;
   updateVenueProfile(token: string, input: UpdateVenueProfileInput): Promise<VenueSessionInfo>;
   getDashboard(token: string, range: VenueDashboardRange, now?: Date): Promise<VenueDashboardStats>;
@@ -109,7 +115,7 @@ export interface VenueManagementService {
   deleteMenu(token: string, menuId: string): Promise<void>;
   publishMenu(token: string, menuId: string): Promise<VenueAdminMenu[]>;
   recordMenuView(event: MenuViewEvent): Promise<void>;
-  recordMatch(result: VenueMatchResult, accountId?: string | null): Promise<string | null>;
+  recordMatch(result: VenueMatchResult, accountId?: string | null, originalVibe?: string | null): Promise<string | null>;
   submitFeedback(matchId: string, input: FeedbackInput, accountId?: string | null): Promise<FeedbackReceipt>;
 }
 
@@ -177,6 +183,26 @@ export class DefaultVenueManagementService implements VenueManagementService {
     } catch {
       return null;
     }
+  }
+
+  async getSharedMatch(matchId: string): Promise<SharedMatch> {
+    if (!UUID_PATTERN.test(matchId)) throw matchNotFound();
+    const snapshot = await this.repository.getMatchSnapshot(matchId);
+    if (!snapshot) throw matchNotFound();
+    return snapshot;
+  }
+
+  async saveToVibeBar(token: string, matchId: string): Promise<{ status: "created" | "duplicate" }> {
+    const account = await this.authorize(token);
+    if (!UUID_PATTERN.test(matchId)) throw matchNotFound();
+    const outcome = await this.repository.saveDrink(account.id, matchId);
+    if (outcome === "match_not_found") throw matchNotFound();
+    return { status: outcome };
+  }
+
+  async listVibeBar(token: string): Promise<SavedDrink[]> {
+    const account = await this.authorize(token);
+    return this.repository.listSavedDrinks(account.id, 100);
   }
 
   async createVenue(token: string, input: CreateVenueInput): Promise<VenueSessionInfo> {
@@ -439,7 +465,7 @@ export class DefaultVenueManagementService implements VenueManagementService {
     }
   }
 
-  async recordMatch(result: VenueMatchResult, accountId: string | null = null): Promise<string | null> {
+  async recordMatch(result: VenueMatchResult, accountId: string | null = null, originalVibe: string | null = null): Promise<string | null> {
     try {
       return await this.repository.recordMatchEvent({
         merchantId: result.venue.id,
@@ -448,6 +474,18 @@ export class DefaultVenueManagementService implements VenueManagementService {
         itemName: result.item.name,
         traceId: result.traceId,
         accountId,
+        snapshot: {
+          originalVibe: originalVibe?.trim().slice(0, 500) || null,
+          vibeName: result.vibeName,
+          tastesLike: result.tastesLike,
+          flavorProfile: result.flavorProfile,
+          whyThisMatch: result.whyThisMatch,
+          roast: result.roast,
+          venueName: result.venue.name,
+          venueSlug: result.venue.slug,
+          menuName: result.menu.name,
+          menuSlug: result.menu.slug,
+        },
       });
     } catch {
       return null;
@@ -460,7 +498,7 @@ export class DefaultVenueManagementService implements VenueManagementService {
     accountId: string | null = null,
   ): Promise<FeedbackReceipt> {
     const parsed = feedbackInputSchema.parse(input);
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(matchId)) {
+    if (!UUID_PATTERN.test(matchId)) {
       throw matchNotFound();
     }
     const outcome = await this.repository.createFeedback(
@@ -558,6 +596,22 @@ export class DefaultVenueManagementService implements VenueManagementService {
 
 /** Keeps public reads available when the privileged Supabase key is not configured. */
 export class UnavailableVenueManagementService implements VenueManagementService {
+  async getSharedMatch(matchId: string): Promise<SharedMatch> {
+    void matchId;
+    return venueBackendUnavailable();
+  }
+
+  async saveToVibeBar(token: string, matchId: string): Promise<{ status: "created" | "duplicate" }> {
+    void token;
+    void matchId;
+    return venueBackendUnavailable();
+  }
+
+  async listVibeBar(token: string): Promise<SavedDrink[]> {
+    void token;
+    return venueBackendUnavailable();
+  }
+
   async login(name: string): Promise<VenueLoginResult> {
     void name;
     return venueBackendUnavailable();
@@ -697,7 +751,8 @@ export class UnavailableVenueManagementService implements VenueManagementService
     void event;
   }
 
-  async recordMatch(result: VenueMatchResult, accountId?: string | null): Promise<string | null> {
+  async recordMatch(result: VenueMatchResult, accountId?: string | null, originalVibe?: string | null): Promise<string | null> {
+    void originalVibe;
     void result;
     void accountId;
     return null;
@@ -782,6 +837,8 @@ export function slugify(name: string): string {
 function sha256Hex(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function unauthorized(): VenueManagementServiceError {
   return new VenueManagementServiceError(

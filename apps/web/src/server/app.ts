@@ -6,6 +6,7 @@ import {
   drinkInputSchema,
   feedbackInputSchema,
   globalMatchRequestSchema,
+  saveToVibeBarInputSchema,
   importScannedMenuInputSchema,
   menuItemInputSchema,
   menuViewEventSchema,
@@ -117,7 +118,32 @@ export function createWebApp(options: WebAppOptions): Express {
     asyncRoute(async (request, response) => {
       const { preferences } = globalMatchRequestSchema.parse(request.body);
       const result = await options.venueService.matchGlobalItem(preferences);
-      response.json(await withMatchId(options.venueManagementService, result, request));
+      response.json(await withMatchId(options.venueManagementService, result, request, preferences.mood ?? preferences.freeText ?? null));
+    }),
+  );
+
+  // Public replay of a shared result card. IDs are unguessable uuids and the
+  // guest's own words are never stored, so no auth is required to view one.
+  app.get(
+    "/v1/matches/:matchId",
+    asyncRoute(async (request, response) => {
+      response.json(await options.venueManagementService.getSharedMatch(request.params.matchId ?? ""));
+    }),
+  );
+
+  app.post(
+    "/v1/vibe-bar",
+    asyncRoute(async (request, response) => {
+      const { matchId } = saveToVibeBarInputSchema.parse(request.body);
+      const outcome = await options.venueManagementService.saveToVibeBar(readBearerToken(request), matchId);
+      response.status(outcome.status === "created" ? 201 : 200).json(outcome);
+    }),
+  );
+
+  app.get(
+    "/v1/vibe-bar",
+    asyncRoute(async (request, response) => {
+      response.json(await options.venueManagementService.listVibeBar(readBearerToken(request)));
     }),
   );
 
@@ -237,7 +263,7 @@ export function createWebApp(options: WebAppOptions): Express {
         menuSlug: request.params.menuSlug ?? "",
         preferences,
       });
-      response.json(await withMatchId(options.venueManagementService, result, request));
+      response.json(await withMatchId(options.venueManagementService, result, request, preferences.mood ?? preferences.freeText ?? null));
     }),
   );
 
@@ -487,11 +513,12 @@ async function withMatchId(
   service: VenueManagementService,
   result: VenueMatchResult,
   request: Request,
+  originalVibe: string | null = null,
 ): Promise<VenueMatchResult> {
   try {
     // Consumer sign-in is optional, so an unusable token just means anonymous.
     const accountId = await service.resolveAccountId(readBearerToken(request));
-    const matchId = await service.recordMatch(result, accountId);
+    const matchId = await service.recordMatch(result, accountId, originalVibe);
     return matchId ? { ...result, matchId } : result;
   } catch {
     return result;

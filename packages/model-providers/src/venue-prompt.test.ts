@@ -32,6 +32,7 @@ function request(overrides: Partial<VenueModelRequest> = {}): VenueModelRequest 
       alcoholPreference: "either",
       excludedAllergens: [],
       excludedIngredients: [],
+      excludeItemIds: [],
     },
     allowedItems: ids.map((id) => candidate(id)),
     traceId: "trace-a",

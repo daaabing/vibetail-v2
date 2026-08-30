@@ -103,32 +103,62 @@ export type Database = {
         Row: {
           account_id: string | null
           created_at: string
+          flavor_profile: string | null
           id: string
           item_id: string
           item_name: string
           menu_id: string | null
+          menu_name: string | null
+          menu_slug: string | null
           merchant_id: string
+          original_vibe: string | null
+          roast: string | null
+          tastes_like: string | null
           trace_id: string
+          venue_name: string | null
+          venue_slug: string | null
+          vibe_name: string | null
+          why_this_match: string | null
         }
         Insert: {
           account_id?: string | null
           created_at?: string
+          flavor_profile?: string | null
           id?: string
           item_id: string
           item_name: string
           menu_id?: string | null
+          menu_name?: string | null
+          menu_slug?: string | null
           merchant_id: string
+          original_vibe?: string | null
+          roast?: string | null
+          tastes_like?: string | null
           trace_id: string
+          venue_name?: string | null
+          venue_slug?: string | null
+          vibe_name?: string | null
+          why_this_match?: string | null
         }
         Update: {
           account_id?: string | null
           created_at?: string
+          flavor_profile?: string | null
           id?: string
           item_id?: string
           item_name?: string
           menu_id?: string | null
+          menu_name?: string | null
+          menu_slug?: string | null
           merchant_id?: string
+          original_vibe?: string | null
+          roast?: string | null
+          tastes_like?: string | null
           trace_id?: string
+          venue_name?: string | null
+          venue_slug?: string | null
+          vibe_name?: string | null
+          why_this_match?: string | null
         }
         Relationships: [
           {
@@ -510,6 +540,42 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_drinks: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          match_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          id?: string
+          match_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          match_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_drinks_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "venue_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_drinks_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "match_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venue_accounts: {
         Row: {
           auth_user_id: string | null
@@ -727,3 +793,4 @@ export const Constants = {
     },
   },
 } as const
+
