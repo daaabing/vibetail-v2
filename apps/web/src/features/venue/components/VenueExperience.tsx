@@ -17,7 +17,7 @@ export function VenueExperience({ client, initialPreferences, initialResult, men
   const noActiveItems = !noVisibleItems && menu.items.every((item) => item.availabilityStatus !== "active");
   if (noVisibleItems || noActiveItems) return <UnavailableMenu menu={menu} />;
 
-  return <div className="vt-page"><main className="vt-match-main">
+  return <div className="vt-page vt-page-dark"><SiteHeader /><main className="vt-match-main">
     <MatchFlow
       context={{
         kicker: `${menu.venue.name} · ${menu.name}`,

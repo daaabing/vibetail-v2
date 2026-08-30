@@ -66,7 +66,7 @@ export function LandingPage() {
   useSeo("Vibetail — Meet the drink you didn't know how to order", "Tell Vibetail what you're in the mood for, then choose, order and pay from the venue's actual menu.");
   useEffect(() => { client.listActiveVenues().then(setVenues).catch(() => setFailed(true)); }, []);
 
-  return <div className="house-page house-landing"><SiteHeader overlay /><main>
+  return <div className="house-page house-landing vt-page-dark"><SiteHeader /><main>
     <section className="landing-hero">
       <div className="landing-hero-media" aria-hidden><img src="/hero.jpg" alt="" /><div className="film-grain" />
         <AnimatePresence>{heroAct === "drawing" && <motion.img key="drummer" className="landing-drummer" src="/drummer.png" alt="" exit={{ opacity: 0, y: -24, scale: 0.97 }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} />}</AnimatePresence>
