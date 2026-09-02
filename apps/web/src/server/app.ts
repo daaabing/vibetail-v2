@@ -40,7 +40,7 @@ import {
 } from "@vibetail/venue-core";
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
 import { randomUUID } from "node:crypto";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 
 export interface WebAppOptions {
   venueService: DefaultVenueService;
@@ -481,7 +481,10 @@ export function createWebApp(options: WebAppOptions): Express {
     "/v1/me/drink-logs/:id",
     asyncRoute(async (request, response) => {
       const accountId = await requireAccountId(request);
-      await options.drinkLogService.deleteEntry(accountId, request.params.id ?? "");
+      // A non-uuid id can't exist, and delete is idempotent — succeed without
+      // asking Postgres to choke on the cast.
+      const entryId = z.string().uuid().safeParse(request.params.id ?? "");
+      if (entryId.success) await options.drinkLogService.deleteEntry(accountId, entryId.data);
       response.status(204).end();
     }),
   );

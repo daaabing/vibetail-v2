@@ -18,6 +18,8 @@ import { VenueManagementServiceError } from "./venue-management-service.js";
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 365 * 10;
 const BUCKET = "drink-logs";
+/** Per-account cap so anonymous-mintable accounts can't grow storage unbounded. */
+const MAX_ENTRIES_PER_ACCOUNT = 2000;
 
 export interface DrinkLogService {
   createEntry(accountId: string, input: CreateDrinkLogInput): Promise<DrinkLogEntry>;
@@ -108,6 +110,15 @@ export class SupabaseDrinkLogRepository {
     if (result.error) throw serviceUnavailable(result.error.message);
   }
 
+  async countEntries(accountId: string): Promise<number> {
+    const result = await this.client
+      .from("drink_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("account_id", accountId);
+    if (result.error) throw serviceUnavailable(result.error.message);
+    return result.count ?? 0;
+  }
+
   async uploadPhoto(input: {
     accountId: string;
     entryId: string;
@@ -142,6 +153,13 @@ export class DefaultDrinkLogService implements DrinkLogService {
   async createEntry(accountId: string, rawInput: CreateDrinkLogInput): Promise<DrinkLogEntry> {
     // Routes already parsed the body; re-parse for defense in depth.
     const input = createDrinkLogInputSchema.parse(rawInput);
+
+    if (await this.repository.countEntries(accountId) >= MAX_ENTRIES_PER_ACCOUNT) {
+      throw new VenueManagementServiceError(
+        { code: "INVALID_REQUEST", message: "This journal is full. Delete some entries to make room.", retryable: false },
+        400,
+      );
+    }
 
     let photoPath: string | null = null;
     if (input.photoBase64 && input.photoContentType) {
@@ -239,9 +257,16 @@ function invalidRequest(message: string): VenueManagementServiceError {
   return new VenueManagementServiceError({ code: "INVALID_REQUEST", message, retryable: false }, 400);
 }
 
-function serviceUnavailable(message: string): VenueManagementServiceError {
+function serviceUnavailable(internalDetail: string): VenueManagementServiceError {
+  // Raw Supabase/Postgres text stays in the server log; clients get a generic
+  // line (same policy as VenueRepositoryUnavailableError in mapError).
+  console.error(JSON.stringify({
+    event: "drink_log_storage_failed",
+    detail: internalDetail,
+    timestamp: new Date().toISOString(),
+  }));
   return new VenueManagementServiceError(
-    { code: "INTERNAL_ERROR", message: `Drink log storage failed: ${message}`, retryable: true },
+    { code: "INTERNAL_ERROR", message: "Drink log storage is temporarily unavailable.", retryable: true },
     503,
   );
 }

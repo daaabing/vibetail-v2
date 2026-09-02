@@ -484,8 +484,10 @@ describe("venue HTTP slice (local supabase)", () => {
     expect(listed.body.entries).toHaveLength(2);
 
     await request(instance).delete(`/v1/me/drink-logs/${photoId}`).set(auth).expect(204);
-    // Deleting again stays idempotent.
+    // Deleting again stays idempotent, and a non-uuid id can't exist so it
+    // also succeeds — without leaking a raw Postgres cast error.
     await request(instance).delete(`/v1/me/drink-logs/${photoId}`).set(auth).expect(204);
+    await request(instance).delete("/v1/me/drink-logs/not-a-uuid").set(auth).expect(204);
     const after = await request(instance).get("/v1/me/drink-logs").set(auth).expect(200);
     expect(after.body.entries).toHaveLength(1);
   });
