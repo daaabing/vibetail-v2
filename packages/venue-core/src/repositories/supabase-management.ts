@@ -58,7 +58,7 @@ export class SupabaseManagementRepository implements ManagementRepository {
   async getManagedMerchant(merchantId: string): Promise<StoredVenue | null> {
     const merchantResult = await this.client
       .from("merchants")
-      .select("id, slug, name, short_intro, logo_url, cover_image_url, is_active")
+      .select("id, slug, name, short_intro, logo_url, cover_image_url, is_active, latitude, longitude")
       .eq("id", merchantId)
       .maybeSingle();
     if (merchantResult.error) throw new Error(merchantResult.error.message);
@@ -108,7 +108,10 @@ export class SupabaseManagementRepository implements ManagementRepository {
       shortIntro: merchantResult.data.short_intro ? String(merchantResult.data.short_intro) : null,
       logoUrl: merchantResult.data.logo_url ? String(merchantResult.data.logo_url) : null,
       coverImageUrl: merchantResult.data.cover_image_url ? String(merchantResult.data.cover_image_url) : null,
-      isActive: Boolean(merchantResult.data.is_active), menus,
+      isActive: Boolean(merchantResult.data.is_active),
+      latitude: typeof merchantResult.data.latitude === "number" ? merchantResult.data.latitude : null,
+      longitude: typeof merchantResult.data.longitude === "number" ? merchantResult.data.longitude : null,
+      menus,
     };
   }
 

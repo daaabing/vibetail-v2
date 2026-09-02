@@ -7,6 +7,8 @@
       "shortIntro": "Culinary cocktails in New York's Lower East Side.",
       "logoUrl": null,
       "coverImageUrl": null,
+      "latitude": 40.7191,
+      "longitude": -73.9871,
       "isActive": true,
       "menus": [
         {
@@ -157,6 +159,8 @@
       "shortIntro": "A fixture bar for bright, botanical, smoky and zero-proof matches.",
       "logoUrl": null,
       "coverImageUrl": null,
+      "latitude": 40.7282,
+      "longitude": -73.9942,
       "isActive": true,
       "menus": [
         {
@@ -313,6 +317,8 @@
       "shortIntro": "Fixture venue managed through the account-based venue backend.",
       "logoUrl": null,
       "coverImageUrl": null,
+      "latitude": 40.742,
+      "longitude": -74.0048,
       "isActive": true,
       "menus": [
         {
