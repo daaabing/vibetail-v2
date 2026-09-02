@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuthUser } from "../auth/useAuthUser.js";
+import { VenueClientError } from "../../clients/http-venue-client.js";
 import { addJournalEntry } from "./drink-log-store.js";
 import { compressPhoto } from "./photo.js";
 import { CameraIcon, StarIcon } from "./icons.js";
@@ -46,10 +47,16 @@ export function RecordDrinkSheet({ venueNames, onSaved }: { venueNames: string[]
         source: "camera",
       });
       onSaved();
-    } catch {
-      setError(auth.status === "signed_in"
-        ? "Couldn’t reach your account just now. Check the connection and try again."
-        : "Couldn’t save on this device. Free up a little storage and try again.");
+    } catch (saveError) {
+      // A 4xx is the server explaining what's wrong (bad photo format, full
+      // journal) — show that, not a misleading connectivity line.
+      if (saveError instanceof VenueClientError && saveError.status < 500) {
+        setError(saveError.detail.message);
+      } else {
+        setError(auth.status === "signed_in"
+          ? "Couldn’t reach your account just now. Check the connection and try again."
+          : "Couldn’t save on this device. Free up a little storage and try again.");
+      }
       setBusy(false);
     }
   }

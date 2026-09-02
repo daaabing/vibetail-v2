@@ -18,7 +18,8 @@ export function ProfileSheet({ logVersion }: { logVersion: number }) {
 
   useEffect(() => {
     let cancelled = false;
-    listJournalEntries().then((loaded) => { if (!cancelled) setEntries(loaded); }).catch(() => setEntries([]));
+    // On failure entries stays undefined: the stats show "—", not a false 0.
+    listJournalEntries().then((loaded) => { if (!cancelled) setEntries(loaded); }).catch(() => undefined);
     return () => { cancelled = true; };
   }, [logVersion]);
 
