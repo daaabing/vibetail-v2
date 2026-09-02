@@ -81,7 +81,7 @@ export function CalendarTab({ logVersion, onRecord }: { logVersion: number; onRe
     </header>
 
     {migration.status === "offer" && <div className="ma-sync-banner">
-      <p>{migration.count} {migration.count === 1 ? "drink" : "drinks"} on this phone aren’t in your account yet.</p>
+      <p>{migration.count} {migration.count === 1 ? "drink" : "drinks"} on this phone {migration.count === 1 ? "isn’t" : "aren’t"} in your account yet.</p>
       <button className="btn btn-solid" type="button" onClick={() => void migrate()}>Upload to account</button>
     </div>}
     {migration.status === "uploading" && <div className="ma-sync-banner"><p>Uploading your local drinks…</p></div>}
