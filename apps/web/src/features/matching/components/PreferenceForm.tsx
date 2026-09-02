@@ -179,12 +179,19 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
         <div className="paper-pocket relative flex min-w-0 flex-col" style={{ background: "var(--paper)" }}>
           <div className="sticky top-0 z-30" style={{ background: "var(--paper)", borderBottom: "1px solid var(--line)" }}>
             <div className="flex items-center justify-between gap-4 px-[clamp(20px,4vw,64px)] py-3.5">
-              <a href="/" className="mono flex items-center gap-2" style={{ color: "inherit", textDecoration: "none" }}>
-                <span aria-hidden>←</span>
-                {step === 0 ? "Exit" : ""}
-              </a>
-              {step > 0 && (
-                <button type="button" onClick={() => setStep(step - 1)} className="mono flex items-center gap-2">
+              {step === 0 ? (
+                <a href="/" className="mono flex items-center gap-2" style={{ color: "inherit", textDecoration: "none" }}>
+                  <span aria-hidden>←</span>
+                  Exit
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setStep(step - 1)}
+                  className="mono flex items-center gap-2"
+                  style={{ color: "inherit", background: "none", border: 0, padding: 0, cursor: "pointer", font: "inherit" }}
+                >
+                  <span aria-hidden>←</span>
                   Back
                 </button>
               )}
