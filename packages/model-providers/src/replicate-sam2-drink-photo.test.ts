@@ -1,6 +1,10 @@
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
-import { defaultReplicateSam2Model, ReplicateSam2DrinkPhotoProvider } from "./replicate-sam2-drink-photo.js";
+import {
+  buildReplicateSam2TextPrompt,
+  defaultReplicateSam2Model,
+  ReplicateSam2DrinkPhotoProvider,
+} from "./replicate-sam2-drink-photo.js";
 import type { DrinkPhotoRequest } from "./drink-photo.js";
 
 async function requestFixture(): Promise<DrinkPhotoRequest> {
@@ -23,6 +27,33 @@ async function maskPng(): Promise<Buffer> {
 }
 
 describe("replicate sam2 drink photo", () => {
+  it("asks GroundingDINO for the complete assembled drink", () => {
+    const prompt = buildReplicateSam2TextPrompt();
+    const targets = prompt.split(",");
+
+    expect(targets.length).toBeGreaterThan(40);
+    expect(new Set(targets).size).toBe(targets.length);
+    expect(prompt.length).toBeLessThan(700);
+    expect(targets).toContain("cocktail glass");
+    expect(targets).toContain("coupe glass");
+    expect(targets).toContain("tiki mug");
+    expect(targets).toContain("mug");
+    expect(targets).toContain("ice");
+    expect(targets).toContain("cocktail foam");
+    expect(targets).toContain("cocktail garnish");
+    expect(targets).toContain("fruit garnish");
+    expect(targets).toContain("herb garnish");
+    expect(targets).toContain("decorated rim");
+    expect(targets).toContain("cherry");
+    expect(targets).toContain("citrus peel");
+    expect(targets).toContain("pineapple");
+    expect(targets).toContain("mint leaves");
+    expect(targets).toContain("edible flower");
+    expect(targets).toContain("cocktail pick");
+    expect(targets).toContain("straw");
+    expect(targets).toContain("cocktail umbrella");
+  });
+
   it("uploads the photo, runs lang-segment-anything, and composites the mask cutout", async () => {
     const calls: { url: string; init: RequestInit }[] = [];
     const mask = await maskPng();
@@ -55,16 +86,16 @@ describe("replicate sam2 drink photo", () => {
     expect(meta.width).toBe(10);
     expect(meta.height).toBe(10);
 
-    // Community model → generic predictions endpoint with the pinned version hash.
-    const predict = calls[1]!;
-    expect(predict.url).toBe("https://api.replicate.com/v1/predictions");
-    const body = JSON.parse(String(predict.init.body)) as {
+    // Community model → one compact caption through the generic endpoint.
+    const predictCalls = calls.filter((call) => call.url.endsWith("/predictions"));
+    expect(predictCalls).toHaveLength(1);
+    const body = JSON.parse(String(predictCalls[0]!.init.body)) as {
       version?: string;
       input?: { image?: string; text_prompt?: string };
     };
     expect(body.version).toBe(defaultReplicateSam2Model.split(":")[1]);
     expect(body.input?.image).toBe("https://api.replicate.com/v1/files/f1");
-    expect(body.input?.text_prompt).toBe("cocktail glass");
+    expect(body.input?.text_prompt).toBe(buildReplicateSam2TextPrompt());
   });
 
   it("fails when the model finds no usable subject", async () => {

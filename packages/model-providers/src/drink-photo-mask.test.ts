@@ -57,7 +57,7 @@ describe("applyMaskCutout", () => {
     expect(alpha[0]).toBe(255);
   });
 
-  it("keeps only the largest component", async () => {
+  it("keeps the vessel while dropping a loose table prop", async () => {
     // Main 12x12 subject plus a stray 2x2 blob far away.
     const image = await solidImage(30, 30);
     const mask = await maskImage(
@@ -71,6 +71,53 @@ describe("applyMaskCutout", () => {
     // Crop bounds cover only the 12x12 subject (3% pad ~ 0), not the stray blob.
     expect(width).toBeLessThanOrEqual(13);
     expect(height).toBeLessThanOrEqual(13);
+  });
+
+  it("preserves detached garnish, picks, and straws associated with the vessel", async () => {
+    const image = await solidImage(40, 40);
+    const mask = await maskImage(
+      block(40, 40, (x, y) => {
+        const vessel = x >= 10 && x < 30 && y >= 16 && y < 36;
+        const straw = x >= 16 && x < 18 && y >= 3 && y < 14;
+        const garnish = x >= 20 && x < 25 && y >= 8 && y < 14;
+        const looseFruit = x >= 33 && x < 38 && y >= 31 && y < 36;
+        return vessel || straw || garnish || looseFruit;
+      }),
+      40,
+      40,
+    );
+
+    const cutout = await applyMaskCutout(image, mask);
+    const { width, height, alpha } = await alphaGrid(cutout);
+
+    // The upper accessories extend the crop well above the 20px-tall vessel.
+    expect(height).toBeGreaterThan(30);
+    // The loose fruit at the lower right must not widen the crop.
+    expect(width).toBeLessThan(30);
+    // At least one pixel near the crop top belongs to the preserved straw.
+    expect(alpha.subarray(0, width * 3).some((value) => value === 255)).toBe(true);
+  });
+
+  it("unions low-valued grayscale garnish instances with the vessel", async () => {
+    const image = await solidImage(40, 40);
+    const mask = await maskImage(
+      Array.from({ length: 40 }, (_, y) =>
+        Array.from({ length: 40 }, (_, x) => {
+          if (x >= 10 && x < 30 && y >= 16 && y < 36) return 253;
+          if (x >= 16 && x < 18 && y >= 3 && y < 14) return 133;
+          if (x >= 20 && x < 25 && y >= 8 && y < 14) return 107;
+          return 0;
+        }),
+      ),
+      40,
+      40,
+    );
+
+    const cutout = await applyMaskCutout(image, mask);
+    const { width, height, alpha } = await alphaGrid(cutout);
+
+    expect(height).toBeGreaterThan(30);
+    expect(alpha.subarray(0, width * 3).some((value) => value === 255)).toBe(true);
   });
 
   it("rejects masks that cover almost nothing", async () => {
