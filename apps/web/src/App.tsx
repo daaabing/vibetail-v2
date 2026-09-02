@@ -1,5 +1,6 @@
 import { AuthCallbackPage } from "./features/auth/AuthCallbackPage.js";
 import { SignInPage } from "./features/auth/SignInPage.js";
+import { MobileAppPage } from "./features/mobile/MobileAppPage.js";
 import { CurrentMenuRoute } from "./routes/CurrentMenuRoute.js";
 import { VenueRoute } from "./routes/VenueRoute.js";
 import { GlobalMatchPage } from "./features/platform/pages/GlobalMatchPage.js";
@@ -29,6 +30,7 @@ export type VenueAdminSection = keyof typeof VENUE_ADMIN_PAGES;
 export function App() {
   const route = resolveAppRoute(window.location.pathname);
   if (route.kind === "landing") return <LandingPage />;
+  if (route.kind === "mobile_app") return <MobileAppPage />;
   if (route.kind === "match") return <GlobalMatchPage />;
   if (route.kind === "auth_callback") return <AuthCallbackPage />;
   if (route.kind === "signin") return <SignInPage />;
@@ -51,6 +53,7 @@ export function App() {
 
 export type AppRoute =
   | { kind: "landing" }
+  | { kind: "mobile_app" }
   | { kind: "match" }
   | { kind: "auth_callback" }
   | { kind: "signin" }
@@ -67,6 +70,8 @@ export type AppRoute =
 export function resolveAppRoute(pathname: string): AppRoute {
   const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   if (normalized === "/") return { kind: "landing" };
+  // The installable mobile shell (PWA / iOS wrapper) lives on one path.
+  if (normalized === "/app") return { kind: "mobile_app" };
   if (normalized === "/match") return { kind: "match" };
   // Fixed OAuth redirect target; must match the Supabase + Google redirect allowlists.
   if (normalized === "/auth/callback") return { kind: "auth_callback" };
