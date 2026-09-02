@@ -3,9 +3,10 @@ import sharp from "sharp";
 /**
  * Turns a segmentation mask into a transparent-background cutout, mirroring
  * the local SAM 2 sidecar's post-processing: threshold, fill internal holes
- * (ice and liquid must stay opaque), keep the largest connected component
- * (drop stray fruit blobs), sanity-check the silhouette area, then apply the
- * mask as the alpha channel and crop tight around the subject.
+ * (ice and liquid must stay opaque), keep the main vessel plus associated
+ * garnish components near its rim (while dropping loose table props),
+ * sanity-check the silhouette area, then apply the mask as the alpha channel
+ * and crop tight around the assembled drink.
  */
 export async function applyMaskCutout(imageBytes: Uint8Array, maskBytes: Uint8Array): Promise<Uint8Array> {
   // Render EXIF rotation into the pixels FIRST: metadata() on a pending
@@ -26,13 +27,16 @@ export async function applyMaskCutout(imageBytes: Uint8Array, maskBytes: Uint8Ar
     .raw()
     .toBuffer();
   const mask = new Uint8Array(maskRaw.length);
-  for (let i = 0; i < maskRaw.length; i += 1) mask[i] = maskRaw[i]! >= 128 ? 1 : 0;
+  // LangSAM encodes separate detected instances at different non-zero gray
+  // values. A conventional >=128 threshold drops valid low-valued garnishes
+  // (a live cherry mask measured 107), so union every non-black instance here.
+  for (let i = 0; i < maskRaw.length; i += 1) mask[i] = maskRaw[i]! > 0 ? 1 : 0;
 
-  // Fill holes before dropping components: a straw or finger can bisect the
+  // Fill holes before filtering components: a straw or finger can bisect the
   // silhouette, and filling first reconnects it instead of losing one half.
   const scratch = new Int32Array(mask.length);
   fillHoles(mask, width, height, scratch);
-  keepLargestComponent(mask, width, scratch);
+  keepDrinkAssemblyComponents(mask, width, height, scratch);
 
   let area = 0;
   for (let i = 0; i < mask.length; i += 1) area += mask[i]!;
@@ -93,10 +97,24 @@ function fillHoles(mask: Uint8Array, width: number, height: number, queue: Int32
   }
 }
 
-function keepLargestComponent(mask: Uint8Array, width: number, queue: Int32Array): void {
+interface MaskComponent {
+  label: number;
+  size: number;
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
+/**
+ * Keeps the vessel (largest mask component) and detached components that look
+ * spatially attached to its upper half. LangSAM can return a cherry, pick,
+ * mint sprig, or straw as separate components even when they are visibly part
+ * of the drink. Components down by the base or away on the table stay out.
+ */
+function keepDrinkAssemblyComponents(mask: Uint8Array, width: number, height: number, queue: Int32Array): void {
   const labels = new Int32Array(mask.length);
-  let bestLabel = 0;
-  let bestSize = 0;
+  const components: MaskComponent[] = [];
   let label = 0;
   for (let start = 0; start < mask.length; start += 1) {
     if (mask[start] === 0 || labels[start] !== 0) continue;
@@ -106,11 +124,20 @@ function keepLargestComponent(mask: Uint8Array, width: number, queue: Int32Array
     let head = 0;
     let tail = 1;
     let size = 0;
+    let minX = width;
+    let minY = height;
+    let maxX = -1;
+    let maxY = -1;
     while (head < tail) {
       const index = queue[head]!;
       head += 1;
       size += 1;
       const x = index % width;
+      const y = Math.floor(index / width);
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
       const visit = (next: number) => {
         if (mask[next] === 1 && labels[next] === 0) {
           labels[next] = label;
@@ -122,15 +149,41 @@ function keepLargestComponent(mask: Uint8Array, width: number, queue: Int32Array
       if (x < width - 1) visit(index + 1);
       if (index >= width) visit(index - width);
       if (index < mask.length - width) visit(index + width);
+
+      // Use 8-connectivity so thin diagonal stems and picks do not fragment.
+      if (x > 0 && index >= width) visit(index - width - 1);
+      if (x < width - 1 && index >= width) visit(index - width + 1);
+      if (x > 0 && index < mask.length - width) visit(index + width - 1);
+      if (x < width - 1 && index < mask.length - width) visit(index + width + 1);
     }
-    if (size > bestSize) {
-      bestSize = size;
-      bestLabel = label;
-    }
+    components.push({ label, size, minX, minY, maxX, maxY });
   }
-  if (bestLabel === 0) return;
+
+  const vessel = components.reduce<MaskComponent | undefined>(
+    (largest, component) => (!largest || component.size > largest.size ? component : largest),
+    undefined,
+  );
+  if (!vessel) return;
+
+  const vesselWidth = vessel.maxX - vessel.minX + 1;
+  const vesselHeight = vessel.maxY - vessel.minY + 1;
+  const sideReach = Math.max(2, Math.round(vesselWidth * 0.25));
+  const topReach = Math.max(2, Math.round(vesselHeight * 0.8));
+  const lowerAnchor = vessel.minY + Math.round(vesselHeight * 0.55);
+  const minAccessoryArea = Math.max(2, Math.floor(vessel.size * 0.001));
+
+  const keptLabels = new Set<number>([vessel.label]);
+  for (const component of components) {
+    if (component.label === vessel.label || component.size < minAccessoryArea) continue;
+    const horizontallyAssociated =
+      component.maxX >= vessel.minX - sideReach && component.minX <= vessel.maxX + sideReach;
+    const verticallyAssociated =
+      component.maxY >= vessel.minY - topReach && component.minY <= lowerAnchor;
+    if (horizontallyAssociated && verticallyAssociated) keptLabels.add(component.label);
+  }
+
   for (let i = 0; i < mask.length; i += 1) {
-    if (mask[i] === 1 && labels[i] !== bestLabel) mask[i] = 0;
+    if (mask[i] === 1 && !keptLabels.has(labels[i]!)) mask[i] = 0;
   }
 }
 
