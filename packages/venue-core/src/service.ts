@@ -263,6 +263,8 @@ function toVenueSummary(venue: StoredVenue) {
     shortIntro: venue.shortIntro,
     logoUrl: venue.logoUrl,
     coverImageUrl: venue.coverImageUrl,
+    latitude: venue.latitude,
+    longitude: venue.longitude,
   });
 }
 
