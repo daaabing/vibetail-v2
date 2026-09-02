@@ -1,4 +1,5 @@
 import {
+  createDrinkLogInputSchema,
   createMenuInputSchema,
   createVenueInputSchema,
   createVenueMenuInputSchema,
@@ -33,17 +34,19 @@ import {
   VenueRepositoryUnavailableError,
   VenueServiceError,
   type DefaultVenueService,
+  type DrinkLogService,
   type ManagementService,
   type VenueManagementService,
 } from "@vibetail/venue-core";
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
 import { randomUUID } from "node:crypto";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 
 export interface WebAppOptions {
   venueService: DefaultVenueService;
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
+  drinkLogService: DrinkLogService;
   authConfig: AuthConfig;
   menuPhotoScanProvider?: MenuPhotoScanProvider;
   checkReadiness?: () => Promise<Array<{ name: string; ready: boolean; detail: string }>>;
@@ -437,6 +440,52 @@ export function createWebApp(options: WebAppOptions): Express {
         feedbackInputSchema.parse(request.body),
         await venueManagement.resolveAccountId(readBearerToken(request)),
       ));
+    }),
+  );
+
+  // ── The signed-in guest's drink journal ────────────────────────────────
+  // Auth piggybacks on resolveAccountId: any signed-in identity gets a
+  // venue_accounts row on first call; no merchant is required.
+  const requireAccountId = async (request: Request): Promise<string> => {
+    const accountId = await venueManagement.resolveAccountId(readBearerToken(request));
+    if (!accountId) {
+      throw new VenueManagementServiceError(
+        { code: "UNAUTHORIZED", message: "Sign in to sync your drink log.", retryable: false },
+        401,
+      );
+    }
+    return accountId;
+  };
+
+  app.post(
+    "/v1/me/drink-logs",
+    asyncRoute(async (request, response) => {
+      const accountId = await requireAccountId(request);
+      const entry = await options.drinkLogService.createEntry(
+        accountId,
+        createDrinkLogInputSchema.parse(request.body),
+      );
+      response.status(201).json(entry);
+    }),
+  );
+
+  app.get(
+    "/v1/me/drink-logs",
+    asyncRoute(async (request, response) => {
+      const accountId = await requireAccountId(request);
+      response.json({ entries: await options.drinkLogService.listEntries(accountId) });
+    }),
+  );
+
+  app.delete(
+    "/v1/me/drink-logs/:id",
+    asyncRoute(async (request, response) => {
+      const accountId = await requireAccountId(request);
+      // A non-uuid id can't exist, and delete is idempotent — succeed without
+      // asking Postgres to choke on the cast.
+      const entryId = z.string().uuid().safeParse(request.params.id ?? "");
+      if (entryId.success) await options.drinkLogService.deleteEntry(accountId, entryId.data);
+      response.status(204).end();
     }),
   );
 

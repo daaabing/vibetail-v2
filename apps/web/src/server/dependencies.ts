@@ -11,16 +11,20 @@ import {
   type ModelProvider,
 } from "@vibetail/model-providers";
 import {
+  DefaultDrinkLogService,
   DefaultVenueManagementService,
   DefaultVenueService,
   DefaultManagementService,
+  SupabaseDrinkLogRepository,
   SupabaseManagementRepository,
   SupabaseVenueManagementRepository,
   SupabaseVenueRepository,
   SupabaseVenueMediaStorage,
   SupabaseIdentityVerifier,
+  UnavailableDrinkLogService,
   UnavailableManagementService,
   UnavailableVenueManagementService,
+  type DrinkLogService,
   type IdentityVerifier,
   type ManagementService,
   type VenueManagementService,
@@ -39,6 +43,7 @@ export interface WebDependencies {
   venueService: DefaultVenueService;
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
+  drinkLogService: DrinkLogService;
   menuPhotoScanProvider: ReturnType<typeof createMenuPhotoScanProvider>;
   authConfig: AuthConfig;
   checkReadiness(): Promise<DependencyReadinessCheck[]>;
@@ -116,10 +121,17 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
         },
       )
     : new UnavailableVenueManagementService();
+  const drinkLogService = env.SUPABASE_SERVICE_ROLE_KEY
+    ? new DefaultDrinkLogService(new SupabaseDrinkLogRepository({
+        url: env.SUPABASE_URL,
+        serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
+      }))
+    : new UnavailableDrinkLogService();
   return {
     venueService: new DefaultVenueService(repository, provider),
     managementService,
     venueManagementService,
+    drinkLogService,
     menuPhotoScanProvider: createMenuPhotoScanProvider(env),
     authConfig,
     checkReadiness: async () => {

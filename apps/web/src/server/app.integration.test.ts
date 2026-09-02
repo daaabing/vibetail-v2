@@ -6,9 +6,11 @@ import {
   type ModelProvider,
 } from "@vibetail/model-providers";
 import {
+  DefaultDrinkLogService,
   DefaultManagementService,
   DefaultVenueManagementService,
   DefaultVenueService,
+  SupabaseDrinkLogRepository,
   SupabaseManagementRepository,
   SupabaseVenueManagementRepository,
   SupabaseVenueMediaStorage,
@@ -72,6 +74,9 @@ function app(venueProvider?: ModelProvider) {
         mediaStorage: new SupabaseVenueMediaStorage({ url, serviceRoleKey }),
         renderQrSvg: async (text) => `<svg data-url="${text}"></svg>`,
       },
+    ),
+    drinkLogService: new DefaultDrinkLogService(
+      new SupabaseDrinkLogRepository({ url, serviceRoleKey }),
     ),
     menuPhotoScanProvider: new DeterministicMenuPhotoScanProvider(),
     authConfig: NO_AUTH,
@@ -146,6 +151,9 @@ describe("venue HTTP slice (local supabase)", () => {
         new SupabaseManagementRepository({ url, serviceRoleKey }),
       ),
       venueManagementService: new UnavailableVenueManagementService(),
+      drinkLogService: new DefaultDrinkLogService(
+        new SupabaseDrinkLogRepository({ url, serviceRoleKey }),
+      ),
       authConfig: NO_AUTH,
       checkReadiness: async () => [{ name: "venue_repository", ready: false, detail: "supabase query failed" }],
       testFrontend: true,
@@ -427,5 +435,84 @@ describe("venue HTTP slice (local supabase)", () => {
 
     const publicMenu = await request(instance).get(`/v1/venues/${venueSlug}/current-menu`).expect(200);
     expect(publicMenu.body.items.map((item: { id: string }) => item.id)).toEqual([keeper.body.id]);
+  });
+
+  // 1x1 transparent PNG — enough to exercise the sniff + storage upload path.
+  const TINY_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+
+  function logPayload(id: string, overrides: Record<string, unknown> = {}) {
+    return {
+      id,
+      loggedAt: new Date().toISOString(),
+      drinkName: `Webint Nightcap ${RUN_ID}`,
+      venueName: "Webint Test Bar",
+      rating: 4,
+      note: "Logged by the integration suite.",
+      source: "camera",
+      ...overrides,
+    };
+  }
+
+  it("rejects drink-log access without a bearer token", async () => {
+    const instance = app();
+    await request(instance).get("/v1/me/drink-logs").expect(401);
+    await request(instance).post("/v1/me/drink-logs").send(logPayload(randomUUID())).expect(401);
+    await request(instance).delete(`/v1/me/drink-logs/${randomUUID()}`).expect(401);
+  });
+
+  it("syncs a drink journal: create, list, idempotent re-post, delete", async () => {
+    const instance = app();
+    const login = await request(instance).post("/v1/venue/session")
+      .send({ name: `Webint Drinker ${RUN_ID}` }).expect(201);
+    const auth = { Authorization: `Bearer ${login.body.token as string}` };
+
+    const photoId = randomUUID();
+    const created = await request(instance).post("/v1/me/drink-logs").set(auth)
+      .send(logPayload(photoId, { photoBase64: TINY_PNG_BASE64, photoContentType: "image/png" }))
+      .expect(201);
+    expect(created.body.photoUrl).toContain("drink-logs");
+    await request(instance).post("/v1/me/drink-logs").set(auth)
+      .send(logPayload(randomUUID(), { drinkName: "Webint No Photo", venueName: null, rating: null, note: null }))
+      .expect(201);
+
+    // Re-posting the same id (the local→cloud migration path) must not duplicate.
+    await request(instance).post("/v1/me/drink-logs").set(auth)
+      .send(logPayload(photoId, { photoBase64: TINY_PNG_BASE64, photoContentType: "image/png" }))
+      .expect(201);
+
+    const listed = await request(instance).get("/v1/me/drink-logs").set(auth).expect(200);
+    expect(listed.body.entries).toHaveLength(2);
+
+    await request(instance).delete(`/v1/me/drink-logs/${photoId}`).set(auth).expect(204);
+    // Deleting again stays idempotent, and a non-uuid id can't exist so it
+    // also succeeds — without leaking a raw Postgres cast error.
+    await request(instance).delete(`/v1/me/drink-logs/${photoId}`).set(auth).expect(204);
+    await request(instance).delete("/v1/me/drink-logs/not-a-uuid").set(auth).expect(204);
+    const after = await request(instance).get("/v1/me/drink-logs").set(auth).expect(200);
+    expect(after.body.entries).toHaveLength(1);
+  });
+
+  it("keeps drink journals private between accounts", async () => {
+    const instance = app();
+    const loginA = await request(instance).post("/v1/venue/session")
+      .send({ name: `Webint Drinker A ${RUN_ID}` }).expect(201);
+    const loginB = await request(instance).post("/v1/venue/session")
+      .send({ name: `Webint Drinker B ${RUN_ID}` }).expect(201);
+    const authA = { Authorization: `Bearer ${loginA.body.token as string}` };
+    const authB = { Authorization: `Bearer ${loginB.body.token as string}` };
+
+    const entryId = randomUUID();
+    await request(instance).post("/v1/me/drink-logs").set(authA)
+      .send(logPayload(entryId, { drinkName: "Webint Private Pour" })).expect(201);
+
+    const listedB = await request(instance).get("/v1/me/drink-logs").set(authB).expect(200);
+    expect(listedB.body.entries).toHaveLength(0);
+    // Claiming someone else's entry id conflicts instead of leaking or duplicating.
+    await request(instance).post("/v1/me/drink-logs").set(authB)
+      .send(logPayload(entryId, { drinkName: "Webint Hijack Attempt" })).expect(409);
+    // And a cross-account delete silently no-ops rather than deleting A's row.
+    await request(instance).delete(`/v1/me/drink-logs/${entryId}`).set(authB).expect(204);
+    const listedA = await request(instance).get("/v1/me/drink-logs").set(authA).expect(200);
+    expect(listedA.body.entries).toHaveLength(1);
   });
 });

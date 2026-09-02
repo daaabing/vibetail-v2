@@ -468,6 +468,53 @@ export type Database = {
           },
         ]
       }
+      drink_logs: {
+        Row: {
+          account_id: string
+          created_at: string
+          drink_name: string
+          id: string
+          logged_at: string
+          note: string | null
+          photo_path: string | null
+          rating: number | null
+          source: string
+          venue_name: string | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          drink_name: string
+          id: string
+          logged_at?: string
+          note?: string | null
+          photo_path?: string | null
+          rating?: number | null
+          source?: string
+          venue_name?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          drink_name?: string
+          id?: string
+          logged_at?: string
+          note?: string | null
+          photo_path?: string | null
+          rating?: number | null
+          source?: string
+          venue_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drink_logs_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "venue_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merchants: {
         Row: {
           address: string | null
