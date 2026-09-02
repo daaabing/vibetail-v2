@@ -1,23 +1,50 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Draw from "../draw/art.js";
-import { dayKey, deleteDrinkLogEntry, entryDayKey, listDrinkLogEntries, type DrinkLogEntry } from "./drink-log.js";
+import { dayKey, entryDayKey, type DrinkLogEntry } from "./drink-log.js";
+import {
+  countLocalEntries,
+  deleteJournalEntry,
+  isCloudJournal,
+  listJournalEntries,
+  migrateLocalEntries,
+} from "./drink-log-store.js";
 import { ChevronIcon, StarIcon } from "./icons.js";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
 const TIME_FORMAT = new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" });
 
-/** Calendar: every logged drink, kept on-device, one month at a time. */
+type MigrationState =
+  | { status: "hidden" }
+  | { status: "offer"; count: number }
+  | { status: "uploading" }
+  | { status: "done"; uploaded: number; failed: number };
+
+/** Calendar: every logged drink — cloud journal when signed in — one month at a time. */
 export function CalendarTab({ logVersion, onRecord }: { logVersion: number; onRecord(): void }) {
   const [entries, setEntries] = useState<DrinkLogEntry[]>();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [selectedDay, setSelectedDay] = useState(() => dayKey(new Date()));
+  const [migration, setMigration] = useState<MigrationState>({ status: "hidden" });
+  const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    listDrinkLogEntries().then((loaded) => { if (!cancelled) setEntries(loaded); }).catch(() => setEntries([]));
+    listJournalEntries().then((loaded) => { if (!cancelled) setEntries(loaded); }).catch(() => setEntries([]));
+    void (async () => {
+      if (!(await isCloudJournal())) return;
+      const count = await countLocalEntries().catch(() => 0);
+      if (!cancelled && count > 0) setMigration({ status: "offer", count });
+    })();
     return () => { cancelled = true; };
-  }, [logVersion]);
+  }, [logVersion, reloadTick]);
+
+  const migrate = useCallback(async () => {
+    setMigration({ status: "uploading" });
+    const result = await migrateLocalEntries();
+    setMigration({ status: "done", ...result });
+    setReloadTick((tick) => tick + 1);
+  }, []);
 
   const byDay = useMemo(() => {
     const map = new Map<string, DrinkLogEntry[]>();
@@ -42,6 +69,15 @@ export function CalendarTab({ logVersion, onRecord }: { logVersion: number; onRe
         <ChevronIcon size={18} />
       </button>
     </header>
+
+    {migration.status === "offer" && <div className="ma-sync-banner">
+      <p>{migration.count} {migration.count === 1 ? "drink" : "drinks"} on this phone aren’t in your account yet.</p>
+      <button className="btn btn-solid" type="button" onClick={() => void migrate()}>Upload to account</button>
+    </div>}
+    {migration.status === "uploading" && <div className="ma-sync-banner"><p>Uploading your local drinks…</p></div>}
+    {migration.status === "done" && <div className="ma-sync-banner" data-done>
+      <p>{migration.uploaded} uploaded{migration.failed > 0 ? ` · ${migration.failed} kept on this phone (try again later)` : " — all synced."}</p>
+    </div>}
 
     <div className="ma-cal-grid" role="grid">
       {WEEKDAYS.map((day, index) => <span aria-hidden className="ma-cal-weekday" key={`${day}-${index}`}>{day}</span>)}
@@ -77,7 +113,7 @@ export function CalendarTab({ logVersion, onRecord }: { logVersion: number; onRe
           entry={entry}
           key={entry.id}
           onDelete={async () => {
-            await deleteDrinkLogEntry(entry.id);
+            await deleteJournalEntry(entry.id);
             setEntries((current) => current?.filter((candidate) => candidate.id !== entry.id));
           }}
         />)}
@@ -87,8 +123,13 @@ export function CalendarTab({ logVersion, onRecord }: { logVersion: number; onRe
 
 function LogCard({ entry, onDelete }: { entry: DrinkLogEntry; onDelete(): Promise<void> }) {
   const [confirming, setConfirming] = useState(false);
-  const photoUrl = useMemo(() => (entry.photo ? URL.createObjectURL(entry.photo) : null), [entry.photo]);
-  useEffect(() => () => { if (photoUrl) URL.revokeObjectURL(photoUrl); }, [photoUrl]);
+  const photoUrl = useMemo(
+    () => (entry.photo instanceof Blob ? URL.createObjectURL(entry.photo) : entry.photo),
+    [entry.photo],
+  );
+  useEffect(() => () => {
+    if (entry.photo instanceof Blob && photoUrl) URL.revokeObjectURL(photoUrl);
+  }, [entry.photo, photoUrl]);
 
   return <article className="ma-log-card">
     {photoUrl
