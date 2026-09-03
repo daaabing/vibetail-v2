@@ -20,6 +20,8 @@ const merchantRowSchema = z.object({
   logo_url: z.string().url().nullable(),
   cover_image_url: z.string().url().nullable(),
   is_active: z.boolean(),
+  latitude: z.number().min(-90).max(90).nullable(),
+  longitude: z.number().min(-180).max(180).nullable(),
 });
 
 const menuRowSchema = z.object({
@@ -93,7 +95,7 @@ export class SupabaseVenueRepository implements VenueRepository {
     // stable and human-predictable.
     const merchantsResult = await this.client
       .from("merchants")
-      .select("id, slug, name, short_intro, logo_url, cover_image_url, is_active")
+      .select("id, slug, name, short_intro, logo_url, cover_image_url, is_active, latitude, longitude")
       .eq("is_active", true)
       .order("slug", { ascending: true });
     if (merchantsResult.error) throw unavailable(merchantsResult.error.message);
@@ -116,7 +118,7 @@ export class SupabaseVenueRepository implements VenueRepository {
   async lookupVenue(merchantSlug: string): Promise<VenueLookup> {
     const merchantResult = await this.client
       .from("merchants")
-      .select("id, slug, name, short_intro, logo_url, cover_image_url, is_active")
+      .select("id, slug, name, short_intro, logo_url, cover_image_url, is_active, latitude, longitude")
       .eq("slug", merchantSlug)
       .maybeSingle();
     if (merchantResult.error) throw unavailable(merchantResult.error.message);
@@ -133,7 +135,7 @@ export class SupabaseVenueRepository implements VenueRepository {
   async lookupMenu(merchantSlug: string, menuSlug: string): Promise<VenueMenuLookup> {
     const merchantResult = await this.client
       .from("merchants")
-      .select("id, slug, name, short_intro, logo_url, cover_image_url, is_active")
+      .select("id, slug, name, short_intro, logo_url, cover_image_url, is_active, latitude, longitude")
       .eq("slug", merchantSlug)
       .maybeSingle();
     if (merchantResult.error) throw unavailable(merchantResult.error.message);
@@ -240,6 +242,8 @@ function mapVenue(row: z.infer<typeof merchantRowSchema>): StoredVenue {
     logoUrl: row.logo_url,
     coverImageUrl: row.cover_image_url,
     isActive: row.is_active,
+    latitude: row.latitude,
+    longitude: row.longitude,
     menus: [],
   };
 }

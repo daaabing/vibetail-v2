@@ -11,6 +11,10 @@ export const venueSummarySchema = z.object({
   shortIntro: z.string().max(1_000).nullable(),
   logoUrl: nullableUrlSchema,
   coverImageUrl: nullableUrlSchema,
+  // Optional (not just nullable) so responses from servers predating the
+  // merchant geo migration still parse during the deploy overlap.
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
 });
 export type VenueSummary = z.infer<typeof venueSummarySchema>;
 

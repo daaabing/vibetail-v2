@@ -45,6 +45,18 @@ describe("DefaultVenueService", () => {
     expect(menusByVenue.get("double-chicken-please")).not.toContain("unpublished");
   });
 
+  it("carries seeded coordinates through the public venue summary", async () => {
+    const directory = await venueService().listActiveVenues();
+    const bySlug = new Map(directory.map((entry) => [entry.venue.slug, entry.venue]));
+    expect(bySlug.get("double-chicken-please")).toMatchObject({ latitude: 40.7191, longitude: -73.9871 });
+    expect(bySlug.get("vibetail-taproom")).toMatchObject({ latitude: 40.742, longitude: -74.0048 });
+    // Venues without coordinates surface null (not undefined, not a parse error).
+    for (const entry of directory) {
+      expect(entry.venue.latitude === null || typeof entry.venue.latitude === "number").toBe(true);
+      expect(entry.venue.longitude === null || typeof entry.venue.longitude === "number").toBe(true);
+    }
+  });
+
   it("globally matches a canonical merchant, menu and active item with a deep link", async () => {
     const provider = fixedProvider("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1", "Bright, botanical and zero proof.");
     const result = await new DefaultVenueService(anonVenueRepository(), provider).matchGlobalItem({

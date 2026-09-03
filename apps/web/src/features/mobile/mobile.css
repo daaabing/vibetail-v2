@@ -123,6 +123,7 @@
   overflow: hidden;
 }
 .ma-venue-meta { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-top: 2px; }
+.ma-venue-distance { font-style: normal; color: var(--ink); margin-right: 8px; }
 .ma-venue-go { color: var(--ink-faint); }
 
 /* ── Empty states ── */

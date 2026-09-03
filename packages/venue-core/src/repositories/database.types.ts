@@ -475,7 +475,9 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          latitude: number | null
           logo_url: string | null
+          longitude: number | null
           name: string
           short_intro: string | null
           slug: string
@@ -488,7 +490,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           name: string
           short_intro?: string | null
           slug: string
@@ -501,7 +505,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           name?: string
           short_intro?: string | null
           slug?: string

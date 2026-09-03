@@ -12,10 +12,10 @@ insert into storage.buckets (id, name, public) values ('merchant-menus', 'mercha
 -- Merchants (address/venue_type merged from venues.profiles)
 -- ---------------------------------------------------------------------------
 
-insert into public.merchants (id, slug, name, short_intro, logo_url, cover_image_url, is_active, address, venue_type) values ('11111111-1111-4111-8111-111111111111', 'double-chicken-please', 'Double Chicken Please', 'Culinary cocktails in New York''s Lower East Side.', null, null, true, null, null);
-insert into public.merchants (id, slug, name, short_intro, logo_url, cover_image_url, is_active, address, venue_type) values ('88888888-8888-4888-8888-888888888888', 'nightjar-demo', 'Nightjar Demo', 'A fixture bar for bright, botanical, smoky and zero-proof matches.', null, null, true, null, null);
-insert into public.merchants (id, slug, name, short_intro, logo_url, cover_image_url, is_active, address, venue_type) values ('44444444-4444-4444-8444-444444444444', 'inactive-venue', 'Inactive Venue', 'This merchant is intentionally inactive.', null, null, false, null, null);
-insert into public.merchants (id, slug, name, short_intro, logo_url, cover_image_url, is_active, address, venue_type) values ('99999999-9999-4999-8999-999999999999', 'vibetail-taproom', 'Vibetail Taproom', 'Fixture venue managed through the account-based venue backend.', null, null, true, '88 Fixture Lane, New York, NY', 'cocktail_bar');
+insert into public.merchants (id, slug, name, short_intro, logo_url, cover_image_url, is_active, address, venue_type, latitude, longitude) values ('11111111-1111-4111-8111-111111111111', 'double-chicken-please', 'Double Chicken Please', 'Culinary cocktails in New York''s Lower East Side.', null, null, true, null, null, 40.7191, -73.9871);
+insert into public.merchants (id, slug, name, short_intro, logo_url, cover_image_url, is_active, address, venue_type, latitude, longitude) values ('88888888-8888-4888-8888-888888888888', 'nightjar-demo', 'Nightjar Demo', 'A fixture bar for bright, botanical, smoky and zero-proof matches.', null, null, true, null, null, 40.7282, -73.9942);
+insert into public.merchants (id, slug, name, short_intro, logo_url, cover_image_url, is_active, address, venue_type, latitude, longitude) values ('44444444-4444-4444-8444-444444444444', 'inactive-venue', 'Inactive Venue', 'This merchant is intentionally inactive.', null, null, false, null, null, null, null);
+insert into public.merchants (id, slug, name, short_intro, logo_url, cover_image_url, is_active, address, venue_type, latitude, longitude) values ('99999999-9999-4999-8999-999999999999', 'vibetail-taproom', 'Vibetail Taproom', 'Fixture venue managed through the account-based venue backend.', null, null, true, '88 Fixture Lane, New York, NY', 'cocktail_bar', 40.742, -74.0048);
 
 -- ---------------------------------------------------------------------------
 -- Legacy management tokens (token_hash = sha256 hex of the raw token)
