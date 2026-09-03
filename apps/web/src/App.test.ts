@@ -14,6 +14,8 @@ describe("venue route", () => {
 describe("platform routes", () => {
   it.each([
     ["/", { kind: "landing" }],
+    ["/app", { kind: "mobile_app" }],
+    ["/app/", { kind: "mobile_app" }],
     ["/match", { kind: "match" }],
     ["/venues", { kind: "venues" }],
     ["/signin", { kind: "signin" }],

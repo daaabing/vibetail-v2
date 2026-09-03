@@ -1,5 +1,6 @@
 import { AuthCallbackPage } from "./features/auth/AuthCallbackPage.js";
 import { SignInPage } from "./features/auth/SignInPage.js";
+import { MobileAppPage } from "./features/mobile/MobileAppPage.js";
 import { CurrentMenuRoute } from "./routes/CurrentMenuRoute.js";
 import { SharedMatchPage } from "./features/matching/pages/SharedMatchPage.js";
 import { VibeBarPage } from "./features/matching/pages/VibeBarPage.js";
@@ -33,6 +34,7 @@ export type VenueAdminSection = keyof typeof VENUE_ADMIN_PAGES;
 export function App() {
   const route = resolveAppRoute(window.location.pathname);
   if (route.kind === "landing") return <LandingPage />;
+  if (route.kind === "mobile_app") return <MobileAppPage />;
   if (route.kind === "match") return <GlobalMatchPage />;
   if (route.kind === "shared_match") return <SharedMatchPage matchId={route.matchId} />;
   if (route.kind === "vibe_bar") return <VibeBarPage />;
@@ -57,6 +59,7 @@ export function App() {
 
 export type AppRoute =
   | { kind: "landing" }
+  | { kind: "mobile_app" }
   | { kind: "match" }
   | { kind: "shared_match"; matchId: string }
   | { kind: "vibe_bar" }
@@ -75,6 +78,8 @@ export type AppRoute =
 export function resolveAppRoute(pathname: string): AppRoute {
   const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   if (normalized === "/") return { kind: "landing" };
+  // The installable mobile shell (PWA / iOS wrapper) lives on one path.
+  if (normalized === "/app") return { kind: "mobile_app" };
   if (normalized === "/match") return { kind: "match" };
   const shared = normalized.match(/^\/r\/([0-9a-f-]{36})$/i);
   if (shared?.[1]) return { kind: "shared_match", matchId: shared[1].toLowerCase() };
