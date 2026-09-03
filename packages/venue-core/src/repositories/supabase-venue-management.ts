@@ -183,6 +183,8 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
         address: input.address,
         venue_type: input.venueType,
         is_active: true,
+        latitude: input.latitude,
+        longitude: input.longitude,
       })
       .select("id")
       .single();

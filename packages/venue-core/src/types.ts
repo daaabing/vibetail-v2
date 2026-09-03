@@ -172,6 +172,8 @@ export interface CreateVenueRecord {
   address: string;
   venueType: VenueType;
   shortIntro: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface UpdateVenueProfileRecord {

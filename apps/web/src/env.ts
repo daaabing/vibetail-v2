@@ -44,6 +44,8 @@ const serverEnvSchema = z
       z.string({ error: supabaseSetupHint("SUPABASE_PUBLISHABLE_KEY") }).min(1),
     ),
     SUPABASE_SERVICE_ROLE_KEY: optionalString(),
+    // Address autocomplete upstream; defaults to the public Photon instance.
+    GEOCODE_BASE_URL: optionalString(z.string().url()),
     MODEL_API_KEY: optionalString(),
     OPENROUTER_API_KEY: optionalString(),
     MODEL_NAME: optionalString(),

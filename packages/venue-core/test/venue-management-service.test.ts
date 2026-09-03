@@ -54,6 +54,8 @@ async function createVenueContext(
     address: "1 Test Street",
     venueType: "cocktail_bar",
     shortIntro: null,
+    latitude: null,
+    longitude: null,
   });
   const venue = session.venue;
   if (!venue) throw new Error("createVenue did not attach a venue to the session");
@@ -125,6 +127,8 @@ describe("venue creation", () => {
       address: "1 Test Street",
       venueType: "cocktail_bar",
       shortIntro: "Taproom test intro.",
+      latitude: 40.7042,
+      longitude: -73.9932,
     });
     // The seeded slug "vibetail-taproom" is taken, so a numeric suffix is
     // appended. The exact number depends on how many colliding venues this
@@ -138,6 +142,8 @@ describe("venue creation", () => {
       address: "2 Test Street",
       venueType: "other",
       shortIntro: null,
+      latitude: null,
+      longitude: null,
     })).rejects.toMatchObject({ detail: { code: "CONFLICT" } });
   });
 
