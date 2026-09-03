@@ -123,6 +123,8 @@ describe("DefaultVenueService", () => {
       slugBase: emptyName,
       address: "1 Test Street",
       venueType: "cocktail_bar",
+      latitude: null,
+      longitude: null,
     });
     const drinkId = await repository.createDrink(merchantId, {
       name: "Disposable Drink",

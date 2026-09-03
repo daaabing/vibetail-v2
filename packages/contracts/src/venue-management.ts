@@ -51,6 +51,10 @@ export const createVenueInputSchema = z.object({
   name: z.string().trim().min(1).max(200),
   address: z.string().trim().min(1).max(500),
   venueType: venueTypeSchema.default("cocktail_bar"),
+  // Filled automatically when the owner picks an autocomplete suggestion;
+  // null when the address was typed free-form.
+  latitude: z.number().min(-90).max(90).nullable().default(null),
+  longitude: z.number().min(-180).max(180).nullable().default(null),
 });
 export type CreateVenueInput = z.infer<typeof createVenueInputSchema>;
 

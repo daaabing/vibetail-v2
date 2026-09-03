@@ -32,6 +32,15 @@ const SEED_VENUE_SLUGS = ["double-chicken-please", "nightjar-demo", "vibetail-ta
 // across suites and watch-mode reruns.
 const RUN_ID = randomUUID().slice(0, 8);
 
+// Deterministic stand-in for the Photon proxy: integration tests must not
+// depend on an external geocoding service.
+const STUB_GEOCODE = {
+  async suggest(query: string) {
+    if (query.includes("fail")) throw new Error("stub upstream down");
+    return [{ label: `${query} — Stub Street, Testville`, latitude: 40.7, longitude: -74 }];
+  },
+};
+
 function requiredEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -73,6 +82,7 @@ function app(venueProvider?: ModelProvider) {
         renderQrSvg: async (text) => `<svg data-url="${text}"></svg>`,
       },
     ),
+    geocodeProvider: STUB_GEOCODE,
     menuPhotoScanProvider: new DeterministicMenuPhotoScanProvider(),
     authConfig: NO_AUTH,
     checkReadiness: async () => {
@@ -146,6 +156,7 @@ describe("venue HTTP slice (local supabase)", () => {
         new SupabaseManagementRepository({ url, serviceRoleKey }),
       ),
       venueManagementService: new UnavailableVenueManagementService(),
+      geocodeProvider: STUB_GEOCODE,
       authConfig: NO_AUTH,
       checkReadiness: async () => [{ name: "venue_repository", ready: false, detail: "supabase query failed" }],
       testFrontend: true,
@@ -427,5 +438,38 @@ describe("venue HTTP slice (local supabase)", () => {
 
     const publicMenu = await request(instance).get(`/v1/venues/${venueSlug}/current-menu`).expect(200);
     expect(publicMenu.body.items.map((item: { id: string }) => item.id)).toEqual([keeper.body.id]);
+  });
+
+  it("serves geocode suggestions to signed-in accounts and degrades quietly", async () => {
+    const instance = app();
+    await request(instance).get("/v1/geocode/suggest?q=ludlow").expect(401);
+
+    const login = await request(instance).post("/v1/venue/session")
+      .send({ name: `Webint Geocoder ${RUN_ID}` }).expect(201);
+    const auth = { Authorization: `Bearer ${login.body.token as string}` };
+
+    const found = await request(instance).get("/v1/geocode/suggest?q=177 ludlow").set(auth).expect(200);
+    expect(found.body.suggestions).toEqual([
+      { label: "177 ludlow — Stub Street, Testville", latitude: 40.7, longitude: -74 },
+    ]);
+    // Sub-3-char queries and upstream failures both come back as empty lists.
+    const short = await request(instance).get("/v1/geocode/suggest?q=17").set(auth).expect(200);
+    expect(short.body.suggestions).toEqual([]);
+    const failed = await request(instance).get("/v1/geocode/suggest?q=fail here").set(auth).expect(200);
+    expect(failed.body.suggestions).toEqual([]);
+  });
+
+  it("persists picked coordinates through venue creation to the public directory", async () => {
+    const instance = app();
+    const name = `Webint Geo Bar ${RUN_ID}`;
+    const login = await request(instance).post("/v1/venue/session").send({ name }).expect(201);
+    const auth = { Authorization: `Bearer ${login.body.token as string}` };
+    const created = await request(instance).post("/v1/venue").set(auth)
+      .send({ name, address: "177 Ludlow Street, New York", venueType: "cocktail_bar", latitude: 40.7191, longitude: -73.9871 })
+      .expect(201);
+    const slug = created.body.venue.slug as string;
+
+    const detail = await request(instance).get(`/v1/venues/${slug}`).expect(200);
+    expect(detail.body.venue).toMatchObject({ latitude: 40.7191, longitude: -73.9871 });
   });
 });
