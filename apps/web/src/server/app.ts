@@ -33,17 +33,19 @@ import {
   VenueRepositoryUnavailableError,
   VenueServiceError,
   type DefaultVenueService,
+  type GeocodeProvider,
   type ManagementService,
   type VenueManagementService,
 } from "@vibetail/venue-core";
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
 import { randomUUID } from "node:crypto";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 
 export interface WebAppOptions {
   venueService: DefaultVenueService;
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
+  geocodeProvider: GeocodeProvider;
   authConfig: AuthConfig;
   menuPhotoScanProvider?: MenuPhotoScanProvider;
   checkReadiness?: () => Promise<Array<{ name: string; ready: boolean; detail: string }>>;
@@ -437,6 +439,39 @@ export function createWebApp(options: WebAppOptions): Express {
         feedbackInputSchema.parse(request.body),
         await venueManagement.resolveAccountId(readBearerToken(request)),
       ));
+    }),
+  );
+
+  // ── Address autocomplete for venue onboarding ──────────────────────────
+  // Signed-in accounts only (any signed-in identity, no merchant required),
+  // so the proxy and its upstream quota aren't an anonymous public endpoint.
+  const requireAccountId = async (request: Request): Promise<string> => {
+    const accountId = await venueManagement.resolveAccountId(readBearerToken(request));
+    if (!accountId) {
+      throw new VenueManagementServiceError(
+        { code: "UNAUTHORIZED", message: "Sign in first.", retryable: false },
+        401,
+      );
+    }
+    return accountId;
+  };
+
+  app.get(
+    "/v1/geocode/suggest",
+    asyncRoute(async (request, response) => {
+      await requireAccountId(request);
+      const query = z.string().max(200).parse(request.query["q"] ?? "").trim();
+      if (query.length < 3) {
+        response.json({ suggestions: [] });
+        return;
+      }
+      try {
+        response.json({ suggestions: await options.geocodeProvider.suggest(query) });
+      } catch {
+        // Upstream hiccups must not break onboarding: the form works without
+        // suggestions, so degrade to an empty list rather than an error.
+        response.json({ suggestions: [] });
+      }
     }),
   );
 

@@ -168,6 +168,8 @@ export interface CreateVenueRecord {
   slugBase: string;
   address: string;
   venueType: VenueType;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface VenueMenuRecordInput {

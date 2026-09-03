@@ -12,6 +12,7 @@ import {
 } from "@vibetail/model-providers";
 import {
   DefaultVenueManagementService,
+  PhotonGeocodeProvider,
   DefaultVenueService,
   DefaultManagementService,
   SupabaseManagementRepository,
@@ -21,6 +22,7 @@ import {
   SupabaseIdentityVerifier,
   UnavailableManagementService,
   UnavailableVenueManagementService,
+  type GeocodeProvider,
   type IdentityVerifier,
   type ManagementService,
   type VenueManagementService,
@@ -39,6 +41,7 @@ export interface WebDependencies {
   venueService: DefaultVenueService;
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
+  geocodeProvider: GeocodeProvider;
   menuPhotoScanProvider: ReturnType<typeof createMenuPhotoScanProvider>;
   authConfig: AuthConfig;
   checkReadiness(): Promise<DependencyReadinessCheck[]>;
@@ -120,6 +123,9 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
     venueService: new DefaultVenueService(repository, provider),
     managementService,
     venueManagementService,
+    geocodeProvider: new PhotonGeocodeProvider(
+      env.GEOCODE_BASE_URL ? { baseUrl: env.GEOCODE_BASE_URL } : {},
+    ),
     menuPhotoScanProvider: createMenuPhotoScanProvider(env),
     authConfig,
     checkReadiness: async () => {

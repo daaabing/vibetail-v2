@@ -175,7 +175,15 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
     const slug = await this.uniqueMerchantSlug(input.slugBase);
     const merchant = await this.client
       .from("merchants")
-      .insert({ slug, name: input.name, address: input.address, venue_type: input.venueType, is_active: true })
+      .insert({
+        slug,
+        name: input.name,
+        address: input.address,
+        venue_type: input.venueType,
+        is_active: true,
+        latitude: input.latitude,
+        longitude: input.longitude,
+      })
       .select("id")
       .single();
     if (merchant.error) throw new Error(merchant.error.message);

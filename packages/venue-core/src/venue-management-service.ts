@@ -190,6 +190,8 @@ export class DefaultVenueManagementService implements VenueManagementService {
       slugBase: slugify(parsed.name),
       address: parsed.address,
       venueType: parsed.venueType,
+      latitude: parsed.latitude,
+      longitude: parsed.longitude,
     }));
     const refreshed = await this.authorize(token);
     return this.buildSession(refreshed);

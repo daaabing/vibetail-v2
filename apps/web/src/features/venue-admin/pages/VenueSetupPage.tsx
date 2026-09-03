@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { venueTypeSchema } from "@vibetail/contracts";
 import { SiteFooter, SiteHeader } from "../../platform/components/SiteHeader.js";
 import { useSeo } from "../../platform/useSeo.js";
+import { AddressAutocompleteInput } from "../AddressAutocompleteInput.js";
 import { VenueAdminLoading, errorMessage, useVenueSession } from "../VenueShell.js";
 
 const VENUE_TYPES = [
@@ -16,6 +17,7 @@ export function VenueSetupPage() {
   const state = useVenueSession();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
 
   if (!state) return <VenueAdminLoading />;
   if (state.session.venue) {
@@ -34,6 +36,8 @@ export function VenueSetupPage() {
         name: String(data.get("name") ?? "").trim(),
         address: String(data.get("address") ?? "").trim(),
         venueType: venueTypeSchema.parse(data.get("venueType") ?? "cocktail_bar"),
+        latitude: coordinates?.latitude ?? null,
+        longitude: coordinates?.longitude ?? null,
       });
       window.location.assign("/venue/dashboard");
     } catch (caught) {
@@ -59,7 +63,15 @@ export function VenueSetupPage() {
                 {VENUE_TYPES.map((entry) => <option key={entry.value} value={entry.value}>{entry.label}</option>)}
               </select>
             </label>
-            <label className="vt-span-2">Address<input name="address" required maxLength={500} placeholder="129 City Road, London" /></label>
+            <label className="vt-span-2">Address
+              <AddressAutocompleteInput
+                maxLength={500}
+                name="address"
+                placeholder="129 City Road, London"
+                required
+                onCoordinates={setCoordinates}
+              />
+            </label>
             <button className="vt-primary" type="submit" disabled={pending}>
               {pending ? "Creating…" : "Create venue"}
             </button>
