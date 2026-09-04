@@ -46,9 +46,13 @@ export class DeterministicMatchingProvider implements ModelProvider, DrinkInfoPr
     const signalLabel = request.preferences.flavors[0] ?? request.preferences.mood;
     const whyThisMatch = `${selected.name} best matches ${signalLabel ? `your “${signalLabel}” signal` : "tonight's vibe"}. Menu facts come from the venue record.`;
     // Rule-based stand-ins: the fixture provider keeps the shape honest without
-    // pretending to have the model's voice.
-    const moodLabel = request.preferences.mood ?? signalLabel ?? "tonight";
-    const vibeName = `A ${moodLabel} kind of night`;
+    // pretending to have the model's voice. The card title follows the real
+    // prompt's naming rules — a short invented name, never the guest's mood
+    // echoed back and never the menu item's label.
+    const vibeName = inventVibeName(
+      [request.preferences.mood, request.preferences.occasion, request.preferences.freeText, ...request.preferences.flavors, selected.id].filter(Boolean).join("|"),
+      selected.flavorTags[0],
+    );
     const tastesLike = `${selected.ingredients.slice(0, 3).join(", ") || "This pour"} — right where the mood already is.`;
     const flavorProfile = selected.flavorTags.slice(0, 4).join(", ") || "balanced, easy";
     const roast = "Ordering this says more than you meant it to.";
@@ -86,6 +90,20 @@ export class DeterministicMatchingProvider implements ModelProvider, DrinkInfoPr
       },
     };
   }
+}
+
+/* A stable invented card title: the same vibe and pick always name the same
+   drink, and no word comes from the guest's text or the menu item's label. */
+const VIBE_ADJECTIVES = ["Velvet", "Paper", "Neon", "Quiet", "Golden", "Sideways", "Midnight", "Feathered"] as const;
+const VIBE_NOUNS = ["Hour", "Moon", "Detour", "Parade", "Lantern", "Corner", "Postcard", "Orbit"] as const;
+
+function inventVibeName(seedText: string, flavorTag?: string): string {
+  let h = 0;
+  for (let i = 0; i < seedText.length; i++) h = (h * 31 + seedText.charCodeAt(i)) >>> 0;
+  const adjective = VIBE_ADJECTIVES[h % VIBE_ADJECTIVES.length]!;
+  const noun = VIBE_NOUNS[(h >>> 4) % VIBE_NOUNS.length]!;
+  const middle = flavorTag ? `${flavorTag.charAt(0).toUpperCase()}${flavorTag.slice(1).toLowerCase()} ` : "";
+  return `${adjective} ${middle}${noun}`;
 }
 
 const SPIRIT_KEYWORDS: ReadonlyArray<readonly [string, readonly string[]]> = [
