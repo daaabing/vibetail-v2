@@ -1,5 +1,10 @@
-/** English-only. Kept as a type so ported components read the same. */
-export type Lang = "en";
-export function useLang() {
-  return { lang: "en" as Lang, t: (k: string) => k };
+import { createContext, useContext } from "react";
+
+export type Lang = "en" | "zh";
+
+export const LangContext = createContext<Lang>("en");
+
+export function useLang(): { lang: Lang; t: (en: string, zh: string) => string } {
+  const lang = useContext(LangContext);
+  return { lang, t: (en, zh) => (lang === "zh" ? zh : en) };
 }

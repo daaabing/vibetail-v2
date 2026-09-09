@@ -105,25 +105,33 @@ export function computeFill(hasVibe: boolean, s: SensoryState): number {
 }
 
 // ── Human-readable summary ("Feel: crisp, soft, with a twist.") ──────────
-export function sensorySummary(_lang: Lang, s: SensoryState): string {
+export function sensorySummary(lang: Lang, s: SensoryState): string {
+  const zh = lang === "zh";
   const bits: string[] = [];
-  const push = (a: string, cond: boolean) => {
-    if (cond) bits.push(a);
+  const push = (en: string, zhStr: string, cond: boolean) => {
+    if (cond) bits.push(zh ? zhStr : en);
   };
 
-  push("crisp", s.fresh < 40);
-  push("rich", s.fresh > 60);
-  push("soft", s.soft < 40);
-  push("with a kick", s.soft > 60);
-  push("familiar", s.familiar < 40);
-  push("with a twist", s.familiar > 60);
+  push("crisp", "清爽", s.fresh < 40);
+  push("rich", "浓郁", s.fresh > 60);
+  push("soft", "柔和", s.soft < 40);
+  push("with a kick", "有劲", s.soft > 60);
+  push("familiar", "经典", s.familiar < 40);
+  push("with a twist", "有点意外", s.familiar > 60);
 
-  if (bits.length === 0) return "Feel: leave it to us.";
-  return `Feel: ${bits.join(", ")}.`;
+  if (bits.length === 0) return zh ? "口感: 交给我们。" : "Feel: leave it to us.";
+  return zh ? `口感: ${bits.join("、")}。` : `Feel: ${bits.join(", ")}.`;
 }
 
 // ── The thinking, spelled out while the model works ──────────────────────
-export function loadingLines(_lang: Lang, isMenu: boolean): string[] {
+export function loadingLines(lang: Lang, isMenu: boolean): string[] {
+  if (lang === "zh") return [
+    "正在读你写的",
+    "把心情转化成风味",
+    isMenu ? "翻看今晚的菜单" : "选一个基底，再搭配其余的",
+    "调配中，品尝中",
+    "给它取个名字",
+  ];
   return [
     "Reading what you wrote",
     "Turning the mood into flavour",

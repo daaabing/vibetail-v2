@@ -22,3 +22,10 @@ export const MOOD_PLACEHOLDERS_EN = [
   "late-night rain feels calm, want to put on a song",
   "long day, I want something bright and a little strange",
 ];
+
+export const MOOD_PLACEHOLDERS_ZH = [
+  "明天要面试，有点紧张",
+  "周五下午，阳光正好，终于周末了——好开心",
+  "深夜下雨，很安静，想放一首歌",
+  "漫长的一天，想喝点明亮、又有一点奇怪的",
+];

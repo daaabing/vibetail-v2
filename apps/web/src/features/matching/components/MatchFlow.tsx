@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import type { VenueError, VenueMatchResult, VenueMenuItem, VenuePreferences } from "@vibetail/contracts";
 import { VenueClientError } from "../../../clients/http-venue-client.js";
+import { useLang } from "../../../lib/i18n.js";
 import { PreferenceForm } from "./PreferenceForm.js";
 import { ResultCard } from "./ResultCard.js";
 import MixingOverlay from "../../mix/MixingOverlay.js";
@@ -16,9 +17,11 @@ interface MatchFlowProps {
   /** Venue flow: restrict the base-spirit shelf to what this menu pours. */
   menuItems?: VenueMenuItem[];
   onDestination?(preferences: VenuePreferences, result: VenueMatchResult): void;
+  onLocaleToggle?(): void;
 }
 
-export function MatchFlow({ context, destination, headerAction, initialPreferences, initialResult, match, menuItems, onDestination }: MatchFlowProps) {
+export function MatchFlow({ context, destination, headerAction, initialPreferences, initialResult, match, menuItems, onDestination, onLocaleToggle }: MatchFlowProps) {
+  const { lang } = useLang();
   const [preferences, setPreferences] = useState<VenuePreferences | undefined>(initialPreferences);
   const [result, setResult] = useState<VenueMatchResult | undefined>(initialResult);
   const [busy, setBusy] = useState(false);
@@ -41,8 +44,8 @@ export function MatchFlow({ context, destination, headerAction, initialPreferenc
       <h1>{context.title}</h1>
       <p>{context.description}</p>
     </header>}
-    <MixingOverlay open={busy} lines={loadingLines("en", Boolean(menuItems))} />
-    {building && <PreferenceForm busy={busy} {...(preferences ? { initial: preferences } : {})} {...(menuItems ? { menuItems } : {})} onSubmit={(value) => void submit(value)} />}
+    <MixingOverlay open={busy} lines={loadingLines(lang, Boolean(menuItems))} />
+    {building && <PreferenceForm busy={busy} {...(preferences ? { initial: preferences } : {})} {...(menuItems ? { menuItems } : {})} {...(onLocaleToggle ? { onLocaleToggle } : {})} onSubmit={(value) => void submit(value)} />}
     {!busy && error && <MatchError error={error} onRetry={() => preferences && void submit(preferences)} onEdit={() => setError(undefined)} />}
     {!busy && result && <ResultCard
       {...(destination ? { destination: destination(result) } : {})}
@@ -57,7 +60,7 @@ export function MatchFlow({ context, destination, headerAction, initialPreferenc
 function MatchError({ error, onRetry, onEdit }: { error: VenueError; onRetry(): void; onEdit(): void }) {
   return <section className="vt-match-state" data-testid="error-state" role="alert">
     <p className="vt-kicker">{error.code}</p>
-    <h2>That match didn’t land</h2>
+    <h2>That match didn't land</h2>
     <p>{error.message}</p>
     <div className="vt-actions">{error.retryable && <button className="vt-primary" type="button" onClick={onRetry}>Try again</button>}<button className="vt-secondary" type="button" onClick={onEdit}>Edit preferences</button></div>
   </section>;
