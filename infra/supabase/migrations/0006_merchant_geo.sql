@@ -1,7 +1,7 @@
--- 0005_merchant_geo.sql
+-- 0006_merchant_geo.sql
 -- Venue coordinates for the consumer "near you" experience: nullable, additive,
--- backward compatible (old code never reads them). Values are set by ops for
--- now; owner-facing editing can come later.
+-- backward compatible (old code never reads them). New venues can populate the
+-- values by selecting an address-autocomplete suggestion.
 --
 -- Review + apply manually to the shared project (see infra/supabase/README.md).
 
@@ -19,4 +19,4 @@ alter table public.merchants
 
 -- Manual staging verification:
 --   select slug, latitude, longitude from public.merchants;
---   (expect: columns exist, all null until seeded/ops-filled, directory API unchanged)
+--   (expect: columns exist; existing rows remain null until backfilled)

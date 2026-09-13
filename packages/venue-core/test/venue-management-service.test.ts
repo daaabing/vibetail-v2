@@ -151,7 +151,14 @@ describe("venue creation", () => {
     const { service } = createService();
     const name = uniqueName("vms-test-intro");
     const { token } = await service.login(name);
-    const created = await service.createVenue(token, { name, address: "1 Test Street", venueType: "cocktail_bar", shortIntro: null });
+    const created = await service.createVenue(token, {
+      name,
+      address: "1 Test Street",
+      venueType: "cocktail_bar",
+      shortIntro: null,
+      latitude: null,
+      longitude: null,
+    });
     expect(created.venue?.shortIntro).toBeNull();
 
     const updated = await service.updateVenueProfile(token, {
