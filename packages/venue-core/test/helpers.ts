@@ -92,6 +92,8 @@ export async function createLegacyMerchantContext(prefix: string): Promise<Legac
     shortIntro: null,
     address: "1 Test Street",
     venueType: "cocktail_bar",
+    latitude: null,
+    longitude: null,
   });
   const profile = await repository.getVenueProfile(merchantId);
   if (!profile) throw new Error(`No venue profile after createVenue for ${name}`);

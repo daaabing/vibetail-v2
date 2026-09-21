@@ -56,6 +56,8 @@ export const storedVenueSchema = z.object({
   logoUrl: nullableUrlSchema,
   coverImageUrl: nullableUrlSchema,
   isActive: z.boolean(),
+  latitude: z.number().min(-90).max(90).nullable(),
+  longitude: z.number().min(-180).max(180).nullable(),
   menus: z.array(storedMenuSchema),
 });
 export type StoredVenue = z.infer<typeof storedVenueSchema>;
@@ -170,6 +172,8 @@ export interface CreateVenueRecord {
   address: string;
   venueType: VenueType;
   shortIntro: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface UpdateVenueProfileRecord {

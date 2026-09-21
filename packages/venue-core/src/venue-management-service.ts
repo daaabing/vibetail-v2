@@ -220,6 +220,8 @@ export class DefaultVenueManagementService implements VenueManagementService {
       address: parsed.address,
       venueType: parsed.venueType,
       shortIntro: parsed.shortIntro,
+      latitude: parsed.latitude,
+      longitude: parsed.longitude,
     }));
     const refreshed = await this.authorize(token);
     return this.buildSession(refreshed);

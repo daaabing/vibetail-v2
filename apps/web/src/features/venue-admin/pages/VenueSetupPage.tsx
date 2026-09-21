@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { venueTypeSchema } from "@vibetail/contracts";
 import { SiteFooter, SiteHeader } from "../../platform/components/SiteHeader.js";
 import { useSeo } from "../../platform/useSeo.js";
+import { AddressAutocompleteInput } from "../AddressAutocompleteInput.js";
 import { VenueAdminLoading, errorMessage, useVenueSession } from "../VenueShell.js";
 import { saveCachedVenueSession } from "../session-store.js";
 import { importPendingMenuDraft } from "../draft-import.js";
@@ -18,6 +19,7 @@ export function VenueSetupPage() {
   const state = useVenueSession();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
 
   if (!state) return <VenueAdminLoading />;
   if (state.session.venue) {
@@ -37,6 +39,8 @@ export function VenueSetupPage() {
         address: String(data.get("address") ?? "").trim(),
         venueType: venueTypeSchema.parse(data.get("venueType") ?? "cocktail_bar"),
         shortIntro: String(data.get("shortIntro") ?? "").trim() || null,
+        latitude: coordinates?.latitude ?? null,
+        longitude: coordinates?.longitude ?? null,
       });
       // The admin page renders from this snapshot on arrival; without it the
       // brand-new venue would flash the account name until the recheck lands.
@@ -67,7 +71,15 @@ export function VenueSetupPage() {
                 {VENUE_TYPES.map((entry) => <option key={entry.value} value={entry.value}>{entry.label}</option>)}
               </select>
             </label>
-            <label className="vt-span-2">Address<input name="address" required maxLength={500} placeholder="129 City Road, London" /></label>
+            <label className="vt-span-2">Address
+              <AddressAutocompleteInput
+                maxLength={500}
+                name="address"
+                placeholder="129 City Road, London"
+                required
+                onCoordinates={setCoordinates}
+              />
+            </label>
             <label className="vt-span-2">Short intro
               <input name="shortIntro" maxLength={1000} placeholder="Culinary cocktails in NYC's Lower East Side." />
               <small>One line guests see next to your name in the Vibetail directory.</small>

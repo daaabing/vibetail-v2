@@ -46,6 +46,12 @@ function sqlInt(value) {
   return String(value);
 }
 
+function sqlNumber(value) {
+  if (value === null || value === undefined) return "null";
+  if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`Expected finite number, got: ${value}`);
+  return String(value);
+}
+
 function sqlTextArray(values) {
   if (!Array.isArray(values)) throw new Error(`Expected array, got: ${values}`);
   if (values.length === 0) return "'{}'::text[]";
@@ -198,6 +204,8 @@ for (const merchant of fixture.merchants) {
     ["is_active", sqlBool(merchant.isActive)],
     ["address", sqlString(profile?.address ?? null)],
     ["venue_type", sqlString(profile?.venueType ?? null)],
+    ["latitude", sqlNumber(merchant.latitude ?? null)],
+    ["longitude", sqlNumber(merchant.longitude ?? null)],
   ]);
 }
 
