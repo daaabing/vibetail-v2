@@ -1,7 +1,8 @@
 /**
- * The drink log lives entirely on the device (IndexedDB). Guests are
- * anonymous everywhere else in Vibetail, so the calendar keeps that promise:
- * no account, no upload — the photos never leave the phone.
+ * The on-device half of the drink log (IndexedDB). Signed-out guests keep
+ * their whole journal here — no account, no upload. Signed-in guests read
+ * and write the cloud journal instead (drink-log-store.ts routes between
+ * the two and migrates this store up on request).
  */
 
 export interface DrinkLogEntry {
@@ -13,7 +14,8 @@ export interface DrinkLogEntry {
   /** 1–5 stars, or null when the guest skipped rating. */
   rating: number | null;
   note: string | null;
-  photo: Blob | null;
+  /** A local Blob (device store) or a signed https URL (cloud store). */
+  photo: Blob | string | null;
   source: "camera" | "match";
 }
 

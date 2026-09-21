@@ -449,6 +449,31 @@
 .ma-item-body small { display: block; color: var(--ink-mute); font-size: 12.5px; line-height: 1.4; margin-top: 2px; }
 .ma-item-out { color: var(--gold-deep); letter-spacing: 0.08em; text-transform: uppercase; font-size: 10.5px; }
 
+/* ── Cloud sync ── */
+.ma-sync-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--gold-line-strong);
+  background: var(--paper-card);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+.ma-sync-banner[data-done] { border-color: var(--line); color: var(--ink-mute); }
+
+.ma-account { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
+.ma-account-line { font-size: 14.5px; color: var(--ink); letter-spacing: 0.01em; }
+.ma-account-signout {
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  color: var(--ink-soft);
+}
+.ma-account .btn { width: 100%; }
+
 /* ── Profile ── */
 .ma-profile { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; padding: 8px 4px 4px; }
 .ma-profile-badge {

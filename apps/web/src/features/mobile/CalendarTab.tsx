@@ -1,23 +1,60 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Draw from "../draw/art.js";
-import { dayKey, deleteDrinkLogEntry, entryDayKey, listDrinkLogEntries, type DrinkLogEntry } from "./drink-log.js";
+import { dayKey, entryDayKey, type DrinkLogEntry } from "./drink-log.js";
+import {
+  countLocalEntries,
+  deleteJournalEntry,
+  isCloudJournal,
+  listJournalEntries,
+  migrateLocalEntries,
+} from "./drink-log-store.js";
 import { ChevronIcon, StarIcon } from "./icons.js";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 const MONTH_FORMAT = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
 const TIME_FORMAT = new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" });
 
-/** Calendar: every logged drink, kept on-device, one month at a time. */
+type MigrationState =
+  | { status: "hidden" }
+  | { status: "offer"; count: number }
+  | { status: "uploading" }
+  | { status: "done"; uploaded: number; failed: number };
+
+/** Calendar: every logged drink — cloud journal when signed in — one month at a time. */
 export function CalendarTab({ logVersion, onRecord }: { logVersion: number; onRecord(): void }) {
   const [entries, setEntries] = useState<DrinkLogEntry[]>();
+  const [loadFailed, setLoadFailed] = useState(false);
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [selectedDay, setSelectedDay] = useState(() => dayKey(new Date()));
+  const [migration, setMigration] = useState<MigrationState>({ status: "hidden" });
+  const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    listDrinkLogEntries().then((loaded) => { if (!cancelled) setEntries(loaded); }).catch(() => setEntries([]));
+    setLoadFailed(false);
+    listJournalEntries()
+      .then((loaded) => { if (!cancelled) { setEntries(loaded); setLoadFailed(false); } })
+      // A failed cloud fetch is not an empty journal: keep whatever was on
+      // screen and say so, instead of announcing "nothing on the record".
+      .catch(() => { if (!cancelled) setLoadFailed(true); });
+    void (async () => {
+      if (!(await isCloudJournal())) return;
+      const count = await countLocalEntries().catch(() => 0);
+      if (cancelled || count === 0) return;
+      // Never clobber an on-screen migration summary with a fresh offer —
+      // a partial failure needs to stay readable until the user retries.
+      setMigration((current) =>
+        current.status === "hidden" || current.status === "offer" ? { status: "offer", count } : current);
+    })();
     return () => { cancelled = true; };
-  }, [logVersion]);
+  }, [logVersion, reloadTick]);
+
+  const migrate = useCallback(async () => {
+    setMigration({ status: "uploading" });
+    const result = await migrateLocalEntries();
+    setMigration({ status: "done", ...result });
+    setReloadTick((tick) => tick + 1);
+  }, []);
 
   const byDay = useMemo(() => {
     const map = new Map<string, DrinkLogEntry[]>();
@@ -30,7 +67,7 @@ export function CalendarTab({ logVersion, onRecord }: { logVersion: number; onRe
 
   const weeks = useMemo(() => monthGrid(month), [month]);
   const selectedEntries = byDay.get(selectedDay) ?? [];
-  const empty = entries !== undefined && entries.length === 0;
+  const empty = entries !== undefined && entries.length === 0 && !loadFailed;
 
   return <div className="ma-page">
     <header className="ma-cal-head">
@@ -42,6 +79,20 @@ export function CalendarTab({ logVersion, onRecord }: { logVersion: number; onRe
         <ChevronIcon size={18} />
       </button>
     </header>
+
+    {migration.status === "offer" && <div className="ma-sync-banner">
+      <p>{migration.count} {migration.count === 1 ? "drink" : "drinks"} on this phone {migration.count === 1 ? "isn’t" : "aren’t"} in your account yet.</p>
+      <button className="btn btn-solid" type="button" onClick={() => void migrate()}>Upload to account</button>
+    </div>}
+    {migration.status === "uploading" && <div className="ma-sync-banner"><p>Uploading your local drinks…</p></div>}
+    {migration.status === "done" && <div className="ma-sync-banner" data-done>
+      <p>{migration.uploaded} uploaded{migration.failed > 0 ? ` · ${migration.failed} kept on this phone` : " — all synced."}</p>
+      {migration.failed > 0 && <button className="btn btn-solid" type="button" onClick={() => void migrate()}>Try again</button>}
+    </div>}
+
+    {loadFailed && <p className="ma-alert" role="alert">
+      Couldn’t reach your journal just now. What you see may be out of date — check the connection and reopen this tab.
+    </p>}
 
     <div className="ma-cal-grid" role="grid">
       {WEEKDAYS.map((day, index) => <span aria-hidden className="ma-cal-weekday" key={`${day}-${index}`}>{day}</span>)}
@@ -77,7 +128,7 @@ export function CalendarTab({ logVersion, onRecord }: { logVersion: number; onRe
           entry={entry}
           key={entry.id}
           onDelete={async () => {
-            await deleteDrinkLogEntry(entry.id);
+            await deleteJournalEntry(entry.id);
             setEntries((current) => current?.filter((candidate) => candidate.id !== entry.id));
           }}
         />)}
@@ -87,8 +138,14 @@ export function CalendarTab({ logVersion, onRecord }: { logVersion: number; onRe
 
 function LogCard({ entry, onDelete }: { entry: DrinkLogEntry; onDelete(): Promise<void> }) {
   const [confirming, setConfirming] = useState(false);
-  const photoUrl = useMemo(() => (entry.photo ? URL.createObjectURL(entry.photo) : null), [entry.photo]);
-  useEffect(() => () => { if (photoUrl) URL.revokeObjectURL(photoUrl); }, [photoUrl]);
+  const [deleteFailed, setDeleteFailed] = useState(false);
+  const photoUrl = useMemo(
+    () => (entry.photo instanceof Blob ? URL.createObjectURL(entry.photo) : entry.photo),
+    [entry.photo],
+  );
+  useEffect(() => () => {
+    if (entry.photo instanceof Blob && photoUrl) URL.revokeObjectURL(photoUrl);
+  }, [entry.photo, photoUrl]);
 
   return <article className="ma-log-card">
     {photoUrl
@@ -108,8 +165,19 @@ function LogCard({ entry, onDelete }: { entry: DrinkLogEntry; onDelete(): Promis
     </div>
     {confirming
       ? <span className="ma-log-confirm">
-        <button className="ma-log-delete" type="button" onClick={() => void onDelete()}>Delete</button>
-        <button className="ma-log-keep" type="button" onClick={() => setConfirming(false)}>Keep</button>
+        <button
+          className="ma-log-delete"
+          type="button"
+          onClick={() => {
+            setDeleteFailed(false);
+            // A failed cloud delete keeps the card and says so, instead of
+            // dying as an unhandled rejection.
+            onDelete().catch(() => setDeleteFailed(true));
+          }}
+        >
+          {deleteFailed ? "Retry delete" : "Delete"}
+        </button>
+        <button className="ma-log-keep" type="button" onClick={() => { setConfirming(false); setDeleteFailed(false); }}>Keep</button>
       </span>
       : <button aria-label={`Delete ${entry.drinkName}`} className="ma-log-x" type="button" onClick={() => setConfirming(true)}>×</button>}
   </article>;

@@ -2,6 +2,8 @@ import { useState, type FormEvent } from "react";
 import { venueTypeSchema } from "@vibetail/contracts";
 import { useSeo } from "../../platform/useSeo.js";
 import { VenueAdminLoading, VenueShell, errorMessage, useVenueSession } from "../VenueShell.js";
+import { VenueLogoField } from "../VenueLogoField.js";
+import { readVenueImage } from "../imageUpload.js";
 
 const VENUE_TYPES = [
   { value: "cocktail_bar", label: "Cocktail bar" },
@@ -16,6 +18,7 @@ export function VenueProfilePage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [logoFile, setLogoFile] = useState<File>();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     if (!state) return;
@@ -30,8 +33,11 @@ export function VenueProfilePage() {
         address: String(data.get("address") ?? "").trim(),
         venueType: venueTypeSchema.parse(data.get("venueType") ?? "cocktail_bar"),
         shortIntro: String(data.get("shortIntro") ?? "").trim() || null,
+        // Null keeps the avatar already on file; a picked file replaces it.
+        logo: logoFile ? await readVenueImage(logoFile) : null,
       });
       await state.refreshSession();
+      setLogoFile(undefined);
       setSaved(true);
     } catch (caught) {
       setError(errorMessage(caught));
@@ -69,6 +75,12 @@ export function VenueProfilePage() {
             />
             <small>One line guests see next to your name in the Vibetail directory.</small>
           </label>
+          <VenueLogoField
+            currentUrl={venue.logoUrl}
+            file={logoFile}
+            hint="Guests see this next to your name. Pick a new file to replace it."
+            onSelect={setLogoFile}
+          />
           <button className="vt-primary" type="submit" disabled={pending}>{pending ? "Saving…" : "Save profile"}</button>
         </form>
         {error && <div className="vt-alert" role="alert">{error}</div>}

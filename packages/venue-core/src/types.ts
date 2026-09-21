@@ -95,6 +95,7 @@ export interface StoredVenueProfile {
   slug: string;
   name: string;
   shortIntro: string | null;
+  logoUrl: string | null;
   isActive: boolean;
   address: string | null;
   venueType: VenueType | null;
@@ -174,6 +175,7 @@ export interface CreateVenueRecord {
   shortIntro: string | null;
   latitude: number | null;
   longitude: number | null;
+  logoUrl: string;
 }
 
 export interface UpdateVenueProfileRecord {
@@ -181,6 +183,8 @@ export interface UpdateVenueProfileRecord {
   address: string;
   venueType: VenueType;
   shortIntro: string | null;
+  /** Omitted when the owner did not upload a replacement avatar. */
+  logoUrl?: string;
 }
 
 export interface VenueMenuRecordInput {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { VenueDirectoryEntry } from "@vibetail/contracts";
 import Draw from "../draw/art.js";
+import { VenueAvatar } from "../platform/components/VenueAvatar.js";
 import type { VenuesState } from "./MobileAppPage.js";
 import { ChevronIcon, LocationIcon } from "./icons.js";
 
@@ -62,11 +63,7 @@ export function ExploreTab({ venues, onOpenVenue }: {
     {venues.status === "ready" && <ul className="ma-venue-list">
       {sorted.map(({ entry, km }) => <li key={entry.venue.id}>
         <button className="ma-venue-card" type="button" onClick={() => onOpenVenue(entry)}>
-          <span className="ma-venue-visual">
-            {entry.venue.coverImageUrl
-              ? <img alt="" loading="lazy" src={entry.venue.coverImageUrl} />
-              : <span className="ma-venue-sketch"><Draw name="barrel" strokeWidth={2.2} /></span>}
-          </span>
+          <VenueThumbnail venue={entry.venue} />
           <span className="ma-venue-body">
             <strong>{entry.venue.name}</strong>
             {entry.venue.shortIntro && <small>{entry.venue.shortIntro}</small>}
@@ -80,6 +77,17 @@ export function ExploreTab({ venues, onOpenVenue }: {
       </li>)}
     </ul>}
   </div>;
+}
+
+/**
+ * The avatar is required at venue creation, so it leads here; venues that
+ * predate that requirement fall back to their cover image, and VenueAvatar
+ * draws a monogram when neither loads — every bar wears a mark of its own.
+ */
+function VenueThumbnail({ venue }: { venue: VenueDirectoryEntry["venue"] }) {
+  return <span className="ma-venue-visual">
+    <VenueAvatar name={venue.name} src={venue.logoUrl ?? venue.coverImageUrl} />
+  </span>;
 }
 
 function distanceKm(from: Coords, venue: VenueDirectoryEntry["venue"]): number | null {

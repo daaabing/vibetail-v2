@@ -14,6 +14,7 @@ import {
   anonVenueRepository,
   createLegacyMerchantContext,
   managementRepository,
+  TEST_LOGO_URL,
   uniqueName,
   venueManagementRepository,
 } from "./helpers.js";
@@ -127,6 +128,7 @@ describe("DefaultVenueService", () => {
       venueType: "cocktail_bar",
       latitude: null,
       longitude: null,
+      logoUrl: TEST_LOGO_URL,
     });
     const drinkId = await repository.createDrink(merchantId, {
       name: "Disposable Drink",

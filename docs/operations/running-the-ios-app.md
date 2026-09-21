@@ -32,7 +32,7 @@ intended experience. Useful bits:
   the seeded demo bars carry NYC coordinates out of the box.
 - **Calendar / Record a drink**: signed out, entries stay in the browser's
   IndexedDB. Signed in, the journal syncs through `/v1/me/drink-logs`
-  (migration `0006_drink_logs`), and the calendar offers a one-tap upload of
+  (migration `0007_drink_logs`), and the calendar offers a one-tap upload of
   any entries still on the device.
 - Demo sign-in (seeded): `demo@vibetail.test` / `vibetail-demo` via the
   profile sheet → *Sign in to sync*.

@@ -15,6 +15,7 @@ import type { Database } from "../src/repositories/database.types.js";
 import { SupabaseManagementRepository } from "../src/repositories/supabase-management.js";
 import { SupabaseVenueManagementRepository } from "../src/repositories/supabase-venue-management.js";
 import { SupabaseVenueRepository } from "../src/repositories/supabase.js";
+import { SupabaseVenueMediaStorage } from "../src/venue-media-storage.js";
 
 export interface SupabaseTestEnv {
   url: string;
@@ -56,6 +57,26 @@ export function venueManagementRepository(): SupabaseVenueManagementRepository {
   return new SupabaseVenueManagementRepository({ url, serviceRoleKey });
 }
 
+/** Local Storage adapter, so avatar uploads exercise the real signed-URL path. */
+export function venueMediaStorage(): SupabaseVenueMediaStorage {
+  const { url, serviceRoleKey } = supabaseTestEnv();
+  return new SupabaseVenueMediaStorage({ url, serviceRoleKey });
+}
+
+/**
+ * Smallest valid PNG, used wherever a test creates a venue: every venue needs
+ * an avatar, and the bytes themselves are never asserted on.
+ */
+export const TEST_LOGO_PNG_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
+export function testVenueLogoInput(): { imageBase64: string; imageContentType: "image/png" } {
+  return { imageBase64: TEST_LOGO_PNG_BASE64, imageContentType: "image/png" };
+}
+
+/** Stand-in for repository-level tests that bypass the service upload step. */
+export const TEST_LOGO_URL = "https://cdn.test.vibetail/avatar.png";
+
 let uniqueCounter = 0;
 
 /**
@@ -94,6 +115,7 @@ export async function createLegacyMerchantContext(prefix: string): Promise<Legac
     venueType: "cocktail_bar",
     latitude: null,
     longitude: null,
+    logoUrl: TEST_LOGO_URL,
   });
   const profile = await repository.getVenueProfile(merchantId);
   if (!profile) throw new Error(`No venue profile after createVenue for ${name}`);
