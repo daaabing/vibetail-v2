@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { VenueDirectoryEntry, VenueMenu } from "@vibetail/contracts";
 import { HttpVenueClient } from "../../clients/http-venue-client.js";
 import Draw from "../draw/art.js";
+import { VenueAvatar } from "../platform/components/VenueAvatar.js";
 import type { MatchScope } from "./MatchSheet.js";
 import { ChevronIcon } from "./icons.js";
 
@@ -31,7 +32,7 @@ export function VenueSheet({ entry, onMatch }: { entry: VenueDirectoryEntry; onM
   return <div className="ma-venue-sheet">
     {venue.coverImageUrl && <img alt="" className="ma-venue-cover" src={venue.coverImageUrl} />}
     <div className="ma-venue-title">
-      {venue.logoUrl && <img alt="" className="ma-venue-logo" src={venue.logoUrl} />}
+      <VenueAvatar className="ma-venue-logo" name={venue.name} src={venue.logoUrl} />
       <h2 className="display">{venue.name}</h2>
     </div>
     {venue.shortIntro && <p className="ma-venue-intro">{venue.shortIntro}</p>}

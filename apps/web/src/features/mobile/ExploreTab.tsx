@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { VenueDirectoryEntry } from "@vibetail/contracts";
 import Draw from "../draw/art.js";
+import { VenueAvatar } from "../platform/components/VenueAvatar.js";
 import type { VenuesState } from "./MobileAppPage.js";
 import { ChevronIcon, LocationIcon } from "./icons.js";
 
@@ -79,15 +80,13 @@ export function ExploreTab({ venues, onOpenVenue }: {
 }
 
 /**
- * The avatar is required at venue creation, so it leads here; the cover image
- * is the fallback for venues that predate that requirement.
+ * The avatar is required at venue creation, so it leads here; venues that
+ * predate that requirement fall back to their cover image, and VenueAvatar
+ * draws a monogram when neither loads — every bar wears a mark of its own.
  */
 function VenueThumbnail({ venue }: { venue: VenueDirectoryEntry["venue"] }) {
-  const image = venue.logoUrl ?? venue.coverImageUrl;
   return <span className="ma-venue-visual">
-    {image
-      ? <img alt="" loading="lazy" src={image} />
-      : <span className="ma-venue-sketch"><Draw name="barrel" strokeWidth={2.2} /></span>}
+    <VenueAvatar name={venue.name} src={venue.logoUrl ?? venue.coverImageUrl} />
   </span>;
 }
 
