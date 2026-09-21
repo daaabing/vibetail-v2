@@ -228,6 +228,8 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .vt-map:active { cursor:grabbing; }
 .vt-map:focus-visible { outline:1px solid var(--ink); outline-offset:2px; }
 .vt-map[data-empty] { display:grid; place-content:center; padding:0 22px; border-style:dashed; cursor:default; }
+.vt-map-canvas { position:absolute; inset:0; }
+.vt-map[data-google] { cursor:default; }
 .vt-map-tile { position:absolute; width:256px; height:256px; filter:grayscale(1) contrast(.9) brightness(1.05); user-select:none; }
 .vt-map-pin { position:absolute; top:50%; left:50%; width:22px; height:29px; transform:translate(-50%,-100%); filter:drop-shadow(0 3px 5px rgba(0,0,0,.32)); pointer-events:none; }
 .vt-map-pin path { fill:var(--ink); }.vt-map-pin circle { fill:var(--paper-card); }

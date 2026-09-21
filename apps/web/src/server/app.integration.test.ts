@@ -148,11 +148,35 @@ describe("venue HTTP slice (local supabase)", () => {
     });
   });
 
-  it("serves the publishable auth config and no secrets", async () => {
+  it("serves the publishable auth and map config and no secrets", async () => {
     const body = (await request(app()).get("/v1/config").expect(200)).body;
     expect(body).toEqual({
       auth: { appUrl: APP_URL, provider: "none", supabaseUrl: null, supabasePublishableKey: null },
+      // No Google browser key configured here: the client draws the proxied
+      // OSM basemap instead of asking Google for one.
+      maps: { googleApiKey: null },
     });
+  });
+
+  it("passes a configured Google browser key through to the client", async () => {
+    const { url, publishableKey, serviceRoleKey } = supabaseConfig();
+    const withKey = createWebApp({
+      venueService: new DefaultVenueService(
+        new SupabaseVenueRepository({ url, publishableKey }),
+        new DeterministicMatchingProvider(),
+      ),
+      managementService: new DefaultManagementService(
+        new SupabaseManagementRepository({ url, serviceRoleKey }),
+      ),
+      venueManagementService: new UnavailableVenueManagementService(),
+      geocodeProvider: STUB_GEOCODE,
+      mapTileProvider: STUB_TILES,
+      authConfig: NO_AUTH,
+      mapsConfig: { googleApiKey: "test-browser-key" },
+      testFrontend: true,
+    });
+    const body = (await request(withKey).get("/v1/config").expect(200)).body;
+    expect(body.maps).toEqual({ googleApiKey: "test-browser-key" });
   });
 
   it("fails readiness closed when a required dependency is unavailable", async () => {

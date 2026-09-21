@@ -13,7 +13,20 @@ export const authConfigSchema = z.object({
 });
 export type AuthConfig = z.infer<typeof authConfigSchema>;
 
+/**
+ * Basemap settings. The Google key is a browser key restricted by HTTP
+ * referrer, so it belongs in the publishable config exactly like the Supabase
+ * one; null means this deployment has no key and the map falls back to the
+ * proxied OSM tiles.
+ */
+export const mapsConfigSchema = z.object({
+  googleApiKey: z.string().min(1).nullable().default(null),
+});
+export type MapsConfig = z.infer<typeof mapsConfigSchema>;
+
 export const runtimeConfigSchema = z.object({
   auth: authConfigSchema,
+  // Defaulted so a new client reading an older server still parses.
+  maps: mapsConfigSchema.default({ googleApiKey: null }),
 });
 export type RuntimeConfig = z.infer<typeof runtimeConfigSchema>;

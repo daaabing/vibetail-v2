@@ -25,6 +25,7 @@ import {
   updateMenuInputSchema,
   updateMerchantInputSchema,
   type AuthConfig,
+  type MapsConfig,
   type VenueError,
   type VenueMatchResult,
 } from "@vibetail/contracts";
@@ -52,6 +53,7 @@ export interface WebAppOptions {
   geocodeProvider: GeocodeProvider;
   mapTileProvider: MapTileProvider;
   authConfig: AuthConfig;
+  mapsConfig?: MapsConfig;
   menuPhotoScanProvider?: MenuPhotoScanProvider;
   checkReadiness?: () => Promise<Array<{ name: string; ready: boolean; detail: string }>>;
   testFrontend?: boolean;
@@ -85,7 +87,7 @@ export function createWebApp(options: WebAppOptions): Express {
   // Runtime config keeps a single build deployable across environments; it is
   // publishable-only by construction (see authConfigSchema).
   app.get("/v1/config", (_request, response) => {
-    response.json(runtimeConfigSchema.parse({ auth: options.authConfig }));
+    response.json(runtimeConfigSchema.parse({ auth: options.authConfig, maps: options.mapsConfig ?? {} }));
   });
 
   app.get(

@@ -31,7 +31,7 @@ import {
   type ManagementService,
   type VenueManagementService,
 } from "@vibetail/venue-core";
-import type { AuthConfig } from "@vibetail/contracts";
+import type { AuthConfig, MapsConfig } from "@vibetail/contracts";
 import QRCode from "qrcode";
 import type { WebServerEnv } from "../env.js";
 
@@ -49,6 +49,7 @@ export interface WebDependencies {
   mapTileProvider: MapTileProvider;
   menuPhotoScanProvider: ReturnType<typeof createMenuPhotoScanProvider>;
   authConfig: AuthConfig;
+  mapsConfig: MapsConfig;
   checkReadiness(): Promise<DependencyReadinessCheck[]>;
 }
 
@@ -136,6 +137,7 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
     ),
     menuPhotoScanProvider: createMenuPhotoScanProvider(env),
     authConfig,
+    mapsConfig: { googleApiKey: env.GOOGLE_MAPS_API_KEY ?? null },
     checkReadiness: async () => {
       try {
         const scopes = await repository.listPublishedVenueMenus();
