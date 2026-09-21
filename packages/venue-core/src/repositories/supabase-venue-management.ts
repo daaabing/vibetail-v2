@@ -185,6 +185,7 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
         is_active: true,
         latitude: input.latitude,
         longitude: input.longitude,
+        logo_url: input.logoUrl,
       })
       .select("id")
       .single();
@@ -201,7 +202,7 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
   async getVenueProfile(merchantId: string): Promise<StoredVenueProfile | null> {
     const result = await this.client
       .from("merchants")
-      .select("id, slug, name, short_intro, is_active, address, venue_type")
+      .select("id, slug, name, short_intro, logo_url, is_active, address, venue_type")
       .eq("id", merchantId)
       .maybeSingle();
     if (result.error) throw new Error(result.error.message);
@@ -211,6 +212,7 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
       slug: String(result.data.slug),
       name: String(result.data.name),
       shortIntro: result.data.short_intro ? String(result.data.short_intro) : null,
+      logoUrl: result.data.logo_url ? String(result.data.logo_url) : null,
       isActive: Boolean(result.data.is_active),
       address: result.data.address ? String(result.data.address) : null,
       venueType: (result.data.venue_type as VenueType | null) ?? null,
@@ -225,6 +227,9 @@ export class SupabaseVenueManagementRepository implements VenueManagementReposit
         short_intro: input.shortIntro,
         address: input.address,
         venue_type: input.venueType,
+        // Left out of the patch when no replacement was uploaded, so the
+        // stored avatar survives an ordinary profile edit.
+        ...(input.logoUrl ? { logo_url: input.logoUrl } : {}),
       })
       .eq("id", merchantId);
     if (result.error) throw new Error(result.error.message);

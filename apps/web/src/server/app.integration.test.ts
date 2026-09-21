@@ -43,6 +43,13 @@ const STUB_GEOCODE = {
   },
 };
 
+// Smallest valid PNG. Venue creation requires an avatar, so every POST /v1/venue
+// in this suite ships these bytes; the upload lands in the local Storage bucket.
+const LOGO_PAYLOAD = {
+  imageBase64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  imageContentType: "image/png",
+};
+
 function requiredEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -111,7 +118,7 @@ async function createWebintVenue(instance: ReturnType<typeof app>, name: string)
   const login = await request(instance).post("/v1/venue/session").send({ name }).expect(201);
   const auth = { Authorization: `Bearer ${login.body.token as string}` };
   const created = await request(instance).post("/v1/venue").set(auth)
-    .send({ name, address: "1 Webint Way", venueType: "cocktail_bar" }).expect(201);
+    .send({ name, address: "1 Webint Way", venueType: "cocktail_bar", logo: LOGO_PAYLOAD }).expect(201);
   return { auth, venueSlug: created.body.venue.slug as string };
 }
 
@@ -276,8 +283,10 @@ describe("venue HTTP slice (local supabase)", () => {
 
     // No shortIntro in the payload: clients that predate the field still work.
     const created = await request(instance).post("/v1/venue").set(auth)
-      .send({ name: venueName, address: "42 Test Ave", venueType: "cocktail_bar" }).expect(201);
+      .send({ name: venueName, address: "42 Test Ave", venueType: "cocktail_bar", logo: LOGO_PAYLOAD }).expect(201);
     expect(created.body.venue).toMatchObject({ slug: venueSlug, address: "42 Test Ave", shortIntro: null });
+    // The avatar was stored on the way in and comes back as a signed URL.
+    expect(created.body.venue.logoUrl as string).toContain("/storage/v1/object/sign/merchant-menus/");
 
     const profile = await request(instance).patch("/v1/venue").set(auth).send({
       name: venueName, address: "42 Test Ave", venueType: "cocktail_bar", shortIntro: "Webint intro line.",
@@ -484,12 +493,27 @@ describe("venue HTTP slice (local supabase)", () => {
     const login = await request(instance).post("/v1/venue/session").send({ name }).expect(201);
     const auth = { Authorization: `Bearer ${login.body.token as string}` };
     const created = await request(instance).post("/v1/venue").set(auth)
-      .send({ name, address: "177 Ludlow Street, New York", venueType: "cocktail_bar", latitude: 40.7191, longitude: -73.9871 })
+      .send({ name, address: "177 Ludlow Street, New York", venueType: "cocktail_bar", latitude: 40.7191, longitude: -73.9871, logo: LOGO_PAYLOAD })
       .expect(201);
     const slug = created.body.venue.slug as string;
 
     const detail = await request(instance).get(`/v1/venues/${slug}`).expect(200);
     expect(detail.body.venue).toMatchObject({ latitude: 40.7191, longitude: -73.9871 });
+  });
+
+  it("refuses a venue without an avatar and publishes the stored one to the directory", async () => {
+    const instance = app();
+    const name = `Webint Avatar Bar ${RUN_ID}`;
+    const login = await request(instance).post("/v1/venue/session").send({ name }).expect(201);
+    const auth = { Authorization: `Bearer ${login.body.token as string}` };
+    await request(instance).post("/v1/venue").set(auth)
+      .send({ name, address: "9 Webint Way", venueType: "cocktail_bar" }).expect(400);
+
+    const created = await request(instance).post("/v1/venue").set(auth)
+      .send({ name, address: "9 Webint Way", venueType: "cocktail_bar", logo: LOGO_PAYLOAD }).expect(201);
+    const slug = created.body.venue.slug as string;
+    const detail = await request(instance).get(`/v1/venues/${slug}`).expect(200);
+    expect(detail.body.venue.logoUrl as string).toContain("/storage/v1/object/sign/merchant-menus/");
   });
 
   // 1x1 transparent PNG — enough to exercise the sniff + storage upload path.

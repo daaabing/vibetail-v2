@@ -62,11 +62,7 @@ export function ExploreTab({ venues, onOpenVenue }: {
     {venues.status === "ready" && <ul className="ma-venue-list">
       {sorted.map(({ entry, km }) => <li key={entry.venue.id}>
         <button className="ma-venue-card" type="button" onClick={() => onOpenVenue(entry)}>
-          <span className="ma-venue-visual">
-            {entry.venue.coverImageUrl
-              ? <img alt="" loading="lazy" src={entry.venue.coverImageUrl} />
-              : <span className="ma-venue-sketch"><Draw name="barrel" strokeWidth={2.2} /></span>}
-          </span>
+          <VenueThumbnail venue={entry.venue} />
           <span className="ma-venue-body">
             <strong>{entry.venue.name}</strong>
             {entry.venue.shortIntro && <small>{entry.venue.shortIntro}</small>}
@@ -80,6 +76,19 @@ export function ExploreTab({ venues, onOpenVenue }: {
       </li>)}
     </ul>}
   </div>;
+}
+
+/**
+ * The avatar is required at venue creation, so it leads here; the cover image
+ * is the fallback for venues that predate that requirement.
+ */
+function VenueThumbnail({ venue }: { venue: VenueDirectoryEntry["venue"] }) {
+  const image = venue.logoUrl ?? venue.coverImageUrl;
+  return <span className="ma-venue-visual">
+    {image
+      ? <img alt="" loading="lazy" src={image} />
+      : <span className="ma-venue-sketch"><Draw name="barrel" strokeWidth={2.2} /></span>}
+  </span>;
 }
 
 function distanceKm(from: Coords, venue: VenueDirectoryEntry["venue"]): number | null {
