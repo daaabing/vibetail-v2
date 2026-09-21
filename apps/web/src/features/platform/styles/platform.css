@@ -221,3 +221,21 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .vt-autocomplete-list button { display: block; width: 100%; border: 0; border-bottom: 1px solid var(--line); padding: 11px 13px; background: none; color: inherit; cursor: pointer; font-size: 13.5px; text-align: left; }
 .vt-autocomplete-list li:last-child button { border-bottom: 0; }
 .vt-autocomplete-list button[data-active] { background: var(--paper-warm); }
+
+/* ── Location pin map (venue onboarding) ── */
+.vt-map-field { display:grid; gap:9px; }
+.vt-map { position:relative; height:215px; overflow:hidden; border:1px solid var(--line-strong); background:var(--paper-warm); cursor:grab; touch-action:none; }
+.vt-map:active { cursor:grabbing; }
+.vt-map:focus-visible { outline:1px solid var(--ink); outline-offset:2px; }
+.vt-map[data-empty] { display:grid; place-content:center; padding:0 22px; border-style:dashed; cursor:default; }
+.vt-map-tile { position:absolute; width:256px; height:256px; filter:grayscale(1) contrast(.9) brightness(1.05); user-select:none; }
+.vt-map-pin { position:absolute; top:50%; left:50%; width:22px; height:29px; transform:translate(-50%,-100%); filter:drop-shadow(0 3px 5px rgba(0,0,0,.32)); pointer-events:none; }
+.vt-map-pin path { fill:var(--ink); }.vt-map-pin circle { fill:var(--paper-card); }
+.vt-map-empty { max-width:270px; margin:0; color:var(--ink-mute); font-size:10px; font-weight:500; letter-spacing:.13em; line-height:1.7; text-align:center; text-transform:uppercase; }
+.vt-map-zoom { position:absolute; top:10px; right:10px; display:grid; }
+.vt-map-zoom button { width:27px; height:27px; border:1px solid var(--line-strong); border-bottom:0; padding:0; color:var(--ink); background:var(--paper-card); cursor:pointer; font-size:15px; line-height:1; }
+.vt-map-zoom button:last-child { border-bottom:1px solid var(--line-strong); }
+.vt-map-zoom button:disabled { color:var(--ink-faint); cursor:default; }
+.vt-map-credit { position:absolute; right:0; bottom:0; padding:3px 7px; color:var(--ink-mute); background:rgba(251,250,248,.82); font-size:9px; letter-spacing:.04em; text-decoration:none; }
+.vt-map-note { display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px; margin:0; color:var(--ink-mute); font-size:10px; font-weight:500; letter-spacing:.13em; text-transform:uppercase; }
+.vt-map-readout { font-variant-numeric:tabular-nums; letter-spacing:.06em; }

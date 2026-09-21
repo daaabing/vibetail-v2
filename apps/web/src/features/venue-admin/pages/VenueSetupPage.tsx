@@ -3,6 +3,7 @@ import { venueTypeSchema } from "@vibetail/contracts";
 import { SiteFooter, SiteHeader } from "../../platform/components/SiteHeader.js";
 import { useSeo } from "../../platform/useSeo.js";
 import { AddressAutocompleteInput } from "../AddressAutocompleteInput.js";
+import { VenueLocationMap } from "../VenueLocationMap.js";
 import { VenueAdminLoading, errorMessage, useVenueSession } from "../VenueShell.js";
 import { saveCachedVenueSession } from "../session-store.js";
 import { importPendingMenuDraft } from "../draft-import.js";
@@ -80,6 +81,9 @@ export function VenueSetupPage() {
                 onCoordinates={setCoordinates}
               />
             </label>
+            <div className="vt-span-2">
+              <VenueLocationMap coordinates={coordinates} onChange={setCoordinates} />
+            </div>
             <label className="vt-span-2">Short intro
               <input name="shortIntro" maxLength={1000} placeholder="Culinary cocktails in NYC's Lower East Side." />
               <small>One line guests see next to your name in the Vibetail directory.</small>

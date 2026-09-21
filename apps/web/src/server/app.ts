@@ -30,12 +30,14 @@ import {
 } from "@vibetail/contracts";
 import type { MenuPhotoScanProvider } from "@vibetail/model-providers";
 import {
+  MAX_TILE_ZOOM,
   ManagementServiceError,
   VenueManagementServiceError,
   VenueRepositoryUnavailableError,
   VenueServiceError,
   type DefaultVenueService,
   type GeocodeProvider,
+  type MapTileProvider,
   type ManagementService,
   type VenueManagementService,
 } from "@vibetail/venue-core";
@@ -48,6 +50,7 @@ export interface WebAppOptions {
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
   geocodeProvider: GeocodeProvider;
+  mapTileProvider: MapTileProvider;
   authConfig: AuthConfig;
   menuPhotoScanProvider?: MenuPhotoScanProvider;
   checkReadiness?: () => Promise<Array<{ name: string; ready: boolean; detail: string }>>;
@@ -508,6 +511,39 @@ export function createWebApp(options: WebAppOptions): Express {
         // suggestions, so degrade to an empty list rather than an error.
         response.json({ suggestions: [] });
       }
+    }),
+  );
+
+  // ── Basemap tiles for the venue location pin ──────────────────────────
+  // Proxied rather than hotlinked: osm.org needs an identifying User-Agent
+  // (which a browser cannot send) and answers unknown web apps with a
+  // "blocked" tile. Signed in like the geocode proxy above, so the upstream
+  // quota is never anonymous — the client fetches tiles with its bearer token
+  // and hands the blobs to <img>.
+  app.get(
+    "/v1/map/tile/:zoom/:x/:y",
+    asyncRoute(async (request, response) => {
+      await requireAccountId(request);
+      const zoom = z.coerce.number().int().min(0).max(MAX_TILE_ZOOM).parse(request.params.zoom);
+      // Each zoom level is a 2^zoom square, so the bound depends on it; this
+      // keeps the proxy on real tiles instead of arbitrary upstream paths.
+      const coordinate = z.coerce.number().int().min(0).max(2 ** zoom - 1);
+      const x = coordinate.parse(request.params.x);
+      const y = coordinate.parse(request.params.y);
+      let tile;
+      try {
+        tile = await options.mapTileProvider.fetchTile(zoom, x, y);
+      } catch {
+        // A missing tile leaves a blank square under the pin, which still
+        // shows the address; that beats failing the whole onboarding form.
+        response.status(502).end();
+        return;
+      }
+      response.type(tile.contentType);
+      // Panning revisits the same tiles constantly, and the upstream policy
+      // asks callers to cache; a day is far shorter than basemaps change.
+      response.setHeader("cache-control", "private, max-age=86400");
+      response.send(Buffer.from(tile.body));
     }),
   );
 

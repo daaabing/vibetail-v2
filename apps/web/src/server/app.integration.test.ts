@@ -41,6 +41,15 @@ const STUB_GEOCODE = {
   },
 };
 
+// Same idea for basemap tiles: a 1x1 PNG stands in for the OSM proxy.
+const STUB_TILE_BODY = Uint8Array.from([137, 80, 78, 71, 13, 10, 26, 10]);
+const STUB_TILES = {
+  async fetchTile(zoom: number, x: number, y: number) {
+    if (zoom === 9) throw new Error("stub upstream down");
+    return { body: STUB_TILE_BODY, contentType: `image/png;tile=${zoom}/${x}/${y}` };
+  },
+};
+
 function requiredEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -83,6 +92,7 @@ function app(venueProvider?: ModelProvider) {
       },
     ),
     geocodeProvider: STUB_GEOCODE,
+    mapTileProvider: STUB_TILES,
     menuPhotoScanProvider: new DeterministicMenuPhotoScanProvider(),
     authConfig: NO_AUTH,
     checkReadiness: async () => {
@@ -157,6 +167,7 @@ describe("venue HTTP slice (local supabase)", () => {
       ),
       venueManagementService: new UnavailableVenueManagementService(),
       geocodeProvider: STUB_GEOCODE,
+      mapTileProvider: STUB_TILES,
       authConfig: NO_AUTH,
       checkReadiness: async () => [{ name: "venue_repository", ready: false, detail: "supabase query failed" }],
       testFrontend: true,
@@ -468,6 +479,26 @@ describe("venue HTTP slice (local supabase)", () => {
     expect(short.body.suggestions).toEqual([]);
     const failed = await request(instance).get("/v1/geocode/suggest?q=fail here").set(auth).expect(200);
     expect(failed.body.suggestions).toEqual([]);
+  });
+
+  it("proxies basemap tiles to signed-in accounts and rejects tiles off the map", async () => {
+    const instance = app();
+    await request(instance).get("/v1/map/tile/17/20984/50673").expect(401);
+
+    const login = await request(instance).post("/v1/venue/session")
+      .send({ name: `Webint Tiles ${RUN_ID}` }).expect(201);
+    const auth = { Authorization: `Bearer ${login.body.token as string}` };
+
+    const tile = await request(instance).get("/v1/map/tile/17/20984/50673").set(auth).expect(200);
+    expect(tile.headers["content-type"]).toContain("tile=17/20984/50673");
+    expect(tile.headers["cache-control"]).toContain("max-age=");
+    expect(Buffer.from(tile.body)).toEqual(Buffer.from(STUB_TILE_BODY));
+
+    // Coordinates outside the pyramid never reach the upstream, and an
+    // upstream failure is a 502 rather than a broken onboarding form.
+    await request(instance).get("/v1/map/tile/22/1/1").set(auth).expect(400);
+    await request(instance).get("/v1/map/tile/17/999999999/1").set(auth).expect(400);
+    await request(instance).get("/v1/map/tile/9/1/1").set(auth).expect(502);
   });
 
   it("persists picked coordinates through venue creation to the public directory", async () => {

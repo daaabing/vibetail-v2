@@ -15,6 +15,7 @@ import {
 import {
   DefaultVenueManagementService,
   PhotonGeocodeProvider,
+  RasterMapTileProvider,
   DefaultVenueService,
   DefaultManagementService,
   SupabaseManagementRepository,
@@ -25,6 +26,7 @@ import {
   UnavailableManagementService,
   UnavailableVenueManagementService,
   type GeocodeProvider,
+  type MapTileProvider,
   type IdentityVerifier,
   type ManagementService,
   type VenueManagementService,
@@ -44,6 +46,7 @@ export interface WebDependencies {
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
   geocodeProvider: GeocodeProvider;
+  mapTileProvider: MapTileProvider;
   menuPhotoScanProvider: ReturnType<typeof createMenuPhotoScanProvider>;
   authConfig: AuthConfig;
   checkReadiness(): Promise<DependencyReadinessCheck[]>;
@@ -127,6 +130,9 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
     venueManagementService,
     geocodeProvider: new PhotonGeocodeProvider(
       env.GEOCODE_BASE_URL ? { baseUrl: env.GEOCODE_BASE_URL } : {},
+    ),
+    mapTileProvider: new RasterMapTileProvider(
+      env.MAP_TILE_BASE_URL ? { baseUrl: env.MAP_TILE_BASE_URL } : {},
     ),
     menuPhotoScanProvider: createMenuPhotoScanProvider(env),
     authConfig,
