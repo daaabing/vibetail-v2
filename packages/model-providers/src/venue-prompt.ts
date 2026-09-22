@@ -51,12 +51,33 @@ function renderCandidate(candidate: ModelMenuCandidate): string {
   return lines.join("\n");
 }
 
-const STYLE_RULES = [
-  `=== Naming rules (vibeName) ===`,
-  `'vibeName' is the title on the front of the card — an evocative 2-4 word phrase drawn ONLY from the guest's mood, flavor and free text.`,
-  `It MUST NOT contain, echo, or riff on any word from the matched item's name. Think imagery (e.g. "Velvet Midnight", "Paper Moon"), not the drink's label.`,
-  `'tastesLike' is a warm, evocative 1-2 sentence tasting note. 'roast' is one sharp witty line, 12 words or fewer.`,
-].join("\n");
+// Naming devices distilled from real cocktail naming traditions (golden-age,
+// modern craft, tiki, wordplay). Shuffled per trace like the menu, so no single
+// device anchors the list position-first and generated names spread across
+// registers instead of clustering on soft imagery.
+const NAMING_DEVICES = [
+  `- effect-as-promise, deadpan dark humor (Corpse Reviver, Painkiller)`,
+  `- two clashing registers (Naked and Famous, Widow's Kiss)`,
+  `- an idiom gaining a second meaning (Gold Rush, Tunnel Vision)`,
+  `- a place or hour as transport (Golden Hour, Vieux Carré)`,
+  `- one quiet concrete image (Paper Plane, Fog Cutter)`,
+  `- the persona the guest becomes tonight (Boulevardier, Scofflaw)`,
+  `- deadpan-mundane cheek (Cold Pizza, Too Soon?)`,
+];
+
+function styleRules(random: () => number): string {
+  return [
+    `=== Naming rules (vibeName) ===`,
+    `'vibeName' is the title on the front of the card — an evocative 2-4 word phrase inspired by the guest's mood, flavors, occasion and free text.`,
+    `It MUST NOT contain, echo, or riff on any word from the matched item's name, and it never names an ingredient, spirit, or drink type.`,
+    `Name like a great bar menu — pick the ONE device that fits the guest's vibe (the device may invent a scene or persona, as long as it expresses that vibe):`,
+    ...shuffle(NAMING_DEVICES, random),
+    `Match the register to the guest's actual mood — a rowdy vibe earns a cheeky name; a quiet vibe still earns a quiet name, built with a fresh device (a quiet image, a place, an idiom), never stock velvet/midnight/silk vocabulary.`,
+    `The names in parentheses are real cocktails shown ONLY to teach each device — NEVER output any of them in ANY field: not as vibeName, and not as a comparison in tastesLike, whyThisMatch, or roast. A near-variant (one of these names with a word swapped) counts as outputting it; merely sharing the device or structure is fine.`,
+    `If a menu item happens to share a name with an example, that is a coincidence — it earns no extra weight in matching, and if it is matched, use a different device for its vibeName.`,
+    `'tastesLike' is a warm, evocative 1-2 sentence tasting note. 'roast' is one sharp witty line, 12 words or fewer.`,
+  ].join("\n");
+}
 
 // Voice rules live in the user message alongside the menu, so the system
 // prompt stays a stable, cacheable set of guardrails.
@@ -87,7 +108,7 @@ export function buildVenueMatchPrompt(request: VenueModelRequest): VenueMatchPro
   const freeText = preferences.freeText?.trim() || "(none)";
 
   const user = [
-    STYLE_RULES,
+    styleRules(random),
     ``,
     `You must MATCH the guest's vibe to EXACTLY ONE item from the fixed menu below. You are NOT inventing a new drink — you're picking the one that fits best and explaining why.`,
     ``,
