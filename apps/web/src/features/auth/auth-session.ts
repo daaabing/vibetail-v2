@@ -1,8 +1,8 @@
-import { runtimeConfigSchema, type AuthConfig } from "@vibetail/contracts";
+import { runtimeConfigSchema, type AuthConfig, type MapsConfig, type RuntimeConfig } from "@vibetail/contracts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { clearVenueToken, readVenueToken } from "../venue-admin/session-store.js";
 
-let configPromise: Promise<AuthConfig> | null = null;
+let configPromise: Promise<RuntimeConfig> | null = null;
 let clientPromise: Promise<SupabaseClient> | null = null;
 
 /**
@@ -11,12 +11,21 @@ let clientPromise: Promise<SupabaseClient> | null = null;
  * to the passwordless path on a transient network blip would be misleading.
  */
 export function loadAuthConfig(): Promise<AuthConfig> {
+  return loadRuntimeConfig().then((config) => config.auth);
+}
+
+/** Basemap settings from the same payload; see mapsConfigSchema. */
+export function loadMapsConfig(): Promise<MapsConfig> {
+  return loadRuntimeConfig().then((config) => config.maps);
+}
+
+function loadRuntimeConfig(): Promise<RuntimeConfig> {
   configPromise ??= fetch("/v1/config")
     .then((response) => {
       if (!response.ok) throw new Error(`config request failed with ${response.status}`);
       return response.json();
     })
-    .then((body: unknown) => runtimeConfigSchema.parse(body).auth)
+    .then((body: unknown) => runtimeConfigSchema.parse(body))
     .catch((error: unknown) => {
       configPromise = null;
       throw error;

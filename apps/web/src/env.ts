@@ -46,6 +46,11 @@ const serverEnvSchema = z
     SUPABASE_SERVICE_ROLE_KEY: optionalString(),
     // Address autocomplete upstream; defaults to the public Photon instance.
     GEOCODE_BASE_URL: optionalString(z.string().url()),
+    // Basemap tile upstream for the venue location pin; defaults to OSM.
+    MAP_TILE_BASE_URL: optionalString(z.string().url()),
+    // Browser key for the Google basemap; restrict it by HTTP referrer. Unset
+    // falls back to the OSM tiles proxied through /v1/map/tile.
+    GOOGLE_MAPS_API_KEY: optionalString(),
     MODEL_API_KEY: optionalString(),
     OPENROUTER_API_KEY: optionalString(),
     MODEL_NAME: optionalString(),

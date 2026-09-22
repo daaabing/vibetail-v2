@@ -16,6 +16,7 @@ import {
   DefaultDrinkLogService,
   DefaultVenueManagementService,
   PhotonGeocodeProvider,
+  RasterMapTileProvider,
   DefaultVenueService,
   DefaultManagementService,
   SupabaseDrinkLogRepository,
@@ -29,11 +30,12 @@ import {
   UnavailableVenueManagementService,
   type DrinkLogService,
   type GeocodeProvider,
+  type MapTileProvider,
   type IdentityVerifier,
   type ManagementService,
   type VenueManagementService,
 } from "@vibetail/venue-core";
-import type { AuthConfig } from "@vibetail/contracts";
+import type { AuthConfig, MapsConfig } from "@vibetail/contracts";
 import QRCode from "qrcode";
 import type { WebServerEnv } from "../env.js";
 
@@ -48,9 +50,11 @@ export interface WebDependencies {
   managementService: ManagementService;
   venueManagementService: VenueManagementService;
   geocodeProvider: GeocodeProvider;
+  mapTileProvider: MapTileProvider;
   drinkLogService: DrinkLogService;
   menuPhotoScanProvider: ReturnType<typeof createMenuPhotoScanProvider>;
   authConfig: AuthConfig;
+  mapsConfig: MapsConfig;
   checkReadiness(): Promise<DependencyReadinessCheck[]>;
 }
 
@@ -139,9 +143,13 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
     geocodeProvider: new PhotonGeocodeProvider(
       env.GEOCODE_BASE_URL ? { baseUrl: env.GEOCODE_BASE_URL } : {},
     ),
+    mapTileProvider: new RasterMapTileProvider(
+      env.MAP_TILE_BASE_URL ? { baseUrl: env.MAP_TILE_BASE_URL } : {},
+    ),
     drinkLogService,
     menuPhotoScanProvider: createMenuPhotoScanProvider(env),
     authConfig,
+    mapsConfig: { googleApiKey: env.GOOGLE_MAPS_API_KEY ?? null },
     checkReadiness: async () => {
       try {
         const scopes = await repository.listPublishedVenueMenus();
