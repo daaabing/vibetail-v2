@@ -61,9 +61,19 @@ The job needs a `staging` GitHub Environment holding:
 
 ```text
 secrets.SUPABASE_ACCESS_TOKEN   personal access token from the Supabase dashboard
-secrets.SUPABASE_DB_PASSWORD    the linked project's database password
 vars.SUPABASE_PROJECT_REF       e.g. dzabqqybqmrjxxrmziyf
 ```
+
+The access token is the only credential: with no `SUPABASE_DB_PASSWORD` in the
+environment, the CLI authenticates to Postgres by minting a short-lived login
+from the token ("Initialising login role..." in the job log). Do not add the
+password back — a set-but-stale password takes precedence over the login role
+and fails with `28P01`, and an expired token fails `link` with `Unauthorized`.
+Both happened in Aug–Sep 2026: the job failed silently on every merge while
+deploys continued, staging's schema fell three migrations behind the code, and
+every venue query 503'd once the code selected a column that did not exist.
+Tokens expire — when rotating, name the new one `github-staging-ci-job` and
+update the environment secret the same day.
 
 Seed data is never pushed: `db push` includes it only behind `--include-seed`,
 which this job does not pass. `infra/supabase/config.toml` describes the local
