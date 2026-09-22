@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { addDrinkLogEntry } from "./drink-log.js";
+import { useAuthUser } from "../auth/useAuthUser.js";
+import { VenueClientError } from "../../clients/http-venue-client.js";
+import { addJournalEntry } from "./drink-log-store.js";
 import { compressPhoto } from "./photo.js";
 import { CameraIcon, StarIcon } from "./icons.js";
 
@@ -8,6 +10,7 @@ import { CameraIcon, StarIcon } from "./icons.js";
  * then a name and whatever else the guest can still type at this hour.
  */
 export function RecordDrinkSheet({ venueNames, onSaved }: { venueNames: string[]; onSaved(): void }) {
+  const auth = useAuthUser();
   const fileInput = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<Blob | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -35,7 +38,7 @@ export function RecordDrinkSheet({ venueNames, onSaved }: { venueNames: string[]
     setBusy(true);
     setError("");
     try {
-      await addDrinkLogEntry({
+      await addJournalEntry({
         drinkName: drinkName.trim(),
         venueName: venueName.trim() || null,
         rating: rating || null,
@@ -44,8 +47,16 @@ export function RecordDrinkSheet({ venueNames, onSaved }: { venueNames: string[]
         source: "camera",
       });
       onSaved();
-    } catch {
-      setError("Couldn’t save on this device. Free up a little storage and try again.");
+    } catch (saveError) {
+      // A 4xx is the server explaining what's wrong (bad photo format, full
+      // journal) — show that, not a misleading connectivity line.
+      if (saveError instanceof VenueClientError && saveError.status < 500) {
+        setError(saveError.detail.message);
+      } else {
+        setError(auth.status === "signed_in"
+          ? "Couldn’t reach your account just now. Check the connection and try again."
+          : "Couldn’t save on this device. Free up a little storage and try again.");
+      }
       setBusy(false);
     }
   }
@@ -126,6 +137,10 @@ export function RecordDrinkSheet({ venueNames, onSaved }: { venueNames: string[]
     <button className="btn btn-solid ma-save" disabled={busy} type="button" onClick={() => void save()}>
       {busy ? "Saving…" : "Save to calendar"}
     </button>
-    <p className="ma-fineprint">Stays on this phone. No account, no cloud.</p>
+    <p className="ma-fineprint">
+      {auth.status === "signed_in"
+        ? "Saved to your Vibetail account — it follows you across devices."
+        : "Stays on this phone. Sign in from your profile to sync."}
+    </p>
   </div>;
 }

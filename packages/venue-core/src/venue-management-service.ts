@@ -50,6 +50,7 @@ import {
   type VenueDrink,
   type VenueError,
   type VenueLoginResult,
+  type VenueLogoInput,
   type VenueMatchResult,
   type VenueQr,
   type VenueSessionInfo,
@@ -214,6 +215,9 @@ export class DefaultVenueManagementService implements VenueManagementService {
       );
     }
     const parsed = createVenueInputSchema.parse(input);
+    // Uploaded before the row is inserted: a failed upload leaves no venue
+    // behind, and every venue in the directory has an avatar from birth.
+    const logoUrl = await this.uploadLogo(account.id, parsed.name, parsed.logo);
     await this.mutate(() => this.repository.createVenue(account.id, {
       name: parsed.name,
       slugBase: slugify(parsed.name),
@@ -222,6 +226,7 @@ export class DefaultVenueManagementService implements VenueManagementService {
       shortIntro: parsed.shortIntro,
       latitude: parsed.latitude,
       longitude: parsed.longitude,
+      logoUrl,
     }));
     const refreshed = await this.authorize(token);
     return this.buildSession(refreshed);
@@ -230,12 +235,16 @@ export class DefaultVenueManagementService implements VenueManagementService {
   async updateVenueProfile(token: string, input: UpdateVenueProfileInput): Promise<VenueSessionInfo> {
     const merchantId = await this.requireVenue(token);
     const parsed = updateVenueProfileInputSchema.parse(input);
+    const logoUrl = parsed.logo
+      ? await this.uploadLogo(merchantId, parsed.name, parsed.logo)
+      : null;
     // The slug stays put: it is already printed on QR codes and shared links.
     await this.mutate(() => this.repository.updateVenueProfile(merchantId, {
       name: parsed.name,
       address: parsed.address,
       venueType: parsed.venueType,
       shortIntro: parsed.shortIntro,
+      ...(logoUrl ? { logoUrl } : {}),
     }));
     return this.getSession(token);
   }
@@ -541,6 +550,26 @@ export class DefaultVenueManagementService implements VenueManagementService {
       );
     }
     return account.merchantId;
+  }
+
+  /** Stores an uploaded avatar and returns the URL written to the venue row. */
+  private async uploadLogo(ownerId: string, venueName: string, logo: VenueLogoInput): Promise<string> {
+    const storage = this.options.mediaStorage;
+    if (!storage) throw mediaUnavailable("Venue avatar uploads are not configured on this server.");
+    const bytes = decodeBase64(logo.imageBase64);
+    try {
+      const stored = await storage.uploadVenueLogo({
+        ownerId,
+        objectId: randomUUID(),
+        venueName,
+        bytes,
+        contentType: logo.imageContentType,
+      });
+      return stored.logoUrl;
+    } catch (error) {
+      if (error instanceof VenueManagementServiceError) throw error;
+      throw mediaUnavailable("The venue avatar could not be stored. Try a PNG, JPEG, or WebP under 8 MB.");
+    }
   }
 
   private async buildSession(account: StoredVenueAccount): Promise<VenueSessionInfo> {

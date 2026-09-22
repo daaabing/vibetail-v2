@@ -9,6 +9,17 @@ export type VenueType = z.infer<typeof venueTypeSchema>;
 export const drinkStrengthSchema = z.enum(["zero", "light", "medium", "strong"]);
 export type DrinkStrength = z.infer<typeof drinkStrengthSchema>;
 
+export const venueImageContentTypeSchema = z.enum(["image/png", "image/jpeg", "image/webp"]);
+export type VenueImageContentType = z.infer<typeof venueImageContentTypeSchema>;
+
+// Raw bytes for a venue avatar. The server stores them and hands back a URL:
+// owners upload a file rather than hosting an image themselves.
+export const venueLogoInputSchema = z.object({
+  imageBase64: z.string().min(1).max(12_000_000),
+  imageContentType: venueImageContentTypeSchema,
+});
+export type VenueLogoInput = z.infer<typeof venueLogoInputSchema>;
+
 // Legacy passwordless account-name login. Only reachable when AUTH_PROVIDER=none
 // (local development); Supabase deployments reject it in favour of Google sign-in.
 export const venueLoginInputSchema = z.object({
@@ -33,6 +44,9 @@ export const venueProfileSchema = z.object({
   shortIntro: z.string().max(1_000).nullable(),
   address: z.string().max(500).nullable(),
   venueType: venueTypeSchema.nullable(),
+  // Defaulted (not just nullable) so sessions from servers predating the
+  // venue-avatar release still parse during the deploy overlap.
+  logoUrl: z.string().url().nullable().default(null),
   isActive: z.boolean(),
 });
 export type VenueProfile = z.infer<typeof venueProfileSchema>;
@@ -61,6 +75,8 @@ export const createVenueInputSchema = z.object({
   // null when the address was typed free-form.
   latitude: z.number().min(-90).max(90).nullable().default(null),
   longitude: z.number().min(-180).max(180).nullable().default(null),
+  // Required: a venue without an avatar shows up blank in the guest directory.
+  logo: venueLogoInputSchema,
 });
 export type CreateVenueInput = z.infer<typeof createVenueInputSchema>;
 
@@ -69,6 +85,10 @@ export const updateVenueProfileInputSchema = z.object({
   address: z.string().trim().min(1).max(500),
   venueType: venueTypeSchema,
   shortIntro: shortIntroInputSchema,
+  // Optional here: an owner editing their profile keeps the stored avatar
+  // unless they pick a new file. Venues created before the avatar requirement
+  // can still be edited without one.
+  logo: venueLogoInputSchema.nullable().default(null),
 });
 export type UpdateVenueProfileInput = z.infer<typeof updateVenueProfileInputSchema>;
 
@@ -129,9 +149,6 @@ export const drinkInfoSuggestionSchema = z.object({
   recommendationNote: z.string().trim().min(1).max(300),
 });
 export type DrinkInfoSuggestion = z.infer<typeof drinkInfoSuggestionSchema>;
-
-export const venueImageContentTypeSchema = z.enum(["image/png", "image/jpeg", "image/webp"]);
-export type VenueImageContentType = z.infer<typeof venueImageContentTypeSchema>;
 
 export const menuPhotoScanInputSchema = z.object({
   imageBase64: z.string().min(1).max(12_000_000),

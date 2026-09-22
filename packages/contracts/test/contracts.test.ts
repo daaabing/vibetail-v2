@@ -130,11 +130,24 @@ describe("venue contracts", () => {
 
   it("defaults a missing venue intro to null and normalises blank ones", () => {
     // Clients that predate the intro field keep working against the same route.
-    expect(createVenueInputSchema.parse({ name: "Ego", address: "1 Test Street" }).shortIntro).toBeNull();
-    expect(createVenueInputSchema.parse({ name: "Ego", address: "1 Test Street", shortIntro: " " }).shortIntro).toBeNull();
+    const logo = { imageBase64: "aGk=", imageContentType: "image/png" as const };
+    expect(createVenueInputSchema.parse({ name: "Ego", address: "1 Test Street", logo }).shortIntro).toBeNull();
+    expect(createVenueInputSchema.parse({ name: "Ego", address: "1 Test Street", shortIntro: " ", logo }).shortIntro).toBeNull();
     expect(updateVenueProfileInputSchema.parse({
       name: "Ego", address: "1 Test Street", venueType: "cocktail_bar", shortIntro: "  Natural wine and highballs.  ",
     }).shortIntro).toBe("Natural wine and highballs.");
+  });
+
+  it("requires an avatar on venue creation and leaves profile edits free of one", () => {
+    // Every venue enters the directory with an avatar; an edit keeps the stored
+    // one unless a replacement is uploaded, so older venues stay editable.
+    expect(() => createVenueInputSchema.parse({ name: "Ego", address: "1 Test Street" })).toThrow();
+    expect(() => createVenueInputSchema.parse({
+      name: "Ego", address: "1 Test Street", logo: { imageBase64: "aGk=", imageContentType: "image/gif" },
+    })).toThrow();
+    expect(updateVenueProfileInputSchema.parse({
+      name: "Ego", address: "1 Test Street", venueType: "cocktail_bar", shortIntro: null,
+    }).logo).toBeNull();
   });
 });
 

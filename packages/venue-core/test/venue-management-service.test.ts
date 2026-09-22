@@ -17,7 +17,13 @@ import {
   rangeStart,
   slugify,
 } from "../src/venue-management-service.js";
-import { anonVenueRepository, uniqueName, venueManagementRepository } from "./helpers.js";
+import {
+  anonVenueRepository,
+  testVenueLogoInput,
+  uniqueName,
+  venueManagementRepository,
+  venueMediaStorage,
+} from "./helpers.js";
 
 const DEMO_ACCOUNT_NAME = "Demo Bar";
 // Seeded drink id in the vibetail-taproom library (fixtures/venue/menus.json).
@@ -26,6 +32,7 @@ const SMOKED_PEAR_ID = "77777777-0001-4001-8001-000000000001";
 function createService(repository = venueManagementRepository()) {
   const service = new DefaultVenueManagementService(repository, {
     appUrl: "http://127.0.0.1:3000/",
+    mediaStorage: venueMediaStorage(),
     renderQrSvg: async (text) => `<svg data-url="${text}"></svg>`,
   });
   return { repository, service };
@@ -56,6 +63,7 @@ async function createVenueContext(
     shortIntro: null,
     latitude: null,
     longitude: null,
+    logo: testVenueLogoInput(),
   });
   const venue = session.venue;
   if (!venue) throw new Error("createVenue did not attach a venue to the session");
@@ -129,6 +137,7 @@ describe("venue creation", () => {
       shortIntro: "Taproom test intro.",
       latitude: 40.7042,
       longitude: -73.9932,
+      logo: testVenueLogoInput(),
     });
     // The seeded slug "vibetail-taproom" is taken, so a numeric suffix is
     // appended. The exact number depends on how many colliding venues this
@@ -144,6 +153,7 @@ describe("venue creation", () => {
       shortIntro: null,
       latitude: null,
       longitude: null,
+      logo: testVenueLogoInput(),
     })).rejects.toMatchObject({ detail: { code: "CONFLICT" } });
   });
 
@@ -158,6 +168,7 @@ describe("venue creation", () => {
       shortIntro: null,
       latitude: null,
       longitude: null,
+      logo: testVenueLogoInput(),
     });
     expect(created.venue?.shortIntro).toBeNull();
 
@@ -166,6 +177,7 @@ describe("venue creation", () => {
       address: "2 Test Street",
       venueType: "restaurant",
       shortIntro: "Culinary cocktails, tucked away.",
+      logo: null,
     });
     expect(updated.venue?.slug).toBe(created.venue?.slug);
     expect(updated.venue?.name).toBe(`${name} Bar`);
@@ -179,8 +191,48 @@ describe("venue creation", () => {
       address: "2 Test Street",
       venueType: "restaurant",
       shortIntro: "   ",
+      logo: null,
     });
     expect(cleared.venue?.shortIntro).toBeNull();
+  });
+
+  it("requires an avatar, stores it, and keeps it across an ordinary profile edit", async () => {
+    const { service } = createService();
+    const name = uniqueName("vms-test-avatar");
+    const { token } = await service.login(name);
+    const withoutLogo = {
+      name,
+      address: "1 Test Street",
+      venueType: "cocktail_bar" as const,
+      shortIntro: null,
+      latitude: null,
+      longitude: null,
+    };
+    await expect(service.createVenue(token, withoutLogo as never)).rejects.toThrow();
+
+    const created = await service.createVenue(token, { ...withoutLogo, logo: testVenueLogoInput() });
+    const logoUrl = created.venue?.logoUrl;
+    expect(logoUrl).toContain("/storage/v1/object/sign/merchant-menus/");
+
+    // No replacement file: the stored avatar survives the edit.
+    const edited = await service.updateVenueProfile(token, {
+      name,
+      address: "2 Test Street",
+      venueType: "cocktail_bar",
+      shortIntro: null,
+      logo: null,
+    });
+    expect(edited.venue?.logoUrl).toBe(logoUrl);
+
+    const replaced = await service.updateVenueProfile(token, {
+      name,
+      address: "2 Test Street",
+      venueType: "cocktail_bar",
+      shortIntro: null,
+      logo: testVenueLogoInput(),
+    });
+    expect(replaced.venue?.logoUrl).toContain("/storage/v1/object/sign/merchant-menus/");
+    expect(replaced.venue?.logoUrl).not.toBe(logoUrl);
   });
 
   it("refuses a profile update before a venue exists", async () => {
@@ -191,6 +243,7 @@ describe("venue creation", () => {
       address: "1 Test Street",
       venueType: "other",
       shortIntro: null,
+      logo: null,
     })).rejects.toMatchObject({ detail: { code: "FORBIDDEN" } });
   });
 });
@@ -265,6 +318,7 @@ describe("drink library", () => {
   it("returns validated suggestions when a drink info provider is configured", async () => {
     const service = new DefaultVenueManagementService(venueManagementRepository(), {
       appUrl: "http://127.0.0.1:3000",
+      mediaStorage: venueMediaStorage(),
       drinkInfoProvider: {
         id: "test",
         suggestDrinkInfo: async () => ({

@@ -1,4 +1,5 @@
 import {
+  createDrinkLogInputSchema,
   createMenuInputSchema,
   createVenueInputSchema,
   createVenueMenuInputSchema,
@@ -37,6 +38,7 @@ import {
   VenueRepositoryUnavailableError,
   VenueServiceError,
   type DefaultVenueService,
+  type DrinkLogService,
   type GeocodeProvider,
   type MapTileProvider,
   type ManagementService,
@@ -52,6 +54,7 @@ export interface WebAppOptions {
   venueManagementService: VenueManagementService;
   geocodeProvider: GeocodeProvider;
   mapTileProvider: MapTileProvider;
+  drinkLogService: DrinkLogService;
   authConfig: AuthConfig;
   mapsConfig?: MapsConfig;
   menuPhotoScanProvider?: MenuPhotoScanProvider;
@@ -483,9 +486,11 @@ export function createWebApp(options: WebAppOptions): Express {
     }),
   );
 
-  // ── Address autocomplete for venue onboarding ──────────────────────────
-  // Signed-in accounts only (any signed-in identity, no merchant required),
-  // so the proxy and its upstream quota aren't an anonymous public endpoint.
+  // ── Signed-in account helper ───────────────────────────────────────────
+  // Auth piggybacks on resolveAccountId: any signed-in identity gets a
+  // venue_accounts row on first call; no merchant is required. Shared by the
+  // onboarding geocode proxy and the guest's drink journal, so the 401 copy
+  // stays generic.
   const requireAccountId = async (request: Request): Promise<string> => {
     const accountId = await venueManagement.resolveAccountId(readBearerToken(request));
     if (!accountId) {
@@ -497,6 +502,9 @@ export function createWebApp(options: WebAppOptions): Express {
     return accountId;
   };
 
+  // ── Address autocomplete for venue onboarding ──────────────────────────
+  // Signed-in accounts only (any signed-in identity, no merchant required),
+  // so the proxy and its upstream quota aren't an anonymous public endpoint.
   app.get(
     "/v1/geocode/suggest",
     asyncRoute(async (request, response) => {
@@ -513,6 +521,39 @@ export function createWebApp(options: WebAppOptions): Express {
         // suggestions, so degrade to an empty list rather than an error.
         response.json({ suggestions: [] });
       }
+    }),
+  );
+
+  // ── The signed-in guest's drink journal ────────────────────────────────
+  app.post(
+    "/v1/me/drink-logs",
+    asyncRoute(async (request, response) => {
+      const accountId = await requireAccountId(request);
+      const entry = await options.drinkLogService.createEntry(
+        accountId,
+        createDrinkLogInputSchema.parse(request.body),
+      );
+      response.status(201).json(entry);
+    }),
+  );
+
+  app.get(
+    "/v1/me/drink-logs",
+    asyncRoute(async (request, response) => {
+      const accountId = await requireAccountId(request);
+      response.json({ entries: await options.drinkLogService.listEntries(accountId) });
+    }),
+  );
+
+  app.delete(
+    "/v1/me/drink-logs/:id",
+    asyncRoute(async (request, response) => {
+      const accountId = await requireAccountId(request);
+      // A non-uuid id can't exist, and delete is idempotent — succeed without
+      // asking Postgres to choke on the cast.
+      const entryId = z.string().uuid().safeParse(request.params.id ?? "");
+      if (entryId.success) await options.drinkLogService.deleteEntry(accountId, entryId.data);
+      response.status(204).end();
     }),
   );
 

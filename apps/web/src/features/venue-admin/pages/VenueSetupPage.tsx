@@ -4,6 +4,8 @@ import { SiteFooter, SiteHeader } from "../../platform/components/SiteHeader.js"
 import { useSeo } from "../../platform/useSeo.js";
 import { AddressAutocompleteInput } from "../AddressAutocompleteInput.js";
 import { VenueLocationMap } from "../VenueLocationMap.js";
+import { VenueLogoField } from "../VenueLogoField.js";
+import { readVenueImage } from "../imageUpload.js";
 import { VenueAdminLoading, errorMessage, useVenueSession } from "../VenueShell.js";
 import { saveCachedVenueSession } from "../session-store.js";
 import { importPendingMenuDraft } from "../draft-import.js";
@@ -21,6 +23,7 @@ export function VenueSetupPage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [logoFile, setLogoFile] = useState<File>();
 
   if (!state) return <VenueAdminLoading />;
   if (state.session.venue) {
@@ -32,6 +35,10 @@ export function VenueSetupPage() {
     if (!state) return;
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    if (!logoFile) {
+      setError("Add a venue avatar — guests see it in the bar directory.");
+      return;
+    }
     setPending(true);
     setError("");
     try {
@@ -42,6 +49,7 @@ export function VenueSetupPage() {
         shortIntro: String(data.get("shortIntro") ?? "").trim() || null,
         latitude: coordinates?.latitude ?? null,
         longitude: coordinates?.longitude ?? null,
+        logo: await readVenueImage(logoFile),
       });
       // The admin page renders from this snapshot on arrival; without it the
       // brand-new venue would flash the account name until the recheck lands.
@@ -88,6 +96,11 @@ export function VenueSetupPage() {
               <input name="shortIntro" maxLength={1000} placeholder="Culinary cocktails in NYC's Lower East Side." />
               <small>One line guests see next to your name in the Vibetail directory.</small>
             </label>
+            <VenueLogoField
+              file={logoFile}
+              hint="Required. Your logo or a photo of the room — it fronts your venue in the guest directory."
+              onSelect={setLogoFile}
+            />
             <button className="vt-primary" type="submit" disabled={pending}>
               {pending ? "Creating…" : "Create venue"}
             </button>
