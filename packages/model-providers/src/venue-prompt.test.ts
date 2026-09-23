@@ -90,6 +90,34 @@ describe("venue match prompt", () => {
     expect(user).toContain("MUST NOT contain, echo, or riff on any word from the matched item's name");
   });
 
+  it("teaches varied naming devices without letting examples leak into output", () => {
+    const { user } = buildVenueMatchPrompt(request());
+    expect(user).toContain("pick the ONE device that fits the guest's vibe");
+    const onePerDevice = [
+      "Corpse Reviver", "Naked and Famous", "Tunnel Vision", "Vieux Carré",
+      "Paper Plane", "Scofflaw", "Cold Pizza",
+    ];
+    for (const example of onePerDevice) expect(user).toContain(example);
+    expect(user).toContain("Match the register to the guest's actual mood");
+    expect(user).toContain("never stock velvet/midnight/silk vocabulary");
+    expect(user).toContain(
+      "The names in parentheses are real cocktails shown ONLY to teach each device — NEVER output any of them in ANY field",
+    );
+    expect(user).toContain("it earns no extra weight in matching");
+  });
+
+  it("shuffles the naming devices per trace so no device anchors the list", () => {
+    const deviceRanks = (traceId: string) => {
+      const { user } = buildVenueMatchPrompt(request({ traceId }));
+      const positions = ["Corpse Reviver", "Tunnel Vision", "Paper Plane", "Cold Pizza"]
+        .map((example) => user.indexOf(example));
+      expect(positions.every((index) => index >= 0)).toBe(true);
+      return positions.map((index) => [...positions].sort((a, b) => a - b).indexOf(index));
+    };
+    expect(deviceRanks("trace-a")).toEqual(deviceRanks("trace-a"));
+    expect(deviceRanks("trace-b")).not.toEqual(deviceRanks("trace-a"));
+  });
+
   it("never lets guest text escape the data section", () => {
     const { system, user } = buildVenueMatchPrompt(request({
       preferences: {
