@@ -56,9 +56,12 @@ jobs:
       group: migrate-staging
       cancel-in-progress: false
     environment: staging
+    # No SUPABASE_DB_PASSWORD: when the password env is unset the CLI mints a
+    # short-lived Postgres login from the access token ("login role"), so the
+    # token is the only credential — a stale password secret would be preferred
+    # over that and fail, which is how the 2026-09 staging schema drift started.
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
