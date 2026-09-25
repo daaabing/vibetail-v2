@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { FLAVOR_CHIPS, MOOD_PLACEHOLDERS_EN } from "../../lib/moodtail-data.js";
+import { FLAVOR_CHIPS, MOOD_PLACEHOLDERS_EN, MOOD_PLACEHOLDERS_ZH } from "../../lib/moodtail-data.js";
+import { useLang } from "../../lib/i18n.js";
 import { VIBE_PICKS } from "../../lib/vibe-picks.js";
 import type { SensoryState } from "../../lib/vibeflow.js";
 import { BASE_SPIRITS, type AlcoholLevel } from "../../lib/mix-flow.js";
@@ -196,10 +197,10 @@ export function StepVibe({
   onText: (text: string) => void;
   onDiy: () => void;
 }) {
+  const { lang, t } = useLang();
   const boxRef = useRef<HTMLTextAreaElement>(null);
-  // The box opens only when the guest asks for it (or arrived with typed text).
   const [diyOpen, setDiyOpen] = useState(() => !!moodText.trim() && !pickedLabel);
-  const placeholders = MOOD_PLACEHOLDERS_EN;
+  const placeholders = lang === "zh" ? MOOD_PLACEHOLDERS_ZH : MOOD_PLACEHOLDERS_EN;
   const shuffle = () => onText(placeholders[Math.floor(Math.random() * placeholders.length)]!);
 
   const pickPlate = (key: string) => {
@@ -218,11 +219,9 @@ export function StepVibe({
   return (
     <div>
       <div className="mb-4">
-        <span className="scrawl">{"Which one is tonight?"}</span>
+        <span className="scrawl">{t("Which one is tonight?", "今晚是哪一种？")}</span>
       </div>
 
-      {/* All the plates on the table at once — four to a row.
-          Writing it yourself is just one more plate. */}
       <div className="grid grid-cols-2 gap-x-8 gap-y-14 sm:grid-cols-3 lg:grid-cols-4">
         <button
           type="button"
@@ -237,7 +236,7 @@ export function StepVibe({
           <span className="mt-3 flex items-baseline gap-2">
             <span className="specimen-no">00</span>
             <span className="plate-label note text-[14px] leading-tight">
-              {"Write it yourself"}
+              {t("Write it yourself", "用自己的话说")}
             </span>
           </span>
         </button>
@@ -258,14 +257,13 @@ export function StepVibe({
               <span className="plate-rule mt-4" />
               <span className="mt-3 flex items-baseline gap-2">
                 <span className="specimen-no">{String(i + 1).padStart(2, "0")}</span>
-                <span className="plate-label note text-[14px] leading-tight">{v.label}</span>
+                <span className="plate-label note text-[14px] leading-tight">{lang === "zh" ? v.labelZh : v.label}</span>
               </span>
             </button>
           );
         })}
       </div>
 
-      {/* The box, revealed only when "Write it yourself" is on the table */}
       <AnimatePresence initial={false}>
         {diySelected && (
           <motion.div
@@ -277,7 +275,7 @@ export function StepVibe({
             style={{ overflow: "hidden" }}
           >
             <div className="mt-8">
-              <div className="scrawl mb-1">{"In your own words"}</div>
+              <div className="scrawl mb-1">{t("In your own words", "用你自己的话")}</div>
               <div className="relative">
                 <textarea
                   ref={boxRef}
@@ -293,7 +291,7 @@ export function StepVibe({
                   onClick={shuffle}
                   className="btn btn-outline absolute bottom-2 right-0 !px-3 !py-1 !text-[15px]"
                 >
-                  {"Shuffle"}
+                  {t("Shuffle", "换一个")}
                 </button>
               </div>
             </div>
@@ -315,38 +313,39 @@ export function StepTaste({
   onChange: (key: keyof SensoryState, v: number) => void;
   summary: string;
 }) {
+  const { t } = useLang();
   return (
     <div>
       <div className="space-y-9">
         <PoleSlider
           value={sensory.fresh}
           onChange={(v) => onChange("fresh", v)}
-          left={"Bright"}
-          right={"Deep"}
+          left={t("Bright", "明亮")}
+          right={t("Deep", "深沉")}
           leftArt="lemon"
           rightArt="barrel"
-          leftHint={"citrus, ice, wakes you up"}
-          rightHint={"oak, caramel, sits heavier"}
+          leftHint={t("citrus, ice, wakes you up", "柑橘、冰感、提神")}
+          rightHint={t("oak, caramel, sits heavier", "橡木、焦糖、更厚重")}
         />
         <PoleSlider
           value={sensory.soft}
           onChange={(v) => onChange("soft", v)}
-          left={"Gentle"}
-          right={"Punchy"}
+          left={t("Gentle", "柔和")}
+          right={t("Punchy", "有劲")}
           leftArt="feather"
           rightArt="chili"
-          leftHint={"smooth, no bite"}
-          rightHint={"spice, bitterness, a jolt"}
+          leftHint={t("smooth, no bite", "顺滑，不辣口")}
+          rightHint={t("spice, bitterness, a jolt", "辛辣、苦味、一击")}
         />
         <PoleSlider
           value={sensory.familiar}
           onChange={(v) => onChange("familiar", v)}
-          left={"Familiar"}
-          right={"Surprise me"}
+          left={t("Familiar", "经典")}
+          right={t("Surprise me", "给我惊喜")}
           leftArt="home"
           rightArt="dice"
-          leftHint={"the one you always order"}
-          rightHint={"never had it, roll the dice"}
+          leftHint={t("the one you always order", "每次都点的那杯")}
+          rightHint={t("never had it, roll the dice", "没喝过的，掷骰子")}
         />
       </div>
 
@@ -370,23 +369,24 @@ export function StepStrength({
   strength: number;
   onStrength: (v: number) => void;
 }) {
+  const { t } = useLang();
   return (
     <div>
-      <div className="scrawl mb-4">{"Tap the glass — pour it as high as you like"}</div>
+      <div className="scrawl mb-4">{t("Tap the glass — pour it as high as you like", "点一下杯子——倒到你想要的高度")}</div>
 
       <PourCup value={alcohol} onChange={onAlcohol} />
 
       <div className="mt-10 border-t pt-8" style={{ borderColor: "var(--line)" }}>
-        <div className="scrawl mb-5">{"How long are we here?"}</div>
+        <div className="scrawl mb-5">{t("How long are we here?", "今晚打算坐多久？")}</div>
         <PoleSlider
           value={strength}
           onChange={onStrength}
-          left={"All evening"}
-          right={"One and done"}
+          left={t("All evening", "整晚慢慢喝")}
+          right={t("One and done", "一杯走人")}
           leftArt="highball"
           rightArt="coupe"
-          leftHint={"tall glass, ice, keeps going"}
-          rightHint={"small glass, concentrated, hits"}
+          leftHint={t("tall glass, ice, keeps going", "高杯、冰块、持续")}
+          rightHint={t("small glass, concentrated, hits", "小杯、浓缩、有冲击")}
           artOnly
         />
       </div>
@@ -405,6 +405,8 @@ export function StepSpirit({
   onPick: (key: string) => void;
   availableKeys?: string[];
 }) {
+  const { lang, t } = useLang();
+  const zh = lang === "zh";
   const options =
     availableKeys === undefined
       ? BASE_SPIRITS
@@ -413,7 +415,6 @@ export function StepSpirit({
   return (
     <div>
       <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-        {/* No preference sits on the shelf like everything else */}
         <button
           type="button"
           className="plate"
@@ -425,9 +426,9 @@ export function StepSpirit({
           </span>
           <span className="plate-rule mt-3" />
           <span className="plate-label note mt-2.5 block text-[15px] leading-tight">
-            {"No preference"}
+            {t("No preference", "不挑")}
           </span>
-          <span className="scrawl-sm mt-1 block leading-tight">{"You pick for me"}</span>
+          <span className="scrawl-sm mt-1 block leading-tight">{t("You pick for me", "你来选")}</span>
         </button>
         {options.map((sp) => {
           const selected = baseSpirit === sp.key;
@@ -444,16 +445,16 @@ export function StepSpirit({
               </span>
               <span className="plate-rule mt-3" />
               <span className="plate-label note mt-2.5 block text-[15px] leading-tight">
-                {sp.en}
+                {zh ? sp.zh : sp.en}
               </span>
-              <span className="scrawl-sm mt-1 block leading-tight">{sp.noteEn}</span>
+              <span className="scrawl-sm mt-1 block leading-tight">{zh ? sp.noteZh : sp.noteEn}</span>
             </button>
           );
         })}
       </div>
 
       {options.length === 0 && (
-        <p className="note mt-4">{"No base spirits listed on this menu."}</p>
+        <p className="note mt-4">{t("No base spirits listed on this menu.", "此菜单未列出基酒。")}</p>
       )}
     </div>
   );
@@ -472,10 +473,11 @@ export function StepNotes({
   referenceDrink: string;
   onReference: (v: string) => void;
 }) {
+  const { t } = useLang();
   return (
     <div>
       <div className="scrawl mb-3">
-        {"Anything specific · up to 3"}
+        {t("Anything specific · up to 3", "有特别想要的吗 · 最多 3 个")}
         {manualFlavors.length > 0 && ` · ${manualFlavors.length}/3`}
       </div>
       <div className="flex flex-wrap gap-2">
@@ -496,12 +498,12 @@ export function StepNotes({
       </div>
 
       <div className="mt-10 border-t pt-8" style={{ borderColor: "var(--line)" }}>
-        <div className="scrawl mb-1">{"Already got one in mind?"}</div>
+        <div className="scrawl mb-1">{t("Already got one in mind?", "心里已经有一杯了？")}</div>
         <input
           type="text"
           value={referenceDrink}
           onChange={(e) => onReference(e.target.value)}
-          placeholder={"e.g. like a Mojito, but less sweet"}
+          placeholder={t("e.g. like a Mojito, but less sweet", "比如像 Mojito，但不要那么甜")}
           className="field text-[24px]"
           style={{ fontFamily: "var(--font-display)", fontWeight: 400 }}
         />

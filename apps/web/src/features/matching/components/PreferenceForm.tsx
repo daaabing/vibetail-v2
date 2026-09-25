@@ -20,6 +20,7 @@ import {
   sensorySummary,
   type SensoryState,
 } from "../../../lib/vibeflow.js";
+import { useLang } from "../../../lib/i18n.js";
 import {
   BASE_SPIRITS,
   STEP_IDS,
@@ -34,13 +35,27 @@ import {
 /** Longest gap between two taps still read as one double-tap. */
 const DOUBLE_TAP_MS = 320;
 
-const STEP_SUBS: Record<StepId, string> = {
-  vibe: "Pick the one that fits tonight. This is the only answer we actually need.",
-  taste:
-    "Three sliders, by instinct. No cocktail vocabulary required — leave them centred and we'll judge for you.",
-  strength: "How hard should tonight hit, and how long should it last?",
-  spirit: "Optional. Most people skip this and let the drink decide its own base.",
-  notes: "Last call for specifics. Anything here overrides what we inferred.",
+const STEP_SUBS: Record<StepId, { en: string; zh: string }> = {
+  vibe: {
+    en: "Pick the one that fits tonight. This is the only answer we actually need.",
+    zh: "选一个今晚的状态。这是唯一必须回答的问题。",
+  },
+  taste: {
+    en: "Three sliders, by instinct. No cocktail vocabulary required — leave them centred and we'll judge for you.",
+    zh: "三根滑条，凭直觉拉。不需要鸡尾酒词汇——留在中间我们替你判断。",
+  },
+  strength: {
+    en: "How hard should tonight hit, and how long should it last?",
+    zh: "今晚要多上头？想喝多久？",
+  },
+  spirit: {
+    en: "Optional. Most people skip this and let the drink decide its own base.",
+    zh: "可选。大多数人跳过这步，让酒自己选基底。",
+  },
+  notes: {
+    en: "Last call for specifics. Anything here overrides what we inferred.",
+    zh: "最后补充。写在这里的会覆盖我们的推断。",
+  },
 };
 
 interface PreferenceFormProps {
@@ -48,6 +63,7 @@ interface PreferenceFormProps {
   initial?: VenuePreferences;
   /** When present, the base-spirit shelf only shows what this menu pours. */
   menuItems?: VenueMenuItem[];
+  onLocaleToggle?(): void;
   onSubmit(preferences: VenuePreferences): void;
 }
 
@@ -56,7 +72,9 @@ interface PreferenceFormProps {
  * drawing of the drink assembling itself as the guest answers. Right: five
  * questions on paper. Emits the platform's VenuePreferences contract.
  */
-export function PreferenceForm({ busy, initial, menuItems, onSubmit }: PreferenceFormProps) {
+export function PreferenceForm({ busy, initial, menuItems, onLocaleToggle, onSubmit }: PreferenceFormProps) {
+  const { lang, t } = useLang();
+  const zh = lang === "zh";
   const availableSpiritKeys = useMemo(
     () => (menuItems ? deriveMenuBaseSpiritKeys(menuItems) : undefined),
     [menuItems],
@@ -65,7 +83,7 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
   /* ── Step navigation ── */
   const [step, setStepState] = useState(0);
   // The primary button changes identity on the last step — "Continue" becomes
-  // "Meet my drink" — so a double-tap landing either side of that change fires
+  // "Match your vibe" — so a double-tap landing either side of that change fires
   // a match the guest never asked for. Remember when the step last moved and
   // let submit() ignore anything arriving within one double-tap of it.
   const stepMovedAtRef = useRef(Number.NEGATIVE_INFINITY);
@@ -126,13 +144,10 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
   const changeSensory = (key: keyof SensoryState, v: number) => setSensory((s) => ({ ...s, [key]: v }));
 
   const submit = () => {
-    // advance() routes the last step here rather than through setStep, so
-    // without this guard a double-tap on Continue at the 04 → 05 boundary
-    // lands on "Meet my drink" and submits a step early.
     if (performance.now() - stepMovedAtRef.current < DOUBLE_TAP_MS) return;
-    if (!hasVibe) { setError("Choose a mood or write your own line."); setStep(0); return; }
-    const { finalFlavors, customPreference } = buildPreference(order, "en");
-    const mood = moodText.trim() || findVibePick(pickedLabel)?.mood || "";
+    if (!hasVibe) { setError(t("Choose a mood or write your own line.", "请选择一种心情，或者写下自己的描述。")); setStep(0); return; }
+    const { finalFlavors, customPreference } = buildPreference(order, lang);
+    const mood = moodText.trim() || (zh ? findVibePick(pickedLabel)?.moodZh : findVibePick(pickedLabel)?.mood) || "";
     const parsed = venuePreferencesSchema.safeParse({
       ...(mood ? { mood } : {}),
       flavors: finalFlavors,
@@ -141,13 +156,13 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
       excludedIngredients: initial?.excludedIngredients ?? [],
       ...(customPreference ? { freeText: customPreference.slice(0, 500) } : {}),
     });
-    if (!parsed.success) { setError("Tell us a mood or choose at least one flavour."); return; }
+    if (!parsed.success) { setError(t("Tell us a mood or choose at least one flavour.", "请描述心情，或至少选择一种风味。")); return; }
     setError("");
     onSubmit(parsed.data);
   };
 
   const isLast = step === STEP_IDS.length - 1;
-  const primaryLabel = isLast ? "Meet my drink" : "Continue";
+  const primaryLabel = isLast ? t("Match your vibe", "找到今晚这一杯") : t("Continue", "继续");
   const advance = () => (isLast ? submit() : setStep(step + 1));
 
   const stepBody = (() => {
@@ -155,7 +170,7 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
       case "vibe":
         return <StepVibe moodText={moodText} pickedLabel={pickedLabel} onPick={pickVibe} onText={writeMood} onDiy={startDiy} />;
       case "taste":
-        return <StepTaste sensory={sensory} onChange={changeSensory} summary={sensorySummary("en", sensory)} />;
+        return <StepTaste sensory={sensory} onChange={changeSensory} summary={sensorySummary(lang, sensory)} />;
       case "strength":
         return <StepStrength alcohol={alcohol} onAlcohol={setAlcohol} strength={sensory.strength} onStrength={(v) => changeSensory("strength", v)} />;
       case "spirit":
@@ -182,7 +197,7 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
               {step === 0 ? (
                 <a href="/" className="mono flex items-center gap-2" style={{ color: "inherit", textDecoration: "none" }}>
                   <span aria-hidden>←</span>
-                  Exit
+                  {t("Exit", "退出")}
                 </a>
               ) : (
                 <button
@@ -192,7 +207,7 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
                   style={{ color: "inherit", background: "none", border: 0, padding: 0, cursor: "pointer", font: "inherit" }}
                 >
                   <span aria-hidden>←</span>
-                  Back
+                  {t("Back", "返回")}
                 </button>
               )}
               <div className="flex flex-1 items-center gap-1.5 px-2" aria-hidden>
@@ -204,6 +219,7 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
                 {String(step + 1).padStart(2, "0")}
                 <span style={{ color: "var(--ink-faint)" }}>/{String(STEP_IDS.length).padStart(2, "0")}</span>
               </span>
+              {onLocaleToggle && <button className="vt-locale-toggle" type="button" onClick={onLocaleToggle}>{zh ? "EN" : "中文"}</button>}
             </div>
           </div>
 
@@ -212,20 +228,20 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
                 step one) must leave in a single cheap frame, not spend 240ms
                 animating on the way out while the next step rasterises. */}
             <motion.section key={stepId} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}>
-              <StepHeader index={step} total={STEP_IDS.length} title={STEP_TITLES[stepId].en} sub={STEP_SUBS[stepId]} />
+              <StepHeader index={step} total={STEP_IDS.length} title={zh ? STEP_TITLES[stepId].zh : STEP_TITLES[stepId].en} sub={zh ? STEP_SUBS[stepId].zh : STEP_SUBS[stepId].en} />
               {stepBody}
             </motion.section>
 
             {error && <p className="vt-form-error" role="alert">{error}</p>}
 
             <div className="mt-12 hidden items-center gap-3 lg:flex">
-              {step > 0 && <button type="button" className="btn btn-outline" onClick={() => setStep(step - 1)}>Back</button>}
+              {step > 0 && <button type="button" className="btn btn-outline" onClick={() => setStep(step - 1)}>{t("Back", "返回")}</button>}
               <button type="button" className="btn btn-solid" data-testid="match-button" disabled={!hasVibe || busy} onClick={advance}>
                 {primaryLabel}<span aria-hidden>→</span>
               </button>
               {!isLast && (
                 <button type="button" className="mono-sm underline underline-offset-4" onClick={submit} disabled={!hasVibe || busy}>
-                  Skip the rest, just mix it
+                  {t("Skip the rest, just mix it", "跳过剩下的，直接调")}
                 </button>
               )}
             </div>
@@ -234,9 +250,9 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
           {/* ── Mobile bottom bar ── */}
           <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden" style={{ background: "var(--paper)", borderTop: "1px solid var(--line-strong)", paddingBottom: "env(safe-area-inset-bottom)" }}>
             <button type="button" onClick={() => setShowOrder((s) => !s)} className="mono flex w-full items-center justify-between px-5 py-2.5" style={{ borderBottom: showOrder ? "1px solid var(--line)" : undefined }}>
-              <span>The order</span>
+              <span>{t("The order", "你的单")}</span>
               <span className="flex items-center gap-2">
-                <span className="mono-sm truncate" style={{ maxWidth: 150, color: "var(--ink)" }}>{spiritName ? spiritName.en : moodText.trim() || "—"}</span>
+                <span className="mono-sm truncate" style={{ maxWidth: 150, color: "var(--ink)" }}>{spiritName ? (zh ? spiritName.zh : spiritName.en) : moodText.trim() || "—"}</span>
                 <span aria-hidden style={{ transform: showOrder ? "rotate(180deg)" : "none" }}>⌃</span>
               </span>
             </button>
@@ -248,7 +264,7 @@ export function PreferenceForm({ busy, initial, menuItems, onSubmit }: Preferenc
             <div className="flex gap-2 px-5 py-3">
               {step > 0 && <button type="button" className="btn btn-outline flex-none" onClick={() => setStep(step - 1)}>←</button>}
               <button type="button" className="btn btn-solid flex-1" disabled={!hasVibe || busy} onClick={advance}>{primaryLabel}</button>
-              {!isLast && <button type="button" className="btn btn-outline flex-none" disabled={!hasVibe || busy} onClick={submit} title="Mix now">Mix</button>}
+              {!isLast && <button type="button" className="btn btn-outline flex-none" disabled={!hasVibe || busy} onClick={submit} title={t("Mix now", "立即调")}>{t("Mix", "调")}</button>}
             </div>
           </div>
         </div>

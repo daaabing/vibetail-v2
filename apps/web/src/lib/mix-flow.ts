@@ -17,12 +17,12 @@ export const STEP_IDS = ["vibe", "taste", "strength", "spirit", "notes"] as cons
 export type StepId = (typeof STEP_IDS)[number];
 export const STEP_COUNT = STEP_IDS.length;
 
-export const STEP_TITLES: Record<StepId, { en: string }> = {
-  vibe: { en: "The vibe" },
-  taste: { en: "The texture" },
-  strength: { en: "The strength" },
-  spirit: { en: "The base" },
-  notes: { en: "The notes" },
+export const STEP_TITLES: Record<StepId, { en: string; zh: string }> = {
+  vibe: { en: "The vibe", zh: "此刻状态" },
+  taste: { en: "The texture", zh: "口感方向" },
+  strength: { en: "The strength", zh: "酒精强度" },
+  spirit: { en: "The base", zh: "基酒选择" },
+  notes: { en: "The notes", zh: "额外备注" },
 };
 
 // One accent for every step: gold. The flow runs after dark.
@@ -39,70 +39,92 @@ export const STEP_ACCENTS: Record<StepId, string> = {
 export interface BaseSpirit {
   key: string;
   en: string;
+  zh: string;
   color: string;
   noteEn: string;
+  noteZh: string;
 }
 
 export const BASE_SPIRITS: BaseSpirit[] = [
   {
     key: "gin",
     en: "Gin",
+    zh: "金酒",
     color: "#6f9e4f",
     noteEn: "Botanical, bright",
+    noteZh: "草本，明亮",
   },
   {
     key: "vodka",
     en: "Vodka",
+    zh: "伏特加",
     color: "#9fc2d8",
     noteEn: "Clean, gets out of the way",
+    noteZh: "干净，不抢风头",
   },
   {
     key: "rum",
     en: "Rum",
+    zh: "朗姆",
     color: "#b5713a",
     noteEn: "Warm, sugarcane sweetness",
+    noteZh: "温暖，甘蔗甜",
   },
   {
     key: "tequila",
     en: "Tequila",
+    zh: "龙舌兰",
     color: "#d8c34a",
     noteEn: "Green, peppery agave",
+    noteZh: "青绿，辛辣龙舌兰",
   },
   {
     key: "whiskey",
     en: "Whiskey",
+    zh: "威士忌",
     color: "#8a4623",
     noteEn: "Oak, caramel, weight",
+    noteZh: "橡木，焦糖，厚重",
   },
   {
     key: "mezcal",
     en: "Mezcal",
+    zh: "梅斯卡尔",
     color: "#6e6a55",
     noteEn: "Smoke, earth, drama",
+    noteZh: "烟熏，泥土，戏剧性",
   },
   {
     key: "brandy",
     en: "Brandy",
+    zh: "白兰地",
     color: "#93394f",
     noteEn: "Dried fruit, velvet",
+    noteZh: "干果，丝绒",
   },
   {
     key: "sake",
     en: "Sake",
+    zh: "清酒",
     color: "#e3dcc4",
     noteEn: "Rice, quiet, delicate",
+    noteZh: "米香，安静，细腻",
   },
   {
     key: "tashi",
     en: "Tashi",
+    zh: "青稞酒",
     color: "#c9962e",
     noteEn: "Highland barley, house recipes",
+    noteZh: "高原青稞，自家配方",
   },
   {
     key: "nonalcoholic",
     en: "No alcohol",
+    zh: "无酒精",
     color: "#d485ad",
     noteEn: "All ritual, zero proof",
+    noteZh: "全部仪式感，零酒精",
   },
 ];
 
@@ -160,27 +182,37 @@ export type AlcoholLevel = "low" | "standard" | "strong" | "zero";
 export const ALCOHOL_LEVELS: {
   value: AlcoholLevel;
   en: string;
+  zh: string;
   descEn: string;
+  descZh: string;
 }[] = [
   {
     value: "low",
     en: "Low / light buzz",
+    zh: "微醺",
     descEn: "Easy, not too heady",
+    descZh: "轻松，不上头",
   },
   {
     value: "standard",
     en: "Standard",
+    zh: "标准",
     descEn: "A normal, balanced pour",
+    descZh: "正常，均衡的一杯",
   },
   {
     value: "strong",
     en: "Strong",
+    zh: "烈",
     descEn: "Spirit-forward, more punch",
+    descZh: "酒感强烈，更有冲击力",
   },
   {
     value: "zero",
     en: "Zero-proof",
+    zh: "无酒精",
     descEn: "Vibe only, no alcohol",
+    descZh: "只要氛围，不要酒精",
   },
 ];
 
@@ -236,30 +268,31 @@ export function buildPreference(order: MixOrder, lang: Lang) {
 
 /** Short human-readable value shown per row in the order panel. */
 export function orderSummary(order: MixOrder, lang: Lang, stepId: StepId): string | null {
+  const zh = lang === "zh";
   switch (stepId) {
     case "vibe":
       return order.moodText.trim() || null;
     case "taste": {
       const touched =
         order.sensory.fresh !== 50 || order.sensory.soft !== 50 || order.sensory.familiar !== 50;
-      return touched ? sensorySummary(lang, order.sensory).replace(/^Feel: /, "") : null;
+      return touched ? sensorySummary(lang, order.sensory).replace(/^(Feel|口感): /, "") : null;
     }
     case "strength": {
       const lvl = ALCOHOL_LEVELS.find((a) => a.value === order.alcohol);
       const length = strengthToDrinkLength(order.sensory);
       const lengthLabel =
-        length === "long" ? "long drink" : length === "short" ? "short drink" : "";
+        length === "long" ? (zh ? "长饮" : "long drink") : length === "short" ? (zh ? "短饮" : "short drink") : "";
       if (order.alcohol === "standard" && !lengthLabel) return null;
-      return [lvl?.en, lengthLabel].filter(Boolean).join(" · ");
+      return [zh ? lvl?.zh : lvl?.en, lengthLabel].filter(Boolean).join(" · ");
     }
     case "spirit": {
       const s = BASE_SPIRITS.find((x) => x.key === order.baseSpirit);
-      return s?.en ?? null;
+      return (zh ? s?.zh : s?.en) ?? null;
     }
     case "notes": {
       const bits: string[] = [];
       if (order.manualFlavors.length) bits.push(order.manualFlavors.join(", "));
-      if (order.referenceDrink.trim()) bits.push(`“${order.referenceDrink.trim()}”`);
+      if (order.referenceDrink.trim()) bits.push(`"${order.referenceDrink.trim()}"`);
       return bits.length ? bits.join(" · ") : null;
     }
   }
