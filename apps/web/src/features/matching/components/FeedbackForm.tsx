@@ -1,21 +1,22 @@
 import { useState, type FormEvent } from "react";
 import { HttpVenueClient, VenueClientError } from "../../../clients/http-venue-client.js";
+import { useLang } from "../../../lib/i18n.js";
 
 const client = new HttpVenueClient();
 
-const COPY = {
-    prompt: "How was this pick?",
-    commentPlaceholder: "Anything the bar should know? (optional)",
-    submit: "Send feedback",
-    sending: "Sending…",
-    thanks: "Thanks — your feedback reached the venue.",
-    duplicate: "Feedback for this match was already recorded.",
-    failed: "We couldn't send that. Please try again.",
-    star: (value: number) => `${value} star${value === 1 ? "" : "s"}`,
-} as const;
-
 export function FeedbackForm({ matchId }: { matchId: string }) {
-  const copy = COPY;
+  const { lang, t } = useLang();
+  const zh = lang === "zh";
+  const copy = {
+    prompt: t("How was this pick?", "这杯感觉如何？"),
+    commentPlaceholder: t("Anything the bar should know? (optional)", "有什么想告诉酒吧的吗？（可选）"),
+    submit: t("Send feedback", "发送反馈"),
+    sending: t("Sending…", "发送中…"),
+    thanks: t("Thanks — your feedback reached the venue.", "感谢——你的反馈已传达给酒吧。"),
+    duplicate: t("Feedback for this match was already recorded.", "这杯酒的反馈之前已记录。"),
+    failed: t("We couldn't send that. Please try again.", "未能发送，请重试。"),
+    star: (value: number) => zh ? `${value} 星` : `${value} star${value === 1 ? "" : "s"}`,
+  };
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [phase, setPhase] = useState<"idle" | "busy" | "done">("idle");

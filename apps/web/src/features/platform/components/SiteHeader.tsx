@@ -17,7 +17,6 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
           <a href="/for-bars">For bars</a>
           <a href="/venue">Management</a>
         </nav>
-        <a className="house-header-cta" href="/match">Meet your drink</a>
         <AccountControl />
       </div>
     </header>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { loadMapsConfig } from "../auth/auth-session.js";
+import { useLang } from "../../lib/i18n.js";
 import { GoogleLocationMap } from "./GoogleLocationMap.js";
 import { RasterLocationMap } from "./RasterLocationMap.js";
 import type { MapCoordinates } from "./location-map-parts.js";
@@ -20,6 +21,7 @@ export function VenueLocationMap({ coordinates, onChange }: {
   coordinates: MapCoordinates | null;
   onChange(coords: MapCoordinates): void;
 }) {
+  const { t } = useLang();
   const [googleKey, setGoogleKey] = useState<string | null>(null);
   const dropGoogle = useCallback(() => setGoogleKey(null), []);
 
@@ -38,10 +40,10 @@ export function VenueLocationMap({ coordinates, onChange }: {
         ? <GoogleLocationMap apiKey={googleKey} coordinates={coordinates} onChange={onChange} onUnavailable={dropGoogle} />
         : <RasterLocationMap coordinates={coordinates} onChange={onChange} />)
       : <div className="vt-map" data-empty>
-          <p className="vt-map-empty">Pick a suggested address and the pin lands here.</p>
+          <p className="vt-map-empty">{t("Pick a suggested address and the pin lands here.", "选择建议的地址后，大头针会落在这里。")}</p>
         </div>}
     {coordinates && <p className="vt-map-note">
-      <span>Drag the map to line the pin up with your door.</span>
+      <span>{t("Drag the map to line the pin up with your door.", "拖动地图，让大头针准确对准你的店门。")}</span>
       <span className="vt-map-readout">{coordinates.latitude.toFixed(5)}, {coordinates.longitude.toFixed(5)}</span>
     </p>}
   </div>;

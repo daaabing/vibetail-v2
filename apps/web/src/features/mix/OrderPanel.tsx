@@ -23,7 +23,7 @@ export default function OrderPanel({
     <div>
       {!compact && (
         <div className="mb-5 flex items-baseline justify-between">
-          <span className="eyebrow-gilt">{"The order"}</span>
+          <span className="eyebrow-gilt">{lang === "zh" ? "你的单" : "The order"}</span>
           <span className="mono-sm">
             {String(current + 1).padStart(2, "0")}/{String(STEP_IDS.length).padStart(2, "0")}
           </span>
@@ -58,7 +58,7 @@ export default function OrderPanel({
                       color: isCurrent || visited ? "var(--ink)" : "var(--ink-faint)",
                     }}
                   >
-                    {STEP_TITLES[id].en}
+                    {lang === "zh" ? STEP_TITLES[id].zh : STEP_TITLES[id].en}
                   </span>
                   <span
                     className="mt-1 block text-[12.5px] leading-snug"
@@ -68,7 +68,7 @@ export default function OrderPanel({
                       overflowWrap: "anywhere",
                     }}
                   >
-                    {value ?? (i === 0 ? "not set" : "we'll decide")}
+                    {value ?? (i === 0 ? (lang === "zh" ? "未设置" : "not set") : (lang === "zh" ? "我们来决定" : "we'll decide"))}
                   </span>
                 </span>
               </button>

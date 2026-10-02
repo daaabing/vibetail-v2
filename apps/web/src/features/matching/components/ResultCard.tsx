@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { VenueMatchResult, VenuePreferences } from "@vibetail/contracts";
+import { useLang } from "../../../lib/i18n.js";
+import { FLAVOR_CHIPS } from "../../../lib/moodtail-data.js";
 import { FeedbackForm } from "./FeedbackForm.js";
 import { SignInDialog } from "./SignInDialog.js";
 import { rememberVibeBarIntent } from "../vibe-bar-intent.js";
@@ -66,6 +68,7 @@ export function ResultCard({ destination, preferences, result, onAgain, onDestin
   onAgain(): void;
   onDestination(): void;
 }) {
+  const { t } = useLang();
   const [flipped, setFlipped] = useState(false);
   const [cardState, setCardState] = useState<"idle" | "working" | "done" | "error">("idle");
   const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
@@ -164,10 +167,10 @@ export function ResultCard({ destination, preferences, result, onAgain, onDestin
 
   return <div className="poster-wrap" data-testid="match-result">
     {signInFor && <SignInDialog
-      title={signInFor === "save" ? "Sign in to keep this drink" : "Sign in to share this match"}
+      title={signInFor === "save" ? t("Sign in to keep this drink", "登录以保存这杯酒") : t("Sign in to share this match", "登录以分享此匹配")}
       description={signInFor === "save"
-        ? "Your Vibe Bar follows your account, so tonight’s match is still there next time."
-        : "Sharing links your card to you, so the person on the other end sees whose night this was."}
+        ? t("Your Vibe Bar follows your account, so tonight’s match is still there next time.", "你的 Vibe Bar 会同步到你的账号，下次来它依然在。")
+        : t("Sharing links your card to you, so the person on the other end sees whose night this was.", "分享会将卡片与你关联，让对方看到这是属于谁的夜晚。")}
       onGoogle={() => void confirmGoogle()}
       onSignedIn={resumeAfterEmailSignIn}
       onCancel={() => setSignInFor(null)}
@@ -188,21 +191,21 @@ export function ResultCard({ destination, preferences, result, onAgain, onDestin
     <div className="vt-actions poster-actions">
       {destination && <a className="btn btn-solid" href={destination.url} onClick={onDestination}>{destination.label}</a>}
       <button className={destination ? "btn btn-outline" : "btn btn-solid"} data-testid="save-card" disabled={cardState === "working"} type="button" onClick={() => void saveCard()}>
-        {cardState === "working" ? "Rendering card…"
-          : cardState === "done" ? "Saved ✓"
-          : cardState === "error" ? "Retry save card"
-          : "Save card"}
+        {cardState === "working" ? t("Rendering card…", "生成卡片中…")
+          : cardState === "done" ? t("Saved ✓", "已保存 ✓")
+          : cardState === "error" ? t("Retry save card", "重试保存卡片")
+          : t("Save card", "保存卡片")}
       </button>
       {result.matchId && <button className="btn btn-outline" data-testid="save-vibe-bar" disabled={barState === "working"} type="button" onClick={() => void saveToVibeBar()}>
-        {barState === "working" ? "Saving…"
-          : barState === "saved" ? "In your Vibe Bar ✓"
-          : barState === "error" ? "Retry Vibe Bar"
-          : "Save to Vibe Bar"}
+        {barState === "working" ? t("Saving…", "保存中…")
+          : barState === "saved" ? t("In your Vibe Bar ✓", "已存入 Vibe Bar ✓")
+          : barState === "error" ? t("Retry Vibe Bar", "重试存入 Vibe Bar")
+          : t("Save to Vibe Bar", "存入 Vibe Bar")}
       </button>}
       <button className="btn btn-outline" data-testid="share-link" type="button" onClick={() => void shareLink()}>
-        {shareState === "copied" ? "Link copied ✓" : shareState === "shared" ? "Shared ✓" : "Share"}
+        {shareState === "copied" ? t("Link copied ✓", "链接已复制 ✓") : shareState === "shared" ? t("Shared ✓", "已分享 ✓") : t("Share", "分享")}
       </button>
-      <button className="btn btn-outline" type="button" onClick={onAgain}>Match again</button>
+      <button className="btn btn-outline" type="button" onClick={onAgain}>{t("Match again", "再测一次")}</button>
     </div>
 
     {result.matchId && <FeedbackForm key={result.matchId} matchId={result.matchId} />}
@@ -216,6 +219,8 @@ function CardFront({ chips, guest, hidden, result, onFlip }: {
   result: VenueMatchResult;
   onFlip(): void;
 }) {
+  const { lang } = useLang();
+  const zh = lang === "zh";
   return <article aria-hidden={hidden} inert={hidden} className="paper-pocket pocket-card frame-gilt relative flex flex-col" style={FACE_STYLE}>
     <div className="grain-layer" aria-hidden style={{ opacity: 0.32 }} />
 
@@ -243,7 +248,10 @@ function CardFront({ chips, guest, hidden, result, onFlip }: {
       <h1 className="display mx-auto max-w-[22ch] text-[clamp(24px,4.5vw,34px)] leading-[1.06]" style={{ textTransform: "uppercase", letterSpacing: "0.03em" }}>{result.vibeName}</h1>
       <p className="accent-italic mx-auto mt-3 max-w-[36ch] text-[19px] leading-snug" style={{ color: "var(--ink-soft)" }} data-testid="roast">“{result.roast}”</p>
       {chips.length > 0 && <div className="mt-4 flex flex-wrap justify-center gap-1.5">
-        {chips.map((flavor) => <span key={flavor} className="mono-sm" style={{ border: "1px solid var(--line-strong)", padding: "5px 9px", letterSpacing: "0.18em" }}>{flavor}</span>)}
+        {chips.map((flavor) => {
+          const chipLabel = zh ? (FLAVOR_CHIPS.find((c) => c.label.toLowerCase() === flavor.toLowerCase())?.labelZh ?? flavor) : flavor;
+          return <span key={flavor} className="mono-sm" style={{ border: "1px solid var(--line-strong)", padding: "5px 9px", letterSpacing: "0.18em" }}>{chipLabel}</span>;
+        })}
       </div>}
       <OrderLine className="mt-4" result={result} testId="order-line" />
     </div>
@@ -259,6 +267,8 @@ function CardBack({ hidden, originalVibe, result, serial, onFlip }: {
   serial: string;
   onFlip(): void;
 }) {
+  const { lang, t } = useLang();
+  const zh = lang === "zh";
   return <article aria-hidden={hidden} inert={hidden} className="paper-pocket pocket-card frame-gilt relative flex flex-col" style={{ ...FACE_STYLE, transform: "rotateY(180deg)" }}>
     <div className="grain-layer" aria-hidden style={{ opacity: 0.32 }} />
 
@@ -275,24 +285,24 @@ function CardBack({ hidden, originalVibe, result, serial, onFlip }: {
       </div>
 
       {originalVibe && <div className="mt-5 p-4" style={{ border: "1px solid var(--line)", background: "var(--paper-warm)" }}>
-        <BackLabel>Original vibe</BackLabel>
+        <BackLabel>{t("Original vibe", "你的 Vibe")}</BackLabel>
         <p className="accent-italic mt-2 text-[19px] leading-snug" style={{ color: "var(--ink-soft)" }} data-testid="original-vibe">“{originalVibe}”</p>
       </div>}
 
       <div className="mt-5">
-        <BackLabel>Tasting notes</BackLabel>
+        <BackLabel>{t("Tasting notes", "品鉴笔记")}</BackLabel>
         <p className="note mt-2 text-[14px] leading-relaxed">{result.tastesLike}</p>
       </div>
 
       <div className="mt-5">
-        <BackLabel>Why this one</BackLabel>
+        <BackLabel>{t("Why this one", "为什么选它")}</BackLabel>
         <p className="note mt-2 text-[14px] leading-relaxed">{result.whyThisMatch}</p>
       </div>
 
       {(result.item.ingredients.length > 0 || result.item.baseSpirit) && <div className="mt-5">
         <div className="flex items-baseline justify-between gap-3">
-          <BackLabel>Ingredients</BackLabel>
-          {result.item.baseSpirit && <span className="mono-sm">Base · {result.item.baseSpirit}</span>}
+          <BackLabel>{t("Ingredients", "配料")}</BackLabel>
+          {result.item.baseSpirit && <span className="mono-sm">{zh ? `基酒 · ${result.item.baseSpirit}` : `Base · ${result.item.baseSpirit}`}</span>}
         </div>
         {result.item.ingredients.length > 0 && <ol className="mt-2">
           {result.item.ingredients.map((ingredient, i) => <li key={i} className="grid grid-cols-[30px_1fr] gap-3 py-1.5 text-[14px]" style={{ borderBottom: "1px solid var(--line-soft)" }}>
@@ -300,7 +310,7 @@ function CardBack({ hidden, originalVibe, result, serial, onFlip }: {
             <span className="note">{ingredient}</span>
           </li>)}
         </ol>}
-        <p className="note mt-2 text-[11.5px] italic" style={{ color: "var(--ink-mute)" }}>Final interpretation &amp; execution reserved by the bar</p>
+        <p className="note mt-2 text-[11.5px] italic" style={{ color: "var(--ink-mute)" }}>{t("Final interpretation & execution reserved by the bar", "最终调制以酒吧实际出品为准")}</p>
       </div>}
 
       <div className="mt-6 flex items-end justify-between">
@@ -315,8 +325,10 @@ function CardBack({ hidden, originalVibe, result, serial, onFlip }: {
 }
 
 function OrderLine({ className, result, testId }: { className?: string; result: VenueMatchResult; testId?: string }) {
+  const { lang } = useLang();
+  const zh = lang === "zh";
   return <p className={className ? `mono-sm ${className}` : "mono-sm mt-2"} {...(testId ? { "data-testid": testId } : {})}>
-    ORDER: {result.item.name}{result.item.price ? ` · ${result.item.price}` : ""}
+    {zh ? "点单: " : "ORDER: "}{result.item.name}{result.item.price ? ` · ${result.item.price}` : ""}
   </p>;
 }
 
@@ -325,6 +337,7 @@ function BackLabel({ children }: { children: string }) {
 }
 
 function TapHint({ onFlip }: { onFlip(): void }) {
+  const { t } = useLang();
   return <div className="relative flex flex-none justify-center pb-4 pt-1">
     <button
       type="button"
@@ -335,7 +348,7 @@ function TapHint({ onFlip }: { onFlip(): void }) {
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
         <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-      Tap to flip
+      {t("Tap to flip", "点击翻面")}
     </button>
   </div>;
 }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getAccessToken } from "../auth/auth-session.js";
+import { useLang } from "../../lib/i18n.js";
 import {
   CenterPin,
   DEFAULT_MAP_ZOOM,
@@ -86,8 +87,9 @@ export function RasterLocationMap({ coordinates, onChange }: {
     onChange({ latitude: pixelToLatitude(y, world), longitude: pixelToLongitude(x, world) });
   }
 
+  const { t } = useLang();
   return <div
-    aria-label="Venue location — drag or use the arrow keys to move the pin"
+    aria-label={t("Venue location — drag or use the arrow keys to move the pin", "酒吧位置 — 拖动或使用方向键移动大头针")}
     className="vt-map"
     ref={frameRef}
     role="application"
