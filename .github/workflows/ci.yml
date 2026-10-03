@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, staging]
+    branches: [main]
 
 permissions:
   contents: read
@@ -47,7 +47,7 @@ jobs:
   # docs/operations/deployment.md.
   migrate-staging:
     needs: validate
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Never cancelled mid-migration: the workflow-level group above cancels
