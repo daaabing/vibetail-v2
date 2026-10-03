@@ -8,6 +8,11 @@ const root = fileURLToPath(new URL(".", import.meta.url));
 export default defineConfig({
   root,
   plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      "@tarot": fileURLToPath(new URL("./src/tarot-reference", import.meta.url)),
+    },
+  },
   build: {
     outDir: "dist/client",
     emptyOutDir: true,

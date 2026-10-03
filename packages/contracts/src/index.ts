@@ -5,3 +5,5 @@ export * from "./geocode.js";
 export * from "./management.js";
 export * from "./venue.js";
 export * from "./venue-management.js";
+export * from "./tarot-event.js";
+export * from "./tarot-cards.js";

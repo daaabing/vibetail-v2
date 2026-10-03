@@ -3,14 +3,17 @@ import {
   DeterministicMenuPhotoScanProvider,
   OpenAIMenuPhotoScanProvider,
   OpenAIModelProvider,
+  OpenAITarotInterpretationProvider,
   OpenRouterMenuPhotoScanProvider,
   OpenRouterModelProvider,
+  OpenRouterTarotInterpretationProvider,
   OriginalDrinkPhotoProvider,
   ReplicateSam2DrinkPhotoProvider,
   defaultReplicateSam2Model,
   Sam2DrinkPhotoProvider,
   type DrinkInfoProvider,
   type ModelProvider,
+  type TarotInterpretationProvider,
 } from "@vibetail/model-providers";
 import {
   DefaultDrinkLogService,
@@ -38,6 +41,13 @@ import {
 import type { AuthConfig, MapsConfig } from "@vibetail/contracts";
 import QRCode from "qrcode";
 import type { WebServerEnv } from "../env.js";
+import {
+  DeterministicTarotProvider,
+  SupabaseTarotRepository,
+  TarotService,
+  UnavailableTarotService,
+  type TarotService as TarotServiceType,
+} from "@vibetail/tarot-core";
 
 export interface DependencyReadinessCheck {
   name: string;
@@ -55,6 +65,7 @@ export interface WebDependencies {
   menuPhotoScanProvider: ReturnType<typeof createMenuPhotoScanProvider>;
   authConfig: AuthConfig;
   mapsConfig: MapsConfig;
+  tarotService: TarotServiceType | UnavailableTarotService;
   checkReadiness(): Promise<DependencyReadinessCheck[]>;
 }
 
@@ -136,6 +147,12 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
         serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
       }))
     : new UnavailableDrinkLogService();
+  const tarotService = env.SUPABASE_SERVICE_ROLE_KEY
+    ? new TarotService(
+        new SupabaseTarotRepository({ url: env.SUPABASE_URL, serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY }),
+        createTarotInterpretationProvider(env),
+      )
+    : new UnavailableTarotService();
   return {
     venueService: new DefaultVenueService(repository, provider),
     managementService,
@@ -150,6 +167,7 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
     menuPhotoScanProvider: createMenuPhotoScanProvider(env),
     authConfig,
     mapsConfig: { googleApiKey: env.GOOGLE_MAPS_API_KEY ?? null },
+    tarotService,
     checkReadiness: async () => {
       try {
         const scopes = await repository.listPublishedVenueMenus();
@@ -167,6 +185,22 @@ export function createWebDependencies(env: WebServerEnv): WebDependencies {
       }
     },
   };
+}
+
+function createTarotInterpretationProvider(env: WebServerEnv): TarotInterpretationProvider | DeterministicTarotProvider {
+  switch (env.MODEL_PROVIDER) {
+    case "openai":
+      if (!env.MODEL_API_KEY || !env.MODEL_NAME) throw new Error("Validated OpenAI Tarot configuration is unavailable");
+      return new OpenAITarotInterpretationProvider({ apiKey: env.MODEL_API_KEY, model: env.MODEL_NAME });
+    case "openrouter":
+      if (!env.OPENROUTER_API_KEY || !env.MODEL_NAME) throw new Error("Validated OpenRouter Tarot configuration is unavailable");
+      return new OpenRouterTarotInterpretationProvider({ apiKey: env.OPENROUTER_API_KEY, model: env.MODEL_NAME, siteUrl: env.APP_URL });
+    case "deterministic":
+      if (env.NODE_ENV === "production") throw new Error("A real MODEL_PROVIDER is required for the production Tarot event.");
+      return new DeterministicTarotProvider();
+    default:
+      throw new Error(`MODEL_PROVIDER=${env.MODEL_PROVIDER} is not implemented for Tarot`);
+  }
 }
 
 function createMenuPhotoScanProvider(env: WebServerEnv) {

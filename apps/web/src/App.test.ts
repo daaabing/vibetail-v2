@@ -17,6 +17,8 @@ describe("platform routes", () => {
     ["/app", { kind: "mobile_app" }],
     ["/app/", { kind: "mobile_app" }],
     ["/match", { kind: "match" }],
+    ["/tarot", { kind: "tarot_event" }],
+    ["/tarot/", { kind: "tarot_event" }],
     ["/venues", { kind: "venues" }],
     ["/signin", { kind: "signin" }],
     ["/venues/nightjar-demo", { kind: "venue_detail", merchantSlug: "nightjar-demo" }],

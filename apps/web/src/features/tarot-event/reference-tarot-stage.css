@@ -1,0 +1,9 @@
+.tarot-reference-panel { grid-column: 1 / -1; }
+.tarot-reference-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; }
+.tarot-reference-heading > span { color: var(--tarot-muted); font-size: 12px; letter-spacing: .14em; white-space: nowrap; }
+.tarot-reference-scene { height: min(68svh, 760px); min-height: 520px; margin: 30px calc(clamp(48px, 8vw, 120px) * -0.45) 0; overflow: hidden; border-top: 1px solid var(--tarot-line); border-bottom: 1px solid var(--tarot-line); background: #0e0a13; }
+.tarot-reference-scene > div { height: 100%; }
+.tarot-reference-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; padding-top: 22px; }
+.tarot-reference-actions .tarot-button { min-width: 170px; }
+.tarot-reference-complete { width: 100%; margin: 0; color: var(--tarot-muted); text-align: center; }
+@media (max-width: 699px) { .tarot-reference-scene { min-height: 440px; height: 64svh; margin-inline: -24px; } .tarot-reference-panel { grid-column: auto; } }

@@ -20,6 +20,12 @@ import {
   updateVenueProfileInputSchema,
   venueDashboardRangeSchema,
   venueErrorSchema,
+  tarotConsentInputSchema,
+  tarotDrawInputSchema,
+  tarotDrinkPreferencesSchema,
+  tarotPhysicalCardInputSchema,
+  tarotReadingInputSchema,
+  tarotSessionInputSchema,
   venueLoginInputSchema,
   venuePreferencesSchema,
   updateAvailabilityInputSchema,
@@ -44,6 +50,7 @@ import {
   type ManagementService,
   type VenueManagementService,
 } from "@vibetail/venue-core";
+import { TarotService, TarotServiceError, UnavailableTarotService, type TarotService as TarotServiceType } from "@vibetail/tarot-core";
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
 import { randomUUID } from "node:crypto";
 import { z, ZodError } from "zod";
@@ -58,6 +65,7 @@ export interface WebAppOptions {
   authConfig: AuthConfig;
   mapsConfig?: MapsConfig;
   menuPhotoScanProvider?: MenuPhotoScanProvider;
+  tarotService?: TarotServiceType | UnavailableTarotService;
   checkReadiness?: () => Promise<Array<{ name: string; ready: boolean; detail: string }>>;
   testFrontend?: boolean;
 }
@@ -92,6 +100,57 @@ export function createWebApp(options: WebAppOptions): Express {
   app.get("/v1/config", (_request, response) => {
     response.json(runtimeConfigSchema.parse({ auth: options.authConfig, maps: options.mapsConfig ?? {} }));
   });
+
+  // The event is intentionally a small, cookie-backed public flow. The
+  // browser never receives service credentials or a database client.
+  const tarotService = options.tarotService ?? new UnavailableTarotService();
+  app.post("/v1/events/autumn-tarot/session", asyncRoute(async (request, response) => {
+    const input = tarotSessionInputSchema.parse(request.body);
+    const session = await tarotService.startSession(input.email, input.displayName);
+    response.setHeader("Set-Cookie", makeTarotCookie(session.token, session.expiresAt));
+    response.json({ guest: session.guest, expiresAt: session.expiresAt, needsPreferences: session.needsPreferences, preferences: session.preferences ?? null });
+  }));
+  app.get("/v1/events/autumn-tarot/session", asyncRoute(async (request, response) => {
+    const session = await tarotService.getSession(readTarotCookie(request));
+    response.json({ guest: session.guest, expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1_000).toISOString() });
+  }));
+  app.put("/v1/events/autumn-tarot/preferences", asyncRoute(async (request, response) => {
+    const session = await tarotService.getSession(readTarotCookie(request));
+    await tarotService.savePreferences(session, tarotDrinkPreferencesSchema.parse(request.body));
+    response.status(204).end();
+  }));
+  app.get("/v1/events/autumn-tarot/home", asyncRoute(async (request, response) => {
+    const session = await tarotService.getSession(readTarotCookie(request));
+    response.json({ guest: session.guest });
+  }));
+  app.post("/v1/events/autumn-tarot/rounds/first/physical-card", asyncRoute(async (request, response) => {
+    const session = await tarotService.getSession(readTarotCookie(request));
+    response.json(await tarotService.physicalCard(session, tarotPhysicalCardInputSchema.parse(request.body)));
+  }));
+  app.post("/v1/events/autumn-tarot/rounds/second/reading", asyncRoute(async (request, response) => {
+    const session = await tarotService.getSession(readTarotCookie(request));
+    const input = tarotReadingInputSchema.parse(request.body);
+    if (input.draws?.length && tarotService instanceof TarotService) {
+      const draws = input.draws.map(({ cardId, orientation, positionId, positionLabel, positionMeaning }) => ({ cardId, orientation, positionId, positionLabel, ...(positionMeaning ? { positionMeaning } : {}) }));
+      response.json(await tarotService.secondSpreadReading(session, draws, input.question, input.spreadId ?? "single", input.spreadName ?? "秋日指引"));
+      return;
+    }
+    const draw = tarotDrawInputSchema.parse({ cardId: input.cardId, orientation: isRecord(request.body) && "orientation" in request.body ? request.body.orientation : "upright" });
+    response.json(await tarotService.secondReading(session, draw, input.question));
+  }));
+  app.post("/v1/events/autumn-tarot/draw", asyncRoute(async (request, response) => {
+    const session = await tarotService.getSession(readTarotCookie(request));
+    response.json(await tarotService.draw(session, tarotDrawInputSchema.parse(request.body)));
+  }));
+  app.post("/v1/events/autumn-tarot/reading", asyncRoute(async (request, response) => {
+    const session = await tarotService.getSession(readTarotCookie(request));
+    response.json(await tarotService.reading(session, tarotReadingInputSchema.parse(request.body)));
+  }));
+  app.patch("/v1/events/autumn-tarot/consent", asyncRoute(async (request, response) => {
+    const session = await tarotService.getSession(readTarotCookie(request));
+    await tarotService.consent(session, tarotConsentInputSchema.parse(request.body).marketingOptIn);
+    response.status(204).end();
+  }));
 
   app.get(
     "/v1/venues",
@@ -607,7 +666,7 @@ export function createWebApp(options: WebAppOptions): Express {
   app.use((error: unknown, request: Request, response: Response, _next: NextFunction) => {
     void _next;
     const mapped = mapError(error);
-    logServerError(request, mapped.body);
+    logServerError(request, mapped.body, error);
     response.status(mapped.status).json(mapped.body);
   });
 
@@ -640,6 +699,10 @@ async function withMatchId(
 }
 
 function mapError(error: unknown): { status: number; body: VenueError } {
+  if (error instanceof TarotServiceError) {
+    const code = error.detail.code === "NOT_FOUND" ? "MENU_NOT_FOUND" : error.detail.code === "UNAVAILABLE" ? "MATCH_PROVIDER_UNAVAILABLE" : error.detail.code;
+    return { status: error.httpStatus, body: { code, message: error.detail.message, retryable: error.detail.retryable } };
+  }
   if (error instanceof VenueServiceError) {
     return { status: error.httpStatus, body: venueErrorSchema.parse(error.detail) };
   }
@@ -699,7 +762,17 @@ function readBearerToken(request: Request): string {
   return match?.[1] ?? "";
 }
 
-function logServerError(request: Request, error: VenueError): void {
+const tarotCookieName = "vibetail_tarot_session";
+function readTarotCookie(request: Request): string {
+  const value = request.header("cookie")?.split(";").map((part) => part.trim()).find((part) => part.startsWith(`${tarotCookieName}=`));
+  return value ? decodeURIComponent(value.slice(tarotCookieName.length + 1)) : "";
+}
+function makeTarotCookie(token: string, expiresAt: string): string {
+  const maxAge = Math.max(60, Math.floor((Date.parse(expiresAt) - Date.now()) / 1_000));
+  return `${tarotCookieName}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`;
+}
+
+function logServerError(request: Request, error: VenueError, cause?: unknown): void {
   console.error(
     JSON.stringify({
       timestamp: new Date().toISOString(),
@@ -709,6 +782,7 @@ function logServerError(request: Request, error: VenueError): void {
       method: request.method,
       path: request.path,
       error_code: error.code,
+      error_message: cause == null ? undefined : cause instanceof Error ? cause.message : safeErrorMessage(cause),
       trace_id: error.traceId ?? null,
     }),
   );
@@ -716,4 +790,8 @@ function logServerError(request: Request, error: VenueError): void {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+function safeErrorMessage(cause: unknown): string {
+  try { return JSON.stringify(cause); } catch { return String(cause); }
 }

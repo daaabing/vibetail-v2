@@ -18,6 +18,7 @@ import { VenueMenusPage } from "./features/venue-admin/pages/VenueMenusPage.js";
 import { VenueProfilePage } from "./features/venue-admin/pages/VenueProfilePage.js";
 import { VenueQrPage } from "./features/venue-admin/pages/VenueQrPage.js";
 import { VenueSetupPage } from "./features/venue-admin/pages/VenueSetupPage.js";
+import { TarotEventPage } from "./features/tarot-event/TarotEventPage.js";
 
 const VENUE_ADMIN_PAGES = {
   login: VenueLoginPage,
@@ -38,6 +39,7 @@ export function App() {
   if (route.kind === "match") return <GlobalMatchPage />;
   if (route.kind === "shared_match") return <SharedMatchPage matchId={route.matchId} />;
   if (route.kind === "vibe_bar") return <VibeBarPage />;
+  if (route.kind === "tarot_event") return <TarotEventPage />;
   if (route.kind === "auth_callback") return <AuthCallbackPage />;
   if (route.kind === "signin") return <SignInPage />;
   if (route.kind === "venues") return <VenuesPage />;
@@ -63,6 +65,7 @@ export type AppRoute =
   | { kind: "match" }
   | { kind: "shared_match"; matchId: string }
   | { kind: "vibe_bar" }
+  | { kind: "tarot_event" }
   | { kind: "auth_callback" }
   | { kind: "signin" }
   | { kind: "venues" }
@@ -84,6 +87,7 @@ export function resolveAppRoute(pathname: string): AppRoute {
   const shared = normalized.match(/^\/r\/([0-9a-f-]{36})$/i);
   if (shared?.[1]) return { kind: "shared_match", matchId: shared[1].toLowerCase() };
   if (normalized === "/vibe-bar") return { kind: "vibe_bar" };
+  if (normalized === "/tarot") return { kind: "tarot_event" };
   // Fixed OAuth redirect target; must match the Supabase + Google redirect allowlists.
   if (normalized === "/auth/callback") return { kind: "auth_callback" };
   // Guest sign-in; `next` travels in the query string, which routing ignores.

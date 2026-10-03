@@ -477,6 +477,82 @@
           "recommendationNote": "The non-alcoholic pick that still feels like a cocktail.",
           "availabilityStatus": "active"
         }
+      },
+      {
+        "merchantId": "99999999-9999-4999-8999-999999999999",
+        "drink": {
+          "id": "77777777-0010-4010-8010-000000000010",
+          "name": "Tashirita",
+          "description": "柚子、青柠和杜松子百里香糖浆，清爽明亮，酸度干净，带一点草本香气。",
+          "price": null,
+          "imageUrl": null,
+          "ingredients": [
+            "1.5 oz Tashi Baijiu",
+            "0.5 oz yuzu juniper thyme syrup",
+            "0.75 oz key lime concentrate"
+          ],
+          "flavorTags": [
+            "citrusy",
+            "herbal",
+            "refreshing"
+          ],
+          "allergens": [],
+          "baseSpirit": "baijiu",
+          "strength": "medium",
+          "recommendationNote": "像秋天第一阵风，轻轻打开今晚的第一章。",
+          "availabilityStatus": "active"
+        }
+      },
+      {
+        "merchantId": "99999999-9999-4999-8999-999999999999",
+        "drink": {
+          "id": "77777777-0011-4011-8011-000000000011",
+          "name": "The Yak",
+          "description": "百香果、青柠和姜汁汽水，果香明亮，酸甜里带着轻轻的辛香和气泡感。",
+          "price": null,
+          "imageUrl": null,
+          "ingredients": [
+            "1.5 oz Tashi Baijiu",
+            "0.5 oz passion fruit syrup",
+            "0.5 oz key lime concentrate",
+            "3 oz ginger beer"
+          ],
+          "flavorTags": [
+            "fruity",
+            "citrusy",
+            "spicy",
+            "bubbly"
+          ],
+          "allergens": [],
+          "baseSpirit": "baijiu",
+          "strength": "medium",
+          "recommendationNote": "像一片被风吹动的秋叶，明快、俏皮，也很适合碰杯。",
+          "availabilityStatus": "active"
+        }
+      },
+      {
+        "merchantId": "99999999-9999-4999-8999-999999999999",
+        "drink": {
+          "id": "77777777-0012-4012-8012-000000000012",
+          "name": "Autumn After Cake",
+          "description": "Sarabi Rum Cake Cream Liqueur 加冰，奶油般顺滑，带着温暖的蛋糕甜香。",
+          "price": null,
+          "imageUrl": null,
+          "ingredients": [
+            "Sarabi Rum Cake Cream Liqueur",
+            "ice"
+          ],
+          "flavorTags": [
+            "creamy",
+            "sweet",
+            "rich"
+          ],
+          "allergens": [],
+          "baseSpirit": "rum",
+          "strength": "medium",
+          "recommendationNote": "像秋夜最后一盏暖灯，把这一晚收在柔软的余韵里。",
+          "availabilityStatus": "active"
+        }
       }
     ],
     "menuDrinks": [

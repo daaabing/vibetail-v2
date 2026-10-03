@@ -26,6 +26,8 @@ editor or `psql`) after review.
 | `migrations/0004_remove_legacy_game_columns.sql` | Drops `menus.enabled_game_ids` and `menus.game_display_order`, the final schema dependency on the retired game registry. Apply to staging before deploying the paired application change; production still requires explicit approval. |
 | `migrations/0005_match_snapshot_vibe_bar.sql` | Adds shareable match snapshot fields and the signed-in guest `saved_drinks` collection. |
 | `migrations/0006_merchant_geo.sql` | Adds nullable, range-checked `merchants.latitude` / `merchants.longitude` for nearby sorting. New venues populate them when an owner picks an address suggestion. |
+| `migrations/0007_drink_logs.sql` | Adds the private signed-in guest drink journal and its private storage bucket. |
+| `migrations/0008_tarot_events.sql` | Adds the Vibetail-owned event parent and private Tarot event child tables. The stable event key is `tarot-night-2026-10-03`; it is not a merchant venue. |
 
 The shared project was migrated by manually running the original
 `0001_venue_mvp.sql` in two steps (STEP 1 = today's `0001`, STEP 2 = today's
@@ -36,7 +38,7 @@ original single file was removed when it was split.
 
 This directory is now also the migration source for the local Supabase stack:
 `supabase --workdir infra db reset` (invoked via the repo's `package.json`
-scripts and the test global setup) replays `0000` → `0001` → `0002` → `0003` → `0004` → `0005` → `0006` into the
+scripts and the test global setup) replays `0000` → `0001` → `0002` → `0003` → `0004` → `0005` → `0006` → `0007` → `0008` into the
 local database and then loads the generated `seed.sql`.
 
 `0000_baseline.sql` exists only so `0001`/`0002` can replay onto an empty

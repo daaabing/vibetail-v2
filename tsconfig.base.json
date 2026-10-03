@@ -21,7 +21,9 @@
       "@vibetail/provider-e2b": ["packages/provider-e2b/src/index.ts"],
       "@vibetail/provider-fc": ["packages/provider-fc/src/index.ts"],
       "@vibetail/venue-core": ["packages/venue-core/src/index.ts"],
-      "@vibetail/sandbox-runtime": ["packages/sandbox-runtime/src/index.ts"]
+      "@vibetail/tarot-core": ["packages/tarot-core/src/index.ts"],
+      "@vibetail/sandbox-runtime": ["packages/sandbox-runtime/src/index.ts"],
+      "@tarot/*": ["apps/web/src/tarot-reference/*"]
     },
     "resolveJsonModule": true,
     "skipLibCheck": true,

@@ -15,7 +15,9 @@ NODE_ENV=production
 APP_URL=https://<generated-domain>
 SUPABASE_URL=<project URL>
 SUPABASE_PUBLISHABLE_KEY=<publishable or legacy anon key>
-MODEL_PROVIDER=deterministic
+MODEL_PROVIDER=openrouter
+MODEL_NAME=openai/gpt-5-mini
+OPENROUTER_API_KEY=<server-only key>
 SANDBOX_PROVIDER=local
 LOG_LEVEL=info
 ```
@@ -25,7 +27,7 @@ The production server now rejects a loopback `APP_URL` such as `http://127.0.0.1
 
 To enable the venue backend and the temporary legacy management flow, additionally configure `SUPABASE_SERVICE_ROLE_KEY` with a server-only secret or legacy `service_role` key. Without it, public reads remain available while all management operations fail closed with `503`.
 
-To enable AI-written match copy through OpenRouter, configure the server-only variables below and redeploy:
+The Tarot event requires a remote model in production. The staging baseline above uses OpenRouter; configure the server-only variables below and redeploy:
 
 ```text
 MODEL_PROVIDER=openrouter
@@ -54,8 +56,8 @@ Do not paste secrets into logs, commits, public variables, browser code, or depl
 
 `infra/supabase/migrations/` is the source of truth for the remote schema. The
 `migrate-staging` job in [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
-runs `supabase db push --linked` after `validate` passes on `main`, so schema
-changes land with the code that needs them instead of by hand in the SQL editor.
+runs `supabase db push --linked` after `validate` passes on `staging` or `main`,
+so staging can verify a migration before the same commit is promoted to `main`.
 
 The job needs a `staging` GitHub Environment holding:
 

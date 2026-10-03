@@ -1,0 +1,12 @@
+{
+  "name": "@vibetail/tarot-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.97.0",
+    "@vibetail/contracts": "workspace:*",
+    "zod": "^4.3.5"
+  }
+}
