@@ -260,6 +260,9 @@ describe("drink library", () => {
       "Yuzu Garden Spritz",
       "Velvet Espresso Martini",
       "Sunset Cooler",
+      "Tashirita",
+      "The Yak",
+      "Autumn After Cake",
     ]);
     expect(drinks[0]?.id).toBe(SMOKED_PEAR_ID);
   });

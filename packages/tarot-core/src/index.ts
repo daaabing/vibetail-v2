@@ -170,7 +170,7 @@ export class DeterministicTarotProvider implements TarotInterpretationProvider {
     const context = positionLabel
       ? `放在「${positionLabel}」这个位置上，它尤其提醒你留意${positionHint ? `：${positionHint}` : "正在发生的变化"}。`
       : userQuestion?.trim()
-        ? "把它放回你正在思考的事里，看看这份提醒和当下的感受如何相遇。"
+        ? `围绕“${userQuestion.trim()}”，把这份提醒放回正在思考的事里，看看它和当下的感受如何相遇。`
         : "先把注意力放回正在发生的事。";
     return tarotReadingSchema.parse({
       title: card ? `${card.zh} · ${position}` : `${cardId} · ${position}`,
