@@ -4,9 +4,13 @@ import { createServer } from "node:net";
 const serverEntry = "apps/web/dist/server/index.js";
 const port = await findAvailablePort();
 const output = [];
+// The Railway build environment can contain production-only secrets. Keep
+// them out of the deterministic smoke test so the bundle is validated in its
+// intended self-contained mode rather than entering the real model path.
+const { SUPABASE_SERVICE_ROLE_KEY: _serviceRoleKey, ...smokeEnv } = process.env;
 const child = spawn(process.execPath, [serverEntry], {
   env: {
-    ...process.env,
+    ...smokeEnv,
     NODE_ENV: "production",
     APP_URL: "https://example.com",
     AUTH_PROVIDER: "none",
